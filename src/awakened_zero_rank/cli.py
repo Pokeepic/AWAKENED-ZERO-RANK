@@ -29,6 +29,6 @@ def main() -> None:
     print(
         f"Money: ¥{p.money:,} | Health: {p.health} | Energy: {p.energy} | "
         f"Hunger: {p.hunger} | Stress: {p.stress} | "
-        f"Knowledge: {p.knowledge} | Fitness: {p.fitness} | Rank: {p.hunter_rank}"
+        f"Knowledge: {p.knowledge} | Fitness: {p.fitness} | Rank: {p.hunter_rank} | "
+        f"Ability: {p.ability} | Location: {p.location} | Rent arrears: ¥{p.rent_arrears:,}"
     )
-

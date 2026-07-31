@@ -23,12 +23,12 @@ class UtilityAgent:
 
     @staticmethod
     def _reason(action: str, p: Protagonist) -> str:
+        housing_debt = p.rent_arrears or max(0, p.rent_cost - p.money)
         reasons = {
             "Eat": f"hunger is {p.hunger}/100",
             "Rest": f"energy is {p.energy}/100 and stress is {p.stress}/100",
-            "Part-time work": f"¥{max(0, p.rent_cost - p.money):,} is still needed for rent",
+            "Part-time work": f"¥{housing_debt:,} is still needed for housing",
             "Study": f"knowledge is only {p.knowledge}",
             "Train": f"fitness is only {p.fitness}",
         }
         return reasons[action]
-

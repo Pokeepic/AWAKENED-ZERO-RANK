@@ -26,7 +26,7 @@ The protagonist begins poor, unranked, and unknown. They act autonomously while 
 
 ## Current milestone
 
-The simulation can run one autonomous protagonist for multiple days and tracks:
+The simulation now runs Ren's autonomous life across a small playable Tokyo map and tracks:
 
 - current day and time slot;
 - money, health, energy, hunger, stress, knowledge, fitness, and reputation;
@@ -34,12 +34,17 @@ The simulation can run one autonomous protagonist for multiple days and tracks:
 - part-time work, meals, rest, study, and exercise;
 - a chronological event log;
 - identical results when the same random seed is reused.
+- five distinct locations with rail fares and location-aware activity logs;
+- a Kita-Senju konbini job, apartment rent deadline, and unpaid arrears;
+- changing gate alert pressure and gate encounters;
+- a scripted first awakening assessment that grants Rank F and Threat Sense.
 
 ## Project layout
 
 ```text
 src/awakened_zero_rank/
   models.py       # Character, clock, and event state
+  world.py        # Tokyo locations, jobs, and transport costs
   actions.py      # Available actions and their effects
   agent.py        # Explainable utility-based decision policy
   simulation.py   # Deterministic engine
@@ -72,4 +77,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 1: deterministic simulation core and explainable baseline agent.
 
-Next: expand the Japan world with locations, living costs, jobs, rent deadlines, and gate-related events.
+✅ Milestone 2: Tokyo locations, transport, job economy, rent, gates, and awakening.
+
+Next: add guild registration, hunter work, combat readiness, gate missions, injuries, and rank progression.

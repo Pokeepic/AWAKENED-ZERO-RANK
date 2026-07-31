@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .models import Protagonist, TimeSlot
+from .world import JOBS, travel_cost
 
 
 Effect = Callable[[Protagonist], str]
@@ -18,12 +19,16 @@ class Action:
 
 
 def _work(p: Protagonist) -> str:
-    pay = 2_000
+    job = JOBS["konbini"]
+    fare = min(p.money, travel_cost(p.location, job.location))
+    pay = job.pay
+    p.money -= fare
     p.money += pay
-    p.energy -= 22
+    p.energy -= job.energy_cost
     p.hunger += 16
     p.stress += 10
-    return f"Convenience-store shift earned ¥{pay:,}."
+    p.location = job.location
+    return f"Worked a konbini shift for ¥{pay:,}; train fare cost ¥{fare:,}."
 
 
 def _eat(p: Protagonist) -> str:
@@ -35,26 +40,35 @@ def _eat(p: Protagonist) -> str:
 
 
 def _rest(p: Protagonist) -> str:
+    fare = min(p.money, travel_cost(p.location, "Adachi Apartment"))
+    p.money -= fare
+    p.location = "Adachi Apartment"
     p.energy += 42
     p.stress -= 20
     p.hunger += 8
-    return "Rested in the tiny apartment."
+    return f"Returned home and rested; travel cost ¥{fare:,}."
 
 
 def _study(p: Protagonist) -> str:
+    fare = min(p.money, travel_cost(p.location, "Ueno Library"))
+    p.money -= fare
+    p.location = "Ueno Library"
     p.knowledge += 2
     p.energy -= 13
     p.hunger += 7
     p.stress += 4
-    return "Studied public gate-safety material at the library."
+    return f"Studied gate safety at Ueno Library; travel cost ¥{fare:,}."
 
 
 def _train(p: Protagonist) -> str:
+    fare = min(p.money, travel_cost(p.location, "Arakawa Riverbank"))
+    p.money -= fare
+    p.location = "Arakawa Riverbank"
     p.fitness += 2
     p.energy -= 20
     p.hunger += 12
     p.stress -= 5
-    return "Completed bodyweight training beside the Arakawa river."
+    return f"Trained beside the Arakawa; travel cost ¥{fare:,}."
 
 
 def available_actions() -> tuple[Action, ...]:
@@ -72,7 +86,7 @@ def available_actions() -> tuple[Action, ...]:
         ),
         Action(
             "Part-time work",
-            lambda p, slot: max(0, p.rent_cost - p.money) / 90
+            lambda p, slot: (p.rent_arrears or max(0, p.rent_cost - p.money)) / 90
             + (18 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON, TimeSlot.EVENING) else -30)
             - max(0, 35 - p.energy),
             _work,
@@ -92,4 +106,3 @@ def available_actions() -> tuple[Action, ...]:
             _train,
         ),
     )
-

@@ -26,9 +26,30 @@ class SimulationTests(unittest.TestCase):
 
     def test_every_event_explains_the_decision(self) -> None:
         events = Simulation(seed=3).run(12)
-        self.assertTrue(all(event.reason and "utility" in event.reason for event in events))
+        self.assertTrue(all(event.reason for event in events))
+        self.assertTrue(all("utility" in event.reason for event in events if "world event" not in event.reason))
+
+    def test_awakening_occurs_at_bureau_on_day_three(self) -> None:
+        simulation = Simulation(seed=3)
+        events = simulation.run(10)
+        p = simulation.state.protagonist
+        self.assertEqual(events[-1].action, "Awakening assessment")
+        self.assertTrue(p.awakened)
+        self.assertEqual((p.hunter_rank, p.ability), ("F", "Threat Sense"))
+        self.assertEqual(p.location, "Tokyo Awakening Bureau")
+
+    def test_rent_deadline_is_resolved_once(self) -> None:
+        simulation = Simulation(seed=9)
+        events = simulation.run(29)
+        self.assertEqual(sum(event.action == "Rent deadline" for event in events), 1)
+        resolved = simulation.state.rent_payments + int(simulation.state.protagonist.rent_arrears > 0)
+        self.assertEqual(resolved, 1)
+
+    def test_travel_never_makes_money_negative(self) -> None:
+        simulation = Simulation(seed=18)
+        simulation.run(80)
+        self.assertGreaterEqual(simulation.state.protagonist.money, 0)
 
 
 if __name__ == "__main__":
     unittest.main()
-

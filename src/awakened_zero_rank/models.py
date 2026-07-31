@@ -31,8 +31,10 @@ class Clock:
 @dataclass
 class Protagonist:
     name: str = "Ren Takahashi"
-    location: str = "Adachi, Tokyo"
+    location: str = "Adachi Apartment"
     hunter_rank: str = "Unranked"
+    awakened: bool = False
+    ability: str = "None"
     money: int = 2_500
     health: int = 100
     energy: int = 65
@@ -43,6 +45,8 @@ class Protagonist:
     reputation: int = 0
     rent_due_day: int = 8
     rent_cost: int = 8_000
+    rent_arrears: int = 0
+    gates_witnessed: int = 0
 
     def clamp(self) -> None:
         for stat in ("health", "energy", "hunger", "stress"):
@@ -69,4 +73,5 @@ class WorldState:
     clock: Clock = field(default_factory=Clock)
     protagonist: Protagonist = field(default_factory=Protagonist)
     events: list[Event] = field(default_factory=list)
-
+    gate_alert_level: int = 0
+    rent_payments: int = 0
