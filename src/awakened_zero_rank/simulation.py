@@ -217,9 +217,9 @@ class Simulation:
             "Awakening assessment": 10, "Guild registration": 8,
             "Gate mission": 7, "Rent deadline": 8, "Talk with Aiko": 4,
         }
-        if event.action.startswith("Meet "):
-            rating = 6
-        rating = importance if importance is not None else important_actions.get(event.action)
+        rating = (importance if importance is not None else
+                  6 if event.action.startswith("Meet ") else
+                  important_actions.get(event.action))
         if rating is None:
             return
         p.memories.append(Memory(event.day, f"{event.action}: {event.outcome}", rating))

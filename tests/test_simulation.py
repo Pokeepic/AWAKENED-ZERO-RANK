@@ -351,6 +351,8 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(any(event.action == "Meet Daichi Mori" for event in events))
         meeting = next(event for event in events if event.action == "Meet Daichi Mori")
         self.assertIn("Another person", journal_entry(meeting))
+        self.assertTrue(any("Meet Daichi Mori" in memory.summary
+                            for memory in simulation.state.protagonist.memories))
 
     def test_relationship_network_preserves_conflicting_loyalties(self) -> None:
         simulation = Simulation(seed=42)
