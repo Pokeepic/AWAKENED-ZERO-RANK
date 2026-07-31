@@ -1,6 +1,10 @@
 import unittest
+from tempfile import TemporaryDirectory
+from pathlib import Path
 
+from awakened_zero_rank.journal import journal_entry
 from awakened_zero_rank.models import TimeSlot
+from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
 
@@ -138,6 +142,36 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("Energy Drink", outcome)
         self.assertEqual(p.item_count("Healing Gel"), 0)
         self.assertEqual(p.item_count("Energy Drink"), 0)
+
+    def test_save_load_restores_complete_state(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(53)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "ren.json"
+            save_simulation(simulation, path)
+            restored = load_simulation(path)
+        self.assertEqual(restored.state, simulation.state)
+
+    def test_loaded_timeline_has_identical_future(self) -> None:
+        uninterrupted = Simulation(seed=77)
+        interrupted = Simulation(seed=77)
+        uninterrupted.run(41)
+        interrupted.run(41)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "ren.json"
+            save_simulation(interrupted, path)
+            resumed = load_simulation(path)
+        expected = [str(event) for event in uninterrupted.run(40)]
+        actual = [str(event) for event in resumed.run(40)]
+        self.assertEqual(actual, expected)
+        self.assertEqual(resumed.state, uninterrupted.state)
+
+    def test_journal_focuses_on_protagonist_without_utility_report(self) -> None:
+        event = Simulation(seed=3).step()
+        entry = journal_entry(event)
+        self.assertIn("Day 1", entry)
+        self.assertIn(event.outcome, entry)
+        self.assertNotIn("utility", entry.lower())
 
 
 if __name__ == "__main__":

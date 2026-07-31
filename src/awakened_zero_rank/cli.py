@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import argparse
 
+from .journal import journal_entry
+from .persistence import load_simulation, save_simulation
 from .simulation import Simulation
 
 
@@ -9,6 +11,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Observe an autonomous zero-rank life.")
     parser.add_argument("--days", type=int, default=7, help="days to simulate (default: 7)")
     parser.add_argument("--seed", type=int, default=42, help="reproducible seed")
+    parser.add_argument("--load", metavar="FILE", help="continue an existing save")
+    parser.add_argument("--save", metavar="FILE", help="save after this run")
+    parser.add_argument("--technical-log", action="store_true", help="show decision reasons")
     return parser
 
 
@@ -17,12 +22,13 @@ def main() -> None:
     if args.days < 1:
         raise SystemExit("--days must be at least 1")
 
-    simulation = Simulation(seed=args.seed)
+    simulation = load_simulation(args.load) if args.load else Simulation(seed=args.seed)
     protagonist = simulation.state.protagonist
-    print("AWAKENED ZERO RANK — Observer Log")
-    print(f"Watching {protagonist.name} in {protagonist.location} (seed {args.seed})\n")
+    print("AWAKENED ZERO RANK — Ren's Chronicle")
+    print(f"{protagonist.name} | {protagonist.location}\n")
     for event in simulation.run(args.days * 4):
-        print(event)
+        print(event if args.technical_log else journal_entry(event))
+        print()
 
     p = simulation.state.protagonist
     print("\nFinal state")
@@ -46,3 +52,6 @@ def main() -> None:
         print("Key memories:")
         for memory in p.memories[:5]:
             print(f"- Day {memory.day}: {memory.summary}")
+    if args.save:
+        save_simulation(simulation, args.save)
+        print(f"\nTimeline saved to {args.save}")

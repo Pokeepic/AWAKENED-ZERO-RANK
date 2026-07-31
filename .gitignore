@@ -1,1 +1,8 @@
-m«ëˆ"¶('¢·¢Ëœ…ø¥zŠİŠ·œ¶Šò
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+saves/
