@@ -11,9 +11,12 @@ ATMOSPHERE = {
 }
 
 
-def journal_entry(event: Event) -> str:
+def journal_entry(event: Event, weather: str | None = None, temperature_c: int | None = None) -> str:
     """Render an event as a compact scene centered on Ren's experience."""
     opening = ATMOSPHERE[event.slot.value]
+    if weather is not None:
+        opening += f" It is {weather.lower()}"
+        opening += f" and {temperature_c}°C." if temperature_c is not None else "."
     thoughts = {
         "Part-time work": "Rent will not wait for me.",
         "Eat": "I cannot think clearly on an empty stomach.",
@@ -27,6 +30,7 @@ def journal_entry(event: Event) -> str:
         "Talk with Aiko": "Her reaction tells me more than her words do.",
         "Visit hunter shop": "Every item costs money I may need for rent.",
         "Guild patrol": "It is safer than a gate, but danger still has a scent.",
+        "Tanabata evening": "For tonight, wishes seem more real than ranks.",
     }
     thought = thoughts.get(event.action, "I chose the best path I could see.")
     return (

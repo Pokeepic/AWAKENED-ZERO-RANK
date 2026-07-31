@@ -55,6 +55,11 @@ def load_simulation(path: str | Path) -> "Simulation":
         gate_alert_level=raw["gate_alert_level"],
         rent_payments=raw["rent_payments"],
         shop_visits=raw["shop_visits"],
+        season=raw.get("season", "Summer"),
+        weather=raw.get("weather", "Clear"),
+        temperature_c=raw.get("temperature_c", 29),
+        weather_day=raw.get("weather_day", 0),
+        calendar_events_seen=raw.get("calendar_events_seen", []),
     )
     simulation = Simulation(seed=data["seed"], state=state)
     simulation.rng.setstate(_tuplify(data["rng_state"]))

@@ -137,3 +137,8 @@ class WorldState:
     gate_alert_level: int = 0
     rent_payments: int = 0
     shop_visits: int = 0
+    season: str = "Summer"
+    weather: str = "Clear"
+    temperature_c: int = 29
+    weather_day: int = 0
+    calendar_events_seen: list[str] = field(default_factory=list)

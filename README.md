@@ -39,6 +39,10 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - versioned JSON saves that preserve the exact clock, world, character, and random state;
 - deterministic continuation: a resumed timeline has the same future as an uninterrupted run;
 - an optional technical log for debugging without cluttering the main experience.
+- deterministic daily Tokyo summer weather: clear, cloudy, rain, heatwaves, and thunderstorms;
+- weather-aware choices, fatigue, shop closures, and gate danger;
+- season and temperature shown through Ren's immediate experience;
+- a calendar event framework, beginning with a one-time Tanabata evening.
 
 The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
 
@@ -53,6 +57,7 @@ src/awakened_zero_rank/
   simulation.py   # Deterministic world, memory, relationship, and progression engine
   journal.py      # Ren-centered scene presentation
   persistence.py  # Versioned save/load system
+  environment.py  # Seasons, weather conditions, and environmental effects
   cli.py          # Protagonist chronicle interface
 tests/             # Determinism, world, and progression tests
 ```
@@ -109,4 +114,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 6: exact save/load continuation and a protagonist-focused chronicle.
 
-Next: weather, seasons, calendar events, and environment-aware decisions.
+✅ Milestone 7: weather, seasons, calendar events, and environment-aware decisions.
+
+Next: expanded protagonist stats, abilities, training growth, and condition-sensitive progression.

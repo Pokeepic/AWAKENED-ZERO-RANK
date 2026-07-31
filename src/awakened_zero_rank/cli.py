@@ -26,8 +26,11 @@ def main() -> None:
     protagonist = simulation.state.protagonist
     print("AWAKENED ZERO RANK — Ren's Chronicle")
     print(f"{protagonist.name} | {protagonist.location}\n")
-    for event in simulation.run(args.days * 4):
-        print(event if args.technical_log else journal_entry(event))
+    for _ in range(args.days * 4):
+        event = simulation.step()
+        print(event if args.technical_log else journal_entry(
+            event, simulation.state.weather, simulation.state.temperature_c
+        ))
         print()
 
     p = simulation.state.protagonist
@@ -42,6 +45,7 @@ def main() -> None:
     )
     inventory = ", ".join(f"{name} x{count}" for name, count in sorted(p.inventory.items())) or "empty"
     print(f"Equipment: {p.equipped_weapon or 'none'} / {p.equipped_armor or 'none'} | Inventory: {inventory}")
+    print(f"Weather: {simulation.state.weather}, {simulation.state.temperature_c}°C | Season: {simulation.state.season}")
     print(f"Current goal: {p.current_goal}")
     if p.relationships:
         print("Relationships: " + "; ".join(

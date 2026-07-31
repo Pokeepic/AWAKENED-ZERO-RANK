@@ -173,6 +173,47 @@ class SimulationTests(unittest.TestCase):
         self.assertIn(event.outcome, entry)
         self.assertNotIn("utility", entry.lower())
 
+    def test_weather_is_generated_once_per_day(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.step()
+        first = (simulation.state.weather, simulation.state.temperature_c)
+        simulation.run(3)
+        self.assertEqual(first, (simulation.state.weather, simulation.state.temperature_c))
+        simulation.step()
+        self.assertEqual(simulation.state.weather_day, 2)
+
+    def test_weather_is_deterministic_and_saved(self) -> None:
+        first = Simulation(seed=88)
+        second = Simulation(seed=88)
+        first.run(45)
+        second.run(45)
+        self.assertEqual(first.state.weather, second.state.weather)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "weather.json"
+            save_simulation(first, path)
+            restored = load_simulation(path)
+        self.assertEqual(restored.state, first.state)
+
+    def test_severe_weather_changes_agent_preferences(self) -> None:
+        simulation = Simulation(seed=2)
+        p = simulation.state.protagonist
+        p.energy = 70
+        clear = simulation.agent._weather_adjustment("Train", "Clear")
+        storm = simulation.agent._weather_adjustment("Train", "Thunderstorm")
+        self.assertLess(storm, clear)
+
+    def test_tanabata_calendar_event_occurs_once(self) -> None:
+        simulation = Simulation(seed=42)
+        events = simulation.run(32)
+        self.assertEqual(sum(event.action == "Tanabata evening" for event in events), 1)
+        self.assertIn("Tanabata", simulation.state.calendar_events_seen)
+
+    def test_gate_log_includes_environment(self) -> None:
+        events = Simulation(seed=42).run(180)
+        missions = [event.outcome for event in events if event.action == "Gate mission"]
+        self.assertTrue(missions)
+        self.assertTrue(all("weather" in outcome for outcome in missions))
+
 
 if __name__ == "__main__":
     unittest.main()

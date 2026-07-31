@@ -12,14 +12,27 @@ class UtilityAgent:
     def __init__(self, rng: random.Random) -> None:
         self.rng = rng
 
-    def choose(self, protagonist: Protagonist, slot: TimeSlot, gate_alert: int = 0) -> tuple[Action, str]:
+    def choose(self, protagonist: Protagonist, slot: TimeSlot, gate_alert: int = 0,
+               weather: str = "Clear") -> tuple[Action, str]:
         scores = [
-            (action.score(protagonist, slot, gate_alert) + self.rng.uniform(0, 2), action)
+            (action.score(protagonist, slot, gate_alert) + self._weather_adjustment(action.name, weather)
+             + self.rng.uniform(0, 2), action)
             for action in available_actions(protagonist)
         ]
         score, action = max(scores, key=lambda item: item[0])
         reason = self._reason(action.name, protagonist, gate_alert)
         return action, f"{reason} (utility {score:.1f})"
+
+    @staticmethod
+    def _weather_adjustment(action: str, weather: str) -> float:
+        if weather == "Thunderstorm":
+            return {"Rest": 18, "Study": 9, "Train": -35, "Gate mission": -24,
+                    "Visit hunter shop": -50}.get(action, 0)
+        if weather == "Heatwave":
+            return {"Rest": 8, "Eat": 5, "Train": -18, "Gate mission": -8}.get(action, 0)
+        if weather == "Rain":
+            return {"Study": 5, "Train": -10, "Gate mission": -5}.get(action, 0)
+        return 0
 
     @staticmethod
     def _reason(action: str, p: Protagonist, gate_alert: int) -> str:
