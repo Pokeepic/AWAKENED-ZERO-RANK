@@ -43,6 +43,11 @@ def main() -> None:
         f"Injuries: {p.injuries} | Ability: {p.ability} | Location: {p.location} | "
         f"Rent arrears: ¥{p.rent_arrears:,}"
     )
+    print(
+        f"Hunter attributes: STR {p.strength} | AGI {p.agility} | END {p.endurance} | "
+        f"PER {p.perception} | MANA {p.mana} | LUCK {p.luck} | "
+        f"Ability mastery {p.ability_mastery}/100 | Echo exposure {p.echo_fragments}"
+    )
     inventory = ", ".join(f"{name} x{count}" for name, count in sorted(p.inventory.items())) or "empty"
     print(f"Equipment: {p.equipped_weapon or 'none'} / {p.equipped_armor or 'none'} | Inventory: {inventory}")
     print(f"Weather: {simulation.state.weather}, {simulation.state.temperature_c}°C | Season: {simulation.state.season}")

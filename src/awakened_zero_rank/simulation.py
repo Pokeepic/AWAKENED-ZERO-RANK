@@ -40,6 +40,7 @@ class Simulation:
             self.state.shop_visits += 1
         self._apply_passive_needs()
         self._apply_weather_cost(action.name)
+        self._develop_from_action(action.name)
         protagonist.clamp()
         event = Event(clock.day, clock.slot, action.name, reason, outcome)
         self.state.events.append(event)
@@ -65,6 +66,18 @@ class Simulation:
         weather = self._weather()
         if action_name in {"Train", "Gate mission", "Guild patrol", "Part-time work"}:
             self.state.protagonist.energy -= weather.energy_modifier
+
+    def _develop_from_action(self, action_name: str) -> None:
+        """Apply small, explainable growth from relevant lived experience."""
+        p = self.state.protagonist
+        if action_name == "Guild patrol" and p.health >= 45:
+            if p.combat_experience % 8 == 0:
+                p.perception += 1
+            if p.combat_experience % 12 == 0:
+                p.endurance += 1
+        elif action_name == "Gate mission":
+            p.ability_mastery += 2 if p.health >= 40 else 1
+        p.clamp()
 
     def run(self, steps: int) -> list[Event]:
         return [self.step() for _ in range(steps)]
@@ -96,6 +109,7 @@ class Simulation:
             p.awakened = True
             p.hunter_rank = "F"
             p.ability = "Threat Sense"
+            p.ability_mastery = 1
             p.reputation += 1
             return Event(clock.day, clock.slot, "Awakening assessment",
                          "a city gate alert triggered Ren's mandatory screening (world event)",
@@ -190,16 +204,27 @@ class Simulation:
             p.combat_experience += 5
             p.missions_completed += 1
             p.reputation += 2
+            exposure = max(1, encounter.difficulty // 18)
+            p.echo_fragments += exposure
+            if p.missions_completed % 3 == 0:
+                p.perception += 1
+            p.ability_mastery += 3
             promotion = self._promote_if_eligible()
             suffix = f" Promoted to Rank {promotion}!" if promotion else ""
+            echo = (" Echo Fragment awakened from varied survival experience!"
+                    if p.echo_fragments >= 8 and p.ability == "Threat Sense" else "")
+            if echo:
+                p.ability = "Threat Sense / Echo Fragment"
             return (f"Cleared {encounter.name} in {weather.name.lower()} weather "
                     f"(roll {roll} vs {difficulty}) for ¥{reward:,} "
-                    f"and {points} rank points; fare cost ¥{fare:,}.{prep_text}{suffix}")
+                    f"and {points} rank points; gained {exposure} ability exposure; "
+                    f"fare cost ¥{fare:,}.{prep_text}{suffix}{echo}")
         armor_reduction = ITEMS[p.equipped_armor].combat_bonus if p.equipped_armor else 0
         damage = max(8, difficulty - roll + 8 + encounter.damage_bonus - armor_reduction)
         p.health -= damage
         p.injuries += 1
         p.combat_experience += 2
+        p.ability_mastery += 1
         return (f"Retreated from {encounter.name} in {weather.name.lower()} weather "
                 f"(roll {roll} vs {difficulty}); suffered "
                 f"{damage} damage and received no reward. Fare cost ¥{fare:,}.{prep_text}")

@@ -43,6 +43,16 @@ class Protagonist:
     stress: int = 35
     knowledge: int = 5
     fitness: int = 4
+    strength: int = 3
+    agility: int = 4
+    endurance: int = 4
+    perception: int = 6
+    mana: int = 2
+    luck: int = 3
+    ability_mastery: int = 0
+    echo_fragments: int = 0
+    training_sessions: int = 0
+    recent_training: list[str] = field(default_factory=list)
     reputation: int = 0
     rank_points: int = 0
     combat_experience: int = 0
@@ -70,8 +80,10 @@ class Protagonist:
             for item in (self.equipped_weapon, self.equipped_armor)
             if item is not None
         )
-        raw = (self.health * 0.35 + self.energy * 0.25 + self.fitness * 2
-               + self.knowledge + equipment_bonus)
+        hunter_bonus = (self.strength * 1.2 + self.agility + self.endurance
+                        + self.perception * 0.8 + self.mana * 0.5)
+        raw = (self.health * 0.28 + self.energy * 0.2 + self.fitness * 1.4
+               + self.knowledge * 0.7 + hunter_bonus + equipment_bonus)
         return max(0, min(100, round(raw)))
 
     def item_count(self, name: str) -> int:
@@ -91,6 +103,9 @@ class Protagonist:
     def clamp(self) -> None:
         for stat in ("health", "energy", "hunger", "stress"):
             setattr(self, stat, max(0, min(100, getattr(self, stat))))
+        for stat in ("strength", "agility", "endurance", "perception", "mana", "luck"):
+            setattr(self, stat, max(1, min(100, getattr(self, stat))))
+        self.ability_mastery = max(0, min(100, self.ability_mastery))
 
 
 @dataclass(frozen=True)

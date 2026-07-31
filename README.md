@@ -43,6 +43,11 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - weather-aware choices, fatigue, shop closures, and gate danger;
 - season and temperature shown through Ren's immediate experience;
 - a calendar event framework, beginning with a one-time Tanabata evening.
+- hunter attributes: strength, agility, endurance, perception, mana, and luck;
+- rotating physical training whose gains depend on Ren's health and energy;
+- gradual Threat Sense mastery through patrols and dangerous gate experience;
+- latent **Echo Fragment** growth from meaningful survival exposure rather than repetitive kills;
+- all new development state preserved exactly across saves.
 
 The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
 
@@ -116,4 +121,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 7: weather, seasons, calendar events, and environment-aware decisions.
 
-Next: expanded protagonist stats, abilities, training growth, and condition-sensitive progression.
+✅ Milestone 8: expanded protagonist stats, ability growth, rotating training, and condition-sensitive progression.
+
+Next: richer dialogue intentions, emotional reactions, mood, and relationship consequences.

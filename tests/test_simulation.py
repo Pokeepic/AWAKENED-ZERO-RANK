@@ -214,6 +214,49 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(missions)
         self.assertTrue(all("weather" in outcome for outcome in missions))
 
+    def test_training_rotates_hunter_attributes(self) -> None:
+        simulation = Simulation(seed=1)
+        p = simulation.state.protagonist
+        p.health = p.energy = 100
+        from awakened_zero_rank.actions import _train
+        _train(p)
+        _train(p)
+        _train(p)
+        self.assertEqual((p.strength, p.agility, p.endurance), (4, 5, 5))
+        self.assertEqual(p.training_sessions, 3)
+
+    def test_exhaustion_reduces_training_growth(self) -> None:
+        simulation = Simulation(seed=1)
+        p = simulation.state.protagonist
+        p.health = p.energy = 20
+        from awakened_zero_rank.actions import _train
+        _train(p)
+        self.assertEqual(p.fitness, 5)
+        self.assertEqual(p.strength, 3)
+
+    def test_gate_experience_develops_ability(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(160)
+        p = simulation.state.protagonist
+        self.assertGreater(p.ability_mastery, 1)
+        self.assertGreater(p.echo_fragments, 0)
+
+    def test_echo_fragment_unlocks_from_survival_exposure(self) -> None:
+        simulation = Simulation(seed=42)
+        events = simulation.run(160)
+        p = simulation.state.protagonist
+        self.assertIn("Echo Fragment", p.ability)
+        self.assertTrue(any("Echo Fragment awakened" in event.outcome for event in events))
+
+    def test_expanded_stats_survive_save_and_load(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(80)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "growth.json"
+            save_simulation(simulation, path)
+            restored = load_simulation(path)
+        self.assertEqual(restored.state.protagonist, simulation.state.protagonist)
+
 
 if __name__ == "__main__":
     unittest.main()

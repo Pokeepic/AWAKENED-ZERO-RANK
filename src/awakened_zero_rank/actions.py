@@ -102,19 +102,33 @@ def _rest(p: Protagonist) -> str:
 def _study(p: Protagonist) -> str:
     fare = _travel(p, "Ueno Library")
     p.knowledge += 2
+    perception_gain = int(p.knowledge % 3 == 0)
+    p.perception += perception_gain
     p.energy -= 13
     p.hunger += 7
     p.stress += 4
-    return f"Studied gate safety at Ueno Library; travel cost ¥{fare:,}."
+    return (f"Studied gate safety (+2 knowledge, +{perception_gain} perception); "
+            f"travel cost ¥{fare:,}.")
 
 
 def _train(p: Protagonist) -> str:
     fare = _travel(p, "Arakawa Riverbank")
-    p.fitness += 2
+    condition = min(p.health, p.energy)
+    gain = 2 if condition >= 55 else 1
+    focus = ("Strength", "Agility", "Endurance")[p.training_sessions % 3]
+    repeated = p.recent_training[-2:].count(focus)
+    attribute_gain = 0 if repeated >= 2 or condition < 30 else 1
+    p.fitness += gain
+    setattr(p, focus.lower(), getattr(p, focus.lower()) + attribute_gain)
+    p.training_sessions += 1
+    p.recent_training.append(focus)
+    del p.recent_training[:-6]
     p.energy -= 20
     p.hunger += 12
     p.stress -= 5
-    return f"Trained beside the Arakawa; travel cost ¥{fare:,}."
+    result = f"Trained {focus.lower()} beside the Arakawa (+{gain} fitness"
+    result += f", +{attribute_gain} {focus.lower()}); travel cost ¥{fare:,}."
+    return result
 
 
 def available_actions(p: Protagonist) -> tuple[Action, ...]:
