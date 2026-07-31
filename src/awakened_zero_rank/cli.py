@@ -28,7 +28,9 @@ def main() -> None:
     print("\nFinal state")
     print(
         f"Money: ¥{p.money:,} | Health: {p.health} | Energy: {p.energy} | "
-        f"Hunger: {p.hunger} | Stress: {p.stress} | "
-        f"Knowledge: {p.knowledge} | Fitness: {p.fitness} | Rank: {p.hunter_rank} | "
-        f"Ability: {p.ability} | Location: {p.location} | Rent arrears: ¥{p.rent_arrears:,}"
+        f"Hunger: {p.hunger} | Stress: {p.stress} | Knowledge: {p.knowledge} | "
+        f"Fitness: {p.fitness} | Rank: {p.hunter_rank} ({p.rank_points} RP) | "
+        f"Readiness: {p.combat_readiness} | Missions: {p.missions_completed}/{p.missions_attempted} | "
+        f"Injuries: {p.injuries} | Ability: {p.ability} | Location: {p.location} | "
+        f"Rent arrears: ¥{p.rent_arrears:,}"
     )

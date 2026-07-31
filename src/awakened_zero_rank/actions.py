@@ -8,7 +8,7 @@ from .world import JOBS, travel_cost
 
 
 Effect = Callable[[Protagonist], str]
-Score = Callable[[Protagonist, TimeSlot], float]
+Score = Callable[[Protagonist, TimeSlot, int], float]
 
 
 @dataclass(frozen=True)
@@ -18,17 +18,37 @@ class Action:
     apply: Effect
 
 
+def _travel(p: Protagonist, destination: str) -> int:
+    fare = min(p.money, travel_cost(p.location, destination))
+    p.money -= fare
+    p.location = destination
+    return fare
+
+
 def _work(p: Protagonist) -> str:
     job = JOBS["konbini"]
-    fare = min(p.money, travel_cost(p.location, job.location))
-    pay = job.pay
-    p.money -= fare
-    p.money += pay
+    fare = _travel(p, job.location)
+    p.money += job.pay
     p.energy -= job.energy_cost
     p.hunger += 16
     p.stress += 10
-    p.location = job.location
-    return f"Worked a konbini shift for ¥{pay:,}; train fare cost ¥{fare:,}."
+    return f"Worked a konbini shift for ¥{job.pay:,}; train fare cost ¥{fare:,}."
+
+
+def _patrol(p: Protagonist) -> str:
+    job = JOBS["guild_patrol"]
+    fare = _travel(p, job.location)
+    p.money += job.pay
+    p.energy -= job.energy_cost
+    p.hunger += 18
+    p.stress += 8
+    p.combat_experience += 2
+    p.reputation += 1
+    return f"Completed a guild perimeter patrol for ¥{job.pay:,}; fare cost ¥{fare:,}."
+
+
+def _mission_placeholder(_: Protagonist) -> str:
+    return "Gate mission pending resolution."
 
 
 def _eat(p: Protagonist) -> str:
@@ -40,9 +60,7 @@ def _eat(p: Protagonist) -> str:
 
 
 def _rest(p: Protagonist) -> str:
-    fare = min(p.money, travel_cost(p.location, "Adachi Apartment"))
-    p.money -= fare
-    p.location = "Adachi Apartment"
+    fare = _travel(p, "Adachi Apartment")
     p.energy += 42
     p.stress -= 20
     p.hunger += 8
@@ -50,9 +68,7 @@ def _rest(p: Protagonist) -> str:
 
 
 def _study(p: Protagonist) -> str:
-    fare = min(p.money, travel_cost(p.location, "Ueno Library"))
-    p.money -= fare
-    p.location = "Ueno Library"
+    fare = _travel(p, "Ueno Library")
     p.knowledge += 2
     p.energy -= 13
     p.hunger += 7
@@ -61,9 +77,7 @@ def _study(p: Protagonist) -> str:
 
 
 def _train(p: Protagonist) -> str:
-    fare = min(p.money, travel_cost(p.location, "Arakawa Riverbank"))
-    p.money -= fare
-    p.location = "Arakawa Riverbank"
+    fare = _travel(p, "Arakawa Riverbank")
     p.fitness += 2
     p.energy -= 20
     p.hunger += 12
@@ -71,38 +85,50 @@ def _train(p: Protagonist) -> str:
     return f"Trained beside the Arakawa; travel cost ¥{fare:,}."
 
 
-def available_actions() -> tuple[Action, ...]:
-    return (
-        Action(
-            "Eat",
-            lambda p, _: p.hunger * 1.8 + (25 if p.health < 50 else 0),
-            _eat,
-        ),
+def available_actions(p: Protagonist) -> tuple[Action, ...]:
+    actions = [
+        Action("Eat", lambda p, _s, _a: p.hunger * 1.8 + (25 if p.health < 50 else 0), _eat),
         Action(
             "Rest",
-            lambda p, slot: (100 - p.energy) * 1.25 + p.stress * 0.45
+            lambda p, slot, _a: (100 - p.energy) * 1.25 + p.stress * 0.45
             + (22 if slot is TimeSlot.LATE_NIGHT else 0),
             _rest,
         ),
         Action(
             "Part-time work",
-            lambda p, slot: (p.rent_arrears or max(0, p.rent_cost - p.money)) / 90
+            lambda p, slot, _a: (p.rent_arrears or max(0, p.rent_cost - p.money)) / 90
             + (18 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON, TimeSlot.EVENING) else -30)
             - max(0, 35 - p.energy),
             _work,
         ),
         Action(
             "Study",
-            lambda p, slot: 32 - p.knowledge * 0.7
+            lambda p, slot, _a: 32 - p.knowledge * 0.7
             + (10 if slot in (TimeSlot.AFTERNOON, TimeSlot.EVENING) else 0)
             - max(0, 30 - p.energy),
             _study,
         ),
         Action(
             "Train",
-            lambda p, slot: 30 - p.fitness * 0.7
+            lambda p, slot, _a: 30 - p.fitness * 0.7
             + (8 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON) else 0)
             - max(0, 35 - p.energy),
             _train,
         ),
-    )
+    ]
+    if p.guild_registered:
+        actions.append(Action(
+            "Guild patrol",
+            lambda p, slot, _a: 35 + p.rent_arrears / 100
+            + (12 if slot is not TimeSlot.LATE_NIGHT else -25)
+            - max(0, 42 - p.energy),
+            _patrol,
+        ))
+        actions.append(Action(
+            "Gate mission",
+            lambda p, slot, alert: alert * 27 + p.combat_readiness * 0.35
+            + (12 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON) else -12)
+            - max(0, 45 - p.health) - max(0, 40 - p.energy),
+            _mission_placeholder,
+        ))
+    return tuple(actions)

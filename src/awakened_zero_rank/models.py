@@ -35,6 +35,7 @@ class Protagonist:
     hunter_rank: str = "Unranked"
     awakened: bool = False
     ability: str = "None"
+    guild_registered: bool = False
     money: int = 2_500
     health: int = 100
     energy: int = 65
@@ -43,10 +44,21 @@ class Protagonist:
     knowledge: int = 5
     fitness: int = 4
     reputation: int = 0
+    rank_points: int = 0
+    combat_experience: int = 0
+    missions_attempted: int = 0
+    missions_completed: int = 0
+    injuries: int = 0
     rent_due_day: int = 8
     rent_cost: int = 8_000
     rent_arrears: int = 0
     gates_witnessed: int = 0
+
+    @property
+    def combat_readiness(self) -> int:
+        """A readable 0-100 estimate used by both the agent and mission system."""
+        raw = self.health * 0.35 + self.energy * 0.25 + self.fitness * 2 + self.knowledge
+        return max(0, min(100, round(raw)))
 
     def clamp(self) -> None:
         for stat in ("health", "energy", "hunger", "stress"):
@@ -64,7 +76,7 @@ class Event:
     def __str__(self) -> str:
         return (
             f"Day {self.day:02d} | {self.slot.value:<10} | "
-            f"{self.action:<14} | {self.outcome} Why: {self.reason}"
+            f"{self.action:<18} | {self.outcome} Why: {self.reason}"
         )
 
 

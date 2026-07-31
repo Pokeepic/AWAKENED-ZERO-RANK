@@ -2,54 +2,45 @@
 
 An observer-only life simulation set in modern Japan after portals and awakenings become part of everyday society.
 
-The protagonist begins poor, unranked, and unknown. They act autonomously while the player watches their daily routine, relationships, work, study, training, awakening opportunities, failures, and long-term growth.
+The protagonist begins poor, unranked, and unknown. They act autonomously while the player watches their daily routine, work, study, training, awakening, hunter career, failures, and long-term growth.
 
 ## Core vision
 
 - **Observer simulation:** the protagonist chooses; the user watches.
 - **Zero-to-hero progression:** begin with little money, weak stats, and no hunter rank.
 - **Persona-style time:** each meaningful action advances Morning → Afternoon → Evening → Late Night.
-- **Living Japan setting:** rent, part-time work, school, transport, guilds, gates, and social pressure matter.
-- **Explainable autonomy:** every decision is logged with its reason.
-- **Learning-ready architecture:** start with a dependable rule/utility agent, then add reinforcement learning as an experiment.
+- **Living Japan setting:** rent, part-time work, transport, guilds, gates, and social pressure matter.
+- **Explainable autonomy:** every decision is logged with its reason and utility score.
+- **Learning-ready architecture:** start with a dependable utility agent, then add reinforcement learning as an experiment.
 - **Reproducible worlds:** seeded runs make bugs and balance changes comparable.
 
-## V3 development workflow
+## Current simulation
 
-1. **Deterministic simulation core** — clock, calendar, character state, needs, actions, and event log.
-2. **Autonomous decision system** — utility scoring, goals, memory, and explainable choices.
-3. **Japan world systems** — districts, economy, jobs, rent, gates, guilds, and hunter ranks.
-4. **Dashboard** — observe time, status, decisions, relationships, and story events.
-5. **Persistence and evaluation** — save/load, seeded batch runs, survival and progression metrics.
-6. **Learning experiment** — train an RL policy in a separate environment and compare it with the baseline agent.
-7. **Narrative layer** — turn important simulation events into readable scenes and chronicles.
+The simulation follows Ren Takahashi across a small Tokyo map and currently includes:
 
-## Current milestone
+- autonomous work, meals, rest, study, and physical training;
+- money, needs, knowledge, fitness, reputation, and combat readiness;
+- Tokyo locations, rail fares, a konbini job, rent, arrears, and gate alerts;
+- the Day 3 awakening assessment: Rank F with **Threat Sense**;
+- mandatory Tokyo Hunter Guild registration and an F-rank license;
+- safe guild patrol work and riskier low-rank gate missions;
+- deterministic combat rolls, mission rewards, damage, injuries, and combat experience;
+- rank points and promotion from F toward E, D, and C;
+- observer logs explaining why every autonomous choice was made.
 
-The simulation now runs Ren's autonomous life across a small playable Tokyo map and tracks:
-
-- current day and time slot;
-- money, health, energy, hunger, stress, knowledge, fitness, and reputation;
-- the selected action and the reason it was selected;
-- part-time work, meals, rest, study, and exercise;
-- a chronological event log;
-- identical results when the same random seed is reused.
-- five distinct locations with rail fares and location-aware activity logs;
-- a Kita-Senju konbini job, apartment rent deadline, and unpaid arrears;
-- changing gate alert pressure and gate encounters;
-- a scripted first awakening assessment that grants Rank F and Threat Sense.
+The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
 
 ## Project layout
 
 ```text
 src/awakened_zero_rank/
-  models.py       # Character, clock, and event state
+  models.py       # Character, clock, progression, and event state
   world.py        # Tokyo locations, jobs, and transport costs
-  actions.py      # Available actions and their effects
+  actions.py      # Civilian and hunter actions
   agent.py        # Explainable utility-based decision policy
-  simulation.py   # Deterministic engine
+  simulation.py   # Deterministic world, mission, injury, and rank engine
   cli.py          # Observer command-line interface
-tests/             # Determinism and simulation tests
+tests/             # Determinism, world, and progression tests
 ```
 
 ## Run the simulation
@@ -58,10 +49,10 @@ Requires Python 3.11 or newer. From the repository root:
 
 ```bash
 python -m pip install -e .
-python -m awakened_zero_rank --days 7 --seed 42
+python -m awakened_zero_rank --days 12 --seed 42
 ```
 
-The log prints every selected action, its outcome, and the reason behind the decision. Reusing the same seed reproduces the same run.
+The log prints every selected action, its outcome, and its reason. Reusing the same seed reproduces the same story.
 
 Run the tests with:
 
@@ -69,9 +60,19 @@ Run the tests with:
 python -m unittest discover -s tests -v
 ```
 
+## V3 development workflow
+
+1. **Deterministic simulation core** — clock, calendar, character state, needs, actions, and event log.
+2. **Autonomous decision system** — utility scoring, goals, memory, and explainable choices.
+3. **Japan world systems** — districts, economy, jobs, rent, gates, guilds, and hunter ranks.
+4. **Dashboard** — observe time, status, decisions, relationships, and story events.
+5. **Persistence and evaluation** — save/load, seeded batch runs, survival and progression metrics.
+6. **Learning experiment** — train an RL policy separately and compare it with the baseline agent.
+7. **Narrative layer** — turn important simulation events into readable scenes and chronicles.
+
 ## Learning strategy
 
-Reinforcement learning is not the entire simulation. The simulation is the environment; an RL agent is one possible decision-maker inside it. We keep a transparent utility-based baseline so learned behavior can be measured against something stable, debuggable, and fun.
+Reinforcement learning is not the entire simulation. The simulation is the environment; an RL agent is one possible decision-maker inside it. We retain a transparent utility baseline so learned behavior can be measured against something stable, debuggable, and fun.
 
 ## Status
 
@@ -79,4 +80,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 2: Tokyo locations, transport, job economy, rent, gates, and awakening.
 
-Next: add guild registration, hunter work, combat readiness, gate missions, injuries, and rank progression.
+✅ Milestone 3: guild registration, hunter work, combat readiness, gate missions, injuries, rewards, and rank progression.
+
+Next: memories, goals, relationships, and recurring characters that make Ren's choices and story evolve over time.
