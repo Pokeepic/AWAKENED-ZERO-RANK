@@ -467,8 +467,9 @@ class SimulationTests(unittest.TestCase):
 
     def test_milestone_13_state_survives_save_and_load(self) -> None:
         simulation = Simulation(seed=42)
-        simulation.run(28)
+        simulation.run(29)
         simulation.step("Prepare portal")
+        self.assertIsNotNone(simulation.state.active_portal_plan)
         with TemporaryDirectory() as directory:
             path = Path(directory) / "milestone-13.json"
             save_simulation(simulation, path)
