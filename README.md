@@ -31,6 +31,10 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - bounded, importance-ranked memories of awakenings, missions, rent, and social moments;
 - recurring guild clerk Aiko Sato, with trust, familiarity, and meeting history;
 - autonomous social time that can reduce stress and deepen relationships.
+- a Kita-Senju hunter supply shop with autonomous, budget-aware purchases;
+- inventory, equipped weapons and armor, and automatic consumable use;
+- equipment bonuses that affect combat readiness and incoming damage;
+- named gate encounters with distinct difficulty, rewards, rank points, and danger.
 
 The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
 
@@ -88,4 +92,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 4: changing goals, important memories, relationships, and recurring characters.
 
-Next: equipment, inventory, shops, consumables, mission difficulty, and richer gate encounters.
+✅ Milestone 5: equipment, inventory, shops, consumables, mission difficulty, and richer gate encounters.
+
+Next: save/load persistence, batch evaluation, progression metrics, and balance reports.

@@ -2,6 +2,7 @@ import unittest
 
 from awakened_zero_rank.models import TimeSlot
 from awakened_zero_rank.simulation import Simulation
+from awakened_zero_rank.world import ITEMS
 
 
 class SimulationTests(unittest.TestCase):
@@ -97,6 +98,46 @@ class SimulationTests(unittest.TestCase):
         simulation = Simulation(seed=3)
         simulation.run(13)
         self.assertIn("Rank E", simulation.state.protagonist.current_goal)
+
+    def test_shop_purchases_and_equips_hunter_gear(self) -> None:
+        simulation = Simulation(seed=42)
+        events = simulation.run(160)
+        p = simulation.state.protagonist
+        self.assertTrue(any(event.action == "Visit hunter shop" for event in events))
+        self.assertGreater(simulation.state.shop_visits, 0)
+        self.assertIsNotNone(p.equipped_weapon)
+        self.assertIn(p.equipped_weapon, ITEMS)
+
+    def test_equipment_increases_combat_readiness(self) -> None:
+        simulation = Simulation(seed=1)
+        p = simulation.state.protagonist
+        baseline = p.combat_readiness
+        p.equipped_weapon = "Field Knife"
+        p.equipped_armor = "Padded Jacket"
+        self.assertEqual(p.combat_readiness, min(100, baseline + 12))
+
+    def test_gate_logs_name_a_specific_encounter(self) -> None:
+        events = Simulation(seed=42).run(160)
+        mission_logs = [event.outcome for event in events if event.action == "Gate mission"]
+        self.assertTrue(mission_logs)
+        self.assertTrue(any(encounter in outcome for outcome in mission_logs for encounter in (
+            "Tunnel Slime Nest", "Goblin Scavenger Pack", "Armored Fang Boar"
+        )))
+
+    def test_consumables_are_used_and_removed_safely(self) -> None:
+        simulation = Simulation(seed=4)
+        p = simulation.state.protagonist
+        p.guild_registered = True
+        p.health = 40
+        p.energy = 35
+        p.add_item("Healing Gel")
+        p.add_item("Energy Drink")
+        simulation.state.gate_alert_level = 2
+        outcome = simulation._resolve_gate_mission()
+        self.assertIn("Healing Gel", outcome)
+        self.assertIn("Energy Drink", outcome)
+        self.assertEqual(p.item_count("Healing Gel"), 0)
+        self.assertEqual(p.item_count("Energy Drink"), 0)
 
 
 if __name__ == "__main__":

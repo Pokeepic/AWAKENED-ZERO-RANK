@@ -4,7 +4,7 @@ import random
 
 from .agent import UtilityAgent
 from .models import Event, Memory, Relationship, WorldState
-from .world import travel_cost
+from .world import GATE_ENCOUNTERS, ITEMS, travel_cost
 
 
 RANK_THRESHOLDS = ((90, "C"), (60, "D"), (30, "E"))
@@ -29,6 +29,8 @@ class Simulation:
             return special
         action, reason = self.agent.choose(protagonist, clock.slot, self.state.gate_alert_level)
         outcome = self._resolve_gate_mission() if action.name == "Gate mission" else action.apply(protagonist)
+        if action.name == "Visit hunter shop":
+            self.state.shop_visits += 1
         self._apply_passive_needs()
         protagonist.clamp()
         event = Event(clock.day, clock.slot, action.name, reason, outcome)
@@ -126,15 +128,28 @@ class Simulation:
         p.money -= fare
         p.location = "Adachi Gate Zone"
         p.missions_attempted += 1
-        difficulty = 43 + self.state.gate_alert_level * 6
+        alert = self.state.gate_alert_level
+        maximum_index = min(len(GATE_ENCOUNTERS) - 1, max(0, alert - 1))
+        encounter = GATE_ENCOUNTERS[self.rng.randint(0, maximum_index)]
+        difficulty = encounter.difficulty + alert * 3
+        preparation = []
+        if p.health < 68 and p.consume_item("Healing Gel"):
+            healed = min(22, 100 - p.health)
+            p.health += healed
+            preparation.append(f"used Healing Gel (+{healed} health)")
+        if p.energy < 48 and p.consume_item("Energy Drink"):
+            restored = min(18, 100 - p.energy)
+            p.energy += restored
+            preparation.append(f"used Energy Drink (+{restored} energy)")
         roll = p.combat_readiness + self.rng.randint(-12, 12)
         p.energy -= 28
         p.hunger += 18
         p.stress += 12
-        self.state.gate_alert_level = max(0, self.state.gate_alert_level - 2)
+        self.state.gate_alert_level = max(0, alert - 2)
+        prep_text = f" Preparation: {', '.join(preparation)}." if preparation else ""
         if roll >= difficulty:
-            reward = 5_000 + difficulty * 40
-            points = 10 + self.state.gate_alert_level * 2
+            reward = encounter.reward
+            points = encounter.rank_points
             p.money += reward
             p.rank_points += points
             p.combat_experience += 5
@@ -142,14 +157,15 @@ class Simulation:
             p.reputation += 2
             promotion = self._promote_if_eligible()
             suffix = f" Promoted to Rank {promotion}!" if promotion else ""
-            return (f"Cleared a low-rank gate (roll {roll} vs {difficulty}) for ¥{reward:,} "
-                    f"and {points} rank points; fare cost ¥{fare:,}.{suffix}")
-        damage = max(8, difficulty - roll + 8)
+            return (f"Cleared {encounter.name} (roll {roll} vs {difficulty}) for ¥{reward:,} "
+                    f"and {points} rank points; fare cost ¥{fare:,}.{prep_text}{suffix}")
+        armor_reduction = ITEMS[p.equipped_armor].combat_bonus if p.equipped_armor else 0
+        damage = max(8, difficulty - roll + 8 + encounter.damage_bonus - armor_reduction)
         p.health -= damage
         p.injuries += 1
         p.combat_experience += 2
-        return (f"Retreated from a low-rank gate (roll {roll} vs {difficulty}); suffered "
-                f"{damage} damage and received no reward. Fare cost ¥{fare:,}.")
+        return (f"Retreated from {encounter.name} (roll {roll} vs {difficulty}); suffered "
+                f"{damage} damage and received no reward. Fare cost ¥{fare:,}.{prep_text}")
 
     def _promote_if_eligible(self) -> str | None:
         p = self.state.protagonist

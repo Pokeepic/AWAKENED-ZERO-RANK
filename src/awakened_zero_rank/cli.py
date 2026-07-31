@@ -34,6 +34,8 @@ def main() -> None:
         f"Injuries: {p.injuries} | Ability: {p.ability} | Location: {p.location} | "
         f"Rent arrears: ¥{p.rent_arrears:,}"
     )
+    inventory = ", ".join(f"{name} x{count}" for name, count in sorted(p.inventory.items())) or "empty"
+    print(f"Equipment: {p.equipped_weapon or 'none'} / {p.equipped_armor or 'none'} | Inventory: {inventory}")
     print(f"Current goal: {p.current_goal}")
     if p.relationships:
         print("Relationships: " + "; ".join(

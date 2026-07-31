@@ -49,6 +49,9 @@ class Protagonist:
     missions_attempted: int = 0
     missions_completed: int = 0
     injuries: int = 0
+    inventory: dict[str, int] = field(default_factory=dict)
+    equipped_weapon: str | None = None
+    equipped_armor: str | None = None
     rent_due_day: int = 8
     rent_cost: int = 8_000
     rent_arrears: int = 0
@@ -60,8 +63,30 @@ class Protagonist:
     @property
     def combat_readiness(self) -> int:
         """A readable 0-100 estimate used by both the agent and mission system."""
-        raw = self.health * 0.35 + self.energy * 0.25 + self.fitness * 2 + self.knowledge
+        from .world import ITEMS
+
+        equipment_bonus = sum(
+            ITEMS[item].combat_bonus
+            for item in (self.equipped_weapon, self.equipped_armor)
+            if item is not None
+        )
+        raw = (self.health * 0.35 + self.energy * 0.25 + self.fitness * 2
+               + self.knowledge + equipment_bonus)
         return max(0, min(100, round(raw)))
+
+    def item_count(self, name: str) -> int:
+        return self.inventory.get(name, 0)
+
+    def add_item(self, name: str, quantity: int = 1) -> None:
+        self.inventory[name] = self.item_count(name) + quantity
+
+    def consume_item(self, name: str) -> bool:
+        if self.item_count(name) <= 0:
+            return False
+        self.inventory[name] -= 1
+        if self.inventory[name] == 0:
+            del self.inventory[name]
+        return True
 
     def clamp(self) -> None:
         for stat in ("health", "energy", "hunger", "stress"):
@@ -111,3 +136,4 @@ class WorldState:
     events: list[Event] = field(default_factory=list)
     gate_alert_level: int = 0
     rent_payments: int = 0
+    shop_visits: int = 0

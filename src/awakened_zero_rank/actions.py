@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .models import Protagonist, TimeSlot
-from .world import JOBS, travel_cost
+from .world import ITEMS, JOBS, travel_cost
 
 
 Effect = Callable[[Protagonist], str]
@@ -49,6 +49,27 @@ def _patrol(p: Protagonist) -> str:
 
 def _mission_placeholder(_: Protagonist) -> str:
     return "Gate mission pending resolution."
+
+
+def _shop(p: Protagonist) -> str:
+    fare = _travel(p, "Kita-Senju Hunter Supply")
+    priorities = (
+        "Field Knife" if p.equipped_weapon is None else
+        "Padded Jacket" if p.equipped_armor is None else
+        "Healing Gel" if p.item_count("Healing Gel") < 2 else
+        "Energy Drink"
+    )
+    item = ITEMS[priorities]
+    if p.money < item.price:
+        return f"Browsed hunter supplies but could not afford {item.name}; fare cost ¥{fare:,}."
+    p.money -= item.price
+    p.add_item(item.name)
+    if item.kind == "weapon":
+        p.equipped_weapon = item.name
+    elif item.kind == "armor":
+        p.equipped_armor = item.name
+    p.stress -= 2
+    return f"Bought {item.name} for ¥{item.price:,} and equipped it when possible; fare cost ¥{fare:,}."
 
 
 def _socialize(p: Protagonist) -> str:
@@ -128,6 +149,18 @@ def available_actions(p: Protagonist) -> tuple[Action, ...]:
         ),
     ]
     if p.guild_registered:
+        actions.append(Action(
+            "Visit hunter shop",
+            lambda p, slot, alert: (
+                (48 if p.equipped_weapon is None and p.money >= ITEMS["Field Knife"].price + p.rent_cost else 0)
+                + (42 if p.equipped_weapon and p.equipped_armor is None
+                   and p.money >= ITEMS["Padded Jacket"].price + p.rent_cost else 0)
+                + (28 if p.health < 75 and p.item_count("Healing Gel") == 0 and p.money >= 1_500 else 0)
+                + (8 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON) else -25)
+                - alert * 5
+            ),
+            _shop,
+        ))
         actions.append(Action(
             "Talk with Aiko",
             lambda p, slot, _a: 18 + p.stress * 0.45
