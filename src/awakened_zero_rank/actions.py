@@ -51,6 +51,17 @@ def _mission_placeholder(_: Protagonist) -> str:
     return "Gate mission pending resolution."
 
 
+def _socialize(p: Protagonist) -> str:
+    fare = _travel(p, "Tokyo Hunter Guild")
+    relationship = p.relationships["Aiko Sato"]
+    relationship.change(trust=4, familiarity=6)
+    p.energy -= 8
+    p.stress -= 12
+    p.reputation += 1
+    return (f"Shared a break with Aiko Sato at the guild; trust is now "
+            f"{relationship.trust} and familiarity {relationship.familiarity}. Fare cost ¥{fare:,}.")
+
+
 def _eat(p: Protagonist) -> str:
     cost = 600 if p.money >= 600 else 0
     p.money -= cost
@@ -117,6 +128,14 @@ def available_actions(p: Protagonist) -> tuple[Action, ...]:
         ),
     ]
     if p.guild_registered:
+        actions.append(Action(
+            "Talk with Aiko",
+            lambda p, slot, _a: 18 + p.stress * 0.45
+            + (12 if p.relationships["Aiko Sato"].familiarity < 25 else 0)
+            + (8 if slot is TimeSlot.EVENING else 0)
+            - max(0, 25 - p.energy),
+            _socialize,
+        ))
         actions.append(Action(
             "Guild patrol",
             lambda p, slot, _a: 35 + p.rent_arrears / 100

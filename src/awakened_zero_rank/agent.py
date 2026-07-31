@@ -24,6 +24,7 @@ class UtilityAgent:
     @staticmethod
     def _reason(action: str, p: Protagonist, gate_alert: int) -> str:
         housing_debt = p.rent_arrears or max(0, p.rent_cost - p.money)
+        aiko_familiarity = p.relationships.get("Aiko Sato")
         reasons = {
             "Eat": f"hunger is {p.hunger}/100",
             "Rest": f"energy is {p.energy}/100 and stress is {p.stress}/100",
@@ -32,5 +33,7 @@ class UtilityAgent:
             "Train": f"fitness is only {p.fitness}",
             "Guild patrol": f"safe hunter experience pays while readiness is {p.combat_readiness}/100",
             "Gate mission": f"gate alert is {gate_alert}/3 and readiness is {p.combat_readiness}/100",
+            "Talk with Aiko": (f"stress is {p.stress}/100 and their familiarity is "
+                               f"{aiko_familiarity.familiarity if aiko_familiarity else 0}/100"),
         }
         return reasons[action]

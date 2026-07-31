@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 
 from .agent import UtilityAgent
-from .models import Event, WorldState
+from .models import Event, Memory, Relationship, WorldState
 from .world import travel_cost
 
 
@@ -23,6 +23,8 @@ class Simulation:
         special = self._special_event()
         if special is not None:
             self.state.events.append(special)
+            self._remember(special)
+            self._update_goal()
             clock.advance()
             return special
         action, reason = self.agent.choose(protagonist, clock.slot, self.state.gate_alert_level)
@@ -31,6 +33,8 @@ class Simulation:
         protagonist.clamp()
         event = Event(clock.day, clock.slot, action.name, reason, outcome)
         self.state.events.append(event)
+        self._remember(event)
+        self._update_goal()
         self._update_gate_alert()
         clock.advance()
         return event
@@ -66,11 +70,15 @@ class Simulation:
             p.money -= fare
             p.location = "Tokyo Hunter Guild"
             p.guild_registered = True
+            p.relationships["Aiko Sato"] = Relationship(
+                name="Aiko Sato", role="F-rank guild clerk", trust=3, familiarity=5, meetings=1
+            )
             p.reputation += 1
             self.state.gate_alert_level = 2
-            return Event(clock.day, clock.slot, "Guild registration",
+            event = Event(clock.day, clock.slot, "Guild registration",
                          "newly awakened citizens must register before accepting hunter work (world event)",
-                         f"Received an F-rank license; travel and filing cost ¥{fare:,}.")
+                         f"Aiko Sato issued an F-rank license; travel and filing cost ¥{fare:,}.")
+            return event
 
         if clock.day == p.rent_due_day and clock.slot.value == "Morning":
             paid = min(p.money, p.rent_cost)
@@ -85,6 +93,32 @@ class Simulation:
             return Event(clock.day, clock.slot, "Rent deadline",
                          "the apartment payment was automatically due (world event)", outcome)
         return None
+
+    def _remember(self, event: Event, importance: int | None = None) -> None:
+        p = self.state.protagonist
+        important_actions = {
+            "Awakening assessment": 10, "Guild registration": 8,
+            "Gate mission": 7, "Rent deadline": 8, "Talk with Aiko": 4,
+        }
+        rating = importance if importance is not None else important_actions.get(event.action)
+        if rating is None:
+            return
+        p.memories.append(Memory(event.day, f"{event.action}: {event.outcome}", rating))
+        p.memories.sort(key=lambda memory: (-memory.importance, -memory.day))
+        del p.memories[12:]
+
+    def _update_goal(self) -> None:
+        p = self.state.protagonist
+        if not p.awakened:
+            p.current_goal = "Earn enough yen to pay rent"
+        elif not p.guild_registered:
+            p.current_goal = "Register with the Tokyo Hunter Guild"
+        elif p.rent_arrears:
+            p.current_goal = f"Clear ¥{p.rent_arrears:,} in rent arrears"
+        elif p.hunter_rank == "F":
+            p.current_goal = "Survive gate work and reach Rank E"
+        else:
+            p.current_goal = f"Build a stable life as a Rank {p.hunter_rank} hunter"
 
     def _resolve_gate_mission(self) -> str:
         p = self.state.protagonist

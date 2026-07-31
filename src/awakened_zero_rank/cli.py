@@ -34,3 +34,13 @@ def main() -> None:
         f"Injuries: {p.injuries} | Ability: {p.ability} | Location: {p.location} | "
         f"Rent arrears: ¥{p.rent_arrears:,}"
     )
+    print(f"Current goal: {p.current_goal}")
+    if p.relationships:
+        print("Relationships: " + "; ".join(
+            f"{person.name} ({person.role}) trust {person.trust}, familiarity {person.familiarity}"
+            for person in p.relationships.values()
+        ))
+    if p.memories:
+        print("Key memories:")
+        for memory in p.memories[:5]:
+            print(f"- Day {memory.day}: {memory.summary}")

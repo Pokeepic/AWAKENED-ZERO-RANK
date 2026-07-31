@@ -53,6 +53,9 @@ class Protagonist:
     rent_cost: int = 8_000
     rent_arrears: int = 0
     gates_witnessed: int = 0
+    current_goal: str = "Earn enough yen to pay rent"
+    memories: list[Memory] = field(default_factory=list)
+    relationships: dict[str, Relationship] = field(default_factory=dict)
 
     @property
     def combat_readiness(self) -> int:
@@ -78,6 +81,27 @@ class Event:
             f"Day {self.day:02d} | {self.slot.value:<10} | "
             f"{self.action:<18} | {self.outcome} Why: {self.reason}"
         )
+
+
+@dataclass(frozen=True)
+class Memory:
+    day: int
+    summary: str
+    importance: int
+
+
+@dataclass
+class Relationship:
+    name: str
+    role: str
+    trust: int = 0
+    familiarity: int = 0
+    meetings: int = 0
+
+    def change(self, trust: int, familiarity: int = 1) -> None:
+        self.trust = max(-100, min(100, self.trust + trust))
+        self.familiarity = max(0, min(100, self.familiarity + familiarity))
+        self.meetings += 1
 
 
 @dataclass

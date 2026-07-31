@@ -27,6 +27,10 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - deterministic combat rolls, mission rewards, damage, injuries, and combat experience;
 - rank points and promotion from F toward E, D, and C;
 - observer logs explaining why every autonomous choice was made.
+- a changing personal goal that follows Ren's current life stage;
+- bounded, importance-ranked memories of awakenings, missions, rent, and social moments;
+- recurring guild clerk Aiko Sato, with trust, familiarity, and meeting history;
+- autonomous social time that can reduce stress and deepen relationships.
 
 The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
 
@@ -38,7 +42,7 @@ src/awakened_zero_rank/
   world.py        # Tokyo locations, jobs, and transport costs
   actions.py      # Civilian and hunter actions
   agent.py        # Explainable utility-based decision policy
-  simulation.py   # Deterministic world, mission, injury, and rank engine
+  simulation.py   # Deterministic world, memory, relationship, and progression engine
   cli.py          # Observer command-line interface
 tests/             # Determinism, world, and progression tests
 ```
@@ -82,4 +86,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 3: guild registration, hunter work, combat readiness, gate missions, injuries, rewards, and rank progression.
 
-Next: memories, goals, relationships, and recurring characters that make Ren's choices and story evolve over time.
+✅ Milestone 4: changing goals, important memories, relationships, and recurring characters.
+
+Next: equipment, inventory, shops, consumables, mission difficulty, and richer gate encounters.

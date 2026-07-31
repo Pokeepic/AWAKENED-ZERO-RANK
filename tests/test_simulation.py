@@ -70,6 +70,34 @@ class SimulationTests(unittest.TestCase):
         simulation.run(100)
         self.assertGreaterEqual(simulation.state.protagonist.money, 0)
 
+    def test_recurring_character_is_introduced_at_registration(self) -> None:
+        simulation = Simulation(seed=3)
+        simulation.run(13)
+        relationship = simulation.state.protagonist.relationships["Aiko Sato"]
+        self.assertEqual(relationship.role, "F-rank guild clerk")
+        self.assertGreater(relationship.familiarity, 0)
+
+    def test_social_actions_develop_relationships(self) -> None:
+        simulation = Simulation(seed=42)
+        events = simulation.run(120)
+        relationship = simulation.state.protagonist.relationships["Aiko Sato"]
+        self.assertTrue(any(event.action == "Talk with Aiko" for event in events))
+        self.assertGreater(relationship.meetings, 1)
+        self.assertGreater(relationship.trust, 3)
+
+    def test_important_memories_are_bounded_and_prioritized(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(240)
+        memories = simulation.state.protagonist.memories
+        self.assertLessEqual(len(memories), 12)
+        self.assertTrue(any("Awakening assessment" in memory.summary for memory in memories))
+        self.assertEqual(memories, sorted(memories, key=lambda memory: (-memory.importance, -memory.day)))
+
+    def test_goal_changes_with_life_stage(self) -> None:
+        simulation = Simulation(seed=3)
+        simulation.run(13)
+        self.assertIn("Rank E", simulation.state.protagonist.current_goal)
+
 
 if __name__ == "__main__":
     unittest.main()
