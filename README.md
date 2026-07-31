@@ -48,6 +48,12 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - gradual Threat Sense mastery through patrols and dangerous gate experience;
 - latent **Echo Fragment** growth from meaningful survival exposure rather than repetitive kills;
 - all new development state preserved exactly across saves.
+- a dynamic mood and morale state shaped by Ren's health, exhaustion, stress, and outcomes;
+- transparent dialogue intentions such as asking for guidance, expressing gratitude, offering help,
+  concealing worry, and apologizing;
+- spoken exchanges with Aiko shown directly in Ren's chronicle, including her visible emotional reaction;
+- lasting social consequences through trust, familiarity, affection, tension, and social confidence;
+- bounded dialogue history preserved across save and resume.
 
 The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
 
@@ -63,6 +69,7 @@ src/awakened_zero_rank/
   journal.py      # Ren-centered scene presentation
   persistence.py  # Versioned save/load system
   environment.py  # Seasons, weather conditions, and environmental effects
+  dialogue.py     # Dialogue intentions, NPC reactions, and social consequences
   cli.py          # Protagonist chronicle interface
 tests/             # Determinism, world, and progression tests
 ```
@@ -123,4 +130,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 8: expanded protagonist stats, ability growth, rotating training, and condition-sensitive progression.
 
-Next: richer dialogue intentions, emotional reactions, mood, and relationship consequences.
+✅ Milestone 9: mood, dialogue intentions, visible NPC reactions, and lasting social consequences.
+
+Next: additional recurring characters, relationship networks, and dialogue shaped by conflicting loyalties.

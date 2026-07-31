@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 
 from .agent import UtilityAgent
+from .dialogue import resolve_aiko_dialogue
 from .environment import SUMMER_WEATHER, summer_weather
 from .models import Event, Memory, Relationship, WorldState
 from .world import GATE_ENCOUNTERS, ITEMS, travel_cost
@@ -35,12 +36,21 @@ class Simulation:
         if action.name == "Visit hunter shop" and self._weather().shop_closed:
             outcome = "The hunter supply shop was closed under the severe-weather advisory."
         else:
-            outcome = self._resolve_gate_mission() if action.name == "Gate mission" else action.apply(protagonist)
+            if action.name == "Gate mission":
+                outcome = self._resolve_gate_mission()
+            elif action.name == "Talk with Aiko":
+                travel = action.apply(protagonist)
+                exchange, social_reason = resolve_aiko_dialogue(protagonist, clock.day)
+                outcome = (f'{travel} Ren: “{exchange.ren_line}” Aiko: “{exchange.npc_line}” '
+                           f'She seemed {exchange.reaction}; {social_reason}.')
+            else:
+                outcome = action.apply(protagonist)
         if action.name == "Visit hunter shop":
             self.state.shop_visits += 1
         self._apply_passive_needs()
         self._apply_weather_cost(action.name)
         self._develop_from_action(action.name)
+        self._update_mood(action.name)
         protagonist.clamp()
         event = Event(clock.day, clock.slot, action.name, reason, outcome)
         self.state.events.append(event)
@@ -89,6 +99,28 @@ class Simulation:
         if p.energy <= 10:
             p.health -= 5
             p.stress += 8
+
+    def _update_mood(self, action_name: str) -> None:
+        p = self.state.protagonist
+        if action_name == "Gate mission":
+            p.morale += 3 if p.health >= 55 else -7
+        elif action_name == "Rent deadline":
+            p.morale += 4 if p.rent_arrears == 0 else -12
+        elif action_name in {"Rest", "Eat"}:
+            p.morale += 2
+        if p.health < 35 or p.stress >= 80:
+            p.mood = "Overwhelmed"
+        elif p.energy < 25:
+            p.mood = "Exhausted"
+        elif p.morale >= 70:
+            p.mood = "Hopeful"
+        elif p.morale >= 50:
+            p.mood = "Steady"
+        elif p.stress >= 55:
+            p.mood = "Anxious"
+        else:
+            p.mood = "Uneasy"
+        p.clamp()
 
     def _special_event(self) -> Event | None:
         clock = self.state.clock

@@ -29,7 +29,8 @@ def main() -> None:
     for _ in range(args.days * 4):
         event = simulation.step()
         print(event if args.technical_log else journal_entry(
-            event, simulation.state.weather, simulation.state.temperature_c
+            event, simulation.state.weather, simulation.state.temperature_c,
+            simulation.state.protagonist.mood
         ))
         print()
 
@@ -43,6 +44,7 @@ def main() -> None:
         f"Injuries: {p.injuries} | Ability: {p.ability} | Location: {p.location} | "
         f"Rent arrears: ¥{p.rent_arrears:,}"
     )
+    print(f"Mood: {p.mood} | Morale: {p.morale}/100 | Social confidence: {p.social_confidence}")
     print(
         f"Hunter attributes: STR {p.strength} | AGI {p.agility} | END {p.endurance} | "
         f"PER {p.perception} | MANA {p.mana} | LUCK {p.luck} | "
@@ -54,7 +56,8 @@ def main() -> None:
     print(f"Current goal: {p.current_goal}")
     if p.relationships:
         print("Relationships: " + "; ".join(
-            f"{person.name} ({person.role}) trust {person.trust}, familiarity {person.familiarity}"
+            f"{person.name} ({person.role}) trust {person.trust}, familiarity {person.familiarity}, "
+            f"affection {person.affection}, tension {person.tension}"
             for person in p.relationships.values()
         ))
     if p.memories:

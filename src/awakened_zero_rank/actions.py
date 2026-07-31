@@ -74,13 +74,9 @@ def _shop(p: Protagonist) -> str:
 
 def _socialize(p: Protagonist) -> str:
     fare = _travel(p, "Tokyo Hunter Guild")
-    relationship = p.relationships["Aiko Sato"]
-    relationship.change(trust=4, familiarity=6)
     p.energy -= 8
     p.stress -= 12
-    p.reputation += 1
-    return (f"Shared a break with Aiko Sato at the guild; trust is now "
-            f"{relationship.trust} and familiarity {relationship.familiarity}. Fare cost ¥{fare:,}.")
+    return f"Reached the guild break room; fare cost ¥{fare:,}."
 
 
 def _eat(p: Protagonist) -> str:

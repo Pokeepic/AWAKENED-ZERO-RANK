@@ -67,6 +67,10 @@ class Protagonist:
     rent_arrears: int = 0
     gates_witnessed: int = 0
     current_goal: str = "Earn enough yen to pay rent"
+    mood: str = "Uneasy"
+    morale: int = 45
+    social_confidence: int = 3
+    dialogue_history: list[DialogueExchange] = field(default_factory=list)
     memories: list[Memory] = field(default_factory=list)
     relationships: dict[str, Relationship] = field(default_factory=dict)
 
@@ -106,6 +110,8 @@ class Protagonist:
         for stat in ("strength", "agility", "endurance", "perception", "mana", "luck"):
             setattr(self, stat, max(1, min(100, getattr(self, stat))))
         self.ability_mastery = max(0, min(100, self.ability_mastery))
+        self.morale = max(0, min(100, self.morale))
+        self.social_confidence = max(0, min(100, self.social_confidence))
 
 
 @dataclass(frozen=True)
@@ -137,11 +143,24 @@ class Relationship:
     trust: int = 0
     familiarity: int = 0
     meetings: int = 0
+    affection: int = 0
+    tension: int = 0
+    last_reaction: str = ""
 
     def change(self, trust: int, familiarity: int = 1) -> None:
         self.trust = max(-100, min(100, self.trust + trust))
         self.familiarity = max(0, min(100, self.familiarity + familiarity))
         self.meetings += 1
+
+
+@dataclass(frozen=True)
+class DialogueExchange:
+    day: int
+    intention: str
+    ren_line: str
+    npc_name: str
+    npc_line: str
+    reaction: str
 
 
 @dataclass

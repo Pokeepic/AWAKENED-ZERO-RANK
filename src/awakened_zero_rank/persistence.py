@@ -5,7 +5,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from .models import Clock, Event, Memory, Protagonist, Relationship, TimeSlot, WorldState
+from .models import Clock, DialogueExchange, Event, Memory, Protagonist, Relationship, TimeSlot, WorldState
 
 
 SAVE_VERSION = 1
@@ -46,6 +46,9 @@ def load_simulation(path: str | Path) -> "Simulation":
         name: Relationship(**relationship)
         for name, relationship in protagonist_data["relationships"].items()
     }
+    protagonist_data["dialogue_history"] = [
+        DialogueExchange(**exchange) for exchange in protagonist_data.get("dialogue_history", [])
+    ]
     state = WorldState(
         clock=Clock(day=raw["clock"]["day"], slot=TimeSlot(raw["clock"]["slot"])),
         protagonist=Protagonist(**protagonist_data),

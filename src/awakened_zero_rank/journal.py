@@ -11,12 +11,15 @@ ATMOSPHERE = {
 }
 
 
-def journal_entry(event: Event, weather: str | None = None, temperature_c: int | None = None) -> str:
+def journal_entry(event: Event, weather: str | None = None, temperature_c: int | None = None,
+                  mood: str | None = None) -> str:
     """Render an event as a compact scene centered on Ren's experience."""
     opening = ATMOSPHERE[event.slot.value]
     if weather is not None:
         opening += f" It is {weather.lower()}"
         opening += f" and {temperature_c}°C." if temperature_c is not None else "."
+    if mood is not None:
+        opening += f" I feel {mood.lower()}."
     thoughts = {
         "Part-time work": "Rent will not wait for me.",
         "Eat": "I cannot think clearly on an empty stomach.",

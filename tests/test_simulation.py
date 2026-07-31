@@ -3,7 +3,8 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 
 from awakened_zero_rank.journal import journal_entry
-from awakened_zero_rank.models import TimeSlot
+from awakened_zero_rank.dialogue import choose_intention, resolve_aiko_dialogue
+from awakened_zero_rank.models import Relationship, TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
@@ -256,6 +257,60 @@ class SimulationTests(unittest.TestCase):
             save_simulation(simulation, path)
             restored = load_simulation(path)
         self.assertEqual(restored.state.protagonist, simulation.state.protagonist)
+
+    def test_dialogue_intention_responds_to_ren_condition(self) -> None:
+        simulation = Simulation(seed=1)
+        p = simulation.state.protagonist
+        relationship = Relationship("Aiko Sato", "F-rank guild clerk", trust=3, meetings=1)
+        intention, reason = choose_intention(p, relationship)
+        self.assertEqual(intention.name, "Ask for guidance")
+        self.assertIn("survival", reason)
+        p.health = 35
+        intention, _ = choose_intention(p, relationship)
+        self.assertEqual(intention.name, "Hide worry")
+
+    def test_dialogue_shows_npc_reaction_and_changes_relationship(self) -> None:
+        simulation = Simulation(seed=1)
+        p = simulation.state.protagonist
+        p.morale = 60
+        p.relationships["Aiko Sato"] = Relationship("Aiko Sato", "F-rank guild clerk", trust=20,
+                                                     familiarity=30, meetings=3)
+        before = p.relationships["Aiko Sato"].trust
+        exchange, _ = resolve_aiko_dialogue(p, day=5)
+        self.assertEqual(exchange.intention, "Offer support")
+        self.assertEqual(exchange.reaction, "quietly touched")
+        self.assertGreater(p.relationships["Aiko Sato"].trust, before)
+        self.assertGreater(p.relationships["Aiko Sato"].affection, 0)
+
+    def test_hiding_injury_can_create_social_tension(self) -> None:
+        simulation = Simulation(seed=1)
+        p = simulation.state.protagonist
+        p.health = 30
+        p.relationships["Aiko Sato"] = Relationship("Aiko Sato", "F-rank guild clerk", trust=2)
+        exchange, _ = resolve_aiko_dialogue(p, day=5)
+        relationship = p.relationships["Aiko Sato"]
+        self.assertEqual(exchange.reaction, "unconvinced")
+        self.assertLess(relationship.trust, 2)
+        self.assertGreater(relationship.tension, 0)
+
+    def test_dialogue_history_is_bounded_and_saved(self) -> None:
+        simulation = Simulation(seed=1)
+        p = simulation.state.protagonist
+        p.relationships["Aiko Sato"] = Relationship("Aiko Sato", "F-rank guild clerk", trust=20,
+                                                     familiarity=30, meetings=3)
+        for day in range(25):
+            resolve_aiko_dialogue(p, day)
+        self.assertEqual(len(p.dialogue_history), 20)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "dialogue.json"
+            save_simulation(simulation, path)
+            restored = load_simulation(path)
+        self.assertEqual(restored.state.protagonist, p)
+
+    def test_journal_can_show_current_mood(self) -> None:
+        event = Simulation(seed=3).step()
+        entry = journal_entry(event, mood="Hopeful")
+        self.assertIn("I feel hopeful.", entry)
 
 
 if __name__ == "__main__":
