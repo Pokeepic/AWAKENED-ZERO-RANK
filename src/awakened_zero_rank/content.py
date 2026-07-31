@@ -49,6 +49,25 @@ NPCS = {
                                    "friendly merchant banter", "keep his shop independent"),
 }
 
+# Recurring weekly routines. NPCs can still deviate when a delayed consequence calls them away.
+NPC_SCHEDULES = {
+    "Aiko Sato": {"Morning": "Tokyo Hunter Guild", "Afternoon": "Tokyo Hunter Guild",
+                   "Evening": "Kita-Senju Station", "Late Night": "Home"},
+    "Daichi Mori": {"Morning": "Adachi Gate Zone", "Afternoon": "Tokyo Hunter Guild",
+                     "Evening": "Arakawa Riverbank", "Late Night": "Home"},
+    "Mei Kuroda": {"Morning": "Ueno Library", "Afternoon": "Adachi Gate Zone",
+                    "Evening": "Ueno Library", "Late Night": "Shinjuku Guild Annex"},
+    "Haruto Ishikawa": {"Morning": "Akihabara Market", "Afternoon": "Akihabara Market",
+                         "Evening": "Kita-Senju Station", "Late Night": "Home"},
+}
+
+
+def scheduled_location(name: str, slot: str, day: int) -> str:
+    """Return a stable routine location, including a weekly day off."""
+    if day % 7 == 0 and name in {"Aiko Sato", "Haruto Ishikawa"}:
+        return "Asakusa Shrine District"
+    return NPC_SCHEDULES[name][slot]
+
 DIALOGUE_COMPONENTS = {
     "intent": ("guidance", "gratitude", "support", "honesty", "apology", "humor", "warning"),
     "mood": ("uneasy", "exhausted", "hopeful", "anxious", "steady"),

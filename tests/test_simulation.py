@@ -387,6 +387,42 @@ class SimulationTests(unittest.TestCase):
     def test_npc_content_scales_without_flat_line_dump(self) -> None:
         self.assertGreaterEqual(npc_context_count(), 4_000)
 
+    def test_npc_schedules_change_with_time_and_weekly_day_off(self) -> None:
+        from awakened_zero_rank.content import scheduled_location
+        self.assertEqual(scheduled_location("Aiko Sato", "Morning", 6), "Tokyo Hunter Guild")
+        self.assertEqual(scheduled_location("Aiko Sato", "Morning", 7),
+                         "Asakusa Shrine District")
+
+    def test_gate_work_creates_persistent_investigation_progress(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(180)
+        self.assertTrue(simulation.state.portal_investigations)
+        self.assertTrue(all(record.progress > 0 and record.clues_found
+                            for record in simulation.state.portal_investigations.values()))
+
+    def test_portal_decision_resolves_as_delayed_multi_character_consequence(self) -> None:
+        simulation = Simulation(seed=42)
+        events = simulation.run(220)
+        consequences = [event for event in events
+                        if event.action == "Investigation consequence"]
+        self.assertTrue(consequences)
+        self.assertTrue(any("trust" in event.outcome for event in consequences))
+
+    def test_schedule_overlap_can_create_autonomous_social_encounter(self) -> None:
+        simulation = Simulation(seed=42)
+        events = simulation.run(160)
+        self.assertTrue(any("chose to approach me" in event.outcome for event in events))
+        self.assertTrue(simulation.state.social_encounters_seen)
+
+    def test_investigations_schedules_and_consequences_survive_save(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(140)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "milestone-12.json"
+            save_simulation(simulation, path)
+            restored = load_simulation(path)
+        self.assertEqual(restored.state, simulation.state)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -165,6 +165,25 @@ class DialogueExchange:
 
 
 @dataclass
+class PortalInvestigation:
+    portal_name: str
+    clues_found: list[str] = field(default_factory=list)
+    progress: int = 0
+    risk: int = 0
+    last_investigated_day: int = 0
+    reported_to: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class DelayedConsequence:
+    due_day: int
+    source: str
+    people: tuple[str, ...]
+    description: str
+    resolved: bool = False
+
+
+@dataclass
 class WorldState:
     clock: Clock = field(default_factory=Clock)
     protagonist: Protagonist = field(default_factory=Protagonist)
@@ -179,3 +198,7 @@ class WorldState:
     calendar_events_seen: list[str] = field(default_factory=list)
     relationship_network: dict[str, dict[str, int]] = field(default_factory=dict)
     discovered_portals: list[str] = field(default_factory=list)
+    portal_investigations: dict[str, PortalInvestigation] = field(default_factory=dict)
+    npc_locations: dict[str, str] = field(default_factory=dict)
+    delayed_consequences: list[DelayedConsequence] = field(default_factory=list)
+    social_encounters_seen: list[str] = field(default_factory=list)

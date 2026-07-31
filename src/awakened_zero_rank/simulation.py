@@ -4,9 +4,10 @@ import random
 
 from .agent import UtilityAgent
 from .dialogue import contextual_line, resolve_aiko_dialogue
-from .content import NPCS, PORTALS
+from .content import NPCS, PORTALS, scheduled_location
 from .environment import SUMMER_WEATHER, summer_weather
-from .models import Event, Memory, Relationship, WorldState
+from .models import (DelayedConsequence, Event, Memory, PortalInvestigation,
+                     Relationship, WorldState)
 from .world import GATE_ENCOUNTERS, ITEMS, travel_cost
 
 
@@ -24,6 +25,7 @@ class Simulation:
         clock = self.state.clock
         protagonist = self.state.protagonist
         self._update_weather()
+        self._update_npc_schedules()
         special = self._special_event()
         if special is not None:
             self.state.events.append(special)
@@ -54,6 +56,9 @@ class Simulation:
                            f'She seemed {exchange.reaction}; {social_reason}.')
             else:
                 outcome = action.apply(protagonist)
+                social = self._scheduled_social_encounter(action.name)
+                if social:
+                    outcome += f" {social}"
         if action.name == "Visit hunter shop":
             self.state.shop_visits += 1
         self._apply_passive_needs()
@@ -209,7 +214,77 @@ class Simulation:
                        f"Paid ¥{paid:,}; ¥{unpaid:,} became rent arrears.")
             return Event(clock.day, clock.slot, "Rent deadline",
                          "the apartment payment was automatically due (world event)", outcome)
+
+        consequence = next((item for item in self.state.delayed_consequences
+                            if not item.resolved and item.due_day <= clock.day), None)
+        if consequence is not None:
+            index = self.state.delayed_consequences.index(consequence)
+            self.state.delayed_consequences[index] = DelayedConsequence(
+                consequence.due_day, consequence.source, consequence.people,
+                consequence.description, True)
+            reactions = []
+            for name in consequence.people:
+                relationship = p.relationships.get(name)
+                if relationship is not None:
+                    trust_change = 2 if "verified" in consequence.description else -2
+                    relationship.change(trust_change, 1)
+                    reactions.append(f"{name}'s trust {'rose' if trust_change > 0 else 'fell'}")
+            return Event(clock.day, clock.slot, "Investigation consequence",
+                         "an earlier portal decision finally affected other people (delayed event)",
+                         f"{consequence.description} {'; '.join(reactions)}.")
         return None
+
+    def _update_npc_schedules(self) -> None:
+        clock = self.state.clock
+        self.state.npc_locations = {
+            name: scheduled_location(name, clock.slot.value, clock.day)
+            for name in NPCS
+        }
+
+    def _scheduled_social_encounter(self, action_name: str) -> str:
+        """Resolve one autonomous conversation when Ren's routine overlaps an NPC schedule."""
+        p = self.state.protagonist
+        day = self.state.clock.day
+        for name, location in self.state.npc_locations.items():
+            key = f"{day}:{name}"
+            relationship = p.relationships.get(name)
+            if (relationship is None or location != p.location or
+                    key in self.state.social_encounters_seen or action_name == "Rest"):
+                continue
+            context = "portal" if action_name in {"Gate mission", "Guild patrol"} else "routine"
+            line = contextual_line(name, context, relationship)
+            trust_change = 2 if p.mood in {"Hopeful", "Steady"} else 1
+            relationship.change(trust_change, 2)
+            self.state.social_encounters_seen.append(key)
+            return (f"At {location}, {name} chose to approach me: “{line}” "
+                    f"The brief exchange made us more familiar.")
+        return ""
+
+    def _record_portal_investigation(self, portal) -> tuple[PortalInvestigation, bool]:
+        investigation = self.state.portal_investigations.get(portal.name)
+        created = investigation is None
+        if investigation is None:
+            investigation = PortalInvestigation(portal.name, risk=1)
+            self.state.portal_investigations[portal.name] = investigation
+        if portal.clue not in investigation.clues_found:
+            investigation.clues_found.append(portal.clue)
+            investigation.progress = min(100, investigation.progress + 25)
+        else:
+            investigation.progress = min(100, investigation.progress + 8)
+        investigation.risk = min(100, investigation.risk + 4)
+        investigation.last_investigated_day = self.state.clock.day
+        return investigation, created
+
+    def _queue_portal_consequence(self, portal_name: str, progress: int) -> None:
+        if any(item.source == portal_name for item in self.state.delayed_consequences):
+            return
+        people = tuple(name for name in ("Mei Kuroda", "Daichi Mori", "Aiko Sato")
+                       if name in self.state.protagonist.relationships)
+        description = (f"Evidence from {portal_name} was verified and changed the guild patrol route"
+                       if progress >= 25 else
+                       f"An incomplete report from {portal_name} sent a patrol toward uncertain ground")
+        self.state.delayed_consequences.append(DelayedConsequence(
+            self.state.clock.day + 2, portal_name, people, description))
 
     def _remember(self, event: Event, importance: int | None = None) -> None:
         p = self.state.protagonist
@@ -252,6 +327,7 @@ class Simulation:
         newly_discovered = portal.name not in self.state.discovered_portals
         if newly_discovered:
             self.state.discovered_portals.append(portal.name)
+        investigation, _ = self._record_portal_investigation(portal)
         weather = self._weather()
         difficulty = encounter.difficulty + alert * 3 + weather.gate_difficulty
         environmental_difficulty = {
@@ -295,11 +371,13 @@ class Simulation:
                 p.ability = "Threat Sense / Echo Fragment"
             clue = f" Discovered {portal.name}: {portal.clue}." if newly_discovered else ""
             social = self._portal_social_reaction(portal.name)
+            self._queue_portal_consequence(portal.name, investigation.progress)
             return (f"Cleared {encounter.name} inside {portal.name} ({portal.environment}; "
                     f"hazard: {portal.hazard}) in {weather.name.lower()} weather "
                     f"(roll {roll} vs {difficulty}) for ¥{reward:,} "
                     f"and {points} rank points; gained {exposure} ability exposure; "
-                    f"fare cost ¥{fare:,}.{prep_text}{clue}{social}{suffix}{echo}")
+                    f"fare cost ¥{fare:,}.{prep_text}{clue} Investigation reached "
+                    f"{investigation.progress}%.{social}{suffix}{echo}")
         armor_reduction = ITEMS[p.equipped_armor].combat_bonus if p.equipped_armor else 0
         damage = max(8, difficulty - roll + 8 + encounter.damage_bonus - armor_reduction)
         p.health -= damage
@@ -308,10 +386,12 @@ class Simulation:
         p.ability_mastery += 1
         clue = f" Discovered {portal.name}: {portal.clue}." if newly_discovered else ""
         social = self._portal_social_reaction(portal.name)
+        self._queue_portal_consequence(portal.name, investigation.progress)
         return (f"Retreated from {encounter.name} inside {portal.name} ({portal.environment}; "
                 f"hazard: {portal.hazard}) in {weather.name.lower()} weather "
                 f"(roll {roll} vs {difficulty}); suffered "
-                f"{damage} damage and received no reward. Fare cost ¥{fare:,}.{prep_text}{clue}{social}")
+                f"{damage} damage and received no reward. Fare cost ¥{fare:,}.{prep_text}{clue} "
+                f"Investigation reached {investigation.progress}%.{social}")
 
     def _portal_social_reaction(self, portal_name: str) -> str:
         """Let discoveries change relationships and produce an in-world response."""

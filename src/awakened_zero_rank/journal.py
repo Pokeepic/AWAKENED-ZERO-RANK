@@ -34,6 +34,7 @@ def journal_entry(event: Event, weather: str | None = None, temperature_c: int |
         "Visit hunter shop": "Every item costs money I may need for rent.",
         "Guild patrol": "It is safer than a gate, but danger still has a scent.",
         "Tanabata evening": "For tonight, wishes seem more real than ranks.",
+        "Investigation consequence": "Something I noticed days ago has finally reached other lives.",
     }
     thought = ("Another person has entered the part of my life shaped by gates."
                if event.action.startswith("Meet ") else

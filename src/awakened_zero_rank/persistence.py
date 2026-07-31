@@ -5,7 +5,8 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from .models import Clock, DialogueExchange, Event, Memory, Protagonist, Relationship, TimeSlot, WorldState
+from .models import (Clock, DelayedConsequence, DialogueExchange, Event, Memory,
+                     PortalInvestigation, Protagonist, Relationship, TimeSlot, WorldState)
 
 
 SAVE_VERSION = 1
@@ -65,6 +66,19 @@ def load_simulation(path: str | Path) -> "Simulation":
         calendar_events_seen=raw.get("calendar_events_seen", []),
         relationship_network=raw.get("relationship_network", {}),
         discovered_portals=raw.get("discovered_portals", []),
+        portal_investigations={
+            name: PortalInvestigation(**investigation)
+            for name, investigation in raw.get("portal_investigations", {}).items()
+        },
+        npc_locations=raw.get("npc_locations", {}),
+        delayed_consequences=[
+            DelayedConsequence(
+                due_day=item["due_day"], source=item["source"],
+                people=tuple(item["people"]), description=item["description"],
+                resolved=item.get("resolved", False),
+            ) for item in raw.get("delayed_consequences", [])
+        ],
+        social_encounters_seen=raw.get("social_encounters_seen", []),
     )
     simulation = Simulation(seed=data["seed"], state=state)
     simulation.rng.setstate(_tuplify(data["rng_state"]))
