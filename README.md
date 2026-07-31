@@ -54,6 +54,10 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - spoken exchanges with Aiko shown directly in Ren's chronicle, including her visible emotional reaction;
 - lasting social consequences through trust, familiarity, affection, tension, and social confidence;
 - bounded dialogue history preserved across save and resume.
+- structured dialogue contexts supporting more than 1,000 meaningful social states;
+- a reusable catalogue of Tokyo locations and varied portal environments;
+- a dependency-free learning adapter with numeric observations and valid-action masks;
+- external policy actions and a shaped evaluation reward kept outside Ren's chronicle.
 
 The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
 
@@ -70,6 +74,8 @@ src/awakened_zero_rank/
   persistence.py  # Versioned save/load system
   environment.py  # Seasons, weather conditions, and environmental effects
   dialogue.py     # Dialogue intentions, NPC reactions, and social consequences
+  content.py      # Scalable dialogue, Tokyo, and portal content catalogues
+  learning.py     # RL-ready observations, actions, rewards, and baseline adapter
   cli.py          # Protagonist chronicle interface
 tests/             # Determinism, world, and progression tests
 ```
@@ -132,4 +138,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 9: mood, dialogue intentions, visible NPC reactions, and lasting social consequences.
 
-Next: additional recurring characters, relationship networks, and dialogue shaped by conflicting loyalties.
+✅ Milestone 10: scalable narrative content and an RL-ready evaluation interface.
+
+Next: additional recurring characters, relationship networks, conflicting loyalties, and portal discovery state.

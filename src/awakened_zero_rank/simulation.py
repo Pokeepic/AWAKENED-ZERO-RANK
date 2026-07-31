@@ -19,7 +19,7 @@ class Simulation:
         self.rng = random.Random(seed)
         self.agent = UtilityAgent(self.rng)
 
-    def step(self) -> Event:
+    def step(self, selected_action: str | None = None) -> Event:
         clock = self.state.clock
         protagonist = self.state.protagonist
         self._update_weather()
@@ -30,9 +30,17 @@ class Simulation:
             self._update_goal()
             clock.advance()
             return special
-        action, reason = self.agent.choose(
-            protagonist, clock.slot, self.state.gate_alert_level, self.state.weather
-        )
+        if selected_action is None:
+            action, reason = self.agent.choose(
+                protagonist, clock.slot, self.state.gate_alert_level, self.state.weather
+            )
+        else:
+            from .actions import available_actions
+            choices = {candidate.name: candidate for candidate in available_actions(protagonist)}
+            if selected_action not in choices:
+                raise ValueError(f"Action {selected_action!r} is unavailable")
+            action = choices[selected_action]
+            reason = "a learning policy selected this valid strategy (policy action)"
         if action.name == "Visit hunter shop" and self._weather().shop_closed:
             outcome = "The hunter supply shop was closed under the severe-weather advisory."
         else:

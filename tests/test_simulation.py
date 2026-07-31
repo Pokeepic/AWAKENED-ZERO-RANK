@@ -8,6 +8,8 @@ from awakened_zero_rank.models import Relationship, TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
+from awakened_zero_rank.content import dialogue_context_count, portal_situation_count
+from awakened_zero_rank.learning import ACTION_NAMES, LearningEnvironment
 
 
 class SimulationTests(unittest.TestCase):
@@ -311,6 +313,34 @@ class SimulationTests(unittest.TestCase):
         event = Simulation(seed=3).step()
         entry = journal_entry(event, mood="Hopeful")
         self.assertIn("I feel hopeful.", entry)
+
+    def test_content_system_scales_beyond_one_thousand_dialogue_states(self) -> None:
+        self.assertGreaterEqual(dialogue_context_count(), 1_000)
+        self.assertGreaterEqual(portal_situation_count(), 90)
+
+    def test_learning_observation_and_action_mask_are_stable(self) -> None:
+        environment = LearningEnvironment(seed=5)
+        self.assertEqual(len(environment.observe()), 12)
+        self.assertEqual(len(environment.action_mask()), len(ACTION_NAMES))
+        self.assertEqual(sum(environment.action_mask()), len(environment.valid_actions))
+
+    def test_learning_policy_can_select_a_valid_strategy(self) -> None:
+        environment = LearningEnvironment(seed=5)
+        transition = environment.step("Rest")
+        self.assertEqual(transition.action, "Rest")
+        self.assertIn("policy action", environment.simulation.state.events[-1].reason)
+        self.assertIsInstance(transition.reward, float)
+
+    def test_learning_environment_rejects_locked_actions(self) -> None:
+        environment = LearningEnvironment(seed=5)
+        with self.assertRaises(ValueError):
+            environment.step("Gate mission")
+
+    def test_baseline_adapter_remains_deterministic(self) -> None:
+        first, second = LearningEnvironment(seed=19), LearningEnvironment(seed=19)
+        a = [first.baseline_step() for _ in range(20)]
+        b = [second.baseline_step() for _ in range(20)]
+        self.assertEqual(a, b)
 
 
 if __name__ == "__main__":
