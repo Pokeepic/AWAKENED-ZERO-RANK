@@ -24,34 +24,52 @@ The protagonist begins poor, unranked, and unknown. They act autonomously while 
 6. **Learning experiment** — train an RL policy in a separate environment and compare it with the baseline agent.
 7. **Narrative layer** — turn important simulation events into readable scenes and chronicles.
 
-## First playable milestone
+## Current milestone
 
-The first milestone will let us run one autonomous protagonist for multiple days and inspect:
+The simulation can run one autonomous protagonist for multiple days and tracks:
 
 - current day and time slot;
 - money, health, energy, hunger, stress, knowledge, fitness, and reputation;
 - the selected action and the reason it was selected;
-- part-time work, meals, rest, study, exercise, and early awakening events;
+- part-time work, meals, rest, study, and exercise;
 - a chronological event log;
 - identical results when the same random seed is reused.
 
-## Planned project layout
+## Project layout
 
 ```text
 src/awakened_zero_rank/
-  domain/       # Character, time, actions, world state
-  simulation/   # Engine and event processing
-  agents/       # Utility baseline and later learning policies
-  content/      # Japan locations, jobs, gates, events
-  ui/           # Observer dashboard
-tests/          # Deterministic and balance tests
-docs/           # Design, workflow, and experiment notes
+  models.py       # Character, clock, and event state
+  actions.py      # Available actions and their effects
+  agent.py        # Explainable utility-based decision policy
+  simulation.py   # Deterministic engine
+  cli.py          # Observer command-line interface
+tests/             # Determinism and simulation tests
+```
+
+## Run the simulation
+
+Requires Python 3.11 or newer. From the repository root:
+
+```bash
+python -m pip install -e .
+python -m awakened_zero_rank --days 7 --seed 42
+```
+
+The log prints every selected action, its outcome, and the reason behind the decision. Reusing the same seed reproduces the same run.
+
+Run the tests with:
+
+```bash
+python -m unittest discover -s tests -v
 ```
 
 ## Learning strategy
 
-Reinforcement learning is not the entire simulation. The simulation is the environment; an RL agent is one possible decision-maker inside it. We will keep a transparent utility-based baseline so learned behavior can be measured against something stable, debuggable, and fun.
+Reinforcement learning is not the entire simulation. The simulation is the environment; an RL agent is one possible decision-maker inside it. We keep a transparent utility-based baseline so learned behavior can be measured against something stable, debuggable, and fun.
 
 ## Status
 
-🚧 Foundation initialized. Next: implement and test the deterministic simulation core.
+✅ Milestone 1: deterministic simulation core and explainable baseline agent.
+
+Next: expand the Japan world with locations, living costs, jobs, rent deadlines, and gate-related events.
