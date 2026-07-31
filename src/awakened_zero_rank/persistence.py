@@ -79,6 +79,10 @@ def load_simulation(path: str | Path) -> "Simulation":
             ) for item in raw.get("delayed_consequences", [])
         ],
         social_encounters_seen=raw.get("social_encounters_seen", []),
+        active_portal_plan=raw.get("active_portal_plan"),
+        objective_scores=raw.get("objective_scores", {
+            "survival": 0, "stability": 0, "discovery": 0, "relationships": 0,
+        }),
     )
     simulation = Simulation(seed=data["seed"], state=state)
     simulation.rng.setstate(_tuplify(data["rng_state"]))

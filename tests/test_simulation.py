@@ -9,7 +9,7 @@ from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
-from awakened_zero_rank.learning import ACTION_NAMES, LearningEnvironment
+from awakened_zero_rank.learning import ACTION_NAMES, LearningEnvironment, evaluate_scenario
 
 
 class SimulationTests(unittest.TestCase):
@@ -320,7 +320,7 @@ class SimulationTests(unittest.TestCase):
 
     def test_learning_observation_and_action_mask_are_stable(self) -> None:
         environment = LearningEnvironment(seed=5)
-        self.assertEqual(len(environment.observe()), 14)
+        self.assertEqual(len(environment.observe()), 18)
         self.assertEqual(len(environment.action_mask()), len(ACTION_NAMES))
         self.assertEqual(sum(environment.action_mask()), len(environment.valid_actions))
 
@@ -356,7 +356,7 @@ class SimulationTests(unittest.TestCase):
 
     def test_relationship_network_preserves_conflicting_loyalties(self) -> None:
         simulation = Simulation(seed=42)
-        simulation.run(28)
+        simulation.run(29)
         network = simulation.state.relationship_network
         self.assertGreater(network["Aiko Sato"]["Daichi Mori"], 0)
         self.assertLess(network["Aiko Sato"]["Mei Kuroda"], 0)
@@ -419,6 +419,58 @@ class SimulationTests(unittest.TestCase):
         simulation.run(140)
         with TemporaryDirectory() as directory:
             path = Path(directory) / "milestone-12.json"
+            save_simulation(simulation, path)
+            restored = load_simulation(path)
+        self.assertEqual(restored.state, simulation.state)
+
+    def test_portal_preparation_is_hazard_aware_and_persistent(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(29)
+        event = simulation.step("Prepare portal")
+        plan = simulation.state.portal_investigations[simulation.state.active_portal_plan]
+        self.assertIn(plan.preparation_strategy, {
+            "thermal route kit", "sealed breathing kit", "escape-line mapping",
+            "room-marking protocol", "trail-anchor protocol", "cinder protection",
+        })
+        self.assertGreater(plan.preparation_bonus, 0)
+        self.assertIn("mission readiness", event.outcome)
+
+    def test_prepared_gate_consumes_plan_and_records_cooperation(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(29)
+        simulation.step("Prepare portal")
+        portal_name = simulation.state.active_portal_plan
+        ally = simulation.state.portal_investigations[portal_name].cooperating_npc
+        event = simulation.step("Gate mission")
+        record = simulation.state.portal_investigations[portal_name]
+        self.assertIsNone(simulation.state.active_portal_plan)
+        self.assertEqual(record.preparation_strategy, "Used")
+        self.assertEqual(record.joint_missions, int(ally is not None))
+        if ally:
+            self.assertIn(ally, event.outcome)
+
+    def test_competing_objectives_change_scenario_scores(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(29)
+        before = dict(simulation.state.objective_scores)
+        simulation.step("Prepare portal")
+        after = simulation.state.objective_scores
+        self.assertNotEqual(after, before)
+        self.assertTrue(after["discovery"] > before["discovery"] or
+                        after["survival"] > before["survival"])
+
+    def test_long_horizon_evaluation_is_deterministic(self) -> None:
+        first = evaluate_scenario(seed=19, steps=120)
+        second = evaluate_scenario(seed=19, steps=120)
+        self.assertEqual(first, second)
+        self.assertGreaterEqual(first.investigation_progress, 0)
+
+    def test_milestone_13_state_survives_save_and_load(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(28)
+        simulation.step("Prepare portal")
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "milestone-13.json"
             save_simulation(simulation, path)
             restored = load_simulation(path)
         self.assertEqual(restored.state, simulation.state)

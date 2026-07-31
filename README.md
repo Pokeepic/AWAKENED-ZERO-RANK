@@ -67,6 +67,9 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - autonomous social encounters when Ren's routine naturally overlaps another character;
 - persistent portal investigations with clues, progress, risk, and reporting history;
 - delayed portal consequences that alter later patrols and multiple relationships.
+- hazard-aware portal preparation that carries readiness into the next expedition;
+- NPC cooperation shaped by competing survival and discovery priorities;
+- persistent objective scores and deterministic long-horizon scenario evaluation.
 
 The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
 
@@ -153,4 +156,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 12: persistent portal investigations, NPC schedules, autonomous social encounters, and delayed multi-character consequences.
 
-Next: portal preparation strategies, NPC cooperation, competing objectives, and long-horizon learning scenarios.
+✅ Milestone 13: portal preparation, NPC cooperation, competing objectives, and long-horizon evaluation scenarios.
+
+Next: Gymnasium-compatible training episodes, batch baselines, and the first controlled RL experiment.

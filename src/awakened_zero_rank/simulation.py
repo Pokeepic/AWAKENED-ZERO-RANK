@@ -49,6 +49,8 @@ class Simulation:
         else:
             if action.name == "Gate mission":
                 outcome = self._resolve_gate_mission()
+            elif action.name == "Prepare portal":
+                outcome = self._prepare_portal()
             elif action.name == "Talk with Aiko":
                 travel = action.apply(protagonist)
                 exchange, social_reason = resolve_aiko_dialogue(protagonist, clock.day)
@@ -323,7 +325,9 @@ class Simulation:
         alert = self.state.gate_alert_level
         maximum_index = min(len(GATE_ENCOUNTERS) - 1, max(0, alert - 1))
         encounter = GATE_ENCOUNTERS[self.rng.randint(0, maximum_index)]
-        portal = PORTALS[self.rng.randrange(len(PORTALS))]
+        portal = (next(item for item in PORTALS if item.name == self.state.active_portal_plan)
+                  if self.state.active_portal_plan else
+                  PORTALS[self.rng.randrange(len(PORTALS))])
         newly_discovered = portal.name not in self.state.discovered_portals
         if newly_discovered:
             self.state.discovered_portals.append(portal.name)
@@ -335,6 +339,18 @@ class Simulation:
             "forest": 3, "urban ruin": 4,
         }[portal.environment]
         difficulty += environmental_difficulty
+        preparation_bonus = 0
+        cooperation_text = ""
+        if self.state.active_portal_plan == portal.name:
+            preparation_bonus = investigation.preparation_bonus
+            if investigation.cooperating_npc:
+                investigation.joint_missions += 1
+                cooperation_text = f" {investigation.cooperating_npc} supported the prepared approach."
+                self.state.objective_scores["relationships"] += 2
+            investigation.preparation_bonus = 0
+            investigation.preparation_strategy = "Used"
+            investigation.cooperating_npc = None
+            self.state.active_portal_plan = None
         preparation = []
         if p.health < 68 and p.consume_item("Healing Gel"):
             healed = min(22, 100 - p.health)
@@ -344,7 +360,7 @@ class Simulation:
             restored = min(18, 100 - p.energy)
             p.energy += restored
             preparation.append(f"used Energy Drink (+{restored} energy)")
-        roll = p.combat_readiness + self.rng.randint(-12, 12)
+        roll = p.combat_readiness + preparation_bonus + self.rng.randint(-12, 12)
         p.energy -= 28
         p.hunger += 18
         p.stress += 12
@@ -358,6 +374,9 @@ class Simulation:
             p.combat_experience += 5
             p.missions_completed += 1
             p.reputation += 2
+            self.state.objective_scores["survival"] += 2
+            self.state.objective_scores["stability"] += reward // 1000
+            self.state.objective_scores["discovery"] += 3
             exposure = max(1, encounter.difficulty // 18)
             p.echo_fragments += exposure
             if p.missions_completed % 3 == 0:
@@ -377,13 +396,14 @@ class Simulation:
                     f"(roll {roll} vs {difficulty}) for ¥{reward:,} "
                     f"and {points} rank points; gained {exposure} ability exposure; "
                     f"fare cost ¥{fare:,}.{prep_text}{clue} Investigation reached "
-                    f"{investigation.progress}%.{social}{suffix}{echo}")
+                    f"{investigation.progress}%.{cooperation_text}{social}{suffix}{echo}")
         armor_reduction = ITEMS[p.equipped_armor].combat_bonus if p.equipped_armor else 0
         damage = max(8, difficulty - roll + 8 + encounter.damage_bonus - armor_reduction)
         p.health -= damage
         p.injuries += 1
         p.combat_experience += 2
         p.ability_mastery += 1
+        self.state.objective_scores["survival"] -= 2
         clue = f" Discovered {portal.name}: {portal.clue}." if newly_discovered else ""
         social = self._portal_social_reaction(portal.name)
         self._queue_portal_consequence(portal.name, investigation.progress)
@@ -391,7 +411,48 @@ class Simulation:
                 f"hazard: {portal.hazard}) in {weather.name.lower()} weather "
                 f"(roll {roll} vs {difficulty}); suffered "
                 f"{damage} damage and received no reward. Fare cost ¥{fare:,}.{prep_text}{clue} "
-                f"Investigation reached {investigation.progress}%.{social}")
+                f"Investigation reached {investigation.progress}%.{cooperation_text}{social}")
+
+    def _prepare_portal(self) -> str:
+        """Create one hazard-aware plan, including a compatible available ally."""
+        p = self.state.protagonist
+        if self.state.portal_investigations:
+            investigation = min(
+                self.state.portal_investigations.values(),
+                key=lambda item: (item.progress, -item.risk, item.portal_name),
+            )
+            portal = next(item for item in PORTALS if item.name == investigation.portal_name)
+        else:
+            portal = PORTALS[self.rng.randrange(len(PORTALS))]
+            investigation, _ = self._record_portal_investigation(portal)
+        strategies = {
+            "ice": ("thermal route kit", 10), "swamp": ("sealed breathing kit", 11),
+            "underground": ("escape-line mapping", 8), "urban tower": ("room-marking protocol", 9),
+            "forest": ("trail-anchor protocol", 8), "urban ruin": ("cinder protection", 9),
+        }
+        strategy, bonus = strategies[portal.environment]
+        preferred = "Mei Kuroda" if investigation.progress < 60 else "Daichi Mori"
+        ally = preferred if preferred in p.relationships else (
+            "Aiko Sato" if "Aiko Sato" in p.relationships else None)
+        conflict = ""
+        if ally == "Mei Kuroda":
+            bonus += 3
+            self.state.objective_scores["discovery"] += 3
+            conflict = " Mei prioritized evidence even when the guild preferred a quick clearance."
+        elif ally == "Daichi Mori":
+            bonus += 4
+            self.state.objective_scores["survival"] += 3
+            conflict = " Daichi insisted that team survival outranked collecting every clue."
+        investigation.preparation_strategy = strategy
+        investigation.preparation_bonus = bonus
+        investigation.cooperating_npc = ally
+        investigation.reported_to.extend([ally] if ally and ally not in investigation.reported_to else [])
+        self.state.active_portal_plan = portal.name
+        p.energy -= 10
+        p.stress -= 3
+        ally_text = f" with {ally}" if ally else " alone"
+        return (f"Prepared {strategy}{ally_text} for {portal.name} ({portal.environment}), "
+                f"banking +{bonus} mission readiness.{conflict}")
 
     def _portal_social_reaction(self, portal_name: str) -> str:
         """Let discoveries change relationships and produce an in-world response."""

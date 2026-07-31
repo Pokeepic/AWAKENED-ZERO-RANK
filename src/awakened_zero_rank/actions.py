@@ -51,6 +51,10 @@ def _mission_placeholder(_: Protagonist) -> str:
     return "Gate mission pending resolution."
 
 
+def _prepare_placeholder(_: Protagonist) -> str:
+    return "Portal preparation pending resolution."
+
+
 def _shop(p: Protagonist) -> str:
     fare = _travel(p, "Kita-Senju Hunter Supply")
     priorities = (
@@ -159,6 +163,13 @@ def available_actions(p: Protagonist) -> tuple[Action, ...]:
         ),
     ]
     if p.guild_registered:
+        actions.append(Action(
+            "Prepare portal",
+            lambda p, slot, alert: 24 + alert * 11 + p.knowledge * 0.8
+            + (10 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON) else -8)
+            - max(0, 30 - p.energy),
+            _prepare_placeholder,
+        ))
         actions.append(Action(
             "Visit hunter shop",
             lambda p, slot, alert: (

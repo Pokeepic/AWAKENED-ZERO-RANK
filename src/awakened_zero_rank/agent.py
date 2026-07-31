@@ -46,6 +46,8 @@ class UtilityAgent:
             "Train": f"fitness is only {p.fitness}",
             "Guild patrol": f"safe hunter experience pays while readiness is {p.combat_readiness}/100",
             "Gate mission": f"gate alert is {gate_alert}/3 and readiness is {p.combat_readiness}/100",
+            "Prepare portal": (f"gate alert is {gate_alert}/3 and planning knowledge is "
+                               f"{p.knowledge}"),
             "Talk with Aiko": (f"stress is {p.stress}/100 and their familiarity is "
                                f"{aiko_familiarity.familiarity if aiko_familiarity else 0}/100"),
             "Visit hunter shop": (f"equipment is {p.equipped_weapon or 'no weapon'} and "

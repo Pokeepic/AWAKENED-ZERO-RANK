@@ -172,6 +172,10 @@ class PortalInvestigation:
     risk: int = 0
     last_investigated_day: int = 0
     reported_to: list[str] = field(default_factory=list)
+    preparation_strategy: str = "Unprepared"
+    preparation_bonus: int = 0
+    cooperating_npc: str | None = None
+    joint_missions: int = 0
 
 
 @dataclass(frozen=True)
@@ -202,3 +206,7 @@ class WorldState:
     npc_locations: dict[str, str] = field(default_factory=dict)
     delayed_consequences: list[DelayedConsequence] = field(default_factory=list)
     social_encounters_seen: list[str] = field(default_factory=list)
+    active_portal_plan: str | None = None
+    objective_scores: dict[str, int] = field(default_factory=lambda: {
+        "survival": 0, "stability": 0, "discovery": 0, "relationships": 0,
+    })

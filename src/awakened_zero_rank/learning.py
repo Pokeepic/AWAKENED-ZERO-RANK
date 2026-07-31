@@ -15,7 +15,7 @@ from .simulation import Simulation
 
 ACTION_NAMES = (
     "Eat", "Rest", "Part-time work", "Study", "Train", "Visit hunter shop",
-    "Talk with Aiko", "Guild patrol", "Gate mission",
+    "Talk with Aiko", "Guild patrol", "Prepare portal", "Gate mission",
 )
 
 
@@ -53,6 +53,10 @@ class LearningEnvironment:
             p.morale / 100,
             max(-1, min(1, network_trust / 400)),
             len(state.discovered_portals) / 6,
+            int(state.active_portal_plan is not None),
+            min(1, sum(i.preparation_bonus for i in state.portal_investigations.values()) / 30),
+            min(1, sum(i.joint_missions for i in state.portal_investigations.values()) / 10),
+            min(1, sum(state.objective_scores.values()) / 400),
         )
 
     def action_mask(self) -> tuple[int, ...]:
@@ -80,3 +84,30 @@ class LearningEnvironment:
         progress = p.rank_points * 0.7 + p.missions_completed * 2 + p.ability_mastery * 0.2
         social = sum((r.trust - r.tension) * 0.08 for r in p.relationships.values())
         return survival + stability + progress + social
+
+
+@dataclass(frozen=True)
+class ScenarioResult:
+    seed: int
+    steps: int
+    total_reward: float
+    survived: bool
+    rent_arrears: int
+    missions_completed: int
+    investigation_progress: int
+    network_trust: int
+
+
+def evaluate_scenario(seed: int, steps: int = 240) -> ScenarioResult:
+    """Run a complete deterministic baseline scenario for later RL comparison."""
+    environment = LearningEnvironment(seed)
+    total = 0.0
+    for _ in range(steps):
+        total += environment.baseline_step().reward
+    state, p = environment.simulation.state, environment.simulation.state.protagonist
+    return ScenarioResult(
+        seed=seed, steps=steps, total_reward=round(total, 3), survived=p.health > 0,
+        rent_arrears=p.rent_arrears, missions_completed=p.missions_completed,
+        investigation_progress=sum(i.progress for i in state.portal_investigations.values()),
+        network_trust=sum(r.trust for r in p.relationships.values()),
+    )
