@@ -58,6 +58,11 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - a reusable catalogue of Tokyo locations and varied portal environments;
 - a dependency-free learning adapter with numeric observations and valid-action masks;
 - external policy actions and a shaped evaluation reward kept outside Ren's chronicle.
+- recurring patrol leader Daichi Mori, portal researcher Mei Kuroda, and supply owner Haruto Ishikawa;
+- a relationship network with personal loyalties, cooperation, and friction between NPCs;
+- identity-aware dialogue shaped by each NPC's role, personality, voice, context, and trust;
+- persistent portal discoveries with named environments, hazards, clues, and NPC reactions;
+- 4,200 NPC-specific social contexts built from structured components rather than flat line dumps.
 
 The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
 
@@ -140,4 +145,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 10: scalable narrative content and an RL-ready evaluation interface.
 
-Next: additional recurring characters, relationship networks, conflicting loyalties, and portal discovery state.
+✅ Milestone 11: additional recurring characters, relationship networks, contextual dialogue, and portal discovery state.
+
+Next: persistent portal investigation, NPC schedules, social choices, and delayed multi-character consequences.

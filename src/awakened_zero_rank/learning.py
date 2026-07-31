@@ -42,6 +42,7 @@ class LearningEnvironment:
     def observe(self) -> tuple[float, ...]:
         state, p = self.simulation.state, self.simulation.state.protagonist
         relationship = p.relationships.get("Aiko Sato")
+        network_trust = sum(r.trust for r in p.relationships.values())
         return (
             p.health / 100, p.energy / 100, p.hunger / 100, p.stress / 100,
             min(p.money, 50_000) / 50_000, p.combat_readiness / 100,
@@ -50,6 +51,8 @@ class LearningEnvironment:
             (relationship.trust if relationship else 0) / 100,
             (relationship.tension if relationship else 0) / 100,
             p.morale / 100,
+            max(-1, min(1, network_trust / 400)),
+            len(state.discovered_portals) / 6,
         )
 
     def action_mask(self) -> tuple[int, ...]:

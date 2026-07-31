@@ -14,6 +14,15 @@ class PortalProfile:
     clue: str
 
 
+@dataclass(frozen=True)
+class NPCProfile:
+    name: str
+    role: str
+    personality: str
+    speaking_style: str
+    loyalty: str
+
+
 TOKYO_LOCATIONS = (
     "Adachi Apartment", "Kita-Senju Station", "Ueno Library",
     "Tokyo Hunter Guild", "Arakawa Riverbank", "Adachi Gate Zone",
@@ -28,6 +37,17 @@ PORTALS = (
     PortalProfile("Sunken Courtyard", "swamp", "toxic spores", "guild equipment in the reeds"),
     PortalProfile("Glass Office Labyrinth", "urban tower", "shifting rooms", "Ren's reflection moves late"),
 )
+
+NPCS = {
+    "Aiko Sato": NPCProfile("Aiko Sato", "F-rank guild clerk", "observant and kind",
+                             "careful, practical sentences", "protect novice hunters"),
+    "Daichi Mori": NPCProfile("Daichi Mori", "Rank E patrol leader", "blunt and disciplined",
+                               "short field instructions", "protect his patrol team"),
+    "Mei Kuroda": NPCProfile("Mei Kuroda", "independent portal researcher", "curious and guarded",
+                              "precise questions and dry humor", "discover portal truth"),
+    "Haruto Ishikawa": NPCProfile("Haruto Ishikawa", "hunter supply owner", "warm but shrewd",
+                                   "friendly merchant banter", "keep his shop independent"),
+}
 
 DIALOGUE_COMPONENTS = {
     "intent": ("guidance", "gratitude", "support", "honesty", "apology", "humor", "warning"),
@@ -47,3 +67,8 @@ def portal_situation_count() -> int:
     approaches = ("enter", "investigate", "report", "avoid")
     weather_states = ("clear", "rain", "heatwave", "thunderstorm")
     return len(PORTALS) * len(approaches) * len(weather_states)
+
+
+def npc_context_count() -> int:
+    """Social states available once identity and personal voice matter."""
+    return dialogue_context_count() * len(NPCS)

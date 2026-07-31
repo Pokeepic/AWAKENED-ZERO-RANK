@@ -146,6 +146,7 @@ class Relationship:
     affection: int = 0
     tension: int = 0
     last_reaction: str = ""
+    loyalty: int = 0
 
     def change(self, trust: int, familiarity: int = 1) -> None:
         self.trust = max(-100, min(100, self.trust + trust))
@@ -176,3 +177,5 @@ class WorldState:
     temperature_c: int = 29
     weather_day: int = 0
     calendar_events_seen: list[str] = field(default_factory=list)
+    relationship_network: dict[str, dict[str, int]] = field(default_factory=dict)
+    discovered_portals: list[str] = field(default_factory=list)

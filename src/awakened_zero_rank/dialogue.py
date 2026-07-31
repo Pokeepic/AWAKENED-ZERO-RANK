@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .models import DialogueExchange, Protagonist, Relationship
+from .content import NPCS
 
 
 @dataclass(frozen=True)
@@ -77,3 +78,30 @@ def resolve_aiko_dialogue(p: Protagonist, day: int) -> tuple[DialogueExchange, s
     p.dialogue_history.append(exchange)
     del p.dialogue_history[:-20]
     return exchange, reason
+
+
+def contextual_line(npc_name: str, context: str, relationship: Relationship) -> str:
+    """Create controlled NPC wording from identity, situation, and relationship state."""
+    profile = NPCS[npc_name]
+    trusted = relationship.trust >= 15
+    lines = {
+        "Daichi Mori": {
+            "portal": "Check your exit twice. I won't lose a rookie to curiosity.",
+            "injury": "Sit down. Pride is not field medicine.",
+            "guild": "Be early, carry water, and follow the retreat call.",
+        },
+        "Mei Kuroda": {
+            "portal": ("That clue repeats across gates. Tell me exactly what you sensed."
+                       if trusted else "Describe the anomaly. Leave theories out of it."),
+            "injury": "Your wound pattern may tell us what crossed the threshold.",
+            "guild": "The guild records outcomes. I am interested in causes.",
+        },
+        "Haruto Ishikawa": {
+            "portal": "Bring back your gear intact and I'll call that a good investment.",
+            "injury": "Healing Gel is cheaper than another night in emergency care.",
+            "guild": "Guild badge gets you advice. Yen gets you equipment.",
+        },
+    }
+    if npc_name == "Aiko Sato":
+        return "Tell me what happened, not what you think the report wants to hear."
+    return lines[npc_name].get(context, f"{profile.role}: stay aware of what changes around you.")

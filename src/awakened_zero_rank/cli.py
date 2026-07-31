@@ -57,9 +57,11 @@ def main() -> None:
     if p.relationships:
         print("Relationships: " + "; ".join(
             f"{person.name} ({person.role}) trust {person.trust}, familiarity {person.familiarity}, "
-            f"affection {person.affection}, tension {person.tension}"
+            f"affection {person.affection}, tension {person.tension}, loyalty {person.loyalty}"
             for person in p.relationships.values()
         ))
+    if simulation.state.discovered_portals:
+        print("Portals discovered: " + ", ".join(simulation.state.discovered_portals))
     if p.memories:
         print("Key memories:")
         for memory in p.memories[:5]:

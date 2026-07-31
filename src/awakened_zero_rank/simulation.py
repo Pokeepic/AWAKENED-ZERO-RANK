@@ -3,7 +3,8 @@ from __future__ import annotations
 import random
 
 from .agent import UtilityAgent
-from .dialogue import resolve_aiko_dialogue
+from .dialogue import contextual_line, resolve_aiko_dialogue
+from .content import NPCS, PORTALS
 from .environment import SUMMER_WEATHER, summer_weather
 from .models import Event, Memory, Relationship, WorldState
 from .world import GATE_ENCOUNTERS, ITEMS, travel_cost
@@ -161,14 +162,40 @@ class Simulation:
             p.location = "Tokyo Hunter Guild"
             p.guild_registered = True
             p.relationships["Aiko Sato"] = Relationship(
-                name="Aiko Sato", role="F-rank guild clerk", trust=3, familiarity=5, meetings=1
+                name="Aiko Sato", role="F-rank guild clerk", trust=3, familiarity=5, meetings=1,
+                loyalty=4
             )
+            self.state.relationship_network["Aiko Sato"] = {"Daichi Mori": 18, "Mei Kuroda": -8}
             p.reputation += 1
             self.state.gate_alert_level = 2
             event = Event(clock.day, clock.slot, "Guild registration",
                          "newly awakened citizens must register before accepting hunter work (world event)",
                          f"Aiko Sato issued an F-rank license; travel and filing cost ¥{fare:,}.")
             return event
+
+        introductions = {
+            (5, "Morning"): ("Daichi Mori", 4, 3,
+                "Daichi Mori assessed Ren for patrol duty. “Be early, carry water, and follow the retreat call.”"),
+            (6, "Afternoon"): ("Mei Kuroda", 1, 2,
+                "Mei Kuroda noticed Threat Sense in Ren's report and asked him to document unusual portal clues."),
+            (9, "Evening"): ("Haruto Ishikawa", 3, 3,
+                "Haruto Ishikawa introduced himself at the supply counter and quietly explained which cheap gear fails."),
+        }
+        introduction = introductions.get((clock.day, clock.slot.value))
+        if introduction and introduction[0] not in p.relationships:
+            name, trust, familiarity, outcome = introduction
+            profile = NPCS[name]
+            p.relationships[name] = Relationship(name, profile.role, trust=trust,
+                                                  familiarity=familiarity, meetings=1, loyalty=2)
+            self.state.relationship_network.setdefault(name, {})
+            if name == "Daichi Mori":
+                self.state.relationship_network[name]["Aiko Sato"] = 18
+            elif name == "Mei Kuroda":
+                self.state.relationship_network[name]["Aiko Sato"] = -8
+            else:
+                self.state.relationship_network[name]["Daichi Mori"] = 7
+            return Event(clock.day, clock.slot, f"Meet {name}",
+                         "Ren's routine crossed another recurring life in Tokyo (world event)", outcome)
 
         if clock.day == p.rent_due_day and clock.slot.value == "Morning":
             paid = min(p.money, p.rent_cost)
@@ -190,6 +217,8 @@ class Simulation:
             "Awakening assessment": 10, "Guild registration": 8,
             "Gate mission": 7, "Rent deadline": 8, "Talk with Aiko": 4,
         }
+        if event.action.startswith("Meet "):
+            rating = 6
         rating = importance if importance is not None else important_actions.get(event.action)
         if rating is None:
             return
@@ -219,8 +248,17 @@ class Simulation:
         alert = self.state.gate_alert_level
         maximum_index = min(len(GATE_ENCOUNTERS) - 1, max(0, alert - 1))
         encounter = GATE_ENCOUNTERS[self.rng.randint(0, maximum_index)]
+        portal = PORTALS[self.rng.randrange(len(PORTALS))]
+        newly_discovered = portal.name not in self.state.discovered_portals
+        if newly_discovered:
+            self.state.discovered_portals.append(portal.name)
         weather = self._weather()
         difficulty = encounter.difficulty + alert * 3 + weather.gate_difficulty
+        environmental_difficulty = {
+            "ice": 5, "swamp": 6, "underground": 3, "urban tower": 4,
+            "forest": 3, "urban ruin": 4,
+        }[portal.environment]
+        difficulty += environmental_difficulty
         preparation = []
         if p.health < 68 and p.consume_item("Healing Gel"):
             healed = min(22, 100 - p.health)
@@ -255,19 +293,39 @@ class Simulation:
                     if p.echo_fragments >= 8 and p.ability == "Threat Sense" else "")
             if echo:
                 p.ability = "Threat Sense / Echo Fragment"
-            return (f"Cleared {encounter.name} in {weather.name.lower()} weather "
+            clue = f" Discovered {portal.name}: {portal.clue}." if newly_discovered else ""
+            social = self._portal_social_reaction(portal.name)
+            return (f"Cleared {encounter.name} inside {portal.name} ({portal.environment}; "
+                    f"hazard: {portal.hazard}) in {weather.name.lower()} weather "
                     f"(roll {roll} vs {difficulty}) for ¥{reward:,} "
                     f"and {points} rank points; gained {exposure} ability exposure; "
-                    f"fare cost ¥{fare:,}.{prep_text}{suffix}{echo}")
+                    f"fare cost ¥{fare:,}.{prep_text}{clue}{social}{suffix}{echo}")
         armor_reduction = ITEMS[p.equipped_armor].combat_bonus if p.equipped_armor else 0
         damage = max(8, difficulty - roll + 8 + encounter.damage_bonus - armor_reduction)
         p.health -= damage
         p.injuries += 1
         p.combat_experience += 2
         p.ability_mastery += 1
-        return (f"Retreated from {encounter.name} in {weather.name.lower()} weather "
+        clue = f" Discovered {portal.name}: {portal.clue}." if newly_discovered else ""
+        social = self._portal_social_reaction(portal.name)
+        return (f"Retreated from {encounter.name} inside {portal.name} ({portal.environment}; "
+                f"hazard: {portal.hazard}) in {weather.name.lower()} weather "
                 f"(roll {roll} vs {difficulty}); suffered "
-                f"{damage} damage and received no reward. Fare cost ¥{fare:,}.{prep_text}")
+                f"{damage} damage and received no reward. Fare cost ¥{fare:,}.{prep_text}{clue}{social}")
+
+    def _portal_social_reaction(self, portal_name: str) -> str:
+        """Let discoveries change relationships and produce an in-world response."""
+        p = self.state.protagonist
+        if "Mei Kuroda" in p.relationships:
+            relationship = p.relationships["Mei Kuroda"]
+            relationship.change(2, 2)
+            relationship.loyalty = min(100, relationship.loyalty + 1)
+            line = contextual_line("Mei Kuroda", "portal", relationship)
+            return f' Mei later reacted to the {portal_name} report: “{line}”'
+        if "Daichi Mori" in p.relationships:
+            relationship = p.relationships["Daichi Mori"]
+            relationship.change(1, 1)
+        return ""
 
     def _promote_if_eligible(self) -> str | None:
         p = self.state.protagonist

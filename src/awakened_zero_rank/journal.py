@@ -35,7 +35,9 @@ def journal_entry(event: Event, weather: str | None = None, temperature_c: int |
         "Guild patrol": "It is safer than a gate, but danger still has a scent.",
         "Tanabata evening": "For tonight, wishes seem more real than ranks.",
     }
-    thought = thoughts.get(event.action, "I chose the best path I could see.")
+    thought = ("Another person has entered the part of my life shaped by gates."
+               if event.action.startswith("Meet ") else
+               thoughts.get(event.action, "I chose the best path I could see."))
     return (
         f"Day {event.day} — {event.slot.value}\n"
         f"{opening} {thought}\n"

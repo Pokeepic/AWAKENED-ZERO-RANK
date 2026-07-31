@@ -3,12 +3,12 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 
 from awakened_zero_rank.journal import journal_entry
-from awakened_zero_rank.dialogue import choose_intention, resolve_aiko_dialogue
+from awakened_zero_rank.dialogue import choose_intention, contextual_line, resolve_aiko_dialogue
 from awakened_zero_rank.models import Relationship, TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
-from awakened_zero_rank.content import dialogue_context_count, portal_situation_count
+from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
 from awakened_zero_rank.learning import ACTION_NAMES, LearningEnvironment
 
 
@@ -320,7 +320,7 @@ class SimulationTests(unittest.TestCase):
 
     def test_learning_observation_and_action_mask_are_stable(self) -> None:
         environment = LearningEnvironment(seed=5)
-        self.assertEqual(len(environment.observe()), 12)
+        self.assertEqual(len(environment.observe()), 14)
         self.assertEqual(len(environment.action_mask()), len(ACTION_NAMES))
         self.assertEqual(sum(environment.action_mask()), len(environment.valid_actions))
 
@@ -341,6 +341,49 @@ class SimulationTests(unittest.TestCase):
         a = [first.baseline_step() for _ in range(20)]
         b = [second.baseline_step() for _ in range(20)]
         self.assertEqual(a, b)
+
+    def test_additional_recurring_characters_enter_ren_life(self) -> None:
+        simulation = Simulation(seed=42)
+        events = simulation.run(36)
+        relationships = simulation.state.protagonist.relationships
+        self.assertTrue({"Aiko Sato", "Daichi Mori", "Mei Kuroda", "Haruto Ishikawa"}
+                        .issubset(relationships))
+        self.assertTrue(any(event.action == "Meet Daichi Mori" for event in events))
+        meeting = next(event for event in events if event.action == "Meet Daichi Mori")
+        self.assertIn("Another person", journal_entry(meeting))
+
+    def test_relationship_network_preserves_conflicting_loyalties(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(28)
+        network = simulation.state.relationship_network
+        self.assertGreater(network["Aiko Sato"]["Daichi Mori"], 0)
+        self.assertLess(network["Aiko Sato"]["Mei Kuroda"], 0)
+
+    def test_contextual_dialogue_uses_identity_and_trust(self) -> None:
+        guarded = Relationship("Mei Kuroda", "independent portal researcher", trust=2)
+        trusted = Relationship("Mei Kuroda", "independent portal researcher", trust=20)
+        self.assertNotEqual(contextual_line("Mei Kuroda", "portal", guarded),
+                            contextual_line("Mei Kuroda", "portal", trusted))
+
+    def test_gate_missions_discover_named_portals_and_clues(self) -> None:
+        simulation = Simulation(seed=42)
+        events = simulation.run(180)
+        missions = [event.outcome for event in events if event.action == "Gate mission"]
+        self.assertTrue(simulation.state.discovered_portals)
+        self.assertTrue(any("Discovered" in outcome for outcome in missions))
+        self.assertTrue(any("hazard:" in outcome for outcome in missions))
+
+    def test_network_and_portal_discovery_survive_save_load(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(120)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "social-world.json"
+            save_simulation(simulation, path)
+            restored = load_simulation(path)
+        self.assertEqual(restored.state, simulation.state)
+
+    def test_npc_content_scales_without_flat_line_dump(self) -> None:
+        self.assertGreaterEqual(npc_context_count(), 4_000)
 
 
 if __name__ == "__main__":
