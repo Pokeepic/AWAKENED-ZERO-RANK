@@ -560,7 +560,7 @@ def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, 
         observation, info = rl_env.reset(seed=seed)
         rl_total = 0.0
         while True:
-            action, _ = _frozen_policy_action(
+            action, _, _ = _frozen_policy_action(
                 result, rl_env.environment, observation, info["action_mask"])
             observation, reward, terminated, truncated, info = rl_env.step(action)
             rl_total += reward
@@ -639,6 +639,8 @@ class EpisodeDiagnostics:
     social_action_share: float
     unseen_state_count: int
     unseen_state_share: float
+    preventive_rest_override_count: int
+    preventive_rest_override_share: float
     visit_evidence_steps: int
     zero_visit_action_count: int
     zero_visit_action_share: float
@@ -686,7 +688,7 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      critical_energy_actions: Counter,
                      strained_energy_actions: Counter,
                      high_hunger_steps: int, high_stress_steps: int,
-                     unseen_state_count: int,
+                     unseen_state_count: int, preventive_rest_override_count: int,
                      visit_evidence_steps: int, zero_visit_action_count: int,
                      selected_action_visit_total: int,
                      gate_seen_opportunities: int, gate_greedy_steps: int,
@@ -767,6 +769,9 @@ def _episode_summary(seed: int, policy: str, condition: str,
             policy_actions["Talk with Aiko"] / max(1, decision_steps), 3),
         unseen_state_count=unseen_state_count,
         unseen_state_share=round(unseen_state_count / max(1, steps), 3),
+        preventive_rest_override_count=preventive_rest_override_count,
+        preventive_rest_override_share=round(
+            preventive_rest_override_count / max(1, steps), 3),
         visit_evidence_steps=visit_evidence_steps,
         zero_visit_action_count=zero_visit_action_count,
         zero_visit_action_share=round(
@@ -824,19 +829,21 @@ def heuristic_action(environment: LearningEnvironment, mask: tuple[int, ...]) ->
 
 
 def _frozen_policy_action(result: TrainingResult, environment: LearningEnvironment,
-                          observation, mask: tuple[int, ...]) -> tuple[int, bool]:
+                          observation, mask: tuple[int, ...]) -> tuple[int, bool, bool]:
     state = discretize(observation)
     unseen = state not in result.q_table
+    if unseen and result.config.unseen_state_fallback == "heuristic":
+        action = heuristic_action(environment, mask)
+    else:
+        values = result.q_table.get(state, [0.0] * len(ACTION_NAMES))
+        action = _greedy_action(values, mask)
     p = environment.simulation.state.protagonist
     rest_index = ACTION_NAMES.index("Rest")
-    if (result.config.preventive_rest_threshold and
+    if (result.config.preventive_rest_threshold and action != rest_index and
             p.energy <= result.config.preventive_rest_threshold and
             p.injury_severity < 2 and p.hunger < 65 and mask[rest_index]):
-        return rest_index, unseen
-    if unseen and result.config.unseen_state_fallback == "heuristic":
-        return heuristic_action(environment, mask), True
-    values = result.q_table.get(state, [0.0] * len(ACTION_NAMES))
-    return _greedy_action(values, mask), unseen
+        return rest_index, unseen, True
+    return action, unseen, False
 
 
 def _configure_evaluation_condition(environment: LearningEnvironment,
@@ -898,6 +905,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     policy_rng = random.Random(seed * 97_409 + 17)
     transitions, masks, trace = [], [], []
     low_need_recovery_count = unseen_state_count = 0
+    preventive_rest_override_count = 0
     critical_energy_steps = high_hunger_steps = high_stress_steps = 0
     critical_energy_actions = Counter()
     strained_energy_actions = Counter()
@@ -925,9 +933,10 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         else:
             observation = environment.observe()
             state = discretize(observation)
-            action, unseen = _frozen_policy_action(
+            action, unseen, preventive_rest = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
+            preventive_rest_override_count += int(preventive_rest)
             values = result.q_table.get(state)
             if values is not None:
                 greedy = _greedy_action(values, mask)
@@ -971,7 +980,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         seed, policy, condition, environment, transitions, masks, trace,
         low_need_recovery_count, critical_energy_steps, critical_energy_actions,
         strained_energy_actions, high_hunger_steps, high_stress_steps,
-        unseen_state_count, visit_evidence_steps,
+        unseen_state_count, preventive_rest_override_count, visit_evidence_steps,
         zero_visit_action_count, selected_action_visit_total,
         gate_seen_opportunities, gate_greedy_steps, gate_q_gap_total,
         preparation_seen_opportunities, preparation_greedy_steps,
@@ -1447,6 +1456,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.unseen_state_count for e in episodes) / count, 3),
             "average_unseen_state_share": round(
                 sum(e.unseen_state_share for e in episodes) / count, 3),
+            "average_preventive_rest_override_count": round(
+                sum(e.preventive_rest_override_count for e in episodes) / count, 3),
+            "average_preventive_rest_override_share": round(
+                sum(e.preventive_rest_override_share for e in episodes) / count, 3),
             "average_visit_evidence_steps": round(
                 sum(e.visit_evidence_steps for e in episodes) / count, 3),
             "average_zero_visit_action_share": round(
