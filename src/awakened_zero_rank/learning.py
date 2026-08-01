@@ -240,6 +240,7 @@ class QLearningConfig:
     exploration_bonus: float = 0.40
     curriculum: bool = True
     training_conditions: tuple[str, ...] = ("standard",)
+    unseen_state_fallback: str = "first_valid"
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "training_conditions", tuple(self.training_conditions))
@@ -256,6 +257,8 @@ class QLearningConfig:
             raise ValueError("epsilon must satisfy 0 <= end <= start <= 1")
         if self.exploration_bonus < 0:
             raise ValueError("exploration_bonus cannot be negative")
+        if self.unseen_state_fallback not in {"first_valid", "heuristic"}:
+            raise ValueError("unknown unseen-state fallback")
 
 
 QTable = dict[tuple[int, ...], list[float]]
@@ -321,7 +324,7 @@ def abstract_state(observation) -> tuple[int, ...]:
 
 
 def discretize(observation) -> tuple[int, ...]:
-    """Backward-compatible name for the Milestone 18 state abstraction."""
+    """Backward-compatible name for the Update 0.18 state abstraction."""
     return abstract_state(observation)
 
 
@@ -394,7 +397,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table), tuple(episode_conditions),
                           tuple(episode_state_counts))
-CHECKPOINT_VERSION = 4
+CHECKPOINT_VERSION = 5
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -437,7 +440,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, CHECKPOINT_VERSION):
+    if data.get("checkpoint_version") not in (2, 3, 4, CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
         raise ValueError("Checkpoint policy schema does not match this environment")
@@ -448,6 +451,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data = dict(data["config"])
     config_data["training_conditions"] = tuple(
         config_data.get("training_conditions", ("standard",)))
+    config_data.setdefault("unseen_state_fallback", "first_valid")
     episode_rewards = tuple(data["episode_rewards"])
     return TrainingResult(
         training_seed=data["training_seed"], config=QLearningConfig(**config_data),
@@ -484,8 +488,8 @@ def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, 
         observation, info = rl_env.reset(seed=seed)
         rl_total = 0.0
         while True:
-            values = result.q_table.get(discretize(observation), [0.0] * len(ACTION_NAMES))
-            action = _greedy_action(values, info["action_mask"])
+            action, _ = _frozen_policy_action(
+                result, rl_env.environment, observation, info["action_mask"])
             observation, reward, terminated, truncated, info = rl_env.step(action)
             rl_total += reward
             if terminated or truncated:
@@ -649,6 +653,17 @@ def heuristic_action(environment: LearningEnvironment, mask: tuple[int, ...]) ->
     choice = next(name for name in priorities if name in valid)
     return ACTION_NAMES.index(choice)
 
+
+def _frozen_policy_action(result: TrainingResult, environment: LearningEnvironment,
+                          observation, mask: tuple[int, ...]) -> tuple[int, bool]:
+    state = discretize(observation)
+    unseen = state not in result.q_table
+    if unseen and result.config.unseen_state_fallback == "heuristic":
+        return heuristic_action(environment, mask), True
+    values = result.q_table.get(state, [0.0] * len(ACTION_NAMES))
+    return _greedy_action(values, mask), unseen
+
+
 def _configure_evaluation_condition(environment: LearningEnvironment,
                                     condition: str) -> None:
     if condition not in EVALUATION_CONDITIONS:
@@ -725,10 +740,9 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             transition = environment.step(ACTION_NAMES[action])
         else:
             observation = environment.observe()
-            state = discretize(observation)
-            unseen_state_count += int(state not in result.q_table)
-            values = result.q_table.get(state, [0.0] * len(ACTION_NAMES))
-            action = _greedy_action(values, mask)
+            action, unseen = _frozen_policy_action(
+                result, environment, observation, mask)
+            unseen_state_count += int(unseen)
             transition = environment.step(ACTION_NAMES[action])
         transitions.append(transition)
         chosen_action = transition.resolved_action or transition.action

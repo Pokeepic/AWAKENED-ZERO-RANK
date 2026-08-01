@@ -558,6 +558,8 @@ class SimulationTests(unittest.TestCase):
             QLearningConfig(training_conditions=())
         with self.assertRaises(ValueError):
             QLearningConfig(training_conditions=("unknown",))
+        with self.assertRaises(ValueError):
+            QLearningConfig(unseen_state_fallback="unknown")
 
     def test_training_condition_summary_is_auditable(self) -> None:
         trained = train_q_learning(113, QLearningConfig(
@@ -598,6 +600,21 @@ class SimulationTests(unittest.TestCase):
         second = train_q_learning(training_seed=101, config=config)
         self.assertEqual(first, second)
         self.assertEqual(len(first.episode_rewards), 3)
+
+    def test_unseen_state_fallback_is_explicit_and_reproducible(self) -> None:
+        trained = train_q_learning(101, QLearningConfig(episodes=1, horizon=2))
+        empty = replace(trained, q_table={})
+        historical = diagnose_episode(201, 1, "rl", empty)
+        safe = replace(
+            empty,
+            config=replace(empty.config, unseen_state_fallback="heuristic"),
+        )
+        first = diagnose_episode(201, 1, "rl", safe)
+        second = diagnose_episode(201, 1, "rl", safe)
+        self.assertEqual(historical.trace[0].action, "Eat")
+        self.assertEqual(first.trace[0].action, "Part-time work")
+        self.assertEqual(first, second)
+        self.assertEqual(first.unseen_state_count, 1)
 
     def test_batch_comparison_uses_held_out_seeds_and_honest_verdict(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
@@ -825,6 +842,13 @@ class SimulationTests(unittest.TestCase):
             save_checkpoint(restored, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
+            legacy.pop("sha256")
+            legacy["checkpoint_version"] = 4
+            legacy["config"].pop("unseen_state_fallback")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_checkpoint(first), trained)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 3
             legacy.pop("episode_state_counts")
