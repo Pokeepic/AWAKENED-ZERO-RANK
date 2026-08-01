@@ -239,6 +239,7 @@ class QLearningConfig:
     epsilon_end: float = 0.05
     exploration_bonus: float = 0.40
     progression_exploration_bonus: float = 0.0
+    progression_sampling_rate: float = 0.0
     curriculum: bool = True
     training_conditions: tuple[str, ...] = ("standard",)
     unseen_state_fallback: str = "first_valid"
@@ -260,6 +261,10 @@ class QLearningConfig:
             raise ValueError("exploration_bonus cannot be negative")
         if self.progression_exploration_bonus < 0:
             raise ValueError("progression_exploration_bonus cannot be negative")
+        if not 0 <= self.progression_sampling_rate <= 1:
+            raise ValueError("progression_sampling_rate must be between 0 and 1")
+        if self.progression_exploration_bonus and self.progression_sampling_rate:
+            raise ValueError("progression exploration modes are mutually exclusive")
         if self.unseen_state_fallback not in {"first_valid", "heuristic"}:
             raise ValueError("unknown unseen-state fallback")
 
@@ -407,7 +412,12 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             values = table.setdefault(state, [0.0] * len(ACTION_NAMES))
             mask = info["action_mask"]
             valid = [index for index, allowed in enumerate(mask) if allowed]
-            if rng.random() < epsilon:
+            progression = [index for index in valid
+                           if ACTION_NAMES[index] in {"Prepare portal", "Gate mission"}]
+            if (config.progression_sampling_rate > 0 and progression and
+                    rng.random() < config.progression_sampling_rate):
+                action = rng.choice(progression)
+            elif rng.random() < epsilon:
                 action = rng.choice(valid)
             else:
                 action = max(valid, key=lambda index: (
@@ -442,7 +452,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table), tuple(episode_conditions),
                           tuple(episode_state_counts), visit_table)
-CHECKPOINT_VERSION = 7
+CHECKPOINT_VERSION = 8
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -489,7 +499,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, CHECKPOINT_VERSION):
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
         raise ValueError("Checkpoint policy schema does not match this environment")
@@ -506,6 +516,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
         config_data.get("training_conditions", ("standard",)))
     config_data.setdefault("unseen_state_fallback", "first_valid")
     config_data.setdefault("progression_exploration_bonus", 0.0)
+    config_data.setdefault("progression_sampling_rate", 0.0)
     episode_rewards = tuple(data["episode_rewards"])
     return TrainingResult(
         training_seed=data["training_seed"], config=QLearningConfig(**config_data),
