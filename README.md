@@ -137,6 +137,12 @@ Completed milestones are grouped for readability:
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
+### Future international expansion
+
+On timelines spanning roughly three or four in-world years, major portal disasters and other consequential events can emerge outside Japan. Different countries can develop their own Awakened institutions, regulations, economies, Gate responses, recurring characters, and recovery arcs. These events should affect news, markets, guild priorities, relationships, migration, and humanitarian needs rather than existing only as spectacle.
+
+International travel should remain grounded: passports or clearance, airfare, lodging, travel time, language and local contacts, mission invitations, personal risk, and whether Ren can responsibly afford the trip. Ren should decide autonomously whether to travel, remain in Japan, contribute remotely, or decline. All global events and decisions must remain seeded, persistent, and reproducible.
+
 ### Future observer website
 
 A later presentation milestone can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports can feed a separate developer-facing experiment view without coupling the website to training code.
