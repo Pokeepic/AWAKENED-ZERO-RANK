@@ -634,8 +634,12 @@ class SimulationTests(unittest.TestCase):
         )
         first = diagnose_episode(201, 1, "rl", safe)
         second = diagnose_episode(201, 1, "rl", safe)
+        preventive = replace(
+            empty, config=replace(empty.config, preventive_rest_threshold=100))
+        preventive_episode = diagnose_episode(201, 1, "rl", preventive)
         self.assertEqual(historical.trace[0].action, "Eat")
         self.assertEqual(first.trace[0].action, "Part-time work")
+        self.assertEqual(preventive_episode.trace[0].action, "Rest")
         self.assertEqual(first, second)
         self.assertEqual(first.unseen_state_count, 1)
 
@@ -936,6 +940,12 @@ class SimulationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             QLearningConfig(progression_exploration_bonus=0.1,
                             progression_sampling_rate=0.1)
+        with self.assertRaises(ValueError):
+            QLearningConfig(preventive_rest_threshold=101)
+        with self.assertRaises(ValueError):
+            QLearningConfig(preventive_rest_threshold=35.5)
+        with self.assertRaises(ValueError):
+            QLearningConfig(preventive_rest_threshold=True)
         config = QLearningConfig(episodes=2, horizon=5,
                                  progression_sampling_rate=0.1)
         self.assertEqual(train_q_learning(131, config), train_q_learning(131, config))
@@ -963,6 +973,7 @@ class SimulationTests(unittest.TestCase):
             legacy.pop("visit_table")
             legacy["config"].pop("progression_exploration_bonus")
             legacy["config"].pop("progression_sampling_rate")
+            legacy["config"].pop("preventive_rest_threshold")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")

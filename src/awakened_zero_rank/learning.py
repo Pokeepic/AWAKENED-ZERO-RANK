@@ -240,6 +240,7 @@ class QLearningConfig:
     exploration_bonus: float = 0.40
     progression_exploration_bonus: float = 0.0
     progression_sampling_rate: float = 0.0
+    preventive_rest_threshold: int = 0
     curriculum: bool = True
     training_conditions: tuple[str, ...] = ("standard",)
     unseen_state_fallback: str = "first_valid"
@@ -265,6 +266,9 @@ class QLearningConfig:
             raise ValueError("progression_sampling_rate must be between 0 and 1")
         if self.progression_exploration_bonus and self.progression_sampling_rate:
             raise ValueError("progression exploration modes are mutually exclusive")
+        if (type(self.preventive_rest_threshold) is not int or
+                not 0 <= self.preventive_rest_threshold <= 100):
+            raise ValueError("preventive_rest_threshold must be an integer from 0 to 100")
         if self.unseen_state_fallback not in {"first_valid", "heuristic"}:
             raise ValueError("unknown unseen-state fallback")
 
@@ -452,7 +456,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table), tuple(episode_conditions),
                           tuple(episode_state_counts), visit_table)
-CHECKPOINT_VERSION = 8
+CHECKPOINT_VERSION = 9
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -499,7 +503,8 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, CHECKPOINT_VERSION):
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8,
+                                                   CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
         raise ValueError("Checkpoint policy schema does not match this environment")
@@ -517,6 +522,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data.setdefault("unseen_state_fallback", "first_valid")
     config_data.setdefault("progression_exploration_bonus", 0.0)
     config_data.setdefault("progression_sampling_rate", 0.0)
+    config_data.setdefault("preventive_rest_threshold", 0)
     episode_rewards = tuple(data["episode_rewards"])
     return TrainingResult(
         training_seed=data["training_seed"], config=QLearningConfig(**config_data),
@@ -821,6 +827,12 @@ def _frozen_policy_action(result: TrainingResult, environment: LearningEnvironme
                           observation, mask: tuple[int, ...]) -> tuple[int, bool]:
     state = discretize(observation)
     unseen = state not in result.q_table
+    p = environment.simulation.state.protagonist
+    rest_index = ACTION_NAMES.index("Rest")
+    if (result.config.preventive_rest_threshold and
+            p.energy <= result.config.preventive_rest_threshold and
+            p.injury_severity < 2 and p.hunger < 65 and mask[rest_index]):
+        return rest_index, unseen
     if unseen and result.config.unseen_state_fallback == "heuristic":
         return heuristic_action(environment, mask), True
     values = result.q_table.get(state, [0.0] * len(ACTION_NAMES))
