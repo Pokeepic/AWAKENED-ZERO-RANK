@@ -102,28 +102,28 @@ The repeated audit produced trial differences of `−19.965`, `+8.436`, and `−
 
 Unless marked resolved, these are hypotheses rather than scheduled changes. Each patch should be isolated, evaluated on held-out seeds across all stress conditions, and rejected if it improves reward while weakening survival, rent recovery, mission coherence, or behavioral variety.
 
-Milestone 24 now records rent payment, average dominant-action share, and RL exploit flags in every scenario report. These measurements are adoption gates; they do not tune the simulator by themselves.
+Update 0.24 — Adoption Metrics now records rent payment, average dominant-action share, and RL exploit flags in every scenario report. These measurements are adoption gates; they do not tune the simulator by themselves.
 
-Milestone 25 addressed the first measured soft-lock by adding a masked **Pay rent arrears** action that keeps a ¥600 emergency reserve. In the bounded four-seed, 40-step utility audit, financial-pressure rent recovery improved from 0/4 to 4/4, survival remained 4/4, dominant-action share fell from 47.5% to 24.4%, and no exploit flags appeared. Standard and Gate-crisis results were unchanged. The Q-table checkpoint schema advanced because the policy action set changed from 11 to 12.
+Update 0.25 — Rent Recovery addressed the first measured soft-lock by adding a masked **Pay rent arrears** action that keeps a ¥600 emergency reserve. In the bounded four-seed, 40-step utility audit, financial-pressure rent recovery improved from 0/4 to 4/4, survival remained 4/4, dominant-action share fell from 47.5% to 24.4%, and no exploit flags appeared. Standard and Gate-crisis results were unchanged. The Q-table checkpoint schema advanced because the policy action set changed from 11 to 12.
 
-Milestone 26 made utility decisions plan-aware only at maximum Gate alert. In the same bounded audit, Gate-crisis preparation increased from 0 to 5 actions, completed missions increased from 7 to 8, survival and rent recovery remained 4/4, and no exploit flags appeared. Standard, financial-pressure, and injury-recovery behavior remained unchanged. The first Gate-crisis mission is now preceded by preparation without forcing every low-alert mission into the same pattern.
+Update 0.26 — Crisis Preparation made utility decisions plan-aware only at maximum Gate alert. In the same bounded audit, Gate-crisis preparation increased from 0 to 5 actions, completed missions increased from 7 to 8, survival and rent recovery remained 4/4, and no exploit flags appeared. Standard, financial-pressure, and injury-recovery behavior remained unchanged. The first Gate-crisis mission is now preceded by preparation without forcing every low-alert mission into the same pattern.
 
-Milestone 27 replaced action-count inference with persistent prepared-mission counters. The four-seed Gate-crisis audit recorded nine attempts, eight completions, four consumed plans, and three prepared completions: 44.4% preparation coverage, 75% prepared success, and 88.9% overall success. This small sample measures behavior but does not establish that preparation causes a higher success rate. Schema-4 reports expose both rates, and older saves/reports default the new fields safely.
+Update 0.27 — Prepared Mission Evidence replaced action-count inference with persistent prepared-mission counters. The four-seed Gate-crisis audit recorded nine attempts, eight completions, four consumed plans, and three prepared completions: 44.4% preparation coverage, 75% prepared success, and 88.9% overall success. This small sample measures behavior but does not establish that preparation causes a higher success rate. Schema-4 reports expose both rates, and older saves/reports default the new fields safely.
 
-Milestone 28 added a compound crisis combining severe injury, low energy, rent arrears, limited cash, and maximum Gate alert. It exposed rent repayment outranking urgent treatment, so repayment utility now decreases with injury severity and low health. Across four 60-step seeds, utility and heuristic both chose treatment first in 4/4 runs, survived 4/4, cleared arrears 4/4, and produced no exploit flags. Existing condition audits retained 4/4 survival and rent recovery.
+Update 0.28 — Compound Crisis Balance added a compound crisis combining severe injury, low energy, rent arrears, limited cash, and maximum Gate alert. It exposed rent repayment outranking urgent treatment, so repayment utility now decreases with injury severity and low health. Across four 60-step seeds, utility and heuristic both chose treatment first in 4/4 runs, survived 4/4, cleared arrears 4/4, and produced no exploit flags. Existing condition audits retained 4/4 survival and rent recovery.
 
-Milestone 29 made fixed-horizon training condition-aware without changing the default. Gymnasium resets accept a named condition through options, Q-learning cycles a validated condition tuple deterministically, and every episode records its condition. Checkpoint schema 3 preserves the schedule and loads authenticated schema-2 checkpoints as all-standard training. Only tiny reproducibility tests were run; there is no new RL verdict.
+Update 0.29 — Condition-Aware Training made fixed-horizon training condition-aware without changing the default. Gymnasium resets accept a named condition through options, Q-learning cycles a validated condition tuple deterministically, and every episode records its condition. Checkpoint schema 3 preserves the schedule and loads authenticated schema-2 checkpoints as all-standard training. Only tiny reproducibility tests were run; there is no new RL verdict.
 
-Milestone 30 added deterministic per-condition training summaries without changing checkpoints or policy behavior. Each observed condition now reports its episode count, average environment and shaped reward, and worst episode reward, while incomplete diagnostic records fail explicitly. This is coverage evidence only; no larger RL experiment or new verdict was produced.
+Update 0.30 — Condition Summaries added deterministic per-condition training summaries without changing checkpoints or policy behavior. Each observed condition now reports its episode count, average environment and shaped reward, and worst episode reward, while incomplete diagnostic records fail explicitly. This is coverage evidence only; no larger RL experiment or new verdict was produced.
 
-Milestone 31 records unique strategic states visited in every training episode and aggregates average and minimum coverage for each observed condition. Checkpoint schema 4 authenticates these diagnostics; schema-2/3 policies remain loadable with coverage explicitly unavailable. Training behavior is unchanged, and no large RL experiment or new verdict was produced.
+Update 0.31 — State Coverage records unique strategic states visited in every training episode and aggregates average and minimum coverage for each observed condition. Checkpoint schema 4 authenticates these diagnostics; schema-2/3 policies remain loadable with coverage explicitly unavailable. Training behavior is unchanged, and no large RL experiment or new verdict was produced.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
-| Debt behavior — resolved in M25 | Rent arrears were impossible to repay after the deadline, making paid patrols dominate | Added partial repayment while preserving ¥600 emergency cash; no patrol nerf was needed | Recovery improved from 0/4 to 4/4, survival stayed 4/4, and dominant share fell from 47.5% to 24.4% |
-| Gate pacing — resolved for utility in M26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
-| Recovery access — priority fixed in M28 | Compound injury and debt made repayment outrank urgent treatment | Repayment now defers under severe injury or low health; clinic pricing and assistance still need separate review | Utility and heuristic treated first in 4/4 runs, survived 4/4, and cleared arrears 4/4 |
+| Debt behavior — resolved in Update 0.25 | Rent arrears were impossible to repay after the deadline, making paid patrols dominate | Added partial repayment while preserving ¥600 emergency cash; no patrol nerf was needed | Recovery improved from 0/4 to 4/4, survival stayed 4/4, and dominant share fell from 47.5% to 24.4% |
+| Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
+| Recovery access — priority fixed in Update 0.28 | Compound injury and debt made repayment outrank urgent treatment | Repayment now defers under severe injury or low health; clinic pricing and assistance still need separate review | Utility and heuristic treated first in 4/4 runs, survived 4/4, and cleared arrears 4/4 |
 | Social frequency | Dialogue should matter without becoming a low-risk reward farm | Add context-sensitive cooldowns or diminishing utility for repeated conversations while preserving crisis support | Relationship growth remains varied and passive-policy flags do not increase |
 | Policy consistency | Repeated tabular trials remain inconclusive and vary by training seed | Improve state coverage and condition-aware diagnostics before increasing episode counts or trying neural RL | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
@@ -149,30 +149,30 @@ tests/
   test_simulation.py
 ```
 
-## Roadmap
+## Update History & Roadmap
 
-Completed milestones are grouped for readability:
+Completed updates are grouped for readability:
 
-| Milestones | Focus |
+| Updates | Focus |
 |---|---|
-| 1–6 | Deterministic life simulation, Tokyo economy, hunter progression, relationships, equipment, and persistence |
-| 7–9 | Weather, calendar events, expanded attributes, mood, and dialogue consequences |
-| 10–13 | Learning interface, scalable content, NPC networks, investigations, preparation, and cooperation |
-| 14–15 | Gymnasium episodes, reproducible Q-learning, held-out comparison, and failure diagnostics |
-| 16–17 | Broader economic/recovery scenarios and stronger utility, heuristic, and random baselines |
-| 18–19 | Improved tabular training, checkpoint integrity, repeated trials, and neural-readiness auditing |
-| 20 | Multi-horizon held-out scenario suites, pooled verdicts, and conservative adoption checks |
-| 21 | Canonical scenario reports, checkpoint binding, deterministic export, and integrity verification |
-| 22 | Explainable policy-adoption decisions with identity, confidence, safety, and progression gates |
-| 23 | Deterministic financial, injury, and Gate-crisis evaluation conditions with versioned reporting |
-| 24 | Rent recovery, action dominance, and exploit metrics integrated into reports and adoption gates |
-| 25 | Partial rent-arrears repayment, emergency-cash protection, and a measured financial soft-lock fix |
-| 26 | Maximum-alert plan-aware utility scoring with preserved lower-alert behavior |
-| 27 | Persistent prepared-mission counters, effectiveness rates, and backward-compatible schema-4 reports |
-| 28 | Compound medical/debt/Gate stress testing and injury-aware repayment priorities |
-| 29 | Gym reset conditions, deterministic multi-condition training schedules, and checkpoint schema 3 |
-| 30 | Auditable per-condition training reward and coverage summaries |
-| 31 | Per-episode strategic state coverage and authenticated schema-4 diagnostics |
+| 0.01–0.06 | Deterministic life simulation, Tokyo economy, hunter progression, relationships, equipment, and persistence |
+| 0.07–0.09 | Weather, calendar events, expanded attributes, mood, and dialogue consequences |
+| 0.10–0.13 | Learning interface, scalable content, NPC networks, investigations, preparation, and cooperation |
+| 0.14–0.15 | Gymnasium episodes, reproducible Q-learning, held-out comparison, and failure diagnostics |
+| 0.16–0.17 | Broader economic/recovery scenarios and stronger utility, heuristic, and random baselines |
+| 0.18–0.19 | Improved tabular training, checkpoint integrity, repeated trials, and neural-readiness auditing |
+| 0.20 | Multi-horizon held-out scenario suites, pooled verdicts, and conservative adoption checks |
+| 0.21 | Canonical scenario reports, checkpoint binding, deterministic export, and integrity verification |
+| 0.22 | Explainable policy-adoption decisions with identity, confidence, safety, and progression gates |
+| 0.23 | Deterministic financial, injury, and Gate-crisis evaluation conditions with versioned reporting |
+| 0.24 | Rent recovery, action dominance, and exploit metrics integrated into reports and adoption gates |
+| 0.25 | Partial rent-arrears repayment, emergency-cash protection, and a measured financial soft-lock fix |
+| 0.26 | Maximum-alert plan-aware utility scoring with preserved lower-alert behavior |
+| 0.27 | Persistent prepared-mission counters, effectiveness rates, and backward-compatible schema-4 reports |
+| 0.28 | Compound medical/debt/Gate stress testing and injury-aware repayment priorities |
+| 0.29 | Gym reset conditions, deterministic multi-condition training schedules, and checkpoint schema 3 |
+| 0.30 | Auditable per-condition training reward and coverage summaries |
+| 0.31 | Per-episode strategic state coverage and authenticated schema-4 diagnostics |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
@@ -184,6 +184,6 @@ International travel should remain grounded: passports or clearance, airfare, lo
 
 ### Future observer website
 
-A later presentation milestone can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports can feed a separate developer-facing experiment view without coupling the website to training code.
+A later presentation update can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports can feed a separate developer-facing experiment view without coupling the website to training code.
 
 The website must remain a view of the authoritative deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him.
