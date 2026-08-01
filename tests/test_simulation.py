@@ -601,6 +601,16 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(len(first.episode_rewards), 3)
 
+    def test_training_visit_evidence_is_exact_and_reproducible(self) -> None:
+        config = QLearningConfig(episodes=3, horizon=8)
+        first = train_q_learning(103, config)
+        second = train_q_learning(103, config)
+        self.assertEqual(first.visit_table, second.visit_table)
+        self.assertEqual(set(first.visit_table), set(first.q_table))
+        self.assertTrue(all(len(counts) == len(ACTION_NAMES)
+                            for counts in first.visit_table.values()))
+        self.assertEqual(sum(sum(counts) for counts in first.visit_table.values()), 24)
+
     def test_unseen_state_fallback_is_explicit_and_reproducible(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=1, horizon=2))
         empty = replace(trained, q_table={})
@@ -843,12 +853,20 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 5
+            legacy.pop("visit_table")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            migrated_v5 = load_checkpoint(first)
+            self.assertEqual(migrated_v5, replace(trained, visit_table={}))
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 4
             legacy["config"].pop("unseen_state_fallback")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
-            self.assertEqual(load_checkpoint(first), trained)
+            self.assertEqual(load_checkpoint(first), replace(trained, visit_table={}))
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 3
             legacy.pop("episode_state_counts")
@@ -856,7 +874,8 @@ class SimulationTests(unittest.TestCase):
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
             migrated = load_checkpoint(first)
-            self.assertEqual(migrated, replace(trained, episode_state_counts=()))
+            self.assertEqual(migrated, replace(
+                trained, episode_state_counts=(), visit_table={}))
             with self.assertRaises(ValueError):
                 summarize_training_conditions(migrated)
             legacy.pop("sha256")
@@ -866,8 +885,8 @@ class SimulationTests(unittest.TestCase):
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
-            self.assertEqual(load_checkpoint(first),
-                             replace(trained, episode_state_counts=()))
+            self.assertEqual(load_checkpoint(first), replace(
+                trained, episode_state_counts=(), visit_table={}))
         self.assertEqual(restored, trained)
         self.assertEqual(len(checkpoint_digest(restored)), 64)
 

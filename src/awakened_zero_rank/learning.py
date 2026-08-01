@@ -275,6 +275,7 @@ class TrainingResult:
     state_count: int = 0
     episode_conditions: tuple[str, ...] = ()
     episode_state_counts: tuple[int, ...] = ()
+    visit_table: dict[tuple[int, ...], list[int]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -394,10 +395,14 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         totals.append(round(total, 3))
         shaped_totals.append(round(shaped_total, 3))
         episode_state_counts.append(len(episode_states))
+    visit_table = {
+        state: [visits[(state, index)] for index in range(len(ACTION_NAMES))]
+        for state in table
+    }
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table), tuple(episode_conditions),
-                          tuple(episode_state_counts))
-CHECKPOINT_VERSION = 5
+                          tuple(episode_state_counts), visit_table)
+CHECKPOINT_VERSION = 6
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -416,6 +421,10 @@ def _checkpoint_data(result: TrainingResult) -> dict:
         "q_table": [
             {"state": state, "values": values}
             for state, values in sorted(result.q_table.items())
+        ],
+        "visit_table": [
+            {"state": state, "counts": counts}
+            for state, counts in sorted(result.visit_table.items())
         ],
     }
 
@@ -440,7 +449,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, CHECKPOINT_VERSION):
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
         raise ValueError("Checkpoint policy schema does not match this environment")
@@ -448,6 +457,10 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     if digest != hashlib.sha256(payload).hexdigest():
         raise ValueError("Checkpoint integrity verification failed")
     table = {tuple(item["state"]): list(item["values"]) for item in data["q_table"]}
+    visit_table = {
+        tuple(item["state"]): list(item["counts"])
+        for item in data.get("visit_table", ())
+    }
     config_data = dict(data["config"])
     config_data["training_conditions"] = tuple(
         config_data.get("training_conditions", ("standard",)))
@@ -461,6 +474,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
         episode_conditions=tuple(data.get(
             "episode_conditions", ("standard",) * len(episode_rewards))),
         episode_state_counts=tuple(data.get("episode_state_counts", ())),
+        visit_table=visit_table,
     )
 
 @dataclass(frozen=True)

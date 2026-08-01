@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.38.0** · **99 automated tests**
+Current release: **0.39.0** · **100 automated tests**
 
 ## Design principles
 
@@ -43,9 +43,9 @@ Current release: **0.38.0** · **99 automated tests**
 - Gymnasium-compatible fixed-horizon episodes with 12 integer actions and valid-action masks.
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies, with an opt-in safety heuristic for unseen Q-table states.
-- Count-based exploration, phased curriculum rewards, deterministic multi-condition training schedules, per-condition state-coverage summaries, and held-out seed enforcement.
+- Count-based exploration, exact state-action visit evidence, phased curriculum rewards, deterministic multi-condition training schedules, per-condition state-coverage summaries, and held-out seed enforcement.
 - Reward decomposition, action/mask frequencies, held-out state-miss rates, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
-- Deterministic Q-table checkpoints with action/condition/fallback schema validation, SHA-256 tamper detection, and authenticated version migration.
+- Deterministic Q-table checkpoints with action/condition/fallback/visit schema validation, SHA-256 tamper detection, and authenticated version migration.
 - Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 - Deterministic evaluation starts for standard life, financial pressure, injury recovery, Gate crises, and a compound medical/debt/Gate crisis.
@@ -132,6 +132,8 @@ Update 0.37 — Multi-Condition Pilot trained 10 × 40-step episodes, cycling al
 
 Update 0.38 — Safe State Fallback adds an opt-in heuristic action only when a frozen Q-table has never seen the current strategic state; historical first-valid behavior remains the default. On the exact Update 0.37 pilot, the pooled deficit improved from 95.372 to 17.385, rent recovery and survival reached 100%, exploit flags disappeared, and RL completed some missions. Utility still won four scenarios and injury recovery was inconclusive, so the honest verdict remains **baseline remains better**. Checkpoint schema 5 authenticates fallback semantics and older checkpoints retain historical behavior.
 
+Update 0.39 — Visit Evidence tested and rejected a broader fallback based on non-positive Q-values: the exact pilot deficit worsened from 17.385 to 19.100. Training now retains an exact action-count vector for every strategic state, with total visits reconciling to episodes × horizon. Checkpoint schema 6 authenticates the evidence; older checkpoints load with visit data explicitly unavailable. Policy behavior and the **baseline remains better** verdict are unchanged.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -139,7 +141,7 @@ Update 0.38 — Safe State Fallback adds an opt-in heuristic action only when a 
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — baseline still better in Update 0.38 | The opt-in heuristic fallback reduced the pooled deficit from 95.372 to 17.385, restored survival and rent recovery, removed exploit flags, and produced some missions, but utility still won four scenarios | Keep fallback experimental; improve learned mission decisions without increasing training volume or weakening safety | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — confidence evidence added in Update 0.39 | The unseen-state fallback helped, but extending it to all non-positive Q states worsened the pooled deficit from 17.385 to 19.100 | Use authenticated state-action visit counts to design confidence thresholds; do not infer confidence from Q-value sign or increase training volume yet | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -194,6 +196,7 @@ Completed updates are grouped for readability:
 | 0.36 | Social-action frequency diagnostics and an evidence-based no-cooldown decision |
 | 0.37 | Balanced multi-condition pilot, state-miss diagnostics, and baseline-better verdict |
 | 0.38 | Opt-in unseen-state safety fallback, schema-5 checkpoints, and improved but baseline-better pilot |
+| 0.39 | Rejected Q-sign fallback and authenticated state-action visit evidence |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
