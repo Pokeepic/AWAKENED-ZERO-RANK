@@ -724,6 +724,15 @@ class SimulationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluate_repeated_trials((1,), ((),), config)
 
+    def test_gate_crisis_utility_prepares_before_mission_attempts(self) -> None:
+        episode = diagnose_episode(501, 40, "utility", condition="gate_crisis")
+        actions = dict(episode.action_counts)
+        self.assertGreater(actions.get("Gate mission", 0), 0)
+        self.assertGreater(actions.get("Prepare portal", 0), 0)
+        trace = [step.action for step in episode.trace]
+        self.assertLess(trace.index("Prepare portal"), trace.index("Gate mission"))
+        self.assertTrue(episode.survived)
+
     def test_rent_arrears_can_be_repaid_without_spending_emergency_cash(self) -> None:
         simulation = Simulation(seed=25)
         p = simulation.state.protagonist

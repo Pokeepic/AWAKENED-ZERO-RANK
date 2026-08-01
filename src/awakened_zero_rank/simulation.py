@@ -36,7 +36,8 @@ class Simulation:
             return special
         if selected_action is None:
             action, reason = self.agent.choose(
-                protagonist, clock.slot, self.state.gate_alert_level, self.state.weather
+                protagonist, clock.slot, self.state.gate_alert_level, self.state.weather,
+                self.state.active_portal_plan is not None,
             )
         else:
             from .actions import available_actions

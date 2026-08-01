@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.25.0** · **90 automated tests**
+Current release: **0.26.0** · **91 automated tests**
 
 ## Design principles
 
@@ -106,11 +106,13 @@ Milestone 24 now records rent payment, average dominant-action share, and RL exp
 
 Milestone 25 addressed the first measured soft-lock by adding a masked **Pay rent arrears** action that keeps a ¥600 emergency reserve. In the bounded four-seed, 40-step utility audit, financial-pressure rent recovery improved from 0/4 to 4/4, survival remained 4/4, dominant-action share fell from 47.5% to 24.4%, and no exploit flags appeared. Standard and Gate-crisis results were unchanged. The Q-table checkpoint schema advanced because the policy action set changed from 11 to 12.
 
+Milestone 26 made utility decisions plan-aware only at maximum Gate alert. In the same bounded audit, Gate-crisis preparation increased from 0 to 5 actions, completed missions increased from 7 to 8, survival and rent recovery remained 4/4, and no exploit flags appeared. Standard, financial-pressure, and injury-recovery behavior remained unchanged. The first Gate-crisis mission is now preceded by preparation without forcing every low-alert mission into the same pattern.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
 | Debt behavior — resolved in M25 | Rent arrears were impossible to repay after the deadline, making paid patrols dominate | Added partial repayment while preserving ¥600 emergency cash; no patrol nerf was needed | Recovery improved from 0/4 to 4/4, survival stayed 4/4, and dominant share fell from 47.5% to 24.4% |
-| Gate pacing | RL completed more missions without establishing a reward advantage | Strengthen the value of preparation, retreat, and information while keeping unprepared mission failure costly | More prepared completions, not simply more attempts; no survival regression |
+| Gate pacing — resolved for utility in M26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access | Severe injury plus low cash can create a long recovery spiral | Review minimum clinic access, consumable availability, and safe income options rather than granting free healing | Injury scenarios return to stable health without erasing economic consequences |
 | Social frequency | Dialogue should matter without becoming a low-risk reward farm | Add context-sensitive cooldowns or diminishing utility for repeated conversations while preserving crisis support | Relationship growth remains varied and passive-policy flags do not increase |
 | Policy consistency | Repeated tabular trials remain inconclusive and vary by training seed | Improve state coverage and condition-aware diagnostics before increasing episode counts or trying neural RL | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
@@ -155,6 +157,7 @@ Completed milestones are grouped for readability:
 | 23 | Deterministic financial, injury, and Gate-crisis evaluation conditions with versioned reporting |
 | 24 | Rent recovery, action dominance, and exploit metrics integrated into reports and adoption gates |
 | 25 | Partial rent-arrears repayment, emergency-cash protection, and a measured financial soft-lock fix |
+| 26 | Maximum-alert plan-aware utility scoring with preserved lower-alert behavior |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

@@ -12,15 +12,19 @@ class UtilityAgent:
     def __init__(self, rng: random.Random) -> None:
         self.rng = rng
 
-    def choose(self, protagonist: Protagonist, slot: TimeSlot, gate_alert: int = 0,
-               weather: str = "Clear") -> tuple[Action, str]:
+    def choose(
+        self, protagonist: Protagonist, slot: TimeSlot, gate_alert: int = 0,
+        weather: str = "Clear", has_portal_plan: bool = False,
+    ) -> tuple[Action, str]:
         scores = [
-            (action.score(protagonist, slot, gate_alert) + self._weather_adjustment(action.name, weather)
+            (action.score(protagonist, slot, gate_alert)
+             + self._weather_adjustment(action.name, weather)
+             + self._portal_plan_adjustment(action.name, gate_alert, has_portal_plan)
              + self.rng.uniform(0, 2), action)
             for action in available_actions(protagonist)
         ]
         score, action = max(scores, key=lambda item: item[0])
-        reason = self._reason(action.name, protagonist, gate_alert)
+        reason = self._reason(action.name, protagonist, gate_alert, has_portal_plan)
         return action, f"{reason} (utility {score:.1f})"
 
     @staticmethod
@@ -35,9 +39,22 @@ class UtilityAgent:
         return 0
 
     @staticmethod
-    def _reason(action: str, p: Protagonist, gate_alert: int) -> str:
+    def _portal_plan_adjustment(action: str, gate_alert: int,
+                                has_portal_plan: bool) -> float:
+        if gate_alert < 3:
+            return 0
+        if action == "Prepare portal":
+            return -60 if has_portal_plan else 35
+        if action == "Gate mission":
+            return 12 if has_portal_plan else -40
+        return 0
+
+    @staticmethod
+    def _reason(action: str, p: Protagonist, gate_alert: int,
+                has_portal_plan: bool = False) -> str:
         housing_debt = p.rent_arrears or max(0, p.rent_cost - p.money)
         aiko_familiarity = p.relationships.get("Aiko Sato")
+        plan_state = "ready" if has_portal_plan else "missing"
         reasons = {
             "Eat": f"hunger is {p.hunger}/100",
             "Rest": f"energy is {p.energy}/100 and stress is {p.stress}/100",
@@ -46,11 +63,12 @@ class UtilityAgent:
             "Study": f"knowledge is only {p.knowledge}",
             "Train": f"fitness is only {p.fitness}",
             "Guild patrol": f"safe hunter experience pays while readiness is {p.combat_readiness}/100",
-            "Gate mission": f"gate alert is {gate_alert}/3 and readiness is {p.combat_readiness}/100",
+            "Gate mission": (f"gate alert is {gate_alert}/3, readiness is "
+                             f"{p.combat_readiness}/100, and a plan is {plan_state}"),
             "Seek treatment": (f"injury severity is {p.injury_severity}/5 and health is "
                                f"{p.health}/100"),
-            "Prepare portal": (f"gate alert is {gate_alert}/3 and planning knowledge is "
-                               f"{p.knowledge}"),
+            "Prepare portal": (f"gate alert is {gate_alert}/3, planning knowledge is "
+                               f"{p.knowledge}, and a plan is {plan_state}"),
             "Talk with Aiko": (f"stress is {p.stress}/100 and their familiarity is "
                                f"{aiko_familiarity.familiarity if aiko_familiarity else 0}/100"),
             "Visit hunter shop": (f"equipment is {p.equipped_weapon or 'no weapon'} and "
