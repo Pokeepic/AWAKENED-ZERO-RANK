@@ -176,6 +176,7 @@ class TrainingEnvironment(gym.Env if gym else object):
             self.action_space = DiscreteSpace(len(ACTION_NAMES), seed)
             self.observation_space = ObservationSpace()
         self.environment = LearningEnvironment(seed)
+        self.condition = "standard"
         self.elapsed_steps, self._finished = 0, False
 
     @property
@@ -187,17 +188,19 @@ class TrainingEnvironment(gym.Env if gym else object):
 
     def reset(self, *, seed: int | None = None, options: dict | None = None
               ) -> tuple[tuple[float, ...], dict]:
-        del options
         if gym:
             super().reset(seed=seed)
         episode_seed = self.initial_seed if seed is None else seed
+        self.condition = (options or {}).get("condition", "standard")
         self.environment = LearningEnvironment(episode_seed)
+        _configure_evaluation_condition(self.environment, self.condition)
         self.action_space.seed(episode_seed)
         self.elapsed_steps, self._finished = 0, False
         observation = self.environment.observe()
         if np is not None:
             observation = np.asarray(observation, dtype=np.float32)
-        return observation, {"action_mask": self.action_masks(), "seed": episode_seed}
+        return observation, {"action_mask": self.action_masks(), "seed": episode_seed,
+                             "condition": self.condition}
 
     def step(self, action: int) -> tuple[tuple[float, ...], float, bool, bool, dict]:
         if self._finished:
@@ -215,7 +218,7 @@ class TrainingEnvironment(gym.Env if gym else object):
         info = {"action_mask": self.action_masks(), "action_name": transition.action,
                 "event_outcome": transition.event_outcome, "elapsed_steps": self.elapsed_steps,
                 "reward_components": dict(transition.reward_components),
-                "resolved_action": transition.resolved_action}
+                "resolved_action": transition.resolved_action, "condition": self.condition}
         observation = transition.observation
         if np is not None:
             observation = np.asarray(observation, dtype=np.float32)
@@ -235,8 +238,15 @@ class QLearningConfig:
     epsilon_end: float = 0.05
     exploration_bonus: float = 0.40
     curriculum: bool = True
+    training_conditions: tuple[str, ...] = ("standard",)
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "training_conditions", tuple(self.training_conditions))
+        if not self.training_conditions:
+            raise ValueError("At least one training condition is required")
+        unknown = set(self.training_conditions) - set(EVALUATION_CONDITIONS)
+        if unknown:
+            raise ValueError(f"Unknown training conditions: {sorted(unknown)}")
         if self.episodes < 1 or self.horizon < 1:
             raise ValueError("episodes and horizon must be at least 1")
         if not 0 < self.learning_rate <= 1 or not 0 <= self.discount_factor <= 1:
@@ -259,6 +269,7 @@ class TrainingResult:
     episode_seeds: tuple[int, ...] = ()
     training_rewards: tuple[float, ...] = ()
     state_count: int = 0
+    episode_conditions: tuple[str, ...] = ()
 
 
 def abstract_state(observation) -> tuple[int, ...]:
@@ -297,12 +308,14 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     """Train reproducible masked Q-learning with curriculum and count exploration."""
     config = config or QLearningConfig()
     rng, table = random.Random(training_seed), {}
-    totals, shaped_totals, episode_seeds, visits = [], [], [], Counter()
+    totals, shaped_totals, episode_seeds, episode_conditions, visits = [], [], [], [], Counter()
     for episode in range(config.episodes):
         episode_seed = rng.randrange(2**31)
+        condition = config.training_conditions[episode % len(config.training_conditions)]
         episode_seeds.append(episode_seed)
+        episode_conditions.append(condition)
         env = TrainingEnvironment(episode_seed, config.horizon)
-        observation, info = env.reset(seed=episode_seed)
+        observation, info = env.reset(seed=episode_seed, options={"condition": condition})
         total = shaped_total = 0.0
         epsilon = (config.epsilon_start if config.episodes == 1 else config.epsilon_start +
                    (config.epsilon_end - config.epsilon_start) * episode / (config.episodes - 1))
@@ -333,8 +346,8 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         totals.append(round(total, 3))
         shaped_totals.append(round(shaped_total, 3))
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
-                          tuple(shaped_totals), len(table))
-CHECKPOINT_VERSION = 2
+                          tuple(shaped_totals), len(table), tuple(episode_conditions))
+CHECKPOINT_VERSION = 3
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -346,6 +359,7 @@ def _checkpoint_data(result: TrainingResult) -> dict:
         "config": asdict(result.config),
         "episode_rewards": result.episode_rewards,
         "episode_seeds": result.episode_seeds,
+        "episode_conditions": result.episode_conditions,
         "training_rewards": result.training_rewards,
         "state_count": result.state_count,
         "q_table": [
@@ -375,20 +389,26 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") != CHECKPOINT_VERSION:
+    if data.get("checkpoint_version") not in (2, CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
         raise ValueError("Checkpoint policy schema does not match this environment")
+    payload = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if digest != hashlib.sha256(payload).hexdigest():
+        raise ValueError("Checkpoint integrity verification failed")
     table = {tuple(item["state"]): list(item["values"]) for item in data["q_table"]}
-    result = TrainingResult(
-        training_seed=data["training_seed"], config=QLearningConfig(**data["config"]),
-        q_table=table, episode_rewards=tuple(data["episode_rewards"]),
+    config_data = dict(data["config"])
+    config_data["training_conditions"] = tuple(
+        config_data.get("training_conditions", ("standard",)))
+    episode_rewards = tuple(data["episode_rewards"])
+    return TrainingResult(
+        training_seed=data["training_seed"], config=QLearningConfig(**config_data),
+        q_table=table, episode_rewards=episode_rewards,
         episode_seeds=tuple(data["episode_seeds"]),
         training_rewards=tuple(data["training_rewards"]), state_count=data["state_count"],
+        episode_conditions=tuple(data.get(
+            "episode_conditions", ("standard",) * len(episode_rewards))),
     )
-    if digest != checkpoint_digest(result):
-        raise ValueError("Checkpoint integrity verification failed")
-    return result
 
 @dataclass(frozen=True)
 class BatchComparison:

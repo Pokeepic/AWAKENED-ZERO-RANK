@@ -528,6 +528,37 @@ class SimulationTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             environment.step(0)
 
+    def test_training_reset_accepts_deterministic_condition_options(self) -> None:
+        environment = TrainingEnvironment(seed=9, horizon=3)
+        observation, info = environment.reset(
+            seed=9, options={"condition": "compound_crisis"}
+        )
+        self.assertEqual(info["condition"], "compound_crisis")
+        self.assertEqual(environment.simulation.state.protagonist.health, 42)
+        self.assertTrue(environment.observation_space.contains(observation))
+        with self.assertRaises(ValueError):
+            environment.reset(options={"condition": "unknown"})
+
+    def test_training_cycles_conditions_reproducibly(self) -> None:
+        config = QLearningConfig(
+            episodes=4, horizon=5,
+            training_conditions=("standard", "compound_crisis"),
+        )
+        first = train_q_learning(109, config)
+        second = train_q_learning(109, config)
+        self.assertEqual(first, second)
+        self.assertEqual(first.episode_conditions, (
+            "standard", "compound_crisis", "standard", "compound_crisis",
+        ))
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "conditioned.json"
+            save_checkpoint(first, path)
+            self.assertEqual(load_checkpoint(path), first)
+        with self.assertRaises(ValueError):
+            QLearningConfig(training_conditions=())
+        with self.assertRaises(ValueError):
+            QLearningConfig(training_conditions=("unknown",))
+
     def test_integer_actions_enforce_current_mask(self) -> None:
         environment = TrainingEnvironment(seed=5, horizon=4)
         _, info = environment.reset()
@@ -717,6 +748,15 @@ class SimulationTests(unittest.TestCase):
             restored = load_checkpoint(first)
             save_checkpoint(restored, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
+            legacy = json.loads(first.read_text(encoding="utf-8"))
+            legacy.pop("sha256")
+            legacy["checkpoint_version"] = 2
+            legacy.pop("episode_conditions")
+            legacy["config"].pop("training_conditions")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_checkpoint(first), trained)
         self.assertEqual(restored, trained)
         self.assertEqual(len(checkpoint_digest(restored)), 64)
 

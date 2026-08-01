@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.28.0** · **93 automated tests**
+Current release: **0.29.0** · **95 automated tests**
 
 ## Design principles
 
@@ -43,9 +43,9 @@ Current release: **0.28.0** · **93 automated tests**
 - Gymnasium-compatible fixed-horizon episodes with 12 integer actions and valid-action masks.
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies.
-- Count-based exploration, phased curriculum rewards, and held-out seed enforcement.
+- Count-based exploration, phased curriculum rewards, deterministic multi-condition training schedules, and held-out seed enforcement.
 - Reward decomposition, action/mask frequencies, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
-- Deterministic Q-table checkpoints with schema validation and SHA-256 tamper detection.
+- Deterministic Q-table checkpoints with action/condition schema validation, SHA-256 tamper detection, and authenticated version migration.
 - Repeated independent trials with pooled confidence and a conservative adoption gate.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 - Deterministic evaluation starts for standard life, financial pressure, injury recovery, Gate crises, and a compound medical/debt/Gate crisis.
@@ -112,6 +112,8 @@ Milestone 27 replaced action-count inference with persistent prepared-mission co
 
 Milestone 28 added a compound crisis combining severe injury, low energy, rent arrears, limited cash, and maximum Gate alert. It exposed rent repayment outranking urgent treatment, so repayment utility now decreases with injury severity and low health. Across four 60-step seeds, utility and heuristic both chose treatment first in 4/4 runs, survived 4/4, cleared arrears 4/4, and produced no exploit flags. Existing condition audits retained 4/4 survival and rent recovery.
 
+Milestone 29 made fixed-horizon training condition-aware without changing the default. Gymnasium resets accept a named condition through options, Q-learning cycles a validated condition tuple deterministically, and every episode records its condition. Checkpoint schema 3 preserves the schedule and loads authenticated schema-2 checkpoints as all-standard training. Only tiny reproducibility tests were run; there is no new RL verdict.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
@@ -164,6 +166,7 @@ Completed milestones are grouped for readability:
 | 26 | Maximum-alert plan-aware utility scoring with preserved lower-alert behavior |
 | 27 | Persistent prepared-mission counters, effectiveness rates, and backward-compatible schema-4 reports |
 | 28 | Compound medical/debt/Gate stress testing and injury-aware repayment priorities |
+| 29 | Gym reset conditions, deterministic multi-condition training schedules, and checkpoint schema 3 |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
