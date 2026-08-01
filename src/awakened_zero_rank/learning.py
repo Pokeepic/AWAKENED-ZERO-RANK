@@ -7,10 +7,12 @@ its compatible fallback spaces to Gymnasium's official Env, Discrete, and Box ty
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+import hashlib
 import json
 import math
 import random
+from pathlib import Path
 
 try:
     import gymnasium as gym
@@ -328,6 +330,61 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         shaped_totals.append(round(shaped_total, 3))
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table))
+CHECKPOINT_VERSION = 1
+
+
+def _checkpoint_data(result: TrainingResult) -> dict:
+    return {
+        "checkpoint_version": CHECKPOINT_VERSION,
+        "encoder": "strategic-v2",
+        "action_names": ACTION_NAMES,
+        "training_seed": result.training_seed,
+        "config": asdict(result.config),
+        "episode_rewards": result.episode_rewards,
+        "episode_seeds": result.episode_seeds,
+        "training_rewards": result.training_rewards,
+        "state_count": result.state_count,
+        "q_table": [
+            {"state": state, "values": values}
+            for state, values in sorted(result.q_table.items())
+        ],
+    }
+
+
+def checkpoint_digest(result: TrainingResult) -> str:
+    payload = json.dumps(_checkpoint_data(result), sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def save_checkpoint(result: TrainingResult, path: str | Path) -> Path:
+    """Write a deterministic, integrity-protected tabular policy checkpoint."""
+    destination = Path(path)
+    data = _checkpoint_data(result)
+    data["sha256"] = checkpoint_digest(result)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
+    return destination
+
+
+def load_checkpoint(path: str | Path) -> TrainingResult:
+    """Load a checkpoint only when its schema, actions, and digest are intact."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    digest = data.pop("sha256", None)
+    if data.get("checkpoint_version") != CHECKPOINT_VERSION:
+        raise ValueError("Unsupported checkpoint version")
+    if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
+        raise ValueError("Checkpoint policy schema does not match this environment")
+    table = {tuple(item["state"]): list(item["values"]) for item in data["q_table"]}
+    result = TrainingResult(
+        training_seed=data["training_seed"], config=QLearningConfig(**data["config"]),
+        q_table=table, episode_rewards=tuple(data["episode_rewards"]),
+        episode_seeds=tuple(data["episode_seeds"]),
+        training_rewards=tuple(data["training_rewards"]), state_count=data["state_count"],
+    )
+    if digest != checkpoint_digest(result):
+        raise ValueError("Checkpoint integrity verification failed")
+    return result
 
 @dataclass(frozen=True)
 class BatchComparison:
@@ -578,6 +635,52 @@ def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
         worst_rl_seeds=tuple(episode.seed for episode in worst),
     )
 
+@dataclass(frozen=True)
+class TrialSummary:
+    training_seed: int
+    evaluation_seeds: tuple[int, ...]
+    rl_average_reward: float
+    utility_average_reward: float
+    mean_difference: float
+    verdict: str
+    checkpoint_sha256: str
+
+
+@dataclass(frozen=True)
+class RepeatedTrialResult:
+    trials: tuple[TrialSummary, ...]
+    pooled_mean_difference: float
+    verdict: str
+    neural_trial_ready: bool
+
+
+def evaluate_repeated_trials(training_seeds: tuple[int, ...],
+                              evaluation_seed_groups: tuple[tuple[int, ...], ...],
+                              config: QLearningConfig) -> RepeatedTrialResult:
+    """Run independent training/evaluation trials and pool paired held-out evidence."""
+    if not training_seeds or len(training_seeds) != len(evaluation_seed_groups):
+        raise ValueError("Each training seed requires one non-empty evaluation seed group")
+    summaries, pooled = [], []
+    for training_seed, evaluation_seeds in zip(training_seeds, evaluation_seed_groups):
+        if not evaluation_seeds:
+            raise ValueError("Evaluation seed groups cannot be empty")
+        result = train_q_learning(training_seed, config)
+        batch = diagnose_batch(result, evaluation_seeds, config.horizon, worst_count=1)
+        rl_rewards = [item.total_reward for item in batch.rl_episodes]
+        utility_rewards = [item.total_reward for item in batch.utility_episodes]
+        differences = [rl - utility for rl, utility in zip(rl_rewards, utility_rewards)]
+        pooled.extend(differences)
+        summaries.append(TrialSummary(
+            training_seed=training_seed, evaluation_seeds=evaluation_seeds,
+            rl_average_reward=round(sum(rl_rewards) / len(rl_rewards), 3),
+            utility_average_reward=round(sum(utility_rewards) / len(utility_rewards), 3),
+            mean_difference=round(sum(differences) / len(differences), 3),
+            verdict=_honest_verdict(differences), checkpoint_sha256=checkpoint_digest(result),
+        ))
+    verdict = _honest_verdict(pooled)
+    ready = verdict == "promising" and all(item.verdict == "promising" for item in summaries)
+    return RepeatedTrialResult(tuple(summaries), round(sum(pooled) / len(pooled), 3),
+                               verdict, ready)
 
 def diagnostics_report(batch: DiagnosticBatch) -> str:
     """Render a deterministic JSON report suitable for versioned experiment records."""

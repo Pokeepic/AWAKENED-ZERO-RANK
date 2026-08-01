@@ -13,9 +13,11 @@ from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
 from awakened_zero_rank.learning import (
     ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
-    abstract_state, compare_utility_and_rl, curriculum_reward, diagnose_batch,
+    abstract_state, checkpoint_digest, compare_utility_and_rl, curriculum_reward,
+    diagnose_batch,
     diagnose_episode, diagnostics_report, heuristic_action,
-    evaluate_scenario, train_q_learning,
+    evaluate_repeated_trials, evaluate_scenario, load_checkpoint, save_checkpoint,
+    train_q_learning,
 )
 
 
@@ -676,6 +678,44 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(len(result.training_rewards), 3)
         self.assertEqual(result.state_count, len(result.q_table))
         self.assertNotEqual(result.episode_rewards, result.training_rewards)
+    def test_q_checkpoint_round_trip_is_exact_and_stable(self) -> None:
+        trained = train_q_learning(19, QLearningConfig(episodes=2, horizon=5))
+        with TemporaryDirectory() as directory:
+            first = Path(directory) / "first.json"
+            second = Path(directory) / "second.json"
+            save_checkpoint(trained, first)
+            restored = load_checkpoint(first)
+            save_checkpoint(restored, second)
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+        self.assertEqual(restored, trained)
+        self.assertEqual(len(checkpoint_digest(restored)), 64)
+
+    def test_q_checkpoint_rejects_tampering(self) -> None:
+        trained = train_q_learning(19, QLearningConfig(episodes=2, horizon=5))
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "tampered.json"
+            save_checkpoint(trained, path)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["q_table"][0]["values"][0] += 1
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_checkpoint(path)
+
+    def test_repeated_trials_are_reproducible_and_conservative(self) -> None:
+        config = QLearningConfig(episodes=2, horizon=5)
+        args = ((21, 22), ((121, 122), (221, 222)), config)
+        first = evaluate_repeated_trials(*args)
+        second = evaluate_repeated_trials(*args)
+        self.assertEqual(first, second)
+        self.assertFalse(first.neural_trial_ready)
+        self.assertEqual(len({trial.checkpoint_sha256 for trial in first.trials}), 2)
+
+    def test_repeated_trials_require_matching_nonempty_seed_groups(self) -> None:
+        config = QLearningConfig(episodes=2, horizon=5)
+        with self.assertRaises(ValueError):
+            evaluate_repeated_trials((1, 2), ((101,),), config)
+        with self.assertRaises(ValueError):
+            evaluate_repeated_trials((1,), ((),), config)
 
 if __name__ == "__main__":
     unittest.main()

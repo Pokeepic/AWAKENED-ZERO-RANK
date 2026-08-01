@@ -69,7 +69,9 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - reproducible masked-random and independent safety-first heuristic baselines;
 - four-policy held-out ranking across utility, heuristic, RL, and random controllers;
 - compact strategic state abstraction, deterministic count-based exploration, and phased curriculum rewards;
-- separate environment and training returns so reward shaping never contaminates evaluation.
+- separate environment and training returns so reward shaping never contaminates evaluation;
+- canonical Q-table checkpoints with action/encoder schema checks and SHA-256 integrity;
+- repeated independent training trials with pooled confidence and a conservative neural-readiness gate.
 - recurring patrol leader Daichi Mori, portal researcher Mei Kuroda, and supply owner Haruto Ishikawa;
 - a relationship network with personal loyalties, cooperation, and friction between NPCs;
 - identity-aware dialogue shaped by each NPC's role, personality, voice, context, and trust;
@@ -148,6 +150,11 @@ Milestone 14's controlled experiment trained for 24 episodes of 60 steps with tr
 Milestone 15 diagnosed the same frozen experiment rather than scaling it. Both policies survived every held-out episode, but RL completed 1.500 missions per episode versus 3.375, paid rent in 87.5% of due episodes versus 100%, and averaged only 15.200 progress reward versus 35.525. RL also used fewer strategic actions (5.250 versus 7.875) and had a 41.5% dominant-action share versus 30.0%. No configured exploit threshold fired, but the evidence points to excessive eating/resting and insufficient patrol and mission progression. The weakest RL seeds were 2404, 2408, and 2401.
 Milestone 17 regenerated a small 24-by-60 reference policy and compared four controllers on held-out seeds 2701-2708. Utility ranked first at 72.319 average reward, followed by the independent heuristic at 48.186, RL at -15.430, and masked-random at -25.433. Utility and heuristic survived and paid due rent in every episode. Random averaged 2.000 missions but survived only 12.5%, demonstrating why mission count or reward cannot replace safety metrics. The verdict remains **baseline remains better**.
 Milestone 18 trained the second controlled tabular policy for 120 fixed-horizon episodes of 80 steps with training seed 1800, then evaluated on held-out seeds 3801-3812. Utility remained first at 88.581 average environment reward, while RL improved to 80.088, ahead of heuristic at 50.842 and random at -31.887. RL completed 4.667 missions versus utility's 3.750 and matched its 100% survival and rent payment. The paired reward difference was -8.493, but uncertainty crossed zero, so the honest verdict is **inconclusive**. RL remains offline until a repeatable advantage is demonstrated.
+Milestone 19 repeated the 120-by-80 experiment with training seeds 1900-1902 and three disjoint eight-seed evaluation groups. Trial reward differences were -19.965, +8.436, and -7.059; all three verdicts were inconclusive. The pooled difference was -6.196, also **inconclusive**, so the neural-readiness gate remains closed. Each learned Q-table now has a stable SHA-256 checkpoint identity and rejects tampering or incompatible action/encoder schemas.
+
+## Future observer website
+
+A later presentation milestone can expose the simulation through a web observer dashboard: live time and weather, Ren's condition and current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Small sprite animations can visualize travel, work, rest, training, conversations, and Gate activity. The website should remain a read-only view of the authoritative deterministic simulator; pause, speed, seed, save, and diagnostic controls belong to developer tooling rather than direct control over Ren.
 
 ## Status
 
@@ -187,4 +194,6 @@ Milestone 18 trained the second controlled tabular policy for 120 fixed-horizon 
 
 ✅ Milestone 18: compact strategic state abstraction, count-based exploration, phased reward curriculum, auditable returns, and an inconclusive second controlled RL experiment.
 
-Next: consider a masked neural policy only after strengthening repeated-trial confidence and checkpoint auditing.
+✅ Milestone 19: deterministic integrity-protected Q-table checkpoints, repeated independent trials, pooled confidence, and a conservative neural-readiness gate.
+
+Next: improve tabular consistency or environment coverage; defer neural RL while the readiness gate remains closed. A web observer dashboard with lightweight sprite animation remains on the future presentation roadmap.
