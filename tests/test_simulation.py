@@ -1,3 +1,4 @@
+import json
 import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -11,7 +12,8 @@ from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
 from awakened_zero_rank.learning import (
     ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
-    compare_utility_and_rl, evaluate_scenario, train_q_learning,
+    compare_utility_and_rl, diagnose_batch, diagnose_episode, diagnostics_report,
+    evaluate_scenario, train_q_learning,
 )
 
 
@@ -517,6 +519,51 @@ class SimulationTests(unittest.TestCase):
                       {"promising", "inconclusive", "baseline remains better"})
         with self.assertRaises(ValueError):
             compare_utility_and_rl(trained, (101,), horizon=6)
+
+    def test_reward_components_reconcile_with_transition_total(self) -> None:
+        transition = LearningEnvironment(seed=5).step("Rest")
+        self.assertEqual(tuple(name for name, _ in transition.reward_components),
+                         ("survival", "stability", "progress", "social"))
+        self.assertAlmostEqual(transition.reward,
+                               sum(value for _, value in transition.reward_components), places=3)
+
+    def test_episode_diagnostics_count_actions_masks_and_outcomes(self) -> None:
+        trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
+        episode = diagnose_episode(201, 6, "rl", trained)
+        self.assertEqual(sum(count for _, count in episode.action_counts), episode.steps)
+        self.assertEqual(len(episode.trace), episode.steps)
+        self.assertLessEqual(episode.decision_steps, episode.steps)
+        self.assertTrue(all(0 <= count <= episode.steps for _, count in episode.masked_counts))
+        utility = diagnose_episode(201, 12, "utility")
+        self.assertEqual(sum(count for _, count in utility.action_counts), utility.steps)
+        self.assertAlmostEqual(episode.total_reward,
+                               sum(value for _, value in episode.reward_components), places=3)
+        self.assertGreaterEqual(episode.dominant_action_share, 0)
+        self.assertLessEqual(episode.dominant_action_share, 1)
+
+    def test_diagnostic_batch_is_reproducible_and_ranks_worst_seeds(self) -> None:
+        trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
+        first = diagnose_batch(trained, (201, 202, 203), horizon=6, worst_count=2)
+        second = diagnose_batch(trained, (201, 202, 203), horizon=6, worst_count=2)
+        self.assertEqual(first, second)
+        self.assertEqual(len(first.worst_rl_seeds), 2)
+        rewards = {episode.seed: episode.total_reward for episode in first.rl_episodes}
+        self.assertEqual(list(first.worst_rl_seeds),
+                         sorted(rewards, key=lambda seed: (rewards[seed], seed))[:2])
+
+    def test_diagnostics_report_contains_auditable_metrics_and_traces(self) -> None:
+        trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
+        batch = diagnose_batch(trained, (201, 202), horizon=6, worst_count=1)
+        report = json.loads(diagnostics_report(batch))
+        self.assertEqual(report["evaluation_seeds"], [201, 202])
+        self.assertIn("reward_components", report["rl"])
+        self.assertIn("action_counts", report["utility"])
+        self.assertIn("masked_counts", report["rl"])
+        self.assertIn("action_frequencies", report["rl"])
+        self.assertIn("average_dominant_action_share", report["rl"])
+        self.assertTrue(report["worst_rl_episodes"][0]["trace"])
+        self.assertIn(report["verdict"],
+                      {"promising", "inconclusive", "baseline remains better"})
 
 if __name__ == "__main__":
     unittest.main()

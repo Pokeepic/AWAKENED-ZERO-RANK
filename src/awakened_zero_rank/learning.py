@@ -6,7 +6,9 @@ its compatible fallback spaces to Gymnasium's official Env, Discrete, and Box ty
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
+import json
 import math
 import random
 
@@ -26,6 +28,7 @@ ACTION_NAMES = (
     "Eat", "Rest", "Part-time work", "Study", "Train", "Visit hunter shop",
     "Talk with Aiko", "Guild patrol", "Prepare portal", "Gate mission",
 )
+REWARD_COMPONENTS = ("survival", "stability", "progress", "social")
 
 
 @dataclass(frozen=True)
@@ -35,6 +38,8 @@ class Transition:
     action: str
     valid_actions: tuple[str, ...]
     event_outcome: str
+    reward_components: tuple[tuple[str, float], ...] = ()
+    resolved_action: str = ""
 
 
 class LearningEnvironment:
@@ -75,24 +80,47 @@ class LearningEnvironment:
     def step(self, action: str) -> Transition:
         if action not in self.valid_actions:
             raise ValueError(f"Invalid action {action!r}; valid actions: {self.valid_actions}")
-        before = self._score()
+        before = self.score_components()
         event = self.simulation.step(action)
-        reward = round(self._score() - before, 3)
-        return Transition(self.observe(), reward, action, self.valid_actions, event.outcome)
+        components = self._component_delta(before)
+        reward = round(sum(value for _, value in components), 3)
+        components = self._reconcile_components(components, reward)
+        return Transition(self.observe(), reward, action, self.valid_actions,
+                          event.outcome, components, event.action)
 
     def baseline_step(self) -> Transition:
-        before = self._score()
+        before = self.score_components()
         event = self.simulation.step()
-        reward = round(self._score() - before, 3)
-        return Transition(self.observe(), reward, event.action, self.valid_actions, event.outcome)
+        components = self._component_delta(before)
+        reward = round(sum(value for _, value in components), 3)
+        components = self._reconcile_components(components, reward)
+        return Transition(self.observe(), reward, event.action, self.valid_actions,
+                          event.outcome, components, event.action)
 
-    def _score(self) -> float:
+    def score_components(self) -> dict[str, float]:
         p = self.simulation.state.protagonist
         survival = p.health * 0.5 + p.energy * 0.12 - p.hunger * 0.12 - p.stress * 0.08
         stability = min(p.money, p.rent_cost * 2) / 350 - p.rent_arrears / 250
         progress = p.rank_points * 0.7 + p.missions_completed * 2 + p.ability_mastery * 0.2
         social = sum((r.trust - r.tension) * 0.08 for r in p.relationships.values())
-        return survival + stability + progress + social
+        return {"survival": survival, "stability": stability,
+                "progress": progress, "social": social}
+
+    def _component_delta(self, before: dict[str, float]) -> tuple[tuple[str, float], ...]:
+        after = self.score_components()
+        return tuple((name, after[name] - before[name])
+                     for name in REWARD_COMPONENTS)
+
+    @staticmethod
+    def _reconcile_components(components: tuple[tuple[str, float], ...],
+                              reward: float) -> tuple[tuple[str, float], ...]:
+        reconciled = list(components)
+        name, value = reconciled[-1]
+        reconciled[-1] = (name, value + reward - sum(item for _, item in reconciled))
+        return tuple(reconciled)
+
+    def _score(self) -> float:
+        return sum(self.score_components().values())
 
 class DiscreteSpace:
     def __init__(self, n: int, seed: int | None = None) -> None:
@@ -175,7 +203,9 @@ class TrainingEnvironment(gym.Env if gym else object):
         truncated = self.elapsed_steps >= self.horizon and not terminated
         self._finished = terminated or truncated
         info = {"action_mask": self.action_masks(), "action_name": transition.action,
-                "event_outcome": transition.event_outcome, "elapsed_steps": self.elapsed_steps}
+                "event_outcome": transition.event_outcome, "elapsed_steps": self.elapsed_steps,
+                "reward_components": dict(transition.reward_components),
+                "resolved_action": transition.resolved_action}
         observation = transition.observation
         if np is not None:
             observation = np.asarray(observation, dtype=np.float32)
@@ -300,6 +330,223 @@ def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, 
                    "baseline remains better" if mean + margin < 0 else "inconclusive")
     return BatchComparison(result.training_seed, tuple(evaluation_seeds), tuple(rl_totals),
                            tuple(utility_totals), round(mean, 3), verdict)
+@dataclass(frozen=True)
+class DiagnosticStep:
+    step: int
+    action: str
+    reward: float
+    health: int
+    energy: int
+    money: int
+    rent_arrears: int
+    missions_completed: int
+
+
+@dataclass(frozen=True)
+class EpisodeDiagnostics:
+    seed: int
+    policy: str
+    steps: int
+    decision_steps: int
+    total_reward: float
+    reward_components: tuple[tuple[str, float], ...]
+    action_counts: tuple[tuple[str, int], ...]
+    masked_counts: tuple[tuple[str, int], ...]
+    survived: bool
+    rent_due_reached: bool
+    rent_paid: bool
+    missions_attempted: int
+    missions_completed: int
+    unique_actions: int
+    dominant_action_share: float
+    longest_action_streak: int
+    exploit_flags: tuple[str, ...]
+    trace: tuple[DiagnosticStep, ...]
+
+
+@dataclass(frozen=True)
+class DiagnosticBatch:
+    training_seed: int
+    evaluation_seeds: tuple[int, ...]
+    rl_episodes: tuple[EpisodeDiagnostics, ...]
+    utility_episodes: tuple[EpisodeDiagnostics, ...]
+    reward_difference: float
+    verdict: str
+    worst_rl_seeds: tuple[int, ...]
+
+
+def _episode_summary(seed: int, policy: str, environment: LearningEnvironment,
+                     transitions: list[Transition], masks: list[tuple[int, ...]],
+                     trace: list[DiagnosticStep]) -> EpisodeDiagnostics:
+    actions = Counter(item.resolved_action or item.action for item in transitions)
+    policy_actions = Counter(name for name, count in actions.items()
+                             for _ in range(count) if name in ACTION_NAMES)
+    masked = Counter()
+    components = Counter()
+    for mask in masks:
+        for index, valid in enumerate(mask):
+            if not valid:
+                masked[ACTION_NAMES[index]] += 1
+    for transition in transitions:
+        components.update(dict(transition.reward_components))
+    longest, current, previous = 0, 0, None
+    for transition in transitions:
+        action = transition.resolved_action or transition.action
+        current = current + 1 if action == previous else 1
+        longest, previous = max(longest, current), action
+    steps = len(transitions)
+    decision_steps = sum(policy_actions.values())
+    dominant = (max(policy_actions.values(), default=0) / decision_steps
+                if decision_steps else 0.0)
+    flags = []
+    if decision_steps >= 8 and len(policy_actions) <= 2:
+        flags.append("low action diversity")
+    if decision_steps >= 8 and longest >= max(8, math.ceil(decision_steps * 0.2)):
+        flags.append("repeated-action loop")
+    passive = sum(policy_actions[name] for name in ("Eat", "Rest", "Talk with Aiko"))
+    if decision_steps >= 8 and passive / decision_steps >= 0.8:
+        flags.append("passive-policy dominance")
+    p = environment.simulation.state.protagonist
+    due_reached = environment.simulation.state.clock.day > p.rent_due_day
+    return EpisodeDiagnostics(
+        seed=seed, policy=policy, steps=steps, decision_steps=decision_steps,
+        total_reward=round(sum(item.reward for item in transitions), 3),
+        reward_components=tuple((name, round(components[name], 3)) for name in REWARD_COMPONENTS),
+        action_counts=tuple(sorted(actions.items())),
+        masked_counts=tuple((name, masked[name]) for name in ACTION_NAMES),
+        survived=p.health > 0, rent_due_reached=due_reached,
+        rent_paid=due_reached and p.rent_arrears == 0,
+        missions_attempted=p.missions_attempted, missions_completed=p.missions_completed,
+        unique_actions=len(policy_actions), dominant_action_share=round(dominant, 3),
+        longest_action_streak=longest, exploit_flags=tuple(flags), trace=tuple(trace),
+    )
+
+
+def diagnose_episode(seed: int, horizon: int, policy: str,
+                     result: TrainingResult | None = None) -> EpisodeDiagnostics:
+    """Run one deterministic episode and retain evidence for failure analysis."""
+    if horizon < 1:
+        raise ValueError("horizon must be at least 1")
+    if policy not in {"rl", "utility"}:
+        raise ValueError("policy must be 'rl' or 'utility'")
+    if policy == "rl" and result is None:
+        raise ValueError("RL diagnostics require a training result")
+    environment = LearningEnvironment(seed)
+    transitions, masks, trace = [], [], []
+    for step in range(1, horizon + 1):
+        mask = environment.action_mask()
+        masks.append(mask)
+        if policy == "utility":
+            transition = environment.baseline_step()
+        else:
+            observation = environment.observe()
+            values = result.q_table.get(discretize(observation), [0.0] * len(ACTION_NAMES))
+            action = _greedy_action(values, mask)
+            transition = environment.step(ACTION_NAMES[action])
+        transitions.append(transition)
+        p = environment.simulation.state.protagonist
+        trace.append(DiagnosticStep(step, transition.resolved_action or transition.action,
+                                    transition.reward, p.health,
+                                    p.energy, p.money, p.rent_arrears,
+                                    p.missions_completed))
+        if p.health <= 0:
+            break
+    return _episode_summary(seed, policy, environment, transitions, masks, trace)
+
+
+def _honest_verdict(differences: list[float]) -> str:
+    if len(differences) < 2:
+        return "inconclusive"
+    mean = sum(differences) / len(differences)
+    standard_error = math.sqrt(sum((value - mean) ** 2 for value in differences) /
+                               (len(differences) - 1)) / math.sqrt(len(differences))
+    margin = 1.96 * standard_error
+    if mean - margin > 0:
+        return "promising"
+    if mean + margin < 0:
+        return "baseline remains better"
+    return "inconclusive"
+
+
+def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
+                   horizon: int | None = None, worst_count: int = 3) -> DiagnosticBatch:
+    """Compare policies and retain the weakest held-out RL episodes for inspection."""
+    if not evaluation_seeds:
+        raise ValueError("At least one evaluation seed is required")
+    if worst_count < 1:
+        raise ValueError("worst_count must be at least 1")
+    training_seeds = {result.training_seed, *result.episode_seeds}
+    if training_seeds.intersection(evaluation_seeds):
+        raise ValueError("Evaluation seeds must be held out from all training seeds")
+    horizon = horizon or result.config.horizon
+    rl = tuple(diagnose_episode(seed, horizon, "rl", result) for seed in evaluation_seeds)
+    utility = tuple(diagnose_episode(seed, horizon, "utility") for seed in evaluation_seeds)
+    differences = [r.total_reward - u.total_reward for r, u in zip(rl, utility)]
+    worst = sorted(rl, key=lambda episode: (episode.total_reward, episode.seed))[:worst_count]
+    return DiagnosticBatch(
+        training_seed=result.training_seed, evaluation_seeds=tuple(evaluation_seeds),
+        rl_episodes=rl, utility_episodes=utility,
+        reward_difference=round(sum(differences) / len(differences), 3),
+        verdict=_honest_verdict(differences),
+        worst_rl_seeds=tuple(episode.seed for episode in worst),
+    )
+
+
+def diagnostics_report(batch: DiagnosticBatch) -> str:
+    """Render a deterministic JSON report suitable for versioned experiment records."""
+    def aggregate(episodes: tuple[EpisodeDiagnostics, ...]) -> dict:
+        count = len(episodes)
+        actions = Counter()
+        masked = Counter()
+        components = Counter()
+        flags = Counter()
+        for episode in episodes:
+            actions.update(dict(episode.action_counts))
+            masked.update(dict(episode.masked_counts))
+            components.update(dict(episode.reward_components))
+            flags.update(episode.exploit_flags)
+        return {
+            "average_reward": round(sum(e.total_reward for e in episodes) / count, 3),
+            "average_missions": round(sum(e.missions_completed for e in episodes) / count, 3),
+            "survival_rate": round(sum(e.survived for e in episodes) / count, 3),
+            "rent_paid_rate_when_due": round(
+                sum(e.rent_paid for e in episodes) /
+                max(1, sum(e.rent_due_reached for e in episodes)), 3),
+            "average_decision_steps": round(sum(e.decision_steps for e in episodes) / count, 3),
+            "average_unique_actions": round(sum(e.unique_actions for e in episodes) / count, 3),
+            "average_dominant_action_share": round(
+                sum(e.dominant_action_share for e in episodes) / count, 3),
+            "maximum_action_streak": max(e.longest_action_streak for e in episodes),
+            "action_counts": dict(actions),
+            "action_frequencies": {name: round(value / sum(actions.values()), 3)
+                                   for name, value in actions.items()},
+            "masked_counts": dict(masked),
+            "masked_frequencies": {
+                name: round(value / sum(e.steps for e in episodes), 3)
+                for name, value in masked.items()
+            },
+            "reward_components": {name: round(components[name] / count, 3)
+                                  for name in REWARD_COMPONENTS},
+            "exploit_flags": dict(flags),
+        }
+    worst = []
+    for seed in batch.worst_rl_seeds:
+        episode = next(item for item in batch.rl_episodes if item.seed == seed)
+        worst.append({
+            "seed": seed, "reward": episode.total_reward,
+            "exploit_flags": episode.exploit_flags,
+            "trace": [step.__dict__ for step in episode.trace],
+        })
+    payload = {
+        "training_seed": batch.training_seed,
+        "evaluation_seeds": batch.evaluation_seeds,
+        "rl": aggregate(batch.rl_episodes),
+        "utility": aggregate(batch.utility_episodes),
+        "mean_reward_difference": batch.reward_difference,
+        "verdict": batch.verdict,
+        "worst_rl_episodes": worst,
+    }
+    return json.dumps(payload, indent=2, sort_keys=True)
 
 @dataclass(frozen=True)
 class ScenarioResult:

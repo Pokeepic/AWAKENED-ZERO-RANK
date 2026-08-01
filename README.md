@@ -60,7 +60,9 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - external policy actions and a shaped evaluation reward kept outside Ren's chronicle;
 - Gymnasium-style fixed-horizon episodes with integer actions and valid-action masks;
 - reproducible masked tabular Q-learning with auditable training and held-out evaluation seeds;
-- paired utility-versus-RL batch evaluation with a confidence-aware verdict.
+- paired utility-versus-RL batch evaluation with a confidence-aware verdict;
+- deterministic diagnostics for reward components, action and mask frequencies, outcome quality,
+  behavioral diversity, exploit indicators, and worst-seed traces.
 - recurring patrol leader Daichi Mori, portal researcher Mei Kuroda, and supply owner Haruto Ishikawa;
 - a relationship network with personal loyalties, cooperation, and friction between NPCs;
 - identity-aware dialogue shaped by each NPC's role, personality, voice, context, and trust;
@@ -136,6 +138,7 @@ python -m unittest discover -s tests -v
 Reinforcement learning is not the entire simulation. The simulation is the environment; an RL agent is one possible decision-maker inside it. We retain a transparent utility baseline so learned behavior can be measured against something stable, debuggable, and fun.
 
 Milestone 14's controlled experiment trained for 24 episodes of 60 steps with training seed 1400, then evaluated the frozen policy on held-out seeds 2401-2408. RL averaged 33.894 less shaped reward than the paired utility runs, so the honest verdict is **baseline remains better**. This is a small first experiment, not a claim that tabular RL cannot improve.
+Milestone 15 diagnosed the same frozen experiment rather than scaling it. Both policies survived every held-out episode, but RL completed 1.500 missions per episode versus 3.375, paid rent in 87.5% of due episodes versus 100%, and averaged only 15.200 progress reward versus 35.525. RL also used fewer strategic actions (5.250 versus 7.875) and had a 41.5% dominant-action share versus 30.0%. No configured exploit threshold fired, but the evidence points to excessive eating/resting and insufficient patrol and mission progression. The weakest RL seeds were 2404, 2408, and 2401.
 
 ## Status
 
@@ -167,4 +170,6 @@ Milestone 14's controlled experiment trained for 24 episodes of 60 steps with tr
 
 ✅ Milestone 14: Gymnasium-style fixed-horizon episodes, masked integer actions, reproducible tabular Q-learning, held-out batch comparison, and an honest first verdict.
 
-Next: improve state representation and reward design before scaling RL experiments.
+✅ Milestone 15: reward decomposition, action and mask diagnostics, outcome and diversity metrics, exploit indicators, worst-seed traces, and reproducible JSON reports.
+
+Next: broaden economic, injury, recovery, preparation, and multi-step objective scenarios before retraining.
