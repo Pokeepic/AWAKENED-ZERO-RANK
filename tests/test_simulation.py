@@ -687,6 +687,9 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(sum(count for _, count in utility.action_counts), utility.steps)
         self.assertAlmostEqual(episode.total_reward,
                                sum(value for _, value in episode.reward_components), places=3)
+        self.assertTrue(all(0 <= value <= 100 for value in (
+            episode.end_health, episode.end_energy, episode.end_hunger,
+            episode.end_stress)))
         self.assertGreaterEqual(episode.dominant_action_share, 0)
         self.assertLessEqual(episode.dominant_action_share, 1)
         self.assertGreaterEqual(episode.low_need_recovery_count, 0)
@@ -735,6 +738,8 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(len(first.worst_rl_seeds), 2)
         self.assertEqual(tuple(name for name, _ in first.reward_component_differences),
                          ("survival", "stability", "progress", "social"))
+        self.assertEqual(tuple(name for name, _ in first.terminal_wellbeing_differences),
+                         ("health", "energy", "hunger", "stress"))
         rewards = {episode.seed: episode.total_reward for episode in first.rl_episodes}
         self.assertEqual(list(first.worst_rl_seeds),
                          sorted(rewards, key=lambda seed: (rewards[seed], seed))[:2])
@@ -747,6 +752,9 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("reward_components", report["rl"])
         self.assertEqual(set(report["reward_component_differences"]),
                          {"survival", "stability", "progress", "social"})
+        self.assertEqual(set(report["terminal_wellbeing_differences"]),
+                         {"health", "energy", "hunger", "stress"})
+        self.assertIn("average_end_health", report["rl"])
         self.assertIn("action_counts", report["utility"])
         self.assertIn("masked_counts", report["rl"])
         self.assertIn("action_frequencies", report["rl"])

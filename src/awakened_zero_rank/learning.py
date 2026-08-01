@@ -600,6 +600,10 @@ class EpisodeDiagnostics:
     action_counts: tuple[tuple[str, int], ...]
     masked_counts: tuple[tuple[str, int], ...]
     survived: bool
+    end_health: int
+    end_energy: int
+    end_hunger: int
+    end_stress: int
     rent_due_reached: bool
     rent_paid: bool
     missions_attempted: int
@@ -648,6 +652,7 @@ class DiagnosticBatch:
     policy_ranking: tuple[str, ...]
     reward_difference: float
     reward_component_differences: tuple[tuple[str, float], ...]
+    terminal_wellbeing_differences: tuple[tuple[str, float], ...]
     verdict: str
     worst_rl_seeds: tuple[int, ...]
     condition: str = "standard"
@@ -702,7 +707,8 @@ def _episode_summary(seed: int, policy: str, condition: str,
         reward_components=tuple((name, round(components[name], 3)) for name in REWARD_COMPONENTS),
         action_counts=tuple(sorted(actions.items())),
         masked_counts=tuple((name, masked[name]) for name in ACTION_NAMES),
-        survived=p.health > 0, rent_due_reached=due_reached,
+        survived=p.health > 0, end_health=p.health, end_energy=p.energy,
+        end_hunger=p.hunger, end_stress=p.stress, rent_due_reached=due_reached,
         rent_paid=due_reached and p.rent_arrears == 0,
         missions_attempted=p.missions_attempted, missions_completed=p.missions_completed,
         prepared_missions_attempted=p.prepared_missions_attempted,
@@ -954,6 +960,12 @@ def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                          for r, u in zip(rl, utility)) / len(rl), 3))
         for name in REWARD_COMPONENTS
     )
+    terminal_differences = tuple(
+        (name, round(sum(getattr(r, attribute) - getattr(u, attribute)
+                         for r, u in zip(rl, utility)) / len(rl), 3))
+        for name, attribute in (("health", "end_health"), ("energy", "end_energy"),
+                                ("hunger", "end_hunger"), ("stress", "end_stress"))
+    )
     worst = sorted(rl, key=lambda episode: (episode.total_reward, episode.seed))[:worst_count]
     return DiagnosticBatch(
         training_seed=result.training_seed, evaluation_seeds=tuple(evaluation_seeds),
@@ -961,6 +973,7 @@ def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
         heuristic_episodes=heuristic, policy_ranking=ranking,
         reward_difference=round(sum(differences) / len(differences), 3),
         reward_component_differences=component_differences,
+        terminal_wellbeing_differences=terminal_differences,
         verdict=_honest_verdict(differences),
         worst_rl_seeds=tuple(episode.seed for episode in worst), condition=condition,
     )
@@ -1305,6 +1318,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             flags.update(episode.exploit_flags)
         return {
             "average_reward": round(sum(e.total_reward for e in episodes) / count, 3),
+            "average_end_health": round(sum(e.end_health for e in episodes) / count, 3),
+            "average_end_energy": round(sum(e.end_energy for e in episodes) / count, 3),
+            "average_end_hunger": round(sum(e.end_hunger for e in episodes) / count, 3),
+            "average_end_stress": round(sum(e.end_stress for e in episodes) / count, 3),
             "average_missions": round(sum(e.missions_completed for e in episodes) / count, 3),
             "preparation_coverage": round(
                 sum(e.prepared_missions_attempted for e in episodes) /
@@ -1402,6 +1419,8 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         "policy_ranking": batch.policy_ranking,
         "mean_reward_difference": batch.reward_difference,
         "reward_component_differences": dict(batch.reward_component_differences),
+        "terminal_wellbeing_differences": dict(
+            batch.terminal_wellbeing_differences),
         "verdict": batch.verdict,
         "worst_rl_episodes": worst,
     }
