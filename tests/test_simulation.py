@@ -890,6 +890,11 @@ class SimulationTests(unittest.TestCase):
     def test_count_exploration_configuration_is_validated(self) -> None:
         with self.assertRaises(ValueError):
             QLearningConfig(exploration_bonus=-0.1)
+        with self.assertRaises(ValueError):
+            QLearningConfig(progression_exploration_bonus=-0.1)
+        config = QLearningConfig(episodes=2, horizon=5,
+                                 progression_exploration_bonus=0.5)
+        self.assertEqual(train_q_learning(131, config), train_q_learning(131, config))
 
     def test_training_records_environment_and_curriculum_returns(self) -> None:
         result = train_q_learning(18, QLearningConfig(episodes=3, horizon=8))
@@ -912,6 +917,7 @@ class SimulationTests(unittest.TestCase):
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 5
             legacy.pop("visit_table")
+            legacy["config"].pop("progression_exploration_bonus")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")

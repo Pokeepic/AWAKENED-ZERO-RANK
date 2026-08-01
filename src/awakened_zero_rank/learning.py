@@ -238,6 +238,7 @@ class QLearningConfig:
     epsilon_start: float = 0.30
     epsilon_end: float = 0.05
     exploration_bonus: float = 0.40
+    progression_exploration_bonus: float = 0.0
     curriculum: bool = True
     training_conditions: tuple[str, ...] = ("standard",)
     unseen_state_fallback: str = "first_valid"
@@ -257,6 +258,8 @@ class QLearningConfig:
             raise ValueError("epsilon must satisfy 0 <= end <= start <= 1")
         if self.exploration_bonus < 0:
             raise ValueError("exploration_bonus cannot be negative")
+        if self.progression_exploration_bonus < 0:
+            raise ValueError("progression_exploration_bonus cannot be negative")
         if self.unseen_state_fallback not in {"first_valid", "heuristic"}:
             raise ValueError("unknown unseen-state fallback")
 
@@ -386,7 +389,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     config = config or QLearningConfig()
     rng, table = random.Random(training_seed), {}
     totals, shaped_totals, episode_seeds, episode_conditions = [], [], [], []
-    episode_state_counts, visits = [], Counter()
+    episode_state_counts, visits, action_visits = [], Counter(), Counter()
     for episode in range(config.episodes):
         episode_seed = rng.randrange(2**31)
         condition = config.training_conditions[episode % len(config.training_conditions)]
@@ -409,7 +412,11 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             else:
                 action = max(valid, key=lambda index: (
                     values[index] + config.exploration_bonus /
-                    math.sqrt(visits[(state, index)] + 1), -index))
+                    math.sqrt(visits[(state, index)] + 1) +
+                    (config.progression_exploration_bonus /
+                     math.sqrt(action_visits[index] + 1)
+                     if ACTION_NAMES[index] in {"Prepare portal", "Gate mission"}
+                     else 0.0), -index))
             next_observation, reward, terminated, truncated, info = env.step(action)
             shaped = curriculum_reward(episode, config.episodes, reward,
                                        info["reward_components"], config.curriculum)
@@ -419,6 +426,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             future = 0.0 if terminated or truncated else next_values[
                 _greedy_action(next_values, info["action_mask"])]
             visits[(state, action)] += 1
+            action_visits[action] += 1
             values[action] += config.learning_rate * (
                 shaped + config.discount_factor * future - values[action])
             observation, total, shaped_total = next_observation, total + reward, shaped_total + shaped
@@ -434,7 +442,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table), tuple(episode_conditions),
                           tuple(episode_state_counts), visit_table)
-CHECKPOINT_VERSION = 6
+CHECKPOINT_VERSION = 7
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -481,7 +489,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, CHECKPOINT_VERSION):
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
         raise ValueError("Checkpoint policy schema does not match this environment")
@@ -497,6 +505,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data["training_conditions"] = tuple(
         config_data.get("training_conditions", ("standard",)))
     config_data.setdefault("unseen_state_fallback", "first_valid")
+    config_data.setdefault("progression_exploration_bonus", 0.0)
     episode_rewards = tuple(data["episode_rewards"])
     return TrainingResult(
         training_seed=data["training_seed"], config=QLearningConfig(**config_data),
