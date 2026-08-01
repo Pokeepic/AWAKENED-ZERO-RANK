@@ -776,6 +776,16 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(episode.rent_paid)
         self.assertIn("Pay rent arrears", dict(episode.action_counts))
 
+    def test_compound_crisis_prioritizes_treatment_reproducibly(self) -> None:
+        first = diagnose_episode(61, 8, "utility", condition="compound_crisis")
+        second = diagnose_episode(61, 8, "utility", condition="compound_crisis")
+        heuristic = diagnose_episode(61, 8, "heuristic", condition="compound_crisis")
+        self.assertEqual(first, second)
+        self.assertEqual(first.condition, "compound_crisis")
+        self.assertEqual(first.trace[0].action, "Seek treatment")
+        self.assertEqual(heuristic.trace[0].action, "Seek treatment")
+        self.assertTrue(first.survived)
+
     def test_conditioned_diagnostics_are_reproducible_and_auditable(self) -> None:
         first = diagnose_episode(51, 4, "utility", condition="injury_recovery")
         second = diagnose_episode(51, 4, "utility", condition="injury_recovery")

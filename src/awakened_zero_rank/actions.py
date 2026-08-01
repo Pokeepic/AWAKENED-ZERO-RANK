@@ -182,6 +182,7 @@ def available_actions(p: Protagonist) -> tuple[Action, ...]:
             "Pay rent arrears",
             lambda p, _slot, _alert: (
                 70 + min(p.rent_arrears, p.money - 600) / 80 + p.rent_arrears / 200
+                - p.injury_severity * 20 - max(0, 60 - p.health)
             ),
             _pay_rent_arrears,
         ))

@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.27.0** · **92 automated tests**
+Current release: **0.28.0** · **93 automated tests**
 
 ## Design principles
 
@@ -48,7 +48,7 @@ Current release: **0.27.0** · **92 automated tests**
 - Deterministic Q-table checkpoints with schema validation and SHA-256 tamper detection.
 - Repeated independent trials with pooled confidence and a conservative adoption gate.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
-- Deterministic evaluation starts for standard life, financial pressure, injury recovery, and Gate crises.
+- Deterministic evaluation starts for standard life, financial pressure, injury recovery, Gate crises, and a compound medical/debt/Gate crisis.
 - Versioned scenario-suite JSON reports with stable policy binding, SHA-256 identity, exact reload, tamper rejection, and backward-compatible schema loading.
 - Explainable offline adoption decisions with checkpoint verification and explicit confidence, safety, progression, rent-recovery, action-dominance, and exploit blockers.
 
@@ -110,12 +110,14 @@ Milestone 26 made utility decisions plan-aware only at maximum Gate alert. In th
 
 Milestone 27 replaced action-count inference with persistent prepared-mission counters. The four-seed Gate-crisis audit recorded nine attempts, eight completions, four consumed plans, and three prepared completions: 44.4% preparation coverage, 75% prepared success, and 88.9% overall success. This small sample measures behavior but does not establish that preparation causes a higher success rate. Schema-4 reports expose both rates, and older saves/reports default the new fields safely.
 
+Milestone 28 added a compound crisis combining severe injury, low energy, rent arrears, limited cash, and maximum Gate alert. It exposed rent repayment outranking urgent treatment, so repayment utility now decreases with injury severity and low health. Across four 60-step seeds, utility and heuristic both chose treatment first in 4/4 runs, survived 4/4, cleared arrears 4/4, and produced no exploit flags. Existing condition audits retained 4/4 survival and rent recovery.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
 | Debt behavior — resolved in M25 | Rent arrears were impossible to repay after the deadline, making paid patrols dominate | Added partial repayment while preserving ¥600 emergency cash; no patrol nerf was needed | Recovery improved from 0/4 to 4/4, survival stayed 4/4, and dominant share fell from 47.5% to 24.4% |
 | Gate pacing — resolved for utility in M26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
-| Recovery access | Severe injury plus low cash can create a long recovery spiral | Review minimum clinic access, consumable availability, and safe income options rather than granting free healing | Injury scenarios return to stable health without erasing economic consequences |
+| Recovery access — priority fixed in M28 | Compound injury and debt made repayment outrank urgent treatment | Repayment now defers under severe injury or low health; clinic pricing and assistance still need separate review | Utility and heuristic treated first in 4/4 runs, survived 4/4, and cleared arrears 4/4 |
 | Social frequency | Dialogue should matter without becoming a low-risk reward farm | Add context-sensitive cooldowns or diminishing utility for repeated conversations while preserving crisis support | Relationship growth remains varied and passive-policy flags do not increase |
 | Policy consistency | Repeated tabular trials remain inconclusive and vary by training seed | Improve state coverage and condition-aware diagnostics before increasing episode counts or trying neural RL | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
@@ -161,6 +163,7 @@ Completed milestones are grouped for readability:
 | 25 | Partial rent-arrears repayment, emergency-cash protection, and a measured financial soft-lock fix |
 | 26 | Maximum-alert plan-aware utility scoring with preserved lower-alert behavior |
 | 27 | Persistent prepared-mission counters, effectiveness rates, and backward-compatible schema-4 reports |
+| 28 | Compound medical/debt/Gate stress testing and injury-aware repayment priorities |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

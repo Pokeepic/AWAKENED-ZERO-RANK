@@ -33,7 +33,7 @@ ACTION_NAMES = (
 )
 REWARD_COMPONENTS = ("survival", "stability", "progress", "social")
 EVALUATION_CONDITIONS = ("standard", "financial_pressure", "injury_recovery",
-                         "gate_crisis")
+                         "gate_crisis", "compound_crisis")
 MAX_DOMINANCE_REGRESSION = 0.15
 
 
@@ -588,6 +588,13 @@ def _configure_evaluation_condition(environment: LearningEnvironment,
     elif condition == "gate_crisis":
         establish_hunter_start()
         p.health, p.energy, p.stress = 75, 55, 60
+        state.gate_alert_level = 3
+    elif condition == "compound_crisis":
+        establish_hunter_start()
+        state.clock.day = p.rent_due_day + 1
+        p.money, p.rent_arrears = 3_000, p.rent_cost
+        p.health, p.energy, p.hunger, p.stress = 42, 30, 55, 80
+        p.injury_severity, p.injuries = 3, 1
         state.gate_alert_level = 3
 
 
