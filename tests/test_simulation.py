@@ -23,7 +23,7 @@ from awakened_zero_rank.learning import (
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
     load_checkpoint, load_scenario_suite_report, save_checkpoint,
     save_scenario_suite_report,
-    scenario_suite_digest, scenario_suite_report,
+    scenario_suite_digest, scenario_suite_report, summarize_training_conditions,
     train_q_learning,
 )
 
@@ -558,6 +558,26 @@ class SimulationTests(unittest.TestCase):
             QLearningConfig(training_conditions=())
         with self.assertRaises(ValueError):
             QLearningConfig(training_conditions=("unknown",))
+
+    def test_training_condition_summary_is_auditable(self) -> None:
+        trained = train_q_learning(113, QLearningConfig(
+            episodes=4, horizon=4,
+            training_conditions=("standard", "compound_crisis"),
+        ))
+        summaries = summarize_training_conditions(trained)
+        self.assertEqual(tuple(item.condition for item in summaries),
+                         ("standard", "compound_crisis"))
+        self.assertEqual(tuple(item.episode_count for item in summaries), (2, 2))
+        standard_rewards = trained.episode_rewards[::2]
+        self.assertEqual(summaries[0].average_reward,
+                         round(sum(standard_rewards) / 2, 3))
+        self.assertEqual(summaries[0].average_training_reward,
+                         round(sum(trained.training_rewards[::2]) / 2, 3))
+        self.assertEqual(summaries[0].worst_reward,
+                         round(min(standard_rewards), 3))
+        incomplete = replace(trained, episode_conditions=("standard",))
+        with self.assertRaises(ValueError):
+            summarize_training_conditions(incomplete)
 
     def test_integer_actions_enforce_current_mask(self) -> None:
         environment = TrainingEnvironment(seed=5, horizon=4)

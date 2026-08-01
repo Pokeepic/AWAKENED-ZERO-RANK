@@ -272,6 +272,39 @@ class TrainingResult:
     episode_conditions: tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
+class TrainingConditionSummary:
+    condition: str
+    episode_count: int
+    average_reward: float
+    average_training_reward: float
+    worst_reward: float
+
+
+def summarize_training_conditions(
+        result: TrainingResult) -> tuple[TrainingConditionSummary, ...]:
+    """Summarize deterministic reward evidence for each observed condition."""
+    count = len(result.episode_rewards)
+    if (len(result.episode_conditions) != count or
+            len(result.training_rewards) != count):
+        raise ValueError("Training episode diagnostics are incomplete")
+    summaries = []
+    for condition in dict.fromkeys(result.episode_conditions):
+        indices = [index for index, value in enumerate(result.episode_conditions)
+                   if value == condition]
+        rewards = [result.episode_rewards[index] for index in indices]
+        training_rewards = [result.training_rewards[index] for index in indices]
+        summaries.append(TrainingConditionSummary(
+            condition=condition,
+            episode_count=len(indices),
+            average_reward=round(sum(rewards) / len(rewards), 3),
+            average_training_reward=round(
+                sum(training_rewards) / len(training_rewards), 3),
+            worst_reward=round(min(rewards), 3),
+        ))
+    return tuple(summaries)
+
+
 def abstract_state(observation) -> tuple[int, ...]:
     """Compress the 22-value observation into strategic categorical features."""
     indices = (0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 14, 18, 19, 20, 21)

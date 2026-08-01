@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.29.0** · **95 automated tests**
+Current release: **0.30.0** · **96 automated tests**
 
 ## Design principles
 
@@ -114,6 +114,8 @@ Milestone 28 added a compound crisis combining severe injury, low energy, rent a
 
 Milestone 29 made fixed-horizon training condition-aware without changing the default. Gymnasium resets accept a named condition through options, Q-learning cycles a validated condition tuple deterministically, and every episode records its condition. Checkpoint schema 3 preserves the schedule and loads authenticated schema-2 checkpoints as all-standard training. Only tiny reproducibility tests were run; there is no new RL verdict.
 
+Milestone 30 added deterministic per-condition training summaries without changing checkpoints or policy behavior. Each observed condition now reports its episode count, average environment and shaped reward, and worst episode reward, while incomplete diagnostic records fail explicitly. This is coverage evidence only; no larger RL experiment or new verdict was produced.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
@@ -167,6 +169,7 @@ Completed milestones are grouped for readability:
 | 27 | Persistent prepared-mission counters, effectiveness rates, and backward-compatible schema-4 reports |
 | 28 | Compound medical/debt/Gate stress testing and injury-aware repayment priorities |
 | 29 | Gym reset conditions, deterministic multi-condition training schedules, and checkpoint schema 3 |
+| 30 | Auditable per-condition training reward and coverage summaries |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
