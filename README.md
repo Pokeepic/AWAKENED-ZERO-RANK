@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.32.0** · **96 automated tests**
+Current release: **0.33.0** · **96 automated tests**
 
 ## Design principles
 
@@ -46,7 +46,7 @@ Current release: **0.32.0** · **96 automated tests**
 - Count-based exploration, phased curriculum rewards, deterministic multi-condition training schedules, per-condition state-coverage summaries, and held-out seed enforcement.
 - Reward decomposition, action/mask frequencies, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with action/condition schema validation, SHA-256 tamper detection, and authenticated version migration.
-- Repeated independent trials with pooled confidence and an adoption gate that requires every evaluation condition to have been observed in training.
+- Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 - Deterministic evaluation starts for standard life, financial pressure, injury recovery, Gate crises, and a compound medical/debt/Gate crisis.
 - Versioned scenario-suite JSON reports with stable policy binding, SHA-256 identity, exact reload, tamper rejection, and backward-compatible schema loading.
@@ -120,6 +120,8 @@ Update 0.31 — State Coverage records unique strategic states visited in every 
 
 Update 0.32 — Condition Alignment prevents a policy from being adoption-ready when an evaluation scenario uses a condition absent from its recorded training episodes. Scenario-report schema 5 authenticates covered, absent, or legacy-unknown evidence, and both absent and unknown coverage become explicit blockers. Policy behavior is unchanged, and no large RL experiment or new verdict was produced.
 
+Update 0.33 — Exposure Thresholds records the exact number of training episodes for every evaluation condition and requires at least two before adoption can be considered. Scenario-report schema 6 authenticates the count, while legacy reports retain unknown exposure rather than fabricated evidence. The threshold changes only adoption diagnostics; no policy behavior, large RL experiment, or verdict changed.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
@@ -176,6 +178,7 @@ Completed updates are grouped for readability:
 | 0.30 | Auditable per-condition training reward and coverage summaries |
 | 0.31 | Per-episode strategic state coverage and authenticated schema-4 diagnostics |
 | 0.32 | Training/evaluation condition alignment and schema-5 adoption evidence |
+| 0.33 | Minimum condition-exposure thresholds and authenticated schema-6 counts |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

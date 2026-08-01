@@ -35,6 +35,7 @@ REWARD_COMPONENTS = ("survival", "stability", "progress", "social")
 EVALUATION_CONDITIONS = ("standard", "financial_pressure", "injury_recovery",
                          "gate_crisis", "compound_crisis")
 MAX_DOMINANCE_REGRESSION = 0.15
+MIN_TRAINING_CONDITION_EPISODES = 2
 
 
 @dataclass(frozen=True)
@@ -850,6 +851,7 @@ class ScenarioComparison:
     rl_prepared_success_rate: float = 0.0
     utility_prepared_success_rate: float = 0.0
     training_condition_covered: bool | None = None
+    training_condition_episodes: int | None = None
 
 
 @dataclass(frozen=True)
@@ -883,6 +885,13 @@ def _adoption_blockers(scenarios: tuple[ScenarioComparison, ...],
             status = "unknown" if scenario.training_condition_covered is None else "absent"
             blockers.append(
                 f"{scenario.name}: training condition coverage is {status}")
+        elif (scenario.training_condition_episodes is None or
+              scenario.training_condition_episodes < MIN_TRAINING_CONDITION_EPISODES):
+            count = scenario.training_condition_episodes
+            status = "unknown" if count is None else str(count)
+            blockers.append(
+                f"{scenario.name}: training condition exposure is {status}; "
+                f"require {MIN_TRAINING_CONDITION_EPISODES}")
         if scenario.rl_survival_rate < scenario.utility_survival_rate:
             blockers.append(f"{scenario.name}: survival regression")
         if scenario.rl_average_missions < scenario.utility_average_missions:
@@ -924,7 +933,7 @@ def evaluate_scenario_suite(result: TrainingResult,
     if len(set(evaluation_seeds)) != len(evaluation_seeds):
         raise ValueError("Evaluation seeds must be unique across scenarios")
     summaries, pooled = [], []
-    observed_conditions = set(result.episode_conditions)
+    condition_episode_counts = Counter(result.episode_conditions)
     for scenario in scenarios:
         batch = diagnose_batch(result, scenario.evaluation_seeds,
                                horizon=scenario.horizon, worst_count=1,
@@ -978,7 +987,8 @@ def evaluate_scenario_suite(result: TrainingResult,
                 rl_prepared_completed / max(1, rl_prepared), 3),
             utility_prepared_success_rate=round(
                 utility_prepared_completed / max(1, utility_prepared), 3),
-            training_condition_covered=scenario.condition in observed_conditions,
+            training_condition_covered=condition_episode_counts[scenario.condition] > 0,
+            training_condition_episodes=condition_episode_counts[scenario.condition],
         ))
     verdict = _honest_verdict(pooled)
     adoption_ready = not _adoption_blockers(tuple(summaries), verdict)
@@ -989,7 +999,7 @@ def evaluate_scenario_suite(result: TrainingResult,
         verdict=verdict, adoption_ready=adoption_ready,
     )
 
-SCENARIO_REPORT_VERSION = 5
+SCENARIO_REPORT_VERSION = 6
 
 
 def _scenario_suite_data(suite: ScenarioSuiteResult) -> dict:
@@ -1030,7 +1040,7 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
     """Load a scenario-suite report only when its version and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("report_version") not in (1, 2, 3, 4, SCENARIO_REPORT_VERSION):
+    if data.get("report_version") not in (1, 2, 3, 4, 5, SCENARIO_REPORT_VERSION):
         raise ValueError("Unsupported scenario report version")
     payload = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
     if digest != hashlib.sha256(payload).hexdigest():
@@ -1059,6 +1069,7 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
             rl_prepared_success_rate=item.get("rl_prepared_success_rate", 0.0),
             utility_prepared_success_rate=item.get("utility_prepared_success_rate", 0.0),
             training_condition_covered=item.get("training_condition_covered"),
+            training_condition_episodes=item.get("training_condition_episodes"),
         ) for item in data["scenarios"])
         suite = ScenarioSuiteResult(
             training_seed=data["training_seed"],
