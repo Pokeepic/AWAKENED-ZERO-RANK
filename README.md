@@ -1,199 +1,136 @@
-# AWAKENED ZERO RANK
+# AWAKENED: ZERO RANK
 
-An observer-only life simulation set in modern Japan after portals and awakenings become part of everyday society.
+An observer-only life simulation set in Japan after portals and Awakened hunters become part of everyday society.
 
-The protagonist begins poor, unranked, and unknown. They act autonomously while the player watches their daily routine, work, study, training, awakening, hunter career, failures, and long-term growth.
+Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-## Core vision
+Current release: **0.19.0** · **81 automated tests**
 
-- **Observer simulation:** the protagonist chooses; the user watches.
-- **Zero-to-hero progression:** begin with little money, weak stats, and no hunter rank.
-- **Persona-style time:** each meaningful action advances Morning → Afternoon → Evening → Late Night.
-- **Living Japan setting:** rent, part-time work, transport, guilds, gates, and social pressure matter.
-- **Protagonist-focused observation:** the main chronicle follows what Ren experiences, notices, and feels.
-- **Explainable autonomy:** technical decision reasons remain available for development and balancing.
-- **Learning-ready architecture:** start with a dependable utility agent, then add reinforcement learning as an experiment.
-- **Reproducible worlds:** seeded runs make bugs and balance changes comparable.
+## Design principles
 
-## Current simulation
+- **A believable life first:** rent, travel, food, fatigue, injury, weather, and social pressure matter.
+- **Autonomy:** the observer does not select Ren's actions or dialogue.
+- **Explainability:** decisions have recorded options and structured reasons.
+- **Persistence:** people, memories, investigations, plans, and consequences survive save and resume.
+- **Earned progression:** power grows through preparation, varied experience, knowledge, and relationships.
+- **Reproducibility:** the same seed, state, and policy produce the same future.
 
-The simulation follows Ren Takahashi across a small Tokyo map and currently includes:
+## What is implemented
 
-- autonomous work, meals, rest, study, and physical training;
-- money, needs, knowledge, fitness, reputation, and combat readiness;
-- Tokyo locations, rail fares, a konbini job, rent, arrears, and gate alerts;
-- the Day 3 awakening assessment: Rank F with **Threat Sense**;
-- mandatory Tokyo Hunter Guild registration and an F-rank license;
-- safe guild patrol work and riskier low-rank gate missions;
-- deterministic combat rolls, mission rewards, damage, injuries, and combat experience;
-- rank points and promotion from F toward E, D, and C;
-- a protagonist-focused chronicle that presents Ren's days as compact scenes;
-- a changing personal goal that follows Ren's current life stage;
-- bounded, importance-ranked memories of awakenings, missions, rent, and social moments;
-- recurring guild clerk Aiko Sato, with trust, familiarity, and meeting history;
-- autonomous social time that can reduce stress and deepen relationships.
-- a Kita-Senju hunter supply shop with autonomous, budget-aware purchases;
-- inventory, equipped weapons and armor, and automatic consumable use;
-- equipment bonuses that affect combat readiness and incoming damage;
-- named gate encounters with distinct difficulty, rewards, rank points, and danger.
-- versioned JSON saves that preserve the exact clock, world, character, and random state;
-- deterministic continuation: a resumed timeline has the same future as an uninterrupted run;
-- an optional technical log for debugging without cluttering the main experience.
-- deterministic daily Tokyo summer weather: clear, cloudy, rain, heatwaves, and thunderstorms;
-- weather-aware choices, fatigue, shop closures, and gate danger;
-- season and temperature shown through Ren's immediate experience;
-- a calendar event framework, beginning with a one-time Tanabata evening.
-- hunter attributes: strength, agility, endurance, perception, mana, and luck;
-- rotating physical training whose gains depend on Ren's health and energy;
-- gradual Threat Sense mastery through patrols and dangerous gate experience;
-- latent **Echo Fragment** growth from meaningful survival exposure rather than repetitive kills;
-- all new development state preserved exactly across saves.
-- a dynamic mood and morale state shaped by Ren's health, exhaustion, stress, and outcomes;
-- transparent dialogue intentions such as asking for guidance, expressing gratitude, offering help,
-  concealing worry, and apologizing;
-- spoken exchanges with Aiko shown directly in Ren's chronicle, including her visible emotional reaction;
-- lasting social consequences through trust, familiarity, affection, tension, and social confidence;
-- bounded dialogue history preserved across save and resume.
-- structured dialogue contexts supporting more than 1,000 meaningful social states;
-- a reusable catalogue of Tokyo locations and varied portal environments;
-- a dependency-free learning adapter with numeric observations and valid-action masks;
-- external policy actions and a shaped evaluation reward kept outside Ren's chronicle;
-- Gymnasium-style fixed-horizon episodes with integer actions and valid-action masks;
-- reproducible masked tabular Q-learning with auditable training and held-out evaluation seeds;
-- paired utility-versus-RL batch evaluation with a confidence-aware verdict;
-- deterministic diagnostics for reward components, action and mask frequencies, outcome quality,
-  behavioral diversity, exploit indicators, and worst-seed traces;
-- seeded daily wage and meal variation without disturbing the authoritative world RNG;
-- injury severity, autonomous clinic treatment, and persistent recovery progress;
-- three-stage hazard-aware portal preparation and persistent multi-step objectives;
-- reproducible masked-random and independent safety-first heuristic baselines;
-- four-policy held-out ranking across utility, heuristic, RL, and random controllers;
-- compact strategic state abstraction, deterministic count-based exploration, and phased curriculum rewards;
-- separate environment and training returns so reward shaping never contaminates evaluation;
-- canonical Q-table checkpoints with action/encoder schema checks and SHA-256 integrity;
-- repeated independent training trials with pooled confidence and a conservative neural-readiness gate.
-- recurring patrol leader Daichi Mori, portal researcher Mei Kuroda, and supply owner Haruto Ishikawa;
-- a relationship network with personal loyalties, cooperation, and friction between NPCs;
-- identity-aware dialogue shaped by each NPC's role, personality, voice, context, and trust;
-- persistent portal discoveries with named environments, hazards, clues, and NPC reactions;
-- 4,200 NPC-specific social contexts built from structured components rather than flat line dumps.
-- recurring NPC schedules that place characters across Tokyo throughout each day;
-- autonomous social encounters when Ren's routine naturally overlaps another character;
-- persistent portal investigations with clues, progress, risk, and reporting history;
-- delayed portal consequences that alter later patrols and multiple relationships.
-- hazard-aware portal preparation that carries readiness into the next expedition;
-- NPC cooperation shaped by competing survival and discovery priorities;
-- persistent objective scores and deterministic long-horizon scenario evaluation.
+### Life in Tokyo
 
-The calendar roadmap also reserves space for Japanese public holidays, seasonal festivals, shops, scheduled auction days, random/story events, and expanded hunter and social stats.
+- Four daily periods: Morning → Afternoon → Evening → Late Night.
+- Work, meals, rest, study, physical training, commuting, rent, and arrears.
+- Seeded weather, daily wage and meal variation, Tanabata, and Gate alerts.
+- Health, energy, hunger, stress, morale, injury severity, clinic treatment, money, equipment, and inventory.
 
-## Project layout
+### Hunter progression
 
-```text
-src/awakened_zero_rank/
-  models.py       # Character, clock, progression, and event state
-  world.py        # Tokyo locations, jobs, and transport costs
-  actions.py      # Civilian and hunter actions
-  agent.py        # Explainable utility-based decision policy
-  simulation.py   # Deterministic world, memory, relationship, and progression engine
-  journal.py      # Ren-centered scene presentation
-  persistence.py  # Versioned save/load system
-  environment.py  # Seasons, weather conditions, and environmental effects
-  dialogue.py     # Dialogue intentions, NPC reactions, and social consequences
-  content.py      # Scalable dialogue, Tokyo, and portal content catalogues
-  learning.py     # RL-ready observations, actions, rewards, and baseline adapter
-  cli.py          # Protagonist chronicle interface
-tests/             # Determinism, world, and progression tests
-```
+- Day 3 awakening, Rank F registration, Threat Sense mastery, and latent Echo Fragment growth.
+- Guild patrols, named Gate encounters, deterministic combat, injuries, rewards, rank points, and promotion.
+- Persistent portal discoveries, clues, risk, delayed consequences, and three-stage hazard-aware preparation.
+- Multi-step financial, recovery, and portal-readiness objectives.
+
+### Characters and narrative
+
+- Recurring characters Aiko Sato, Daichi Mori, Mei Kuroda, and Haruto Ishikawa.
+- NPC schedules, autonomous encounters, relationship networks, trust, affection, tension, and loyalty.
+- Structured dialogue with more than 4,200 NPC-specific contexts.
+- Bounded memories, changing personal goals, contextual chronicles, and exact save continuation.
+
+### Learning and evaluation
+
+- Gymnasium-compatible fixed-horizon episodes with 11 integer actions and valid-action masks.
+- A 22-value observation interface and compact 16-feature strategic state abstraction.
+- Utility, heuristic, masked-random, and tabular Q-learning policies.
+- Count-based exploration, phased curriculum rewards, and held-out seed enforcement.
+- Reward decomposition, action/mask frequencies, safety metrics, exploit indicators, and worst-seed traces.
+- Deterministic Q-table checkpoints with schema validation and SHA-256 tamper detection.
+- Repeated independent trials with pooled confidence and a conservative adoption gate.
+
+The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or coherence regressions.
 
 ## Run the simulation
 
-Requires Python 3.11 or newer. From the repository root:
+Requires Python 3.11 or newer.
 
 ```bash
 python -m pip install -e .
-# Optional: official Gymnasium spaces and environment validation
-python -m pip install -e ".[training]"
 python -m awakened_zero_rank --days 12 --seed 42
 ```
 
-The main output reads as Ren's chronicle. Reusing the same seed reproduces the same story. Save and resume a timeline with:
+Install the optional official Gymnasium integration with:
+
+```bash
+python -m pip install -e ".[training]"
+```
+
+Save and resume an exact timeline:
 
 ```bash
 python -m awakened_zero_rank --days 7 --seed 42 --save saves/ren.json
 python -m awakened_zero_rank --days 7 --load saves/ren.json --save saves/ren.json
 ```
 
-Developers can add `--technical-log` to inspect decision reasons and utility scores.
+Add `--technical-log` to show decision reasons and utility scores.
 
-Run the tests with:
+Run the tests:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-## V3 development workflow
+## Learning results
 
-1. **Deterministic simulation core** — clock, calendar, character state, needs, actions, and event log.
-2. **Autonomous decision system** — utility scoring, goals, memory, and explainable choices.
-3. **Japan world systems** — districts, economy, jobs, rent, gates, guilds, and hunter ranks.
-4. **Dashboard** — observe time, status, decisions, relationships, and story events.
-5. **Persistence and evaluation** — save/load, seeded batch runs, survival and progression metrics.
-6. **Learning experiment** — train an RL policy separately and compare it with the baseline agent.
-7. **Narrative layer** — turn important simulation events into readable scenes and chronicles.
+All scores below are environment rewards measured on held-out seeds. Training-only curriculum rewards never enter evaluation.
 
-## Learning strategy
+| Experiment | Training | Evaluation | RL vs utility | Verdict |
+|---|---:|---:|---:|---|
+| First tabular reference | 24 × 60 steps | 8 seeds | −33.894 | Baseline remains better |
+| Improved tabular policy | 120 × 80 steps | 12 seeds | −8.493 | Inconclusive |
+| Repeated-trial audit | 3 × 120 × 80 steps | 3 groups × 8 seeds | −6.196 pooled | Inconclusive |
 
-Reinforcement learning is not the entire simulation. The simulation is the environment; an RL agent is one possible decision-maker inside it. We retain a transparent utility baseline so learned behavior can be measured against something stable, debuggable, and fun.
+In the improved-policy experiment, RL averaged `80.088` reward versus utility's `88.581`, completed more missions (`4.667` versus `3.750`), and matched utility's 100% survival and rent payment. The difference was not statistically decisive.
 
-Milestone 14's controlled experiment trained for 24 episodes of 60 steps with training seed 1400, then evaluated the frozen policy on held-out seeds 2401-2408. RL averaged 33.894 less shaped reward than the paired utility runs, so the honest verdict is **baseline remains better**. This is a small first experiment, not a claim that tabular RL cannot improve.
-Milestone 15 diagnosed the same frozen experiment rather than scaling it. Both policies survived every held-out episode, but RL completed 1.500 missions per episode versus 3.375, paid rent in 87.5% of due episodes versus 100%, and averaged only 15.200 progress reward versus 35.525. RL also used fewer strategic actions (5.250 versus 7.875) and had a 41.5% dominant-action share versus 30.0%. No configured exploit threshold fired, but the evidence points to excessive eating/resting and insufficient patrol and mission progression. The weakest RL seeds were 2404, 2408, and 2401.
-Milestone 17 regenerated a small 24-by-60 reference policy and compared four controllers on held-out seeds 2701-2708. Utility ranked first at 72.319 average reward, followed by the independent heuristic at 48.186, RL at -15.430, and masked-random at -25.433. Utility and heuristic survived and paid due rent in every episode. Random averaged 2.000 missions but survived only 12.5%, demonstrating why mission count or reward cannot replace safety metrics. The verdict remains **baseline remains better**.
-Milestone 18 trained the second controlled tabular policy for 120 fixed-horizon episodes of 80 steps with training seed 1800, then evaluated on held-out seeds 3801-3812. Utility remained first at 88.581 average environment reward, while RL improved to 80.088, ahead of heuristic at 50.842 and random at -31.887. RL completed 4.667 missions versus utility's 3.750 and matched its 100% survival and rent payment. The paired reward difference was -8.493, but uncertainty crossed zero, so the honest verdict is **inconclusive**. RL remains offline until a repeatable advantage is demonstrated.
-Milestone 19 repeated the 120-by-80 experiment with training seeds 1900-1902 and three disjoint eight-seed evaluation groups. Trial reward differences were -19.965, +8.436, and -7.059; all three verdicts were inconclusive. The pooled difference was -6.196, also **inconclusive**, so the neural-readiness gate remains closed. Each learned Q-table now has a stable SHA-256 checkpoint identity and rejects tampering or incompatible action/encoder schemas.
+The repeated audit produced trial differences of `−19.965`, `+8.436`, and `−7.059`. All three trials were inconclusive, so neural-policy readiness remains **false**.
 
-## Future observer website
+## Project layout
 
-A later presentation milestone can expose the simulation through a web observer dashboard: live time and weather, Ren's condition and current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Small sprite animations can visualize travel, work, rest, training, conversations, and Gate activity. The website should remain a read-only view of the authoritative deterministic simulator; pause, speed, seed, save, and diagnostic controls belong to developer tooling rather than direct control over Ren.
+```text
+src/awakened_zero_rank/
+  models.py       # Persistent character and world state
+  world.py        # Locations, jobs, items, and Gate encounters
+  actions.py      # Civilian, hunter, preparation, and recovery actions
+  agent.py        # Explainable production utility policy
+  simulation.py   # Deterministic world and consequence engine
+  journal.py      # Ren-centered chronicle presentation
+  persistence.py  # Exact save/load continuation
+  environment.py  # Weather and seasonal effects
+  dialogue.py     # Dialogue intentions and social consequences
+  content.py      # Tokyo, NPC, dialogue, and portal catalogues
+  learning.py     # Episodes, policies, training, diagnostics, and checkpoints
+  cli.py          # Chronicle command-line interface
+tests/
+  test_simulation.py
+```
 
-## Status
+## Roadmap
 
-✅ Milestone 1: deterministic simulation core and explainable baseline agent.
+Completed milestones are grouped for readability:
 
-✅ Milestone 2: Tokyo locations, transport, job economy, rent, gates, and awakening.
+| Milestones | Focus |
+|---|---|
+| 1–6 | Deterministic life simulation, Tokyo economy, hunter progression, relationships, equipment, and persistence |
+| 7–9 | Weather, calendar events, expanded attributes, mood, and dialogue consequences |
+| 10–13 | Learning interface, scalable content, NPC networks, investigations, preparation, and cooperation |
+| 14–15 | Gymnasium episodes, reproducible Q-learning, held-out comparison, and failure diagnostics |
+| 16–17 | Broader economic/recovery scenarios and stronger utility, heuristic, and random baselines |
+| 18–19 | Improved tabular training, checkpoint integrity, repeated trials, and neural-readiness auditing |
 
-✅ Milestone 3: guild registration, hunter work, combat readiness, gate missions, injuries, rewards, and rank progression.
+Near-term work should improve tabular consistency and environment coverage. Neural RL remains deferred while the readiness gate is closed.
 
-✅ Milestone 4: changing goals, important memories, relationships, and recurring characters.
+### Future observer website
 
-✅ Milestone 5: equipment, inventory, shops, consumables, mission difficulty, and richer gate encounters.
+A later presentation milestone can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity.
 
-✅ Milestone 6: exact save/load continuation and a protagonist-focused chronicle.
-
-✅ Milestone 7: weather, seasons, calendar events, and environment-aware decisions.
-
-✅ Milestone 8: expanded protagonist stats, ability growth, rotating training, and condition-sensitive progression.
-
-✅ Milestone 9: mood, dialogue intentions, visible NPC reactions, and lasting social consequences.
-
-✅ Milestone 10: scalable narrative content and an RL-ready evaluation interface.
-
-✅ Milestone 11: additional recurring characters, relationship networks, contextual dialogue, and portal discovery state.
-
-✅ Milestone 12: persistent portal investigations, NPC schedules, autonomous social encounters, and delayed multi-character consequences.
-
-✅ Milestone 13: portal preparation, NPC cooperation, competing objectives, and long-horizon evaluation scenarios.
-
-✅ Milestone 14: Gymnasium-style fixed-horizon episodes, masked integer actions, reproducible tabular Q-learning, held-out batch comparison, and an honest first verdict.
-
-✅ Milestone 15: reward decomposition, action and mask diagnostics, outcome and diversity metrics, exploit indicators, worst-seed traces, and reproducible JSON reports.
-
-✅ Milestone 16: deterministic economic variation, injury severity and treatment, staged portal preparation, persistent multi-step objectives, and a 22-value learning state.
-
-✅ Milestone 17: reproducible masked-random and safety-first heuristic baselines, utility safety validation, four-policy reporting, and held-out ranking.
-
-✅ Milestone 18: compact strategic state abstraction, count-based exploration, phased reward curriculum, auditable returns, and an inconclusive second controlled RL experiment.
-
-✅ Milestone 19: deterministic integrity-protected Q-table checkpoints, repeated independent trials, pooled confidence, and a conservative neural-readiness gate.
-
-Next: improve tabular consistency or environment coverage; defer neural RL while the readiness gate remains closed. A web observer dashboard with lightweight sprite animation remains on the future presentation roadmap.
+The website must remain a view of the authoritative deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him.
