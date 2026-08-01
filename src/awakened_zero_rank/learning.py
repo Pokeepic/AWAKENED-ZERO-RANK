@@ -563,6 +563,10 @@ class EpisodeDiagnostics:
     social_action_share: float
     unseen_state_count: int
     unseen_state_share: float
+    visit_evidence_steps: int
+    zero_visit_action_count: int
+    zero_visit_action_share: float
+    average_selected_action_visits: float
     exploit_flags: tuple[str, ...]
     trace: tuple[DiagnosticStep, ...]
 
@@ -585,8 +589,9 @@ class DiagnosticBatch:
 def _episode_summary(seed: int, policy: str, condition: str,
                      environment: LearningEnvironment, transitions: list[Transition],
                      masks: list[tuple[int, ...]], trace: list[DiagnosticStep],
-                     low_need_recovery_count: int,
-                     unseen_state_count: int) -> EpisodeDiagnostics:
+                     low_need_recovery_count: int, unseen_state_count: int,
+                     visit_evidence_steps: int, zero_visit_action_count: int,
+                     selected_action_visit_total: int) -> EpisodeDiagnostics:
     actions = Counter(item.resolved_action or item.action for item in transitions)
     policy_actions = Counter(name for name, count in actions.items()
                              for _ in range(count) if name in ACTION_NAMES)
@@ -638,6 +643,12 @@ def _episode_summary(seed: int, policy: str, condition: str,
             policy_actions["Talk with Aiko"] / max(1, decision_steps), 3),
         unseen_state_count=unseen_state_count,
         unseen_state_share=round(unseen_state_count / max(1, steps), 3),
+        visit_evidence_steps=visit_evidence_steps,
+        zero_visit_action_count=zero_visit_action_count,
+        zero_visit_action_share=round(
+            zero_visit_action_count / max(1, visit_evidence_steps), 3),
+        average_selected_action_visits=round(
+            selected_action_visit_total / max(1, visit_evidence_steps), 3),
         exploit_flags=tuple(flags), trace=tuple(trace),
     )
 
@@ -737,6 +748,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     policy_rng = random.Random(seed * 97_409 + 17)
     transitions, masks, trace = [], [], []
     low_need_recovery_count = unseen_state_count = 0
+    visit_evidence_steps = zero_visit_action_count = selected_action_visit_total = 0
     for step in range(1, horizon + 1):
         mask = environment.action_mask()
         masks.append(mask)
@@ -754,9 +766,15 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             transition = environment.step(ACTION_NAMES[action])
         else:
             observation = environment.observe()
+            state = discretize(observation)
             action, unseen = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
+            counts = result.visit_table.get(state)
+            if counts is not None:
+                visit_evidence_steps += 1
+                selected_action_visit_total += counts[action]
+                zero_visit_action_count += int(counts[action] == 0)
             transition = environment.step(ACTION_NAMES[action])
         transitions.append(transition)
         chosen_action = transition.resolved_action or transition.action
@@ -770,8 +788,10 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                                     p.missions_completed))
         if p.health <= 0:
             break
-    return _episode_summary(seed, policy, condition, environment, transitions, masks, trace,
-                            low_need_recovery_count, unseen_state_count)
+    return _episode_summary(
+        seed, policy, condition, environment, transitions, masks, trace,
+        low_need_recovery_count, unseen_state_count, visit_evidence_steps,
+        zero_visit_action_count, selected_action_visit_total)
 
 
 def _honest_verdict(differences: list[float]) -> str:
@@ -1191,6 +1211,12 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.unseen_state_count for e in episodes) / count, 3),
             "average_unseen_state_share": round(
                 sum(e.unseen_state_share for e in episodes) / count, 3),
+            "average_visit_evidence_steps": round(
+                sum(e.visit_evidence_steps for e in episodes) / count, 3),
+            "average_zero_visit_action_share": round(
+                sum(e.zero_visit_action_share for e in episodes) / count, 3),
+            "average_selected_action_visits": round(
+                sum(e.average_selected_action_visits for e in episodes) / count, 3),
             "maximum_action_streak": max(e.longest_action_streak for e in episodes),
             "action_counts": dict(actions),
             "action_frequencies": {name: round(value / sum(actions.values()), 3)
