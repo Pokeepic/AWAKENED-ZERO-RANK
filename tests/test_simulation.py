@@ -733,6 +733,8 @@ class SimulationTests(unittest.TestCase):
         second = diagnose_batch(trained, (201, 202, 203), horizon=6, worst_count=2)
         self.assertEqual(first, second)
         self.assertEqual(len(first.worst_rl_seeds), 2)
+        self.assertEqual(tuple(name for name, _ in first.reward_component_differences),
+                         ("survival", "stability", "progress", "social"))
         rewards = {episode.seed: episode.total_reward for episode in first.rl_episodes}
         self.assertEqual(list(first.worst_rl_seeds),
                          sorted(rewards, key=lambda seed: (rewards[seed], seed))[:2])
@@ -743,6 +745,8 @@ class SimulationTests(unittest.TestCase):
         report = json.loads(diagnostics_report(batch))
         self.assertEqual(report["evaluation_seeds"], [201, 202])
         self.assertIn("reward_components", report["rl"])
+        self.assertEqual(set(report["reward_component_differences"]),
+                         {"survival", "stability", "progress", "social"})
         self.assertIn("action_counts", report["utility"])
         self.assertIn("masked_counts", report["rl"])
         self.assertIn("action_frequencies", report["rl"])

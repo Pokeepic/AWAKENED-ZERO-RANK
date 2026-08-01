@@ -647,6 +647,7 @@ class DiagnosticBatch:
     heuristic_episodes: tuple[EpisodeDiagnostics, ...]
     policy_ranking: tuple[str, ...]
     reward_difference: float
+    reward_component_differences: tuple[tuple[str, float], ...]
     verdict: str
     worst_rl_seeds: tuple[int, ...]
     condition: str = "standard"
@@ -947,12 +948,19 @@ def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                 for name, episodes in policies.items()}
     ranking = tuple(sorted(averages, key=lambda name: (-averages[name], name)))
     differences = [r.total_reward - u.total_reward for r, u in zip(rl, utility)]
+    component_differences = tuple(
+        (name, round(sum(dict(r.reward_components)[name] -
+                         dict(u.reward_components)[name]
+                         for r, u in zip(rl, utility)) / len(rl), 3))
+        for name in REWARD_COMPONENTS
+    )
     worst = sorted(rl, key=lambda episode: (episode.total_reward, episode.seed))[:worst_count]
     return DiagnosticBatch(
         training_seed=result.training_seed, evaluation_seeds=tuple(evaluation_seeds),
         rl_episodes=rl, utility_episodes=utility, random_episodes=random_policy,
         heuristic_episodes=heuristic, policy_ranking=ranking,
         reward_difference=round(sum(differences) / len(differences), 3),
+        reward_component_differences=component_differences,
         verdict=_honest_verdict(differences),
         worst_rl_seeds=tuple(episode.seed for episode in worst), condition=condition,
     )
@@ -1393,6 +1401,7 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         "heuristic": aggregate(batch.heuristic_episodes),
         "policy_ranking": batch.policy_ranking,
         "mean_reward_difference": batch.reward_difference,
+        "reward_component_differences": dict(batch.reward_component_differences),
         "verdict": batch.verdict,
         "worst_rl_episodes": worst,
     }

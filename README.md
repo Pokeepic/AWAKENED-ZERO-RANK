@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.47.0** · **101 automated tests**
+Current release: **0.48.0** · **101 automated tests**
 
 ## Design principles
 
@@ -44,7 +44,7 @@ Current release: **0.47.0** · **101 automated tests**
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies, with opt-in unseen-state safety fallback, legacy additive exploration, and seeded progression sampling during training.
 - Count-based exploration, exact state-action visit evidence and per-action exposure summaries, phased curriculum rewards, deterministic multi-condition training schedules, per-condition state-coverage summaries, and held-out seed enforcement.
-- Reward decomposition, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences and Q-value gaps, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
+- Reward decomposition with explicit RL-versus-utility component gaps, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences and Q-value gaps, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with action/condition/fallback/exploration/visit schema validation, SHA-256 tamper detection, and authenticated version migration.
 - Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
@@ -150,6 +150,8 @@ Update 0.46 — Low-Bonus Sensitivity Sweep tested 0.01, 0.025, 0.05, and 0.1 ag
 
 Update 0.47 — Seeded Progression Sampling adds a separate, reproducible probability of choosing among currently valid Gate mission and preparation actions during training. The option defaults to zero and schema 8 authenticates it. Rates of 2.5%, 5%, 10%, and 20% produced gradual Gate exposure of 6, 14, 24, and 35 selections and preparation exposure of 16, 16, 32, and 45, avoiding the additive bonus discontinuity. The 10% rate gave the best pooled reward deficit at 15.571 with seven missions; 20% reached eight missions but worsened to 16.373. Every setting retained 100% survival, rent recovery, and no exploit flags, but all remained **baseline remains better**, so no nonzero default was adopted.
 
+Update 0.48 — Condition Reward-Gap Audit makes mean RL-versus-utility differences for survival, stability, progression, and social reward explicit in every diagnostic batch and JSON report. On the 10% sampler, standard and Gate-crisis deficits were led by progression (−12.100 and −20.000), while injury and compound crises were led by the survival component (−15.180 and −13.320) despite 100% episode survival. Financial pressure gained 4.014 stability reward but lost 5.540 survival-component reward. The evidence shows multiple policy-quality problems rather than one global weighting issue, so reward weights remain unchanged and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -157,7 +159,7 @@ Update 0.47 — Seeded Progression Sampling adds a separate, reproducible probab
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — seeded sampling remains experimental in Update 0.47 | Sampling rates produced gradual exposure and preserved safety, but the best 10% result still trailed utility by 15.571; more sampling increased missions without consistently improving reward | Keep both progression mechanisms default-off; diagnose condition-specific reward loss before further exploration changes | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — condition reward gaps measured in Update 0.48 | Standard/Gate-crisis losses are progression-led, while injury/compound losses are survival-component-led despite full survival; financial pressure gains stability | Keep exploration default-off; improve condition-specific decisions rather than globally reweighting rewards | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -221,6 +223,7 @@ Completed updates are grouped for readability:
 | 0.45 | Default-off progression exploration, schema-7 checkpoints, and a baseline-better pilot |
 | 0.46 | Low-bonus sensitivity sweep and rejection of additive progression exploration |
 | 0.47 | Reproducible progression sampling, schema-8 checkpoints, and a baseline-better rate sweep |
+| 0.48 | Explicit reward-component differences and rejection of global reward reweighting |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
