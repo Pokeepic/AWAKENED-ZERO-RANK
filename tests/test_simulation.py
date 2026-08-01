@@ -19,7 +19,7 @@ from awakened_zero_rank.learning import (
     abstract_state, assess_policy_adoption, checkpoint_digest,
     compare_utility_and_rl, curriculum_reward,
     diagnose_batch,
-    diagnose_episode, diagnostics_report, heuristic_action,
+    diagnose_episode, diagnostics_report, heuristic_action, is_low_need_recovery,
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
     load_checkpoint, load_scenario_suite_report, save_checkpoint,
     save_scenario_suite_report,
@@ -615,6 +615,27 @@ class SimulationTests(unittest.TestCase):
         self.assertAlmostEqual(transition.reward,
                                sum(value for _, value in transition.reward_components), places=3)
 
+    def test_low_need_recovery_thresholds_preserve_real_need(self) -> None:
+        protagonist = Simulation(seed=5).state.protagonist
+        protagonist.health, protagonist.hunger = 80, 20
+        protagonist.energy, protagonist.stress, protagonist.injury_severity = 80, 20, 0
+        self.assertTrue(is_low_need_recovery("Eat", protagonist, TimeSlot.MORNING))
+        self.assertTrue(is_low_need_recovery("Rest", protagonist, TimeSlot.MORNING))
+        protagonist.hunger = 70
+        self.assertFalse(is_low_need_recovery("Eat", protagonist, TimeSlot.MORNING))
+        protagonist.health, protagonist.hunger = 50, 20
+        self.assertFalse(is_low_need_recovery("Eat", protagonist, TimeSlot.MORNING))
+        protagonist.energy = 30
+        self.assertFalse(is_low_need_recovery("Rest", protagonist, TimeSlot.MORNING))
+        protagonist.energy, protagonist.stress = 80, 60
+        self.assertFalse(is_low_need_recovery("Rest", protagonist, TimeSlot.MORNING))
+        protagonist.stress = 20
+        protagonist.energy, protagonist.injury_severity = 80, 2
+        self.assertFalse(is_low_need_recovery("Rest", protagonist, TimeSlot.MORNING))
+        protagonist.injury_severity = 0
+        self.assertFalse(is_low_need_recovery("Rest", protagonist, TimeSlot.LATE_NIGHT))
+        self.assertFalse(is_low_need_recovery("Study", protagonist, TimeSlot.MORNING))
+
     def test_episode_diagnostics_count_actions_masks_and_outcomes(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
         episode = diagnose_episode(201, 6, "rl", trained)
@@ -628,6 +649,9 @@ class SimulationTests(unittest.TestCase):
                                sum(value for _, value in episode.reward_components), places=3)
         self.assertGreaterEqual(episode.dominant_action_share, 0)
         self.assertLessEqual(episode.dominant_action_share, 1)
+        self.assertGreaterEqual(episode.low_need_recovery_count, 0)
+        self.assertGreaterEqual(episode.low_need_recovery_share, 0)
+        self.assertLessEqual(episode.low_need_recovery_share, 1)
 
     def test_diagnostic_batch_is_reproducible_and_ranks_worst_seeds(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
@@ -649,6 +673,8 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("masked_counts", report["rl"])
         self.assertIn("action_frequencies", report["rl"])
         self.assertIn("average_dominant_action_share", report["rl"])
+        self.assertIn("average_low_need_recovery_count", report["utility"])
+        self.assertIn("average_low_need_recovery_share", report["utility"])
         self.assertIn("preparation_coverage", report["rl"])
         self.assertIn("prepared_success_rate", report["utility"])
         self.assertTrue(report["worst_rl_episodes"][0]["trace"])

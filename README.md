@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.33.0** · **96 automated tests**
+Current release: **0.34.0** · **97 automated tests**
 
 ## Design principles
 
@@ -44,7 +44,7 @@ Current release: **0.33.0** · **96 automated tests**
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies.
 - Count-based exploration, phased curriculum rewards, deterministic multi-condition training schedules, per-condition state-coverage summaries, and held-out seed enforcement.
-- Reward decomposition, action/mask frequencies, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
+- Reward decomposition, action/mask frequencies, low-need recovery rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with action/condition schema validation, SHA-256 tamper detection, and authenticated version migration.
 - Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
@@ -122,9 +122,11 @@ Update 0.32 — Condition Alignment prevents a policy from being adoption-ready 
 
 Update 0.33 — Exposure Thresholds records the exact number of training episodes for every evaluation condition and requires at least two before adoption can be considered. Scenario-report schema 6 authenticates the count, while legacy reports retain unknown exposure rather than fabricated evidence. The threshold changes only adoption diagnostics; no policy behavior, large RL experiment, or verdict changed.
 
+Update 0.34 — Recovery Necessity Audit distinguishes all recovery from conservatively low-need eating and resting. Across four 40-step seeds in standard, injury-recovery, and compound-crisis conditions, low-need recovery ranged from 2.6% to 16.1% of decision steps and survival remained 4/4 in every condition. The evidence did not justify a utility nerf, so this update adds diagnostics only.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
-| Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
+| Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
 | Debt behavior — resolved in Update 0.25 | Rent arrears were impossible to repay after the deadline, making paid patrols dominate | Added partial repayment while preserving ¥600 emergency cash; no patrol nerf was needed | Recovery improved from 0/4 to 4/4, survival stayed 4/4, and dominant share fell from 47.5% to 24.4% |
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — priority fixed in Update 0.28 | Compound injury and debt made repayment outrank urgent treatment | Repayment now defers under severe injury or low health; clinic pricing and assistance still need separate review | Utility and heuristic treated first in 4/4 runs, survived 4/4, and cleared arrears 4/4 |
@@ -179,6 +181,7 @@ Completed updates are grouped for readability:
 | 0.31 | Per-episode strategic state coverage and authenticated schema-4 diagnostics |
 | 0.32 | Training/evaluation condition alignment and schema-5 adoption evidence |
 | 0.33 | Minimum condition-exposure thresholds and authenticated schema-6 counts |
+| 0.34 | Low-need recovery diagnostics and an evidence-based no-nerf decision |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

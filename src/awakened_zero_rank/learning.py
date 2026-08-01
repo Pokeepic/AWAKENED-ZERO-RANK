@@ -22,7 +22,7 @@ except ImportError:  # The core simulation remains dependency-free.
     np = None
 
 from .actions import available_actions
-from .models import Relationship, SLOTS
+from .models import Protagonist, Relationship, SLOTS, TimeSlot
 from .simulation import Simulation
 
 
@@ -539,6 +539,8 @@ class EpisodeDiagnostics:
     unique_actions: int
     dominant_action_share: float
     longest_action_streak: int
+    low_need_recovery_count: int
+    low_need_recovery_share: float
     exploit_flags: tuple[str, ...]
     trace: tuple[DiagnosticStep, ...]
 
@@ -560,8 +562,8 @@ class DiagnosticBatch:
 
 def _episode_summary(seed: int, policy: str, condition: str,
                      environment: LearningEnvironment, transitions: list[Transition],
-                     masks: list[tuple[int, ...]],
-                     trace: list[DiagnosticStep]) -> EpisodeDiagnostics:
+                     masks: list[tuple[int, ...]], trace: list[DiagnosticStep],
+                     low_need_recovery_count: int) -> EpisodeDiagnostics:
     actions = Counter(item.resolved_action or item.action for item in transitions)
     policy_actions = Counter(name for name, count in actions.items()
                              for _ in range(count) if name in ACTION_NAMES)
@@ -604,7 +606,11 @@ def _episode_summary(seed: int, policy: str, condition: str,
         prepared_missions_attempted=p.prepared_missions_attempted,
         prepared_missions_completed=p.prepared_missions_completed,
         unique_actions=len(policy_actions), dominant_action_share=round(dominant, 3),
-        longest_action_streak=longest, exploit_flags=tuple(flags), trace=tuple(trace),
+        longest_action_streak=longest,
+        low_need_recovery_count=low_need_recovery_count,
+        low_need_recovery_share=round(
+            low_need_recovery_count / max(1, decision_steps), 3),
+        exploit_flags=tuple(flags), trace=tuple(trace),
     )
 
 
@@ -667,6 +673,16 @@ def _configure_evaluation_condition(environment: LearningEnvironment,
         state.gate_alert_level = 3
 
 
+def is_low_need_recovery(action: str, protagonist: Protagonist, slot: TimeSlot) -> bool:
+    """Return whether recovery was chosen while physical need was conservatively low."""
+    if action == "Eat":
+        return protagonist.hunger < 35 and protagonist.health >= 60
+    if action == "Rest":
+        return (protagonist.energy > 70 and protagonist.stress < 40
+                and protagonist.injury_severity == 0 and slot is not TimeSlot.LATE_NIGHT)
+    return False
+
+
 def diagnose_episode(seed: int, horizon: int, policy: str,
                      result: TrainingResult | None = None,
                      condition: str = "standard") -> EpisodeDiagnostics:
@@ -681,9 +697,14 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     _configure_evaluation_condition(environment, condition)
     policy_rng = random.Random(seed * 97_409 + 17)
     transitions, masks, trace = [], [], []
+    low_need_recovery_count = 0
     for step in range(1, horizon + 1):
         mask = environment.action_mask()
         masks.append(mask)
+        before_p = environment.simulation.state.protagonist
+        before_slot = environment.simulation.state.clock.slot
+        low_need_eat = is_low_need_recovery("Eat", before_p, before_slot)
+        low_need_rest = is_low_need_recovery("Rest", before_p, before_slot)
         if policy == "utility":
             transition = environment.baseline_step()
         elif policy == "random":
@@ -698,6 +719,10 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             action = _greedy_action(values, mask)
             transition = environment.step(ACTION_NAMES[action])
         transitions.append(transition)
+        chosen_action = transition.resolved_action or transition.action
+        low_need_recovery_count += int(
+            (chosen_action == "Eat" and low_need_eat) or
+            (chosen_action == "Rest" and low_need_rest))
         p = environment.simulation.state.protagonist
         trace.append(DiagnosticStep(step, transition.resolved_action or transition.action,
                                     transition.reward, p.health,
@@ -705,7 +730,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                                     p.missions_completed))
         if p.health <= 0:
             break
-    return _episode_summary(seed, policy, condition, environment, transitions, masks, trace)
+    return _episode_summary(seed, policy, condition, environment, transitions, masks, trace,
+                            low_need_recovery_count)
 
 
 def _honest_verdict(differences: list[float]) -> str:
@@ -1113,6 +1139,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "average_unique_actions": round(sum(e.unique_actions for e in episodes) / count, 3),
             "average_dominant_action_share": round(
                 sum(e.dominant_action_share for e in episodes) / count, 3),
+            "average_low_need_recovery_count": round(
+                sum(e.low_need_recovery_count for e in episodes) / count, 3),
+            "average_low_need_recovery_share": round(
+                sum(e.low_need_recovery_share for e in episodes) / count, 3),
             "maximum_action_streak": max(e.longest_action_streak for e in episodes),
             "action_counts": dict(actions),
             "action_frequencies": {name: round(value / sum(actions.values()), 3)
