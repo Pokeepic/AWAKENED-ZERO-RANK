@@ -18,7 +18,9 @@ from awakened_zero_rank.learning import (
     diagnose_batch,
     diagnose_episode, diagnostics_report, heuristic_action,
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
-    load_checkpoint, save_checkpoint,
+    load_checkpoint, load_scenario_suite_report, save_checkpoint,
+    save_scenario_suite_report,
+    scenario_suite_digest, scenario_suite_report,
     train_q_learning,
 )
 
@@ -732,6 +734,35 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(first.total_episodes, 4)
         self.assertIn(first.verdict, {"promising", "inconclusive", "baseline remains better"})
 
+    def test_scenario_suite_report_is_canonical_and_policy_bound(self) -> None:
+        trained = train_q_learning(32, QLearningConfig(episodes=2, horizon=5))
+        suite = evaluate_scenario_suite(trained, (
+            EvaluationScenario("early survival", 5, (132, 133)),
+            EvaluationScenario("longer stability", 9, (232, 233)),
+        ))
+        first = scenario_suite_report(suite)
+        second = scenario_suite_report(suite)
+        payload = json.loads(first)
+        self.assertEqual(first, second)
+        self.assertEqual(payload["report_version"], 1)
+        self.assertEqual(payload["checkpoint_sha256"], checkpoint_digest(trained))
+        self.assertEqual(payload["sha256"], scenario_suite_digest(suite))
+        self.assertEqual(payload["total_episodes"], 4)
+        self.assertEqual(payload["scenarios"][1]["horizon"], 9)
+        self.assertIn("rl_survival_rate", payload["scenarios"][0])
+        with TemporaryDirectory() as directory:
+            first_path = Path(directory) / "first.json"
+            second_path = Path(directory) / "second.json"
+            save_scenario_suite_report(suite, first_path)
+            save_scenario_suite_report(suite, second_path)
+            self.assertEqual(first_path.read_bytes(), second_path.read_bytes())
+            self.assertEqual(first_path.read_text(encoding="utf-8"), first)
+            self.assertEqual(load_scenario_suite_report(first_path), suite)
+            tampered = json.loads(first_path.read_text(encoding="utf-8"))
+            tampered["scenarios"][0]["rl_average_reward"] += 1
+            first_path.write_text(json.dumps(tampered), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_scenario_suite_report(first_path)
     def test_scenario_suite_validates_names_horizons_and_held_out_seeds(self) -> None:
         trained = train_q_learning(41, QLearningConfig(episodes=2, horizon=5))
         with self.assertRaises(ValueError):

@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.20.0** · **83 automated tests**
+Current release: **0.21.0** · **84 automated tests**
 
 ## Design principles
 
@@ -48,6 +48,7 @@ Current release: **0.20.0** · **83 automated tests**
 - Deterministic Q-table checkpoints with schema validation and SHA-256 tamper detection.
 - Repeated independent trials with pooled confidence and a conservative adoption gate.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
+- Versioned scenario-suite JSON reports with stable policy binding, SHA-256 identity, exact reload, and tamper rejection.
 
 The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or coherence regressions.
 
@@ -128,11 +129,12 @@ Completed milestones are grouped for readability:
 | 16–17 | Broader economic/recovery scenarios and stronger utility, heuristic, and random baselines |
 | 18–19 | Improved tabular training, checkpoint integrity, repeated trials, and neural-readiness auditing |
 | 20 | Multi-horizon held-out scenario suites, pooled verdicts, and conservative adoption checks |
+| 21 | Canonical scenario reports, checkpoint binding, deterministic export, and integrity verification |
 
 Near-term work should use the scenario suite to improve tabular consistency across different horizons and conditions. Neural RL remains deferred while the readiness gate is closed.
 
 ### Future observer website
 
-A later presentation milestone can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity.
+A later presentation milestone can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports can feed a separate developer-facing experiment view without coupling the website to training code.
 
 The website must remain a view of the authoritative deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him.

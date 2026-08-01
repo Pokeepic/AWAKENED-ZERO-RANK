@@ -719,6 +719,7 @@ class ScenarioComparison:
 @dataclass(frozen=True)
 class ScenarioSuiteResult:
     training_seed: int
+    checkpoint_sha256: str
     scenarios: tuple[ScenarioComparison, ...]
     total_episodes: int
     pooled_mean_difference: float
@@ -770,11 +771,81 @@ def evaluate_scenario_suite(result: TrainingResult,
                           item.rl_average_missions >= item.utility_average_missions
                           for item in summaries))
     return ScenarioSuiteResult(
-        training_seed=result.training_seed, scenarios=tuple(summaries),
-        total_episodes=len(pooled),
+        training_seed=result.training_seed, checkpoint_sha256=checkpoint_digest(result),
+        scenarios=tuple(summaries), total_episodes=len(pooled),
         pooled_mean_difference=round(sum(pooled) / len(pooled), 3),
         verdict=verdict, adoption_ready=adoption_ready,
     )
+
+SCENARIO_REPORT_VERSION = 1
+
+
+def _scenario_suite_data(suite: ScenarioSuiteResult) -> dict:
+    return {
+        "report_version": SCENARIO_REPORT_VERSION,
+        "training_seed": suite.training_seed,
+        "checkpoint_sha256": suite.checkpoint_sha256,
+        "scenarios": [asdict(scenario) for scenario in suite.scenarios],
+        "total_episodes": suite.total_episodes,
+        "pooled_mean_difference": suite.pooled_mean_difference,
+        "verdict": suite.verdict,
+        "adoption_ready": suite.adoption_ready,
+    }
+
+
+def scenario_suite_digest(suite: ScenarioSuiteResult) -> str:
+    """Return the stable identity of a scenario-suite evaluation payload."""
+    payload = json.dumps(_scenario_suite_data(suite), sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def scenario_suite_report(suite: ScenarioSuiteResult) -> str:
+    """Render a deterministic, integrity-identified scenario-suite JSON report."""
+    data = _scenario_suite_data(suite)
+    data["sha256"] = scenario_suite_digest(suite)
+    return json.dumps(data, indent=2, sort_keys=True)
+
+
+def save_scenario_suite_report(suite: ScenarioSuiteResult, path: str | Path) -> Path:
+    """Save a canonical scenario-suite report for audits and observer tooling."""
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(scenario_suite_report(suite), encoding="utf-8")
+    return destination
+
+def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
+    """Load a scenario-suite report only when its version and digest are intact."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    digest = data.pop("sha256", None)
+    if data.get("report_version") != SCENARIO_REPORT_VERSION:
+        raise ValueError("Unsupported scenario report version")
+    try:
+        scenarios = tuple(ScenarioComparison(
+            name=item["name"], horizon=item["horizon"],
+            evaluation_seeds=tuple(item["evaluation_seeds"]),
+            policy_ranking=tuple(item["policy_ranking"]),
+            rl_average_reward=item["rl_average_reward"],
+            utility_average_reward=item["utility_average_reward"],
+            mean_difference=item["mean_difference"],
+            rl_survival_rate=item["rl_survival_rate"],
+            utility_survival_rate=item["utility_survival_rate"],
+            rl_average_missions=item["rl_average_missions"],
+            utility_average_missions=item["utility_average_missions"],
+            verdict=item["verdict"],
+        ) for item in data["scenarios"])
+        suite = ScenarioSuiteResult(
+            training_seed=data["training_seed"],
+            checkpoint_sha256=data["checkpoint_sha256"], scenarios=scenarios,
+            total_episodes=data["total_episodes"],
+            pooled_mean_difference=data["pooled_mean_difference"],
+            verdict=data["verdict"], adoption_ready=data["adoption_ready"],
+        )
+    except (KeyError, TypeError) as error:
+        raise ValueError("Invalid scenario report schema") from error
+    if digest != scenario_suite_digest(suite):
+        raise ValueError("Scenario report integrity verification failed")
+    return suite
 
 def diagnostics_report(batch: DiagnosticBatch) -> str:
     """Render a deterministic JSON report suitable for versioned experiment records."""
