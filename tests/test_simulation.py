@@ -696,6 +696,11 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(all(0 <= value <= 1 for value in (
             episode.critical_energy_share, episode.high_hunger_share,
             episode.high_stress_share)))
+        self.assertEqual(episode.critical_energy_decision_steps,
+                         sum(count for _, count in episode.critical_energy_action_counts))
+        self.assertGreaterEqual(episode.critical_energy_rest_count, 0)
+        self.assertGreaterEqual(episode.critical_energy_rest_share, 0)
+        self.assertLessEqual(episode.critical_energy_rest_share, 1)
         self.assertGreaterEqual(episode.dominant_action_share, 0)
         self.assertLessEqual(episode.dominant_action_share, 1)
         self.assertGreaterEqual(episode.low_need_recovery_count, 0)
@@ -766,6 +771,9 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("average_end_health", report["rl"])
         self.assertIn("resource_burden_differences", report)
         self.assertIn("average_critical_energy_share", report["rl"])
+        self.assertIn("critical_energy_action_counts", report["rl"])
+        self.assertIn("critical_energy_action_frequencies", report["utility"])
+        self.assertIn("critical_energy_rest_share", report["rl"])
         self.assertIn("action_counts", report["utility"])
         self.assertIn("masked_counts", report["rl"])
         self.assertIn("action_frequencies", report["rl"])
