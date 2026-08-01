@@ -58,6 +58,8 @@ class Protagonist:
     combat_experience: int = 0
     missions_attempted: int = 0
     missions_completed: int = 0
+    prepared_missions_attempted: int = 0
+    prepared_missions_completed: int = 0
     injuries: int = 0
     injury_severity: int = 0
     treatments_received: int = 0

@@ -171,6 +171,20 @@ class SimulationTests(unittest.TestCase):
             restored = load_simulation(path)
         self.assertEqual(restored.state, simulation.state)
 
+    def test_legacy_save_defaults_prepared_mission_counters(self) -> None:
+        simulation = Simulation(seed=27)
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "legacy.json"
+            save_simulation(simulation, path)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            protagonist = data["state"]["protagonist"]
+            protagonist.pop("prepared_missions_attempted")
+            protagonist.pop("prepared_missions_completed")
+            path.write_text(json.dumps(data), encoding="utf-8")
+            restored = load_simulation(path)
+        self.assertEqual(restored.state.protagonist.prepared_missions_attempted, 0)
+        self.assertEqual(restored.state.protagonist.prepared_missions_completed, 0)
+
     def test_loaded_timeline_has_identical_future(self) -> None:
         uninterrupted = Simulation(seed=77)
         interrupted = Simulation(seed=77)
@@ -457,9 +471,16 @@ class SimulationTests(unittest.TestCase):
         simulation.step("Prepare portal")
         portal_name = simulation.state.active_portal_plan
         ally = simulation.state.portal_investigations[portal_name].cooperating_npc
+        p = simulation.state.protagonist
+        attempts_before = p.prepared_missions_attempted
+        prepared_before = p.prepared_missions_completed
+        completed_before = p.missions_completed
         event = simulation.step("Gate mission")
         record = simulation.state.portal_investigations[portal_name]
         self.assertIsNone(simulation.state.active_portal_plan)
+        self.assertEqual(p.prepared_missions_attempted, attempts_before + 1)
+        self.assertEqual(p.prepared_missions_completed - prepared_before,
+                         p.missions_completed - completed_before)
         self.assertEqual(record.preparation_strategy, "Used")
         self.assertEqual(record.joint_missions, int(ally is not None))
         if ally:
@@ -572,6 +593,8 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("masked_counts", report["rl"])
         self.assertIn("action_frequencies", report["rl"])
         self.assertIn("average_dominant_action_share", report["rl"])
+        self.assertIn("preparation_coverage", report["rl"])
+        self.assertIn("prepared_success_rate", report["utility"])
         self.assertTrue(report["worst_rl_episodes"][0]["trace"])
         self.assertIn(report["verdict"],
                       {"promising", "inconclusive", "baseline remains better"})
@@ -731,6 +754,9 @@ class SimulationTests(unittest.TestCase):
         self.assertGreater(actions.get("Prepare portal", 0), 0)
         trace = [step.action for step in episode.trace]
         self.assertLess(trace.index("Prepare portal"), trace.index("Gate mission"))
+        self.assertGreater(episode.prepared_missions_attempted, 0)
+        self.assertLessEqual(episode.prepared_missions_completed,
+                             episode.prepared_missions_attempted)
         self.assertTrue(episode.survived)
 
     def test_rent_arrears_can_be_repaid_without_spending_emergency_cash(self) -> None:
@@ -836,7 +862,7 @@ class SimulationTests(unittest.TestCase):
         second = scenario_suite_report(suite)
         payload = json.loads(first)
         self.assertEqual(first, second)
-        self.assertEqual(payload["report_version"], 3)
+        self.assertEqual(payload["report_version"], 4)
         self.assertEqual(payload["checkpoint_sha256"], checkpoint_digest(trained))
         self.assertEqual(payload["sha256"], scenario_suite_digest(suite))
         self.assertEqual(payload["total_episodes"], 4)
@@ -845,6 +871,8 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("rl_rent_paid_rate", payload["scenarios"][0])
         self.assertIn("rl_dominant_action_share", payload["scenarios"][0])
         self.assertIn("rl_exploit_flags", payload["scenarios"][0])
+        self.assertIn("rl_preparation_coverage", payload["scenarios"][0])
+        self.assertIn("rl_prepared_success_rate", payload["scenarios"][0])
         with TemporaryDirectory() as directory:
             first_path = Path(directory) / "first.json"
             second_path = Path(directory) / "second.json"
@@ -860,7 +888,9 @@ class SimulationTests(unittest.TestCase):
                 scenario.pop("condition")
                 for field in ("rl_rent_paid_rate", "utility_rent_paid_rate",
                               "rl_dominant_action_share", "utility_dominant_action_share",
-                              "rl_exploit_flags"):
+                              "rl_exploit_flags", "rl_preparation_coverage",
+                              "utility_preparation_coverage", "rl_prepared_success_rate",
+                              "utility_prepared_success_rate"):
                     scenario.pop(field)
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()

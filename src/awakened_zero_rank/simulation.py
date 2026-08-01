@@ -388,7 +388,9 @@ class Simulation:
         difficulty += environmental_difficulty
         preparation_bonus = 0
         cooperation_text = ""
-        if self.state.active_portal_plan == portal.name:
+        used_preparation = self.state.active_portal_plan == portal.name
+        if used_preparation:
+            p.prepared_missions_attempted += 1
             preparation_bonus = investigation.preparation_bonus
             if investigation.cooperating_npc:
                 investigation.joint_missions += 1
@@ -420,6 +422,8 @@ class Simulation:
             p.rank_points += points
             p.combat_experience += 5
             p.missions_completed += 1
+            if used_preparation:
+                p.prepared_missions_completed += 1
             p.reputation += 2
             self.state.objective_scores["survival"] += 2
             self.state.objective_scores["stability"] += reward // 1000

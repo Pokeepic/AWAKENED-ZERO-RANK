@@ -465,6 +465,8 @@ class EpisodeDiagnostics:
     rent_paid: bool
     missions_attempted: int
     missions_completed: int
+    prepared_missions_attempted: int
+    prepared_missions_completed: int
     unique_actions: int
     dominant_action_share: float
     longest_action_streak: int
@@ -530,6 +532,8 @@ def _episode_summary(seed: int, policy: str, condition: str,
         survived=p.health > 0, rent_due_reached=due_reached,
         rent_paid=due_reached and p.rent_arrears == 0,
         missions_attempted=p.missions_attempted, missions_completed=p.missions_completed,
+        prepared_missions_attempted=p.prepared_missions_attempted,
+        prepared_missions_completed=p.prepared_missions_completed,
         unique_actions=len(policy_actions), dominant_action_share=round(dominant, 3),
         longest_action_streak=longest, exploit_flags=tuple(flags), trace=tuple(trace),
     )
@@ -766,6 +770,10 @@ class ScenarioComparison:
     rl_dominant_action_share: float = 0.0
     utility_dominant_action_share: float = 0.0
     rl_exploit_flags: tuple[str, ...] = ()
+    rl_preparation_coverage: float = 0.0
+    utility_preparation_coverage: float = 0.0
+    rl_prepared_success_rate: float = 0.0
+    utility_prepared_success_rate: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -847,6 +855,15 @@ def evaluate_scenario_suite(result: TrainingResult,
         count = len(scenario.evaluation_seeds)
         rl_due = sum(episode.rent_due_reached for episode in batch.rl_episodes)
         utility_due = sum(episode.rent_due_reached for episode in batch.utility_episodes)
+        rl_attempts = sum(episode.missions_attempted for episode in batch.rl_episodes)
+        utility_attempts = sum(episode.missions_attempted for episode in batch.utility_episodes)
+        rl_prepared = sum(episode.prepared_missions_attempted for episode in batch.rl_episodes)
+        utility_prepared = sum(
+            episode.prepared_missions_attempted for episode in batch.utility_episodes)
+        rl_prepared_completed = sum(
+            episode.prepared_missions_completed for episode in batch.rl_episodes)
+        utility_prepared_completed = sum(
+            episode.prepared_missions_completed for episode in batch.utility_episodes)
         rl_flags = tuple(sorted({flag for episode in batch.rl_episodes
                                  for flag in episode.exploit_flags}))
         summaries.append(ScenarioComparison(
@@ -873,6 +890,13 @@ def evaluate_scenario_suite(result: TrainingResult,
             utility_dominant_action_share=round(
                 sum(e.dominant_action_share for e in batch.utility_episodes) / count, 3),
             rl_exploit_flags=rl_flags,
+            rl_preparation_coverage=round(rl_prepared / max(1, rl_attempts), 3),
+            utility_preparation_coverage=round(
+                utility_prepared / max(1, utility_attempts), 3),
+            rl_prepared_success_rate=round(
+                rl_prepared_completed / max(1, rl_prepared), 3),
+            utility_prepared_success_rate=round(
+                utility_prepared_completed / max(1, utility_prepared), 3),
         ))
     verdict = _honest_verdict(pooled)
     adoption_ready = not _adoption_blockers(tuple(summaries), verdict)
@@ -883,7 +907,7 @@ def evaluate_scenario_suite(result: TrainingResult,
         verdict=verdict, adoption_ready=adoption_ready,
     )
 
-SCENARIO_REPORT_VERSION = 3
+SCENARIO_REPORT_VERSION = 4
 
 
 def _scenario_suite_data(suite: ScenarioSuiteResult) -> dict:
@@ -924,7 +948,7 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
     """Load a scenario-suite report only when its version and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("report_version") not in (1, 2, SCENARIO_REPORT_VERSION):
+    if data.get("report_version") not in (1, 2, 3, SCENARIO_REPORT_VERSION):
         raise ValueError("Unsupported scenario report version")
     payload = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
     if digest != hashlib.sha256(payload).hexdigest():
@@ -948,6 +972,10 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
             rl_dominant_action_share=item.get("rl_dominant_action_share", 0.0),
             utility_dominant_action_share=item.get("utility_dominant_action_share", 0.0),
             rl_exploit_flags=tuple(item.get("rl_exploit_flags", ())),
+            rl_preparation_coverage=item.get("rl_preparation_coverage", 0.0),
+            utility_preparation_coverage=item.get("utility_preparation_coverage", 0.0),
+            rl_prepared_success_rate=item.get("rl_prepared_success_rate", 0.0),
+            utility_prepared_success_rate=item.get("utility_prepared_success_rate", 0.0),
         ) for item in data["scenarios"])
         suite = ScenarioSuiteResult(
             training_seed=data["training_seed"],
@@ -977,6 +1005,12 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         return {
             "average_reward": round(sum(e.total_reward for e in episodes) / count, 3),
             "average_missions": round(sum(e.missions_completed for e in episodes) / count, 3),
+            "preparation_coverage": round(
+                sum(e.prepared_missions_attempted for e in episodes) /
+                max(1, sum(e.missions_attempted for e in episodes)), 3),
+            "prepared_success_rate": round(
+                sum(e.prepared_missions_completed for e in episodes) /
+                max(1, sum(e.prepared_missions_attempted for e in episodes)), 3),
             "survival_rate": round(sum(e.survived for e in episodes) / count, 3),
             "rent_paid_rate_when_due": round(
                 sum(e.rent_paid for e in episodes) /

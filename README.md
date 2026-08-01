@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.26.0** · **91 automated tests**
+Current release: **0.27.0** · **92 automated tests**
 
 ## Design principles
 
@@ -44,7 +44,7 @@ Current release: **0.26.0** · **91 automated tests**
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies.
 - Count-based exploration, phased curriculum rewards, and held-out seed enforcement.
-- Reward decomposition, action/mask frequencies, safety metrics, exploit indicators, and worst-seed traces.
+- Reward decomposition, action/mask frequencies, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with schema validation and SHA-256 tamper detection.
 - Repeated independent trials with pooled confidence and a conservative adoption gate.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
@@ -108,6 +108,8 @@ Milestone 25 addressed the first measured soft-lock by adding a masked **Pay ren
 
 Milestone 26 made utility decisions plan-aware only at maximum Gate alert. In the same bounded audit, Gate-crisis preparation increased from 0 to 5 actions, completed missions increased from 7 to 8, survival and rent recovery remained 4/4, and no exploit flags appeared. Standard, financial-pressure, and injury-recovery behavior remained unchanged. The first Gate-crisis mission is now preceded by preparation without forcing every low-alert mission into the same pattern.
 
+Milestone 27 replaced action-count inference with persistent prepared-mission counters. The four-seed Gate-crisis audit recorded nine attempts, eight completions, four consumed plans, and three prepared completions: 44.4% preparation coverage, 75% prepared success, and 88.9% overall success. This small sample measures behavior but does not establish that preparation causes a higher success rate. Schema-4 reports expose both rates, and older saves/reports default the new fields safely.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
@@ -158,6 +160,7 @@ Completed milestones are grouped for readability:
 | 24 | Rent recovery, action dominance, and exploit metrics integrated into reports and adoption gates |
 | 25 | Partial rent-arrears repayment, emergency-cash protection, and a measured financial soft-lock fix |
 | 26 | Maximum-alert plan-aware utility scoring with preserved lower-alert behavior |
+| 27 | Persistent prepared-mission counters, effectiveness rates, and backward-compatible schema-4 reports |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
