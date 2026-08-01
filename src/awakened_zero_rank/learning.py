@@ -543,6 +543,8 @@ class EpisodeDiagnostics:
     low_need_recovery_share: float
     social_action_count: int
     social_action_share: float
+    unseen_state_count: int
+    unseen_state_share: float
     exploit_flags: tuple[str, ...]
     trace: tuple[DiagnosticStep, ...]
 
@@ -565,7 +567,8 @@ class DiagnosticBatch:
 def _episode_summary(seed: int, policy: str, condition: str,
                      environment: LearningEnvironment, transitions: list[Transition],
                      masks: list[tuple[int, ...]], trace: list[DiagnosticStep],
-                     low_need_recovery_count: int) -> EpisodeDiagnostics:
+                     low_need_recovery_count: int,
+                     unseen_state_count: int) -> EpisodeDiagnostics:
     actions = Counter(item.resolved_action or item.action for item in transitions)
     policy_actions = Counter(name for name, count in actions.items()
                              for _ in range(count) if name in ACTION_NAMES)
@@ -615,6 +618,8 @@ def _episode_summary(seed: int, policy: str, condition: str,
         social_action_count=policy_actions["Talk with Aiko"],
         social_action_share=round(
             policy_actions["Talk with Aiko"] / max(1, decision_steps), 3),
+        unseen_state_count=unseen_state_count,
+        unseen_state_share=round(unseen_state_count / max(1, steps), 3),
         exploit_flags=tuple(flags), trace=tuple(trace),
     )
 
@@ -702,7 +707,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     _configure_evaluation_condition(environment, condition)
     policy_rng = random.Random(seed * 97_409 + 17)
     transitions, masks, trace = [], [], []
-    low_need_recovery_count = 0
+    low_need_recovery_count = unseen_state_count = 0
     for step in range(1, horizon + 1):
         mask = environment.action_mask()
         masks.append(mask)
@@ -720,7 +725,9 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             transition = environment.step(ACTION_NAMES[action])
         else:
             observation = environment.observe()
-            values = result.q_table.get(discretize(observation), [0.0] * len(ACTION_NAMES))
+            state = discretize(observation)
+            unseen_state_count += int(state not in result.q_table)
+            values = result.q_table.get(state, [0.0] * len(ACTION_NAMES))
             action = _greedy_action(values, mask)
             transition = environment.step(ACTION_NAMES[action])
         transitions.append(transition)
@@ -736,7 +743,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         if p.health <= 0:
             break
     return _episode_summary(seed, policy, condition, environment, transitions, masks, trace,
-                            low_need_recovery_count)
+                            low_need_recovery_count, unseen_state_count)
 
 
 def _honest_verdict(differences: list[float]) -> str:
@@ -1152,6 +1159,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.social_action_count for e in episodes) / count, 3),
             "average_social_action_share": round(
                 sum(e.social_action_share for e in episodes) / count, 3),
+            "average_unseen_state_count": round(
+                sum(e.unseen_state_count for e in episodes) / count, 3),
+            "average_unseen_state_share": round(
+                sum(e.unseen_state_share for e in episodes) / count, 3),
             "maximum_action_streak": max(e.longest_action_streak for e in episodes),
             "action_counts": dict(actions),
             "action_frequencies": {name: round(value / sum(actions.values()), 3)
