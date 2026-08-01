@@ -1,6 +1,7 @@
 import hashlib
 import json
 import unittest
+from dataclasses import replace
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
@@ -777,6 +778,28 @@ class SimulationTests(unittest.TestCase):
         self.assertFalse(mismatch.ready)
         self.assertEqual(mismatch.blockers[0], "checkpoint mismatch")
 
+    def test_adoption_decision_blocks_balance_regressions(self) -> None:
+        trained = train_q_learning(36, QLearningConfig(episodes=2, horizon=5))
+        suite = evaluate_scenario_suite(trained, (
+            EvaluationScenario("balance audit", 5, (138, 139)),
+        ))
+        scenario = replace(
+            suite.scenarios[0], verdict="promising",
+            rl_survival_rate=1.0, utility_survival_rate=1.0,
+            rl_average_missions=1.0, utility_average_missions=1.0,
+            rl_rent_paid_rate=0.0, utility_rent_paid_rate=1.0,
+            rl_dominant_action_share=0.8, utility_dominant_action_share=0.3,
+            rl_exploit_flags=("low action diversity",),
+        )
+        audited = replace(suite, scenarios=(scenario,), verdict="promising",
+                          adoption_ready=False)
+        decision = assess_policy_adoption(trained, audited)
+        self.assertFalse(decision.ready)
+        self.assertIn("balance audit: rent recovery regression", decision.blockers)
+        self.assertIn("balance audit: action dominance regression", decision.blockers)
+        self.assertIn("balance audit: behavioral exploit flags (low action diversity)",
+                      decision.blockers)
+
     def test_scenario_suite_report_is_canonical_and_policy_bound(self) -> None:
         trained = train_q_learning(32, QLearningConfig(episodes=2, horizon=5))
         suite = evaluate_scenario_suite(trained, (
@@ -787,12 +810,15 @@ class SimulationTests(unittest.TestCase):
         second = scenario_suite_report(suite)
         payload = json.loads(first)
         self.assertEqual(first, second)
-        self.assertEqual(payload["report_version"], 2)
+        self.assertEqual(payload["report_version"], 3)
         self.assertEqual(payload["checkpoint_sha256"], checkpoint_digest(trained))
         self.assertEqual(payload["sha256"], scenario_suite_digest(suite))
         self.assertEqual(payload["total_episodes"], 4)
         self.assertEqual(payload["scenarios"][1]["horizon"], 9)
         self.assertIn("rl_survival_rate", payload["scenarios"][0])
+        self.assertIn("rl_rent_paid_rate", payload["scenarios"][0])
+        self.assertIn("rl_dominant_action_share", payload["scenarios"][0])
+        self.assertIn("rl_exploit_flags", payload["scenarios"][0])
         with TemporaryDirectory() as directory:
             first_path = Path(directory) / "first.json"
             second_path = Path(directory) / "second.json"
@@ -806,10 +832,18 @@ class SimulationTests(unittest.TestCase):
             legacy["report_version"] = 1
             for scenario in legacy["scenarios"]:
                 scenario.pop("condition")
+                for field in ("rl_rent_paid_rate", "utility_rent_paid_rate",
+                              "rl_dominant_action_share", "utility_dominant_action_share",
+                              "rl_exploit_flags"):
+                    scenario.pop(field)
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first_path.write_text(json.dumps(legacy), encoding="utf-8")
-            self.assertEqual(load_scenario_suite_report(first_path), suite)
+            restored_legacy = load_scenario_suite_report(first_path)
+            self.assertTrue(all(item.condition == "standard"
+                                for item in restored_legacy.scenarios))
+            self.assertTrue(all(item.rl_dominant_action_share == 0.0
+                                for item in restored_legacy.scenarios))
             first_path.write_text(first, encoding="utf-8")
             tampered = json.loads(first_path.read_text(encoding="utf-8"))
             tampered["scenarios"][0]["rl_average_reward"] += 1

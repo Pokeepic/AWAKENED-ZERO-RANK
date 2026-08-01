@@ -33,6 +33,7 @@ ACTION_NAMES = (
 REWARD_COMPONENTS = ("survival", "stability", "progress", "social")
 EVALUATION_CONDITIONS = ("standard", "financial_pressure", "injury_recovery",
                          "gate_crisis")
+MAX_DOMINANCE_REGRESSION = 0.15
 
 
 @dataclass(frozen=True)
@@ -757,6 +758,11 @@ class ScenarioComparison:
     rl_average_missions: float
     utility_average_missions: float
     verdict: str
+    rl_rent_paid_rate: float = 0.0
+    utility_rent_paid_rate: float = 0.0
+    rl_dominant_action_share: float = 0.0
+    utility_dominant_action_share: float = 0.0
+    rl_exploit_flags: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -790,6 +796,14 @@ def _adoption_blockers(scenarios: tuple[ScenarioComparison, ...],
             blockers.append(f"{scenario.name}: survival regression")
         if scenario.rl_average_missions < scenario.utility_average_missions:
             blockers.append(f"{scenario.name}: mission regression")
+        if scenario.rl_rent_paid_rate < scenario.utility_rent_paid_rate:
+            blockers.append(f"{scenario.name}: rent recovery regression")
+        if (scenario.rl_dominant_action_share - scenario.utility_dominant_action_share >
+                MAX_DOMINANCE_REGRESSION):
+            blockers.append(f"{scenario.name}: action dominance regression")
+        if scenario.rl_exploit_flags:
+            flags = ", ".join(scenario.rl_exploit_flags)
+            blockers.append(f"{scenario.name}: behavioral exploit flags ({flags})")
     return tuple(blockers)
 
 
@@ -828,6 +842,10 @@ def evaluate_scenario_suite(result: TrainingResult,
         differences = [rl - utility for rl, utility in zip(rl_rewards, utility_rewards)]
         pooled.extend(differences)
         count = len(scenario.evaluation_seeds)
+        rl_due = sum(episode.rent_due_reached for episode in batch.rl_episodes)
+        utility_due = sum(episode.rent_due_reached for episode in batch.utility_episodes)
+        rl_flags = tuple(sorted({flag for episode in batch.rl_episodes
+                                 for flag in episode.exploit_flags}))
         summaries.append(ScenarioComparison(
             name=scenario.name, horizon=scenario.horizon, condition=scenario.condition,
             evaluation_seeds=scenario.evaluation_seeds,
@@ -843,6 +861,15 @@ def evaluate_scenario_suite(result: TrainingResult,
             utility_average_missions=round(
                 sum(e.missions_completed for e in batch.utility_episodes) / count, 3),
             verdict=batch.verdict,
+            rl_rent_paid_rate=round(
+                sum(e.rent_paid for e in batch.rl_episodes) / max(1, rl_due), 3),
+            utility_rent_paid_rate=round(
+                sum(e.rent_paid for e in batch.utility_episodes) / max(1, utility_due), 3),
+            rl_dominant_action_share=round(
+                sum(e.dominant_action_share for e in batch.rl_episodes) / count, 3),
+            utility_dominant_action_share=round(
+                sum(e.dominant_action_share for e in batch.utility_episodes) / count, 3),
+            rl_exploit_flags=rl_flags,
         ))
     verdict = _honest_verdict(pooled)
     adoption_ready = not _adoption_blockers(tuple(summaries), verdict)
@@ -853,7 +880,7 @@ def evaluate_scenario_suite(result: TrainingResult,
         verdict=verdict, adoption_ready=adoption_ready,
     )
 
-SCENARIO_REPORT_VERSION = 2
+SCENARIO_REPORT_VERSION = 3
 
 
 def _scenario_suite_data(suite: ScenarioSuiteResult) -> dict:
@@ -894,7 +921,7 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
     """Load a scenario-suite report only when its version and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("report_version") not in (1, SCENARIO_REPORT_VERSION):
+    if data.get("report_version") not in (1, 2, SCENARIO_REPORT_VERSION):
         raise ValueError("Unsupported scenario report version")
     payload = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
     if digest != hashlib.sha256(payload).hexdigest():
@@ -913,6 +940,11 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
             rl_average_missions=item["rl_average_missions"],
             utility_average_missions=item["utility_average_missions"],
             verdict=item["verdict"],
+            rl_rent_paid_rate=item.get("rl_rent_paid_rate", 0.0),
+            utility_rent_paid_rate=item.get("utility_rent_paid_rate", 0.0),
+            rl_dominant_action_share=item.get("rl_dominant_action_share", 0.0),
+            utility_dominant_action_share=item.get("utility_dominant_action_share", 0.0),
+            rl_exploit_flags=tuple(item.get("rl_exploit_flags", ())),
         ) for item in data["scenarios"])
         suite = ScenarioSuiteResult(
             training_seed=data["training_seed"],
