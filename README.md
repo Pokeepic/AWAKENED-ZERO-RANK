@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.54.0** · **101 automated tests**
+Current release: **0.55.0** · **101 automated tests**
 
 ## Design principles
 
@@ -44,7 +44,7 @@ Current release: **0.54.0** · **101 automated tests**
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies, with opt-in unseen-state safety fallback, preventive Rest safeguard, legacy additive exploration, and seeded progression sampling during training.
 - Count-based exploration, exact state-action visit evidence and per-action exposure summaries, phased curriculum rewards, deterministic multi-condition training schedules, per-condition state-coverage summaries, and held-out seed enforcement.
-- Reward decomposition with explicit RL-versus-utility component gaps, terminal wellbeing, resource-burden differences, and critical- and strained-energy action distributions, exact safeguard overrides, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences and Q-value gaps, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
+- Reward decomposition with explicit RL-versus-utility component gaps, terminal wellbeing, resource-burden differences, and critical- and strained-energy action distributions, exact safeguard override contexts, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences and Q-value gaps, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with action/condition/fallback/exploration/recovery/visit schema validation, SHA-256 tamper detection, and authenticated version migration.
 - Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
@@ -164,6 +164,8 @@ Update 0.53 — Preventive Rest Pilot adds a checkpoint-authenticated, default-o
 
 Update 0.54 — Preventive Rest Attribution records only genuine safeguard overrides where the underlying frozen policy selected a non-Rest action. A corrected threshold-30 audit found eight overrides across ten held-out episodes: four in standard, two in injury recovery, two in compound crisis, and none in financial pressure or Gate crisis because those policies already chose Rest. Standard reward improved by 8.461, while injury and compound worsened by 0.763 and 0.479; mission counts were unchanged. The safeguard effect is context-dependent, so it remains default-off and the verdict remains **baseline remains better**.
 
+Update 0.55 — Override Context Audit records the replaced action, energy, health, hunger, stress, injury severity, and time slot for every true safeguard override. All four beneficial standard overrides occurred fully uninjured; all four harmful injury/compound overrides had lingering injury severity 1. Preventive Rest eligibility is now limited to severity 0, preserving urgent treatment and eliminating every harmful override in the frozen pilot. Threshold 30 then improved the pooled deficit from 15.571 to 13.879 with seven missions, 100% survival and rent recovery, and no exploit flags. Schema 10 authenticates the safer eligibility rule while schema-9 checkpoints retain their original severity-1 allowance. The threshold remains default-off and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -171,7 +173,7 @@ Update 0.54 — Preventive Rest Attribution records only genuine safeguard overr
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — safeguard attribution measured in Update 0.54 | Only eight true threshold-30 overrides occurred; four helped standard reward, while two injury and two compound overrides worsened reward, with no changes in financial/Gate crisis | Keep the safeguard default-off; audit health, injury, stress, and time-slot context at true overrides before narrowing eligibility | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — uninjured safeguard refinement in Update 0.55 | Excluding lingering injury removes all four harmful overrides and improves the threshold-30 pooled deficit to 13.879 without mission or safety loss, but only standard behavior changes | Retain severity-0 eligibility and keep threshold zero by default; investigate standard/Gate progression gaps before another adoption trial | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -242,6 +244,7 @@ Completed updates are grouped for readability:
 | 0.52 | Strained-energy action distributions and preventive recovery diagnosis |
 | 0.53 | Default-off preventive Rest safeguard, schema-9 checkpoints, and threshold pilot |
 | 0.54 | Exact preventive Rest override attribution and context-dependent rejection |
+| 0.55 | Override context records, uninjured-only preventive Rest, and schema-10 compatibility |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

@@ -241,6 +241,7 @@ class QLearningConfig:
     progression_exploration_bonus: float = 0.0
     progression_sampling_rate: float = 0.0
     preventive_rest_threshold: int = 0
+    preventive_rest_max_injury_severity: int = 0
     curriculum: bool = True
     training_conditions: tuple[str, ...] = ("standard",)
     unseen_state_fallback: str = "first_valid"
@@ -269,6 +270,10 @@ class QLearningConfig:
         if (type(self.preventive_rest_threshold) is not int or
                 not 0 <= self.preventive_rest_threshold <= 100):
             raise ValueError("preventive_rest_threshold must be an integer from 0 to 100")
+        if (type(self.preventive_rest_max_injury_severity) is not int or
+                not 0 <= self.preventive_rest_max_injury_severity <= 4):
+            raise ValueError(
+                "preventive_rest_max_injury_severity must be an integer from 0 to 4")
         if self.unseen_state_fallback not in {"first_valid", "heuristic"}:
             raise ValueError("unknown unseen-state fallback")
 
@@ -456,7 +461,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table), tuple(episode_conditions),
                           tuple(episode_state_counts), visit_table)
-CHECKPOINT_VERSION = 9
+CHECKPOINT_VERSION = 10
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -503,7 +508,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -523,6 +528,10 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data.setdefault("progression_exploration_bonus", 0.0)
     config_data.setdefault("progression_sampling_rate", 0.0)
     config_data.setdefault("preventive_rest_threshold", 0)
+    config_data.setdefault(
+        "preventive_rest_max_injury_severity",
+        1 if data["checkpoint_version"] == 9 else 0,
+    )
     episode_rewards = tuple(data["episode_rewards"])
     return TrainingResult(
         training_seed=data["training_seed"], config=QLearningConfig(**config_data),
@@ -560,7 +569,7 @@ def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, 
         observation, info = rl_env.reset(seed=seed)
         rl_total = 0.0
         while True:
-            action, _, _ = _frozen_policy_action(
+            action, _, _, _ = _frozen_policy_action(
                 result, rl_env.environment, observation, info["action_mask"])
             observation, reward, terminated, truncated, info = rl_env.step(action)
             rl_total += reward
@@ -592,6 +601,18 @@ class DiagnosticStep:
     money: int
     rent_arrears: int
     missions_completed: int
+
+
+@dataclass(frozen=True)
+class PreventiveRestOverride:
+    step: int
+    replaced_action: str
+    energy: int
+    health: int
+    hunger: int
+    stress: int
+    injury_severity: int
+    slot: str
 
 
 @dataclass(frozen=True)
@@ -641,6 +662,7 @@ class EpisodeDiagnostics:
     unseen_state_share: float
     preventive_rest_override_count: int
     preventive_rest_override_share: float
+    preventive_rest_overrides: tuple[PreventiveRestOverride, ...]
     visit_evidence_steps: int
     zero_visit_action_count: int
     zero_visit_action_share: float
@@ -688,7 +710,8 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      critical_energy_actions: Counter,
                      strained_energy_actions: Counter,
                      high_hunger_steps: int, high_stress_steps: int,
-                     unseen_state_count: int, preventive_rest_override_count: int,
+                     unseen_state_count: int,
+                     preventive_rest_overrides: list[PreventiveRestOverride],
                      visit_evidence_steps: int, zero_visit_action_count: int,
                      selected_action_visit_total: int,
                      gate_seen_opportunities: int, gate_greedy_steps: int,
@@ -769,9 +792,10 @@ def _episode_summary(seed: int, policy: str, condition: str,
             policy_actions["Talk with Aiko"] / max(1, decision_steps), 3),
         unseen_state_count=unseen_state_count,
         unseen_state_share=round(unseen_state_count / max(1, steps), 3),
-        preventive_rest_override_count=preventive_rest_override_count,
+        preventive_rest_override_count=len(preventive_rest_overrides),
         preventive_rest_override_share=round(
-            preventive_rest_override_count / max(1, steps), 3),
+            len(preventive_rest_overrides) / max(1, steps), 3),
+        preventive_rest_overrides=tuple(preventive_rest_overrides),
         visit_evidence_steps=visit_evidence_steps,
         zero_visit_action_count=zero_visit_action_count,
         zero_visit_action_share=round(
@@ -828,8 +852,9 @@ def heuristic_action(environment: LearningEnvironment, mask: tuple[int, ...]) ->
     return ACTION_NAMES.index(choice)
 
 
-def _frozen_policy_action(result: TrainingResult, environment: LearningEnvironment,
-                          observation, mask: tuple[int, ...]) -> tuple[int, bool, bool]:
+def _frozen_policy_action(
+        result: TrainingResult, environment: LearningEnvironment,
+        observation, mask: tuple[int, ...]) -> tuple[int, bool, bool, int | None]:
     state = discretize(observation)
     unseen = state not in result.q_table
     if unseen and result.config.unseen_state_fallback == "heuristic":
@@ -841,9 +866,11 @@ def _frozen_policy_action(result: TrainingResult, environment: LearningEnvironme
     rest_index = ACTION_NAMES.index("Rest")
     if (result.config.preventive_rest_threshold and action != rest_index and
             p.energy <= result.config.preventive_rest_threshold and
-            p.injury_severity < 2 and p.hunger < 65 and mask[rest_index]):
-        return rest_index, unseen, True
-    return action, unseen, False
+            p.injury_severity <=
+            result.config.preventive_rest_max_injury_severity and
+            p.hunger < 65 and mask[rest_index]):
+        return rest_index, unseen, True, action
+    return action, unseen, False, None
 
 
 def _configure_evaluation_condition(environment: LearningEnvironment,
@@ -905,7 +932,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     policy_rng = random.Random(seed * 97_409 + 17)
     transitions, masks, trace = [], [], []
     low_need_recovery_count = unseen_state_count = 0
-    preventive_rest_override_count = 0
+    preventive_rest_overrides = []
     critical_energy_steps = high_hunger_steps = high_stress_steps = 0
     critical_energy_actions = Counter()
     strained_energy_actions = Counter()
@@ -933,10 +960,17 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         else:
             observation = environment.observe()
             state = discretize(observation)
-            action, unseen, preventive_rest = _frozen_policy_action(
+            action, unseen, preventive_rest, replaced_action = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
-            preventive_rest_override_count += int(preventive_rest)
+            if preventive_rest:
+                preventive_rest_overrides.append(PreventiveRestOverride(
+                    step=step, replaced_action=ACTION_NAMES[replaced_action],
+                    energy=before_p.energy, health=before_p.health,
+                    hunger=before_p.hunger, stress=before_p.stress,
+                    injury_severity=before_p.injury_severity,
+                    slot=before_slot.value,
+                ))
             values = result.q_table.get(state)
             if values is not None:
                 greedy = _greedy_action(values, mask)
@@ -980,7 +1014,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         seed, policy, condition, environment, transitions, masks, trace,
         low_need_recovery_count, critical_energy_steps, critical_energy_actions,
         strained_energy_actions, high_hunger_steps, high_stress_steps,
-        unseen_state_count, preventive_rest_override_count, visit_evidence_steps,
+        unseen_state_count, preventive_rest_overrides, visit_evidence_steps,
         zero_visit_action_count, selected_action_visit_total,
         gate_seen_opportunities, gate_greedy_steps, gate_q_gap_total,
         preparation_seen_opportunities, preparation_greedy_steps,
@@ -1394,6 +1428,7 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         flags = Counter()
         critical_energy_actions = Counter()
         strained_energy_actions = Counter()
+        preventive_replaced_actions = Counter()
         for episode in episodes:
             actions.update(dict(episode.action_counts))
             masked.update(dict(episode.masked_counts))
@@ -1401,6 +1436,8 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             flags.update(episode.exploit_flags)
             critical_energy_actions.update(dict(episode.critical_energy_action_counts))
             strained_energy_actions.update(dict(episode.strained_energy_action_counts))
+            preventive_replaced_actions.update(
+                item.replaced_action for item in episode.preventive_rest_overrides)
         critical_decisions = sum(critical_energy_actions.values())
         strained_decisions = sum(strained_energy_actions.values())
         return {
@@ -1460,6 +1497,8 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.preventive_rest_override_count for e in episodes) / count, 3),
             "average_preventive_rest_override_share": round(
                 sum(e.preventive_rest_override_share for e in episodes) / count, 3),
+            "preventive_rest_replaced_action_counts": dict(
+                preventive_replaced_actions),
             "average_visit_evidence_steps": round(
                 sum(e.visit_evidence_steps for e in episodes) / count, 3),
             "average_zero_visit_action_share": round(

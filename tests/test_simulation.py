@@ -637,10 +637,18 @@ class SimulationTests(unittest.TestCase):
         preventive = replace(
             empty, config=replace(empty.config, preventive_rest_threshold=100))
         preventive_episode = diagnose_episode(201, 1, "rl", preventive)
+        injured = replace(
+            safe, config=replace(safe.config, preventive_rest_threshold=100))
+        injured_episode = diagnose_episode(
+            201, 1, "rl", injured, condition="injury_recovery")
         self.assertEqual(historical.trace[0].action, "Eat")
         self.assertEqual(first.trace[0].action, "Part-time work")
         self.assertEqual(preventive_episode.trace[0].action, "Rest")
         self.assertEqual(preventive_episode.preventive_rest_override_count, 1)
+        self.assertEqual(preventive_episode.preventive_rest_overrides[0].replaced_action,
+                         "Eat")
+        self.assertEqual(injured_episode.trace[0].action, "Seek treatment")
+        self.assertEqual(injured_episode.preventive_rest_override_count, 0)
         self.assertEqual(first, second)
         self.assertEqual(first.unseen_state_count, 1)
 
@@ -726,6 +734,8 @@ class SimulationTests(unittest.TestCase):
         self.assertGreaterEqual(episode.preventive_rest_override_count, 0)
         self.assertGreaterEqual(episode.preventive_rest_override_share, 0)
         self.assertLessEqual(episode.preventive_rest_override_share, 1)
+        self.assertEqual(episode.preventive_rest_override_count,
+                         len(episode.preventive_rest_overrides))
         self.assertGreaterEqual(episode.visit_evidence_steps, 0)
         self.assertGreaterEqual(episode.zero_visit_action_count, 0)
         self.assertGreaterEqual(episode.zero_visit_action_share, 0)
@@ -803,6 +813,7 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(report["utility"]["average_unseen_state_count"], 0)
         self.assertIn("average_preventive_rest_override_count", report["rl"])
         self.assertEqual(report["utility"]["average_preventive_rest_override_count"], 0)
+        self.assertIn("preventive_rest_replaced_action_counts", report["rl"])
         self.assertIn("average_visit_evidence_steps", report["rl"])
         self.assertIn("average_zero_visit_action_share", report["rl"])
         self.assertIn("average_selected_action_visits", report["rl"])
@@ -952,6 +963,10 @@ class SimulationTests(unittest.TestCase):
             QLearningConfig(preventive_rest_threshold=35.5)
         with self.assertRaises(ValueError):
             QLearningConfig(preventive_rest_threshold=True)
+        with self.assertRaises(ValueError):
+            QLearningConfig(preventive_rest_max_injury_severity=5)
+        with self.assertRaises(ValueError):
+            QLearningConfig(preventive_rest_max_injury_severity=True)
         config = QLearningConfig(episodes=2, horizon=5,
                                  progression_sampling_rate=0.1)
         self.assertEqual(train_q_learning(131, config), train_q_learning(131, config))
@@ -975,11 +990,21 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 9
+            legacy["config"].pop("preventive_rest_max_injury_severity")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            migrated_v9 = load_checkpoint(first)
+            self.assertEqual(
+                migrated_v9.config.preventive_rest_max_injury_severity, 1)
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 5
             legacy.pop("visit_table")
             legacy["config"].pop("progression_exploration_bonus")
             legacy["config"].pop("progression_sampling_rate")
             legacy["config"].pop("preventive_rest_threshold")
+            legacy["config"].pop("preventive_rest_max_injury_severity", None)
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
