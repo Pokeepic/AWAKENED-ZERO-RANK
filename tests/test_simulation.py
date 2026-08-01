@@ -14,6 +14,7 @@ from awakened_zero_rank.content import dialogue_context_count, npc_context_count
 from awakened_zero_rank.learning import (
     ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
     compare_utility_and_rl, diagnose_batch, diagnose_episode, diagnostics_report,
+    heuristic_action,
     evaluate_scenario, train_q_learning,
 )
 
@@ -617,6 +618,38 @@ class SimulationTests(unittest.TestCase):
         environment = LearningEnvironment(seed=9)
         self.assertEqual(len(environment.observe()), 22)
         self.assertEqual(len(environment.action_mask()), len(ACTION_NAMES))
+    def test_masked_random_baseline_is_legal_and_reproducible(self) -> None:
+        first = diagnose_episode(301, 12, "random")
+        second = diagnose_episode(301, 12, "random")
+        self.assertEqual(first, second)
+        self.assertEqual(sum(count for _, count in first.action_counts), first.steps)
+        self.assertTrue(all(step.action in ACTION_NAMES or step.action in {
+            "Awakening assessment", "Guild registration", "Rent deadline",
+            "Tanabata evening", "Investigation consequence",
+        } or step.action.startswith("Meet ") for step in first.trace))
+
+    def test_heuristic_baseline_prioritizes_severe_injury(self) -> None:
+        environment = LearningEnvironment(seed=4)
+        p = environment.simulation.state.protagonist
+        p.health, p.injury_severity = 50, 3
+        action = heuristic_action(environment, environment.action_mask())
+        self.assertEqual(ACTION_NAMES[action], "Seek treatment")
+
+    def test_utility_baseline_also_treats_severe_injury(self) -> None:
+        simulation = Simulation(seed=4)
+        p = simulation.state.protagonist
+        p.health, p.injury_severity = 50, 3
+        action, _ = simulation.agent.choose(p, simulation.state.clock.slot)
+        self.assertEqual(action.name, "Seek treatment")
+
+    def test_multi_policy_batch_is_reproducible_and_ranked(self) -> None:
+        trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
+        first = diagnose_batch(trained, (201, 202), horizon=6, worst_count=1)
+        second = diagnose_batch(trained, (201, 202), horizon=6, worst_count=1)
+        self.assertEqual(first, second)
+        self.assertEqual(set(first.policy_ranking), {"utility", "heuristic", "rl", "random"})
+        report = json.loads(diagnostics_report(first))
+        self.assertTrue({"utility", "heuristic", "rl", "random"}.issubset(report))
 
 if __name__ == "__main__":
     unittest.main()

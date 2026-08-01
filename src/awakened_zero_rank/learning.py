@@ -374,6 +374,9 @@ class DiagnosticBatch:
     evaluation_seeds: tuple[int, ...]
     rl_episodes: tuple[EpisodeDiagnostics, ...]
     utility_episodes: tuple[EpisodeDiagnostics, ...]
+    random_episodes: tuple[EpisodeDiagnostics, ...]
+    heuristic_episodes: tuple[EpisodeDiagnostics, ...]
+    policy_ranking: tuple[str, ...]
     reward_difference: float
     verdict: str
     worst_rl_seeds: tuple[int, ...]
@@ -426,22 +429,52 @@ def _episode_summary(seed: int, policy: str, environment: LearningEnvironment,
     )
 
 
+def heuristic_action(environment: LearningEnvironment, mask: tuple[int, ...]) -> int:
+    """Choose from explicit safety and progression rules, independent of utility scores."""
+    p, state = environment.simulation.state.protagonist, environment.simulation.state
+    valid = {name for index, name in enumerate(ACTION_NAMES) if mask[index]}
+    priorities = []
+    if p.injury_severity >= 2 or (p.injury_severity and p.health < 65):
+        priorities.append("Seek treatment")
+    if p.hunger >= 65:
+        priorities.append("Eat")
+    if p.energy <= 28 or p.health < 45:
+        priorities.append("Rest")
+    if p.money < p.rent_cost and state.clock.day <= p.rent_due_day:
+        priorities.append("Part-time work")
+    if state.active_portal_plan and p.health >= 60 and p.energy >= 42:
+        priorities.append("Gate mission")
+    if p.guild_registered and state.gate_alert_level >= 2 and p.health >= 65:
+        priorities.append("Prepare portal")
+    if p.guild_registered and p.energy >= 45:
+        priorities.append("Guild patrol")
+    priorities.extend(("Study", "Train", "Part-time work", "Rest", "Eat"))
+    choice = next(name for name in priorities if name in valid)
+    return ACTION_NAMES.index(choice)
+
 def diagnose_episode(seed: int, horizon: int, policy: str,
                      result: TrainingResult | None = None) -> EpisodeDiagnostics:
     """Run one deterministic episode and retain evidence for failure analysis."""
     if horizon < 1:
         raise ValueError("horizon must be at least 1")
-    if policy not in {"rl", "utility"}:
-        raise ValueError("policy must be 'rl' or 'utility'")
+    if policy not in {"rl", "utility", "random", "heuristic"}:
+        raise ValueError("unknown diagnostic policy")
     if policy == "rl" and result is None:
         raise ValueError("RL diagnostics require a training result")
     environment = LearningEnvironment(seed)
+    policy_rng = random.Random(seed * 97_409 + 17)
     transitions, masks, trace = [], [], []
     for step in range(1, horizon + 1):
         mask = environment.action_mask()
         masks.append(mask)
         if policy == "utility":
             transition = environment.baseline_step()
+        elif policy == "random":
+            action = policy_rng.choice([index for index, valid in enumerate(mask) if valid])
+            transition = environment.step(ACTION_NAMES[action])
+        elif policy == "heuristic":
+            action = heuristic_action(environment, mask)
+            transition = environment.step(ACTION_NAMES[action])
         else:
             observation = environment.observe()
             values = result.q_table.get(discretize(observation), [0.0] * len(ACTION_NAMES))
@@ -485,11 +518,19 @@ def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
     horizon = horizon or result.config.horizon
     rl = tuple(diagnose_episode(seed, horizon, "rl", result) for seed in evaluation_seeds)
     utility = tuple(diagnose_episode(seed, horizon, "utility") for seed in evaluation_seeds)
+    random_policy = tuple(diagnose_episode(seed, horizon, "random") for seed in evaluation_seeds)
+    heuristic = tuple(diagnose_episode(seed, horizon, "heuristic") for seed in evaluation_seeds)
+    policies = {"rl": rl, "utility": utility, "random": random_policy,
+                "heuristic": heuristic}
+    averages = {name: sum(item.total_reward for item in episodes) / len(episodes)
+                for name, episodes in policies.items()}
+    ranking = tuple(sorted(averages, key=lambda name: (-averages[name], name)))
     differences = [r.total_reward - u.total_reward for r, u in zip(rl, utility)]
     worst = sorted(rl, key=lambda episode: (episode.total_reward, episode.seed))[:worst_count]
     return DiagnosticBatch(
         training_seed=result.training_seed, evaluation_seeds=tuple(evaluation_seeds),
-        rl_episodes=rl, utility_episodes=utility,
+        rl_episodes=rl, utility_episodes=utility, random_episodes=random_policy,
+        heuristic_episodes=heuristic, policy_ranking=ranking,
         reward_difference=round(sum(differences) / len(differences), 3),
         verdict=_honest_verdict(differences),
         worst_rl_seeds=tuple(episode.seed for episode in worst),
@@ -546,6 +587,9 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         "evaluation_seeds": batch.evaluation_seeds,
         "rl": aggregate(batch.rl_episodes),
         "utility": aggregate(batch.utility_episodes),
+        "random": aggregate(batch.random_episodes),
+        "heuristic": aggregate(batch.heuristic_episodes),
+        "policy_ranking": batch.policy_ranking,
         "mean_reward_difference": batch.reward_difference,
         "verdict": batch.verdict,
         "worst_rl_episodes": worst,

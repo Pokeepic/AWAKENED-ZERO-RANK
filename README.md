@@ -65,7 +65,9 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
   behavioral diversity, exploit indicators, and worst-seed traces;
 - seeded daily wage and meal variation without disturbing the authoritative world RNG;
 - injury severity, autonomous clinic treatment, and persistent recovery progress;
-- three-stage hazard-aware portal preparation and persistent multi-step objectives.
+- three-stage hazard-aware portal preparation and persistent multi-step objectives;
+- reproducible masked-random and independent safety-first heuristic baselines;
+- four-policy held-out ranking across utility, heuristic, RL, and random controllers.
 - recurring patrol leader Daichi Mori, portal researcher Mei Kuroda, and supply owner Haruto Ishikawa;
 - a relationship network with personal loyalties, cooperation, and friction between NPCs;
 - identity-aware dialogue shaped by each NPC's role, personality, voice, context, and trust;
@@ -142,6 +144,7 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 Milestone 14's controlled experiment trained for 24 episodes of 60 steps with training seed 1400, then evaluated the frozen policy on held-out seeds 2401-2408. RL averaged 33.894 less shaped reward than the paired utility runs, so the honest verdict is **baseline remains better**. This is a small first experiment, not a claim that tabular RL cannot improve.
 Milestone 15 diagnosed the same frozen experiment rather than scaling it. Both policies survived every held-out episode, but RL completed 1.500 missions per episode versus 3.375, paid rent in 87.5% of due episodes versus 100%, and averaged only 15.200 progress reward versus 35.525. RL also used fewer strategic actions (5.250 versus 7.875) and had a 41.5% dominant-action share versus 30.0%. No configured exploit threshold fired, but the evidence points to excessive eating/resting and insufficient patrol and mission progression. The weakest RL seeds were 2404, 2408, and 2401.
+Milestone 17 regenerated a small 24-by-60 reference policy and compared four controllers on held-out seeds 2701-2708. Utility ranked first at 72.319 average reward, followed by the independent heuristic at 48.186, RL at -15.430, and masked-random at -25.433. Utility and heuristic survived and paid due rent in every episode. Random averaged 2.000 missions but survived only 12.5%, demonstrating why mission count or reward cannot replace safety metrics. The verdict remains **baseline remains better**.
 
 ## Status
 
@@ -177,4 +180,6 @@ Milestone 15 diagnosed the same frozen experiment rather than scaling it. Both p
 
 ✅ Milestone 16: deterministic economic variation, injury severity and treatment, staged portal preparation, persistent multi-step objectives, and a 22-value learning state.
 
-Next: strengthen utility, random, and heuristic comparison baselines before the next RL iteration.
+✅ Milestone 17: reproducible masked-random and safety-first heuristic baselines, utility safety validation, four-policy reporting, and held-out ranking.
+
+Next: improve state abstraction, exploration, reward shaping, and curriculum for the second RL iteration.
