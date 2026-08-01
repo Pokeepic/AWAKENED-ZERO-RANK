@@ -57,7 +57,10 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - structured dialogue contexts supporting more than 1,000 meaningful social states;
 - a reusable catalogue of Tokyo locations and varied portal environments;
 - a dependency-free learning adapter with numeric observations and valid-action masks;
-- external policy actions and a shaped evaluation reward kept outside Ren's chronicle.
+- external policy actions and a shaped evaluation reward kept outside Ren's chronicle;
+- Gymnasium-style fixed-horizon episodes with integer actions and valid-action masks;
+- reproducible masked tabular Q-learning with auditable training and held-out evaluation seeds;
+- paired utility-versus-RL batch evaluation with a confidence-aware verdict.
 - recurring patrol leader Daichi Mori, portal researcher Mei Kuroda, and supply owner Haruto Ishikawa;
 - a relationship network with personal loyalties, cooperation, and friction between NPCs;
 - identity-aware dialogue shaped by each NPC's role, personality, voice, context, and trust;
@@ -98,6 +101,8 @@ Requires Python 3.11 or newer. From the repository root:
 
 ```bash
 python -m pip install -e .
+# Optional: official Gymnasium spaces and environment validation
+python -m pip install -e ".[training]"
 python -m awakened_zero_rank --days 12 --seed 42
 ```
 
@@ -130,6 +135,8 @@ python -m unittest discover -s tests -v
 
 Reinforcement learning is not the entire simulation. The simulation is the environment; an RL agent is one possible decision-maker inside it. We retain a transparent utility baseline so learned behavior can be measured against something stable, debuggable, and fun.
 
+Milestone 14's controlled experiment trained for 24 episodes of 60 steps with training seed 1400, then evaluated the frozen policy on held-out seeds 2401-2408. RL averaged 33.894 less shaped reward than the paired utility runs, so the honest verdict is **baseline remains better**. This is a small first experiment, not a claim that tabular RL cannot improve.
+
 ## Status
 
 ✅ Milestone 1: deterministic simulation core and explainable baseline agent.
@@ -158,4 +165,6 @@ Reinforcement learning is not the entire simulation. The simulation is the envir
 
 ✅ Milestone 13: portal preparation, NPC cooperation, competing objectives, and long-horizon evaluation scenarios.
 
-Next: Gymnasium-compatible training episodes, batch baselines, and the first controlled RL experiment.
+✅ Milestone 14: Gymnasium-style fixed-horizon episodes, masked integer actions, reproducible tabular Q-learning, held-out batch comparison, and an honest first verdict.
+
+Next: improve state representation and reward design before scaling RL experiments.

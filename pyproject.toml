@@ -4,10 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "awakened-zero-rank"
-version = "0.13.0"
+version = "0.14.0"
 description = "Observer-only autonomous life simulation set in awakened Japan"
 requires-python = ">=3.11"
 
+[project.optional-dependencies]
+training = ["gymnasium>=1.0,<2"]
 [project.scripts]
 awakened-zero-rank = "awakened_zero_rank.cli:main"
 

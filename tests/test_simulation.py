@@ -9,7 +9,10 @@ from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
-from awakened_zero_rank.learning import ACTION_NAMES, LearningEnvironment, evaluate_scenario
+from awakened_zero_rank.learning import (
+    ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
+    compare_utility_and_rl, evaluate_scenario, train_q_learning,
+)
 
 
 class SimulationTests(unittest.TestCase):
@@ -476,6 +479,44 @@ class SimulationTests(unittest.TestCase):
             restored = load_simulation(path)
         self.assertEqual(restored.state, simulation.state)
 
+    def test_training_environment_uses_gymnasium_episode_contract(self) -> None:
+        environment = TrainingEnvironment(seed=7, horizon=3)
+        observation, info = environment.reset(seed=7)
+        self.assertTrue(environment.observation_space.contains(observation))
+        self.assertEqual(environment.action_space.n, len(ACTION_NAMES))
+        self.assertEqual(len(info["action_mask"]), len(ACTION_NAMES))
+        for step in range(3):
+            action = next(i for i, valid in enumerate(info["action_mask"]) if valid)
+            observation, reward, terminated, truncated, info = environment.step(action)
+            self.assertIsInstance(reward, float)
+            self.assertFalse(terminated)
+            self.assertEqual(truncated, step == 2)
+        with self.assertRaises(RuntimeError):
+            environment.step(0)
+
+    def test_integer_actions_enforce_current_mask(self) -> None:
+        environment = TrainingEnvironment(seed=5, horizon=4)
+        _, info = environment.reset()
+        locked_action = ACTION_NAMES.index("Gate mission")
+        self.assertEqual(info["action_mask"][locked_action], 0)
+        with self.assertRaises(ValueError):
+            environment.step(locked_action)
+
+    def test_tabular_q_learning_is_reproducible_at_small_scale(self) -> None:
+        config = QLearningConfig(episodes=3, horizon=8)
+        first = train_q_learning(training_seed=101, config=config)
+        second = train_q_learning(training_seed=101, config=config)
+        self.assertEqual(first, second)
+        self.assertEqual(len(first.episode_rewards), 3)
+
+    def test_batch_comparison_uses_held_out_seeds_and_honest_verdict(self) -> None:
+        trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
+        comparison = compare_utility_and_rl(trained, (201, 202, 203), horizon=6)
+        self.assertEqual(comparison.evaluation_seeds, (201, 202, 203))
+        self.assertIn(comparison.verdict,
+                      {"promising", "inconclusive", "baseline remains better"})
+        with self.assertRaises(ValueError):
+            compare_utility_and_rl(trained, (101,), horizon=6)
 
 if __name__ == "__main__":
     unittest.main()
