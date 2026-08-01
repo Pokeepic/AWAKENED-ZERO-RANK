@@ -1,3 +1,4 @@
+import hashlib
 import json
 import unittest
 from tempfile import TemporaryDirectory
@@ -722,6 +723,27 @@ class SimulationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluate_repeated_trials((1,), ((),), config)
 
+    def test_conditioned_diagnostics_are_reproducible_and_auditable(self) -> None:
+        first = diagnose_episode(51, 4, "utility", condition="injury_recovery")
+        second = diagnose_episode(51, 4, "utility", condition="injury_recovery")
+        self.assertEqual(first, second)
+        self.assertEqual(first.condition, "injury_recovery")
+        self.assertEqual(first.trace[0].action, "Seek treatment")
+        financial = diagnose_episode(52, 1, "utility", condition="financial_pressure")
+        self.assertIn(financial.trace[0].action, ACTION_NAMES)
+        with self.assertRaises(ValueError):
+            diagnose_episode(51, 4, "utility", condition="unknown")
+
+    def test_scenario_suite_propagates_stress_conditions_to_every_policy(self) -> None:
+        trained = train_q_learning(35, QLearningConfig(episodes=2, horizon=5))
+        suite = evaluate_scenario_suite(trained, (
+            EvaluationScenario("financial", 5, (136, 137), "financial_pressure"),
+            EvaluationScenario("gate", 7, (236, 237), "gate_crisis"),
+        ))
+        self.assertEqual(tuple(item.condition for item in suite.scenarios),
+                         ("financial_pressure", "gate_crisis"))
+        self.assertFalse(suite.adoption_ready)
+
     def test_scenario_suite_is_reproducible_across_horizons(self) -> None:
         trained = train_q_learning(31, QLearningConfig(episodes=2, horizon=5))
         scenarios = (
@@ -765,7 +787,7 @@ class SimulationTests(unittest.TestCase):
         second = scenario_suite_report(suite)
         payload = json.loads(first)
         self.assertEqual(first, second)
-        self.assertEqual(payload["report_version"], 1)
+        self.assertEqual(payload["report_version"], 2)
         self.assertEqual(payload["checkpoint_sha256"], checkpoint_digest(trained))
         self.assertEqual(payload["sha256"], scenario_suite_digest(suite))
         self.assertEqual(payload["total_episodes"], 4)
@@ -779,6 +801,16 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first_path.read_bytes(), second_path.read_bytes())
             self.assertEqual(first_path.read_text(encoding="utf-8"), first)
             self.assertEqual(load_scenario_suite_report(first_path), suite)
+            legacy = json.loads(first_path.read_text(encoding="utf-8"))
+            legacy.pop("sha256")
+            legacy["report_version"] = 1
+            for scenario in legacy["scenarios"]:
+                scenario.pop("condition")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first_path.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_scenario_suite_report(first_path), suite)
+            first_path.write_text(first, encoding="utf-8")
             tampered = json.loads(first_path.read_text(encoding="utf-8"))
             tampered["scenarios"][0]["rl_average_reward"] += 1
             first_path.write_text(json.dumps(tampered), encoding="utf-8")

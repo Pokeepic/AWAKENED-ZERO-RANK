@@ -22,7 +22,7 @@ except ImportError:  # The core simulation remains dependency-free.
     np = None
 
 from .actions import available_actions
-from .models import SLOTS
+from .models import Relationship, SLOTS
 from .simulation import Simulation
 
 
@@ -31,6 +31,8 @@ ACTION_NAMES = (
     "Talk with Aiko", "Guild patrol", "Prepare portal", "Gate mission", "Seek treatment",
 )
 REWARD_COMPONENTS = ("survival", "stability", "progress", "social")
+EVALUATION_CONDITIONS = ("standard", "financial_pressure", "injury_recovery",
+                         "gate_crisis")
 
 
 @dataclass(frozen=True)
@@ -449,6 +451,7 @@ class DiagnosticStep:
 class EpisodeDiagnostics:
     seed: int
     policy: str
+    condition: str
     steps: int
     decision_steps: int
     total_reward: float
@@ -479,10 +482,12 @@ class DiagnosticBatch:
     reward_difference: float
     verdict: str
     worst_rl_seeds: tuple[int, ...]
+    condition: str = "standard"
 
 
-def _episode_summary(seed: int, policy: str, environment: LearningEnvironment,
-                     transitions: list[Transition], masks: list[tuple[int, ...]],
+def _episode_summary(seed: int, policy: str, condition: str,
+                     environment: LearningEnvironment, transitions: list[Transition],
+                     masks: list[tuple[int, ...]],
                      trace: list[DiagnosticStep]) -> EpisodeDiagnostics:
     actions = Counter(item.resolved_action or item.action for item in transitions)
     policy_actions = Counter(name for name, count in actions.items()
@@ -515,7 +520,7 @@ def _episode_summary(seed: int, policy: str, environment: LearningEnvironment,
     p = environment.simulation.state.protagonist
     due_reached = environment.simulation.state.clock.day > p.rent_due_day
     return EpisodeDiagnostics(
-        seed=seed, policy=policy, steps=steps, decision_steps=decision_steps,
+        seed=seed, policy=policy, condition=condition, steps=steps, decision_steps=decision_steps,
         total_reward=round(sum(item.reward for item in transitions), 3),
         reward_components=tuple((name, round(components[name], 3)) for name in REWARD_COMPONENTS),
         action_counts=tuple(sorted(actions.items())),
@@ -551,8 +556,36 @@ def heuristic_action(environment: LearningEnvironment, mask: tuple[int, ...]) ->
     choice = next(name for name in priorities if name in valid)
     return ACTION_NAMES.index(choice)
 
+def _configure_evaluation_condition(environment: LearningEnvironment,
+                                    condition: str) -> None:
+    if condition not in EVALUATION_CONDITIONS:
+        raise ValueError(f"Unknown evaluation condition {condition!r}")
+    state, p = environment.simulation.state, environment.simulation.state.protagonist
+
+    def establish_hunter_start() -> None:
+        p.awakened, p.guild_registered = True, True
+        p.hunter_rank, p.ability, p.ability_mastery = "F", "Threat Sense", 10
+        p.relationships["Aiko Sato"] = Relationship(
+            name="Aiko Sato", role="F-rank guild clerk", trust=3,
+            familiarity=5, meetings=1, loyalty=4,
+        )
+
+    if condition == "financial_pressure":
+        establish_hunter_start()
+        state.clock.day = p.rent_due_day + 1
+        p.money, p.rent_arrears, p.hunger, p.stress = 300, p.rent_cost, 55, 70
+    elif condition == "injury_recovery":
+        p.health, p.energy, p.injury_severity, p.injuries = 42, 30, 3, 1
+        p.money, p.stress = 3_500, 65
+    elif condition == "gate_crisis":
+        establish_hunter_start()
+        p.health, p.energy, p.stress = 75, 55, 60
+        state.gate_alert_level = 3
+
+
 def diagnose_episode(seed: int, horizon: int, policy: str,
-                     result: TrainingResult | None = None) -> EpisodeDiagnostics:
+                     result: TrainingResult | None = None,
+                     condition: str = "standard") -> EpisodeDiagnostics:
     """Run one deterministic episode and retain evidence for failure analysis."""
     if horizon < 1:
         raise ValueError("horizon must be at least 1")
@@ -561,6 +594,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     if policy == "rl" and result is None:
         raise ValueError("RL diagnostics require a training result")
     environment = LearningEnvironment(seed)
+    _configure_evaluation_condition(environment, condition)
     policy_rng = random.Random(seed * 97_409 + 17)
     transitions, masks, trace = [], [], []
     for step in range(1, horizon + 1):
@@ -587,7 +621,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                                     p.missions_completed))
         if p.health <= 0:
             break
-    return _episode_summary(seed, policy, environment, transitions, masks, trace)
+    return _episode_summary(seed, policy, condition, environment, transitions, masks, trace)
 
 
 def _honest_verdict(differences: list[float]) -> str:
@@ -605,7 +639,8 @@ def _honest_verdict(differences: list[float]) -> str:
 
 
 def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
-                   horizon: int | None = None, worst_count: int = 3) -> DiagnosticBatch:
+                   horizon: int | None = None, worst_count: int = 3,
+                   condition: str = "standard") -> DiagnosticBatch:
     """Compare policies and retain the weakest held-out RL episodes for inspection."""
     if not evaluation_seeds:
         raise ValueError("At least one evaluation seed is required")
@@ -615,10 +650,14 @@ def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
     if training_seeds.intersection(evaluation_seeds):
         raise ValueError("Evaluation seeds must be held out from all training seeds")
     horizon = horizon or result.config.horizon
-    rl = tuple(diagnose_episode(seed, horizon, "rl", result) for seed in evaluation_seeds)
-    utility = tuple(diagnose_episode(seed, horizon, "utility") for seed in evaluation_seeds)
-    random_policy = tuple(diagnose_episode(seed, horizon, "random") for seed in evaluation_seeds)
-    heuristic = tuple(diagnose_episode(seed, horizon, "heuristic") for seed in evaluation_seeds)
+    rl = tuple(diagnose_episode(seed, horizon, "rl", result, condition)
+               for seed in evaluation_seeds)
+    utility = tuple(diagnose_episode(seed, horizon, "utility", condition=condition)
+                    for seed in evaluation_seeds)
+    random_policy = tuple(diagnose_episode(seed, horizon, "random", condition=condition)
+                          for seed in evaluation_seeds)
+    heuristic = tuple(diagnose_episode(seed, horizon, "heuristic", condition=condition)
+                      for seed in evaluation_seeds)
     policies = {"rl": rl, "utility": utility, "random": random_policy,
                 "heuristic": heuristic}
     averages = {name: sum(item.total_reward for item in episodes) / len(episodes)
@@ -632,7 +671,7 @@ def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
         heuristic_episodes=heuristic, policy_ranking=ranking,
         reward_difference=round(sum(differences) / len(differences), 3),
         verdict=_honest_verdict(differences),
-        worst_rl_seeds=tuple(episode.seed for episode in worst),
+        worst_rl_seeds=tuple(episode.seed for episode in worst), condition=condition,
     )
 
 @dataclass(frozen=True)
@@ -684,10 +723,11 @@ def evaluate_repeated_trials(training_seeds: tuple[int, ...],
 
 @dataclass(frozen=True)
 class EvaluationScenario:
-    """A named held-out evaluation slice with its own fixed episode horizon."""
+    """A named held-out evaluation slice with a horizon and starting condition."""
     name: str
     horizon: int
     evaluation_seeds: tuple[int, ...]
+    condition: str = "standard"
 
     def __post_init__(self) -> None:
         if not self.name.strip():
@@ -698,12 +738,15 @@ class EvaluationScenario:
             raise ValueError("Scenario evaluation seeds cannot be empty")
         if len(set(self.evaluation_seeds)) != len(self.evaluation_seeds):
             raise ValueError("Scenario evaluation seeds must be unique")
+        if self.condition not in EVALUATION_CONDITIONS:
+            raise ValueError(f"Unknown evaluation condition {self.condition!r}")
 
 
 @dataclass(frozen=True)
 class ScenarioComparison:
     name: str
     horizon: int
+    condition: str
     evaluation_seeds: tuple[int, ...]
     policy_ranking: tuple[str, ...]
     rl_average_reward: float
@@ -778,14 +821,15 @@ def evaluate_scenario_suite(result: TrainingResult,
     summaries, pooled = [], []
     for scenario in scenarios:
         batch = diagnose_batch(result, scenario.evaluation_seeds,
-                               horizon=scenario.horizon, worst_count=1)
+                               horizon=scenario.horizon, worst_count=1,
+                               condition=scenario.condition)
         rl_rewards = [episode.total_reward for episode in batch.rl_episodes]
         utility_rewards = [episode.total_reward for episode in batch.utility_episodes]
         differences = [rl - utility for rl, utility in zip(rl_rewards, utility_rewards)]
         pooled.extend(differences)
         count = len(scenario.evaluation_seeds)
         summaries.append(ScenarioComparison(
-            name=scenario.name, horizon=scenario.horizon,
+            name=scenario.name, horizon=scenario.horizon, condition=scenario.condition,
             evaluation_seeds=scenario.evaluation_seeds,
             policy_ranking=batch.policy_ranking,
             rl_average_reward=round(sum(rl_rewards) / count, 3),
@@ -809,7 +853,7 @@ def evaluate_scenario_suite(result: TrainingResult,
         verdict=verdict, adoption_ready=adoption_ready,
     )
 
-SCENARIO_REPORT_VERSION = 1
+SCENARIO_REPORT_VERSION = 2
 
 
 def _scenario_suite_data(suite: ScenarioSuiteResult) -> dict:
@@ -850,11 +894,15 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
     """Load a scenario-suite report only when its version and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("report_version") != SCENARIO_REPORT_VERSION:
+    if data.get("report_version") not in (1, SCENARIO_REPORT_VERSION):
         raise ValueError("Unsupported scenario report version")
+    payload = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if digest != hashlib.sha256(payload).hexdigest():
+        raise ValueError("Scenario report integrity verification failed")
     try:
         scenarios = tuple(ScenarioComparison(
             name=item["name"], horizon=item["horizon"],
+            condition=item.get("condition", "standard"),
             evaluation_seeds=tuple(item["evaluation_seeds"]),
             policy_ranking=tuple(item["policy_ranking"]),
             rl_average_reward=item["rl_average_reward"],
@@ -875,9 +923,8 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
         )
     except (KeyError, TypeError) as error:
         raise ValueError("Invalid scenario report schema") from error
-    if digest != scenario_suite_digest(suite):
-        raise ValueError("Scenario report integrity verification failed")
     return suite
+
 
 def diagnostics_report(batch: DiagnosticBatch) -> str:
     """Render a deterministic JSON report suitable for versioned experiment records."""
@@ -926,6 +973,7 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         })
     payload = {
         "training_seed": batch.training_seed,
+        "condition": batch.condition,
         "evaluation_seeds": batch.evaluation_seeds,
         "rl": aggregate(batch.rl_episodes),
         "utility": aggregate(batch.utility_episodes),
