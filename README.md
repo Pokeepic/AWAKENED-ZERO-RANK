@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.21.0** · **84 automated tests**
+Current release: **0.22.0** · **85 automated tests**
 
 ## Design principles
 
@@ -49,8 +49,9 @@ Current release: **0.21.0** · **84 automated tests**
 - Repeated independent trials with pooled confidence and a conservative adoption gate.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 - Versioned scenario-suite JSON reports with stable policy binding, SHA-256 identity, exact reload, and tamper rejection.
+- Explainable offline adoption decisions with checkpoint verification and explicit confidence, safety, and progression blockers.
 
-The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or coherence regressions.
+The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or progression regressions; every failed gate now returns explicit blocker reasons.
 
 ## Run the simulation
 
@@ -130,6 +131,7 @@ Completed milestones are grouped for readability:
 | 18–19 | Improved tabular training, checkpoint integrity, repeated trials, and neural-readiness auditing |
 | 20 | Multi-horizon held-out scenario suites, pooled verdicts, and conservative adoption checks |
 | 21 | Canonical scenario reports, checkpoint binding, deterministic export, and integrity verification |
+| 22 | Explainable policy-adoption decisions with identity, confidence, safety, and progression gates |
 
 Near-term work should use the scenario suite to improve tabular consistency across different horizons and conditions. Neural RL remains deferred while the readiness gate is closed.
 

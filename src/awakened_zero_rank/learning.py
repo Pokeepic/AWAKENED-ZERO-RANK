@@ -727,6 +727,42 @@ class ScenarioSuiteResult:
     adoption_ready: bool
 
 
+@dataclass(frozen=True)
+class AdoptionDecision:
+    ready: bool
+    checkpoint_sha256: str
+    report_sha256: str
+    blockers: tuple[str, ...]
+
+
+def _adoption_blockers(scenarios: tuple[ScenarioComparison, ...],
+                       verdict: str) -> tuple[str, ...]:
+    blockers = []
+    if verdict != "promising":
+        blockers.append(f"pooled verdict is {verdict}")
+    for scenario in scenarios:
+        if scenario.verdict != "promising":
+            blockers.append(f"{scenario.name}: verdict is {scenario.verdict}")
+        if scenario.rl_survival_rate < scenario.utility_survival_rate:
+            blockers.append(f"{scenario.name}: survival regression")
+        if scenario.rl_average_missions < scenario.utility_average_missions:
+            blockers.append(f"{scenario.name}: mission regression")
+    return tuple(blockers)
+
+
+def assess_policy_adoption(result: TrainingResult,
+                           suite: ScenarioSuiteResult) -> AdoptionDecision:
+    """Verify policy identity and explain every blocker to offline adoption."""
+    digest = checkpoint_digest(result)
+    blockers = list(_adoption_blockers(suite.scenarios, suite.verdict))
+    if digest != suite.checkpoint_sha256:
+        blockers.insert(0, "checkpoint mismatch")
+    return AdoptionDecision(
+        ready=not blockers, checkpoint_sha256=digest,
+        report_sha256=scenario_suite_digest(suite), blockers=tuple(blockers),
+    )
+
+
 def evaluate_scenario_suite(result: TrainingResult,
                             scenarios: tuple[EvaluationScenario, ...]
                             ) -> ScenarioSuiteResult:
@@ -765,11 +801,7 @@ def evaluate_scenario_suite(result: TrainingResult,
             verdict=batch.verdict,
         ))
     verdict = _honest_verdict(pooled)
-    adoption_ready = (verdict == "promising" and
-                      all(item.verdict == "promising" for item in summaries) and
-                      all(item.rl_survival_rate >= item.utility_survival_rate and
-                          item.rl_average_missions >= item.utility_average_missions
-                          for item in summaries))
+    adoption_ready = not _adoption_blockers(tuple(summaries), verdict)
     return ScenarioSuiteResult(
         training_seed=result.training_seed, checkpoint_sha256=checkpoint_digest(result),
         scenarios=tuple(summaries), total_episodes=len(pooled),

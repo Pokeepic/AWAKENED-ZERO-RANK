@@ -14,7 +14,8 @@ from awakened_zero_rank.content import dialogue_context_count, npc_context_count
 from awakened_zero_rank.learning import (
     ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
     EvaluationScenario,
-    abstract_state, checkpoint_digest, compare_utility_and_rl, curriculum_reward,
+    abstract_state, assess_policy_adoption, checkpoint_digest,
+    compare_utility_and_rl, curriculum_reward,
     diagnose_batch,
     diagnose_episode, diagnostics_report, heuristic_action,
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
@@ -733,6 +734,26 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(tuple(item.horizon for item in first.scenarios), (5, 9))
         self.assertEqual(first.total_episodes, 4)
         self.assertIn(first.verdict, {"promising", "inconclusive", "baseline remains better"})
+
+    def test_adoption_decision_is_explainable_and_checkpoint_bound(self) -> None:
+        trained = train_q_learning(33, QLearningConfig(episodes=2, horizon=5))
+        suite = evaluate_scenario_suite(trained, (
+            EvaluationScenario("early survival", 5, (134, 135)),
+            EvaluationScenario("longer stability", 9, (234, 235)),
+        ))
+        decision = assess_policy_adoption(trained, suite)
+        self.assertEqual(decision.ready, suite.adoption_ready)
+        self.assertEqual(decision.checkpoint_sha256, checkpoint_digest(trained))
+        self.assertEqual(decision.report_sha256, scenario_suite_digest(suite))
+        self.assertEqual(decision.ready, not decision.blockers)
+        if not decision.ready:
+            self.assertTrue(any("verdict" in blocker or "regression" in blocker
+                                for blocker in decision.blockers))
+
+        other = train_q_learning(34, QLearningConfig(episodes=2, horizon=5))
+        mismatch = assess_policy_adoption(other, suite)
+        self.assertFalse(mismatch.ready)
+        self.assertEqual(mismatch.blockers[0], "checkpoint mismatch")
 
     def test_scenario_suite_report_is_canonical_and_policy_bound(self) -> None:
         trained = train_q_learning(32, QLearningConfig(episodes=2, horizon=5))
