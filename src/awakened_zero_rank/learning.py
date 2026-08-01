@@ -604,6 +604,12 @@ class EpisodeDiagnostics:
     end_energy: int
     end_hunger: int
     end_stress: int
+    critical_energy_steps: int
+    critical_energy_share: float
+    high_hunger_steps: int
+    high_hunger_share: float
+    high_stress_steps: int
+    high_stress_share: float
     rent_due_reached: bool
     rent_paid: bool
     missions_attempted: int
@@ -653,6 +659,7 @@ class DiagnosticBatch:
     reward_difference: float
     reward_component_differences: tuple[tuple[str, float], ...]
     terminal_wellbeing_differences: tuple[tuple[str, float], ...]
+    resource_burden_differences: tuple[tuple[str, float], ...]
     verdict: str
     worst_rl_seeds: tuple[int, ...]
     condition: str = "standard"
@@ -661,7 +668,9 @@ class DiagnosticBatch:
 def _episode_summary(seed: int, policy: str, condition: str,
                      environment: LearningEnvironment, transitions: list[Transition],
                      masks: list[tuple[int, ...]], trace: list[DiagnosticStep],
-                     low_need_recovery_count: int, unseen_state_count: int,
+                     low_need_recovery_count: int, critical_energy_steps: int,
+                     high_hunger_steps: int, high_stress_steps: int,
+                     unseen_state_count: int,
                      visit_evidence_steps: int, zero_visit_action_count: int,
                      selected_action_visit_total: int,
                      gate_seen_opportunities: int, gate_greedy_steps: int,
@@ -708,7 +717,14 @@ def _episode_summary(seed: int, policy: str, condition: str,
         action_counts=tuple(sorted(actions.items())),
         masked_counts=tuple((name, masked[name]) for name in ACTION_NAMES),
         survived=p.health > 0, end_health=p.health, end_energy=p.energy,
-        end_hunger=p.hunger, end_stress=p.stress, rent_due_reached=due_reached,
+        end_hunger=p.hunger, end_stress=p.stress,
+        critical_energy_steps=critical_energy_steps,
+        critical_energy_share=round(critical_energy_steps / max(1, steps), 3),
+        high_hunger_steps=high_hunger_steps,
+        high_hunger_share=round(high_hunger_steps / max(1, steps), 3),
+        high_stress_steps=high_stress_steps,
+        high_stress_share=round(high_stress_steps / max(1, steps), 3),
+        rent_due_reached=due_reached,
         rent_paid=due_reached and p.rent_arrears == 0,
         missions_attempted=p.missions_attempted, missions_completed=p.missions_completed,
         prepared_missions_attempted=p.prepared_missions_attempted,
@@ -848,6 +864,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     policy_rng = random.Random(seed * 97_409 + 17)
     transitions, masks, trace = [], [], []
     low_need_recovery_count = unseen_state_count = 0
+    critical_energy_steps = high_hunger_steps = high_stress_steps = 0
     visit_evidence_steps = zero_visit_action_count = selected_action_visit_total = 0
     gate_seen_opportunities = gate_greedy_steps = 0
     preparation_seen_opportunities = preparation_greedy_steps = 0
@@ -899,6 +916,9 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             (chosen_action == "Eat" and low_need_eat) or
             (chosen_action == "Rest" and low_need_rest))
         p = environment.simulation.state.protagonist
+        critical_energy_steps += int(p.energy <= 25)
+        high_hunger_steps += int(p.hunger >= 75)
+        high_stress_steps += int(p.stress >= 75)
         trace.append(DiagnosticStep(step, transition.resolved_action or transition.action,
                                     transition.reward, p.health,
                                     p.energy, p.money, p.rent_arrears,
@@ -907,7 +927,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             break
     return _episode_summary(
         seed, policy, condition, environment, transitions, masks, trace,
-        low_need_recovery_count, unseen_state_count, visit_evidence_steps,
+        low_need_recovery_count, critical_energy_steps, high_hunger_steps,
+        high_stress_steps, unseen_state_count, visit_evidence_steps,
         zero_visit_action_count, selected_action_visit_total,
         gate_seen_opportunities, gate_greedy_steps, gate_q_gap_total,
         preparation_seen_opportunities, preparation_greedy_steps,
@@ -966,6 +987,13 @@ def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
         for name, attribute in (("health", "end_health"), ("energy", "end_energy"),
                                 ("hunger", "end_hunger"), ("stress", "end_stress"))
     )
+    burden_differences = tuple(
+        (name, round(sum(getattr(r, attribute) - getattr(u, attribute)
+                         for r, u in zip(rl, utility)) / len(rl), 3))
+        for name, attribute in (("critical_energy_share", "critical_energy_share"),
+                                ("high_hunger_share", "high_hunger_share"),
+                                ("high_stress_share", "high_stress_share"))
+    )
     worst = sorted(rl, key=lambda episode: (episode.total_reward, episode.seed))[:worst_count]
     return DiagnosticBatch(
         training_seed=result.training_seed, evaluation_seeds=tuple(evaluation_seeds),
@@ -974,6 +1002,7 @@ def diagnose_batch(result: TrainingResult, evaluation_seeds: tuple[int, ...],
         reward_difference=round(sum(differences) / len(differences), 3),
         reward_component_differences=component_differences,
         terminal_wellbeing_differences=terminal_differences,
+        resource_burden_differences=burden_differences,
         verdict=_honest_verdict(differences),
         worst_rl_seeds=tuple(episode.seed for episode in worst), condition=condition,
     )
@@ -1322,6 +1351,12 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "average_end_energy": round(sum(e.end_energy for e in episodes) / count, 3),
             "average_end_hunger": round(sum(e.end_hunger for e in episodes) / count, 3),
             "average_end_stress": round(sum(e.end_stress for e in episodes) / count, 3),
+            "average_critical_energy_share": round(
+                sum(e.critical_energy_share for e in episodes) / count, 3),
+            "average_high_hunger_share": round(
+                sum(e.high_hunger_share for e in episodes) / count, 3),
+            "average_high_stress_share": round(
+                sum(e.high_stress_share for e in episodes) / count, 3),
             "average_missions": round(sum(e.missions_completed for e in episodes) / count, 3),
             "preparation_coverage": round(
                 sum(e.prepared_missions_attempted for e in episodes) /
@@ -1421,6 +1456,7 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         "reward_component_differences": dict(batch.reward_component_differences),
         "terminal_wellbeing_differences": dict(
             batch.terminal_wellbeing_differences),
+        "resource_burden_differences": dict(batch.resource_burden_differences),
         "verdict": batch.verdict,
         "worst_rl_episodes": worst,
     }

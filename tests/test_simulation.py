@@ -690,6 +690,12 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(all(0 <= value <= 100 for value in (
             episode.end_health, episode.end_energy, episode.end_hunger,
             episode.end_stress)))
+        self.assertTrue(all(0 <= value <= episode.steps for value in (
+            episode.critical_energy_steps, episode.high_hunger_steps,
+            episode.high_stress_steps)))
+        self.assertTrue(all(0 <= value <= 1 for value in (
+            episode.critical_energy_share, episode.high_hunger_share,
+            episode.high_stress_share)))
         self.assertGreaterEqual(episode.dominant_action_share, 0)
         self.assertLessEqual(episode.dominant_action_share, 1)
         self.assertGreaterEqual(episode.low_need_recovery_count, 0)
@@ -740,6 +746,9 @@ class SimulationTests(unittest.TestCase):
                          ("survival", "stability", "progress", "social"))
         self.assertEqual(tuple(name for name, _ in first.terminal_wellbeing_differences),
                          ("health", "energy", "hunger", "stress"))
+        self.assertEqual(tuple(name for name, _ in first.resource_burden_differences),
+                         ("critical_energy_share", "high_hunger_share",
+                          "high_stress_share"))
         rewards = {episode.seed: episode.total_reward for episode in first.rl_episodes}
         self.assertEqual(list(first.worst_rl_seeds),
                          sorted(rewards, key=lambda seed: (rewards[seed], seed))[:2])
@@ -755,6 +764,8 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(set(report["terminal_wellbeing_differences"]),
                          {"health", "energy", "hunger", "stress"})
         self.assertIn("average_end_health", report["rl"])
+        self.assertIn("resource_burden_differences", report)
+        self.assertIn("average_critical_energy_share", report["rl"])
         self.assertIn("action_counts", report["utility"])
         self.assertIn("masked_counts", report["rl"])
         self.assertIn("action_frequencies", report["rl"])

@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.49.0** · **101 automated tests**
+Current release: **0.50.0** · **101 automated tests**
 
 ## Design principles
 
@@ -44,7 +44,7 @@ Current release: **0.49.0** · **101 automated tests**
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies, with opt-in unseen-state safety fallback, legacy additive exploration, and seeded progression sampling during training.
 - Count-based exploration, exact state-action visit evidence and per-action exposure summaries, phased curriculum rewards, deterministic multi-condition training schedules, per-condition state-coverage summaries, and held-out seed enforcement.
-- Reward decomposition with explicit RL-versus-utility component gaps, terminal wellbeing differences, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences and Q-value gaps, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
+- Reward decomposition with explicit RL-versus-utility component gaps, terminal wellbeing and resource-burden differences, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences and Q-value gaps, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with action/condition/fallback/exploration/visit schema validation, SHA-256 tamper detection, and authenticated version migration.
 - Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
@@ -154,6 +154,8 @@ Update 0.48 — Condition Reward-Gap Audit makes mean RL-versus-utility differen
 
 Update 0.49 — Terminal Wellbeing Audit records end-of-episode health, energy, hunger, and stress for every policy and exposes mean RL-versus-utility differences in diagnostic reports. On the same 10% sampler, RL ended all five conditions with 25.5–68.5 less energy and 4.0–18.5 more stress. Injury recovery also ended 26.5 hungrier and 8 health lower; compound crisis ended 8 health lower. These outcomes explain the survival-component deficit as poor resource and recovery quality rather than episode death. No survival reward increase or recovery-policy change was adopted, and the verdict remains **baseline remains better**.
 
+Update 0.50 — Resource Burden Audit measures the share of post-transition steps at critical energy (≤25), high hunger (≥75), and high stress (≥75), with explicit RL-versus-utility differences. On the same 10% sampler, RL spent 16.3–26.3 percentage points more time at critical energy in every condition. Extra high-hunger burden was only 1.3–6.2 points and extra high-stress burden 0–5.0 points. Persistent low energy, rather than broad hunger or stress crisis, is the clearest recovery-quality blocker. No thresholds, rewards, or policies changed, and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -161,7 +163,7 @@ Update 0.49 — Terminal Wellbeing Audit records end-of-episode health, energy, 
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — terminal wellbeing gaps measured in Update 0.49 | RL finishes with 25.5–68.5 less energy and 4.0–18.5 more stress across all conditions; injury recovery also ends much hungrier and lower-health | Keep exploration default-off; audit recovery timing and resource depletion before changing rewards or recovery utilities | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — critical-energy burden measured in Update 0.50 | RL spends 16.3–26.3 percentage points more time at energy ≤25 in every condition, while excess high-hunger and high-stress burden is much smaller | Keep exploration default-off; audit action timing immediately before and during low-energy runs before changing recovery rewards or utilities | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -227,6 +229,7 @@ Completed updates are grouped for readability:
 | 0.47 | Reproducible progression sampling, schema-8 checkpoints, and a baseline-better rate sweep |
 | 0.48 | Explicit reward-component differences and rejection of global reward reweighting |
 | 0.49 | Terminal wellbeing differences and survival-quality diagnosis without reward changes |
+| 0.50 | Critical-energy, high-hunger, and high-stress burden diagnostics |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
