@@ -23,8 +23,8 @@ from awakened_zero_rank.learning import (
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
     load_checkpoint, load_scenario_suite_report, save_checkpoint,
     save_scenario_suite_report,
-    scenario_suite_digest, scenario_suite_report, summarize_training_conditions,
-    train_q_learning,
+    scenario_suite_digest, scenario_suite_report, summarize_training_actions,
+    summarize_training_conditions, train_q_learning,
 )
 
 
@@ -585,6 +585,19 @@ class SimulationTests(unittest.TestCase):
         incomplete = replace(trained, episode_state_counts=())
         with self.assertRaises(ValueError):
             summarize_training_conditions(incomplete)
+
+    def test_training_action_exposure_is_exact_and_auditable(self) -> None:
+        trained = train_q_learning(127, QLearningConfig(episodes=3, horizon=8))
+        exposures = summarize_training_actions(trained)
+        self.assertEqual(tuple(item.action for item in exposures), ACTION_NAMES)
+        self.assertEqual(sum(item.selection_count for item in exposures),
+                         sum(sum(counts) for counts in trained.visit_table.values()))
+        self.assertTrue(all(item.selection_count >= item.state_count
+                            for item in exposures))
+        self.assertAlmostEqual(sum(item.selection_share for item in exposures),
+                               1.0, places=2)
+        with self.assertRaises(ValueError):
+            summarize_training_actions(replace(trained, visit_table={}))
 
     def test_integer_actions_enforce_current_mask(self) -> None:
         environment = TrainingEnvironment(seed=5, horizon=4)

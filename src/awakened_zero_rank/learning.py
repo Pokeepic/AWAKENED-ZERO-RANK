@@ -317,6 +317,38 @@ def summarize_training_conditions(
     return tuple(summaries)
 
 
+@dataclass(frozen=True)
+class TrainingActionExposure:
+    action: str
+    selection_count: int
+    state_count: int
+    selection_share: float
+
+
+def summarize_training_actions(
+        result: TrainingResult) -> tuple[TrainingActionExposure, ...]:
+    """Summarize exact action exposure retained in a trained policy visit table."""
+    if not result.visit_table:
+        raise ValueError("Training action exposure is unavailable")
+    if any(len(counts) != len(ACTION_NAMES) or
+           any(not isinstance(count, int) or count < 0 for count in counts)
+           for counts in result.visit_table.values()):
+        raise ValueError("Training action visit evidence is invalid")
+    action_totals = [
+        sum(counts[index] for counts in result.visit_table.values())
+        for index in range(len(ACTION_NAMES))
+    ]
+    total = sum(action_totals)
+    return tuple(
+        TrainingActionExposure(
+            action=name, selection_count=action_totals[index],
+            state_count=sum(counts[index] > 0 for counts in result.visit_table.values()),
+            selection_share=round(action_totals[index] / max(1, total), 3),
+        )
+        for index, name in enumerate(ACTION_NAMES)
+    )
+
+
 def abstract_state(observation) -> tuple[int, ...]:
     """Compress the 22-value observation into strategic categorical features."""
     indices = (0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 14, 18, 19, 20, 21)
