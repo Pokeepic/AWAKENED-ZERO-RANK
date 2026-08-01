@@ -227,6 +227,8 @@ class QLearningConfig:
     discount_factor: float = 0.95
     epsilon_start: float = 0.30
     epsilon_end: float = 0.05
+    exploration_bonus: float = 0.40
+    curriculum: bool = True
 
     def __post_init__(self) -> None:
         if self.episodes < 1 or self.horizon < 1:
@@ -235,6 +237,8 @@ class QLearningConfig:
             raise ValueError("learning_rate and discount_factor must be between 0 and 1")
         if not 0 <= self.epsilon_end <= self.epsilon_start <= 1:
             raise ValueError("epsilon must satisfy 0 <= end <= start <= 1")
+        if self.exploration_bonus < 0:
+            raise ValueError("exploration_bonus cannot be negative")
 
 
 QTable = dict[tuple[int, ...], list[float]]
@@ -247,10 +251,35 @@ class TrainingResult:
     q_table: QTable = field(compare=True)
     episode_rewards: tuple[float, ...] = ()
     episode_seeds: tuple[int, ...] = ()
+    training_rewards: tuple[float, ...] = ()
+    state_count: int = 0
+
+
+def abstract_state(observation) -> tuple[int, ...]:
+    """Compress the 22-value observation into strategic categorical features."""
+    indices = (0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 14, 18, 19, 20, 21)
+    return tuple(max(0, min(3, math.floor(float(observation[index]) * 4)))
+                 for index in indices)
 
 
 def discretize(observation) -> tuple[int, ...]:
-    return tuple(max(-4, min(4, math.floor(value * 4))) for value in observation)
+    """Backward-compatible name for the Milestone 18 state abstraction."""
+    return abstract_state(observation)
+
+
+def curriculum_reward(episode: int, episodes: int, reward: float,
+                      components: dict[str, float], enabled: bool = True) -> float:
+    """Apply phased shaping while retaining the environment reward for evaluation."""
+    if not enabled:
+        return reward
+    progress = episode / max(1, episodes - 1)
+    if progress < 1 / 3:
+        adjustment = components["survival"] * 0.35 + components["stability"] * 0.25
+    elif progress < 2 / 3:
+        adjustment = components["stability"] * 0.20 + components["social"] * 0.10
+    else:
+        adjustment = components["progress"] * 0.35 + components["social"] * 0.10
+    return round(reward + adjustment, 3)
 
 
 def _greedy_action(values: list[float], mask: tuple[int, ...]) -> int:
@@ -259,33 +288,46 @@ def _greedy_action(values: list[float], mask: tuple[int, ...]) -> int:
 
 
 def train_q_learning(training_seed: int, config: QLearningConfig | None = None) -> TrainingResult:
-    """Train a reproducible masked tabular Q-policy using training seeds only."""
+    """Train reproducible masked Q-learning with curriculum and count exploration."""
     config = config or QLearningConfig()
-    rng, table, totals, episode_seeds = random.Random(training_seed), {}, [], []
+    rng, table = random.Random(training_seed), {}
+    totals, shaped_totals, episode_seeds, visits = [], [], [], Counter()
     for episode in range(config.episodes):
         episode_seed = rng.randrange(2**31)
         episode_seeds.append(episode_seed)
         env = TrainingEnvironment(episode_seed, config.horizon)
         observation, info = env.reset(seed=episode_seed)
-        total = 0.0
+        total = shaped_total = 0.0
         epsilon = (config.epsilon_start if config.episodes == 1 else config.epsilon_start +
                    (config.epsilon_end - config.epsilon_start) * episode / (config.episodes - 1))
         while True:
-            state = discretize(observation)
+            state = abstract_state(observation)
             values = table.setdefault(state, [0.0] * len(ACTION_NAMES))
             mask = info["action_mask"]
-            action = (rng.choice([i for i, valid in enumerate(mask) if valid])
-                      if rng.random() < epsilon else _greedy_action(values, mask))
+            valid = [index for index, allowed in enumerate(mask) if allowed]
+            if rng.random() < epsilon:
+                action = rng.choice(valid)
+            else:
+                action = max(valid, key=lambda index: (
+                    values[index] + config.exploration_bonus /
+                    math.sqrt(visits[(state, index)] + 1), -index))
             next_observation, reward, terminated, truncated, info = env.step(action)
-            next_values = table.setdefault(discretize(next_observation), [0.0] * len(ACTION_NAMES))
-            future = 0.0 if terminated or truncated else next_values[_greedy_action(next_values, info["action_mask"])]
-            values[action] += config.learning_rate * (reward + config.discount_factor * future - values[action])
-            observation, total = next_observation, total + reward
+            shaped = curriculum_reward(episode, config.episodes, reward,
+                                       info["reward_components"], config.curriculum)
+            next_state = abstract_state(next_observation)
+            next_values = table.setdefault(next_state, [0.0] * len(ACTION_NAMES))
+            future = 0.0 if terminated or truncated else next_values[
+                _greedy_action(next_values, info["action_mask"])]
+            visits[(state, action)] += 1
+            values[action] += config.learning_rate * (
+                shaped + config.discount_factor * future - values[action])
+            observation, total, shaped_total = next_observation, total + reward, shaped_total + shaped
             if terminated or truncated:
                 break
         totals.append(round(total, 3))
-    return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds))
-
+        shaped_totals.append(round(shaped_total, 3))
+    return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
+                          tuple(shaped_totals), len(table))
 
 @dataclass(frozen=True)
 class BatchComparison:

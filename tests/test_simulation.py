@@ -13,8 +13,8 @@ from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
 from awakened_zero_rank.learning import (
     ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
-    compare_utility_and_rl, diagnose_batch, diagnose_episode, diagnostics_report,
-    heuristic_action,
+    abstract_state, compare_utility_and_rl, curriculum_reward, diagnose_batch,
+    diagnose_episode, diagnostics_report, heuristic_action,
     evaluate_scenario, train_q_learning,
 )
 
@@ -650,6 +650,32 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(set(first.policy_ranking), {"utility", "heuristic", "rl", "random"})
         report = json.loads(diagnostics_report(first))
         self.assertTrue({"utility", "heuristic", "rl", "random"}.issubset(report))
+    def test_strategic_state_abstraction_is_compact_and_stable(self) -> None:
+        observation = list(LearningEnvironment(seed=8).observe())
+        state = abstract_state(observation)
+        self.assertEqual(len(state), 16)
+        observation[10] = 0.99  # Relationship tension is intentionally diagnostic-only.
+        self.assertEqual(abstract_state(observation), state)
+        self.assertTrue(all(0 <= value <= 3 for value in state))
+
+    def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
+        components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}
+        early = curriculum_reward(0, 9, 1.0, components)
+        late = curriculum_reward(8, 9, 1.0, components)
+        self.assertEqual(early, 2.9)
+        self.assertEqual(late, 3.2)
+        self.assertEqual(curriculum_reward(8, 9, 1.0, components, False), 1.0)
+
+    def test_count_exploration_configuration_is_validated(self) -> None:
+        with self.assertRaises(ValueError):
+            QLearningConfig(exploration_bonus=-0.1)
+
+    def test_training_records_environment_and_curriculum_returns(self) -> None:
+        result = train_q_learning(18, QLearningConfig(episodes=3, horizon=8))
+        self.assertEqual(len(result.episode_rewards), 3)
+        self.assertEqual(len(result.training_rewards), 3)
+        self.assertEqual(result.state_count, len(result.q_table))
+        self.assertNotEqual(result.episode_rewards, result.training_rewards)
 
 if __name__ == "__main__":
     unittest.main()
