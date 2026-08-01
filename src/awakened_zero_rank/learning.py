@@ -610,6 +610,10 @@ class EpisodeDiagnostics:
     critical_energy_action_counts: tuple[tuple[str, int], ...]
     critical_energy_rest_count: int
     critical_energy_rest_share: float
+    strained_energy_decision_steps: int
+    strained_energy_action_counts: tuple[tuple[str, int], ...]
+    strained_energy_rest_count: int
+    strained_energy_rest_share: float
     high_hunger_steps: int
     high_hunger_share: float
     high_stress_steps: int
@@ -674,6 +678,7 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      masks: list[tuple[int, ...]], trace: list[DiagnosticStep],
                      low_need_recovery_count: int, critical_energy_steps: int,
                      critical_energy_actions: Counter,
+                     strained_energy_actions: Counter,
                      high_hunger_steps: int, high_stress_steps: int,
                      unseen_state_count: int,
                      visit_evidence_steps: int, zero_visit_action_count: int,
@@ -731,6 +736,12 @@ def _episode_summary(seed: int, policy: str, condition: str,
         critical_energy_rest_share=round(
             critical_energy_actions["Rest"] /
             max(1, sum(critical_energy_actions.values())), 3),
+        strained_energy_decision_steps=sum(strained_energy_actions.values()),
+        strained_energy_action_counts=tuple(sorted(strained_energy_actions.items())),
+        strained_energy_rest_count=strained_energy_actions["Rest"],
+        strained_energy_rest_share=round(
+            strained_energy_actions["Rest"] /
+            max(1, sum(strained_energy_actions.values())), 3),
         high_hunger_steps=high_hunger_steps,
         high_hunger_share=round(high_hunger_steps / max(1, steps), 3),
         high_stress_steps=high_stress_steps,
@@ -877,6 +888,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     low_need_recovery_count = unseen_state_count = 0
     critical_energy_steps = high_hunger_steps = high_stress_steps = 0
     critical_energy_actions = Counter()
+    strained_energy_actions = Counter()
     visit_evidence_steps = zero_visit_action_count = selected_action_visit_total = 0
     gate_seen_opportunities = gate_greedy_steps = 0
     preparation_seen_opportunities = preparation_greedy_steps = 0
@@ -889,6 +901,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         low_need_eat = is_low_need_recovery("Eat", before_p, before_slot)
         low_need_rest = is_low_need_recovery("Rest", before_p, before_slot)
         before_critical_energy = before_p.energy <= 25
+        before_strained_energy = 26 <= before_p.energy <= 45
         if policy == "utility":
             transition = environment.baseline_step()
         elif policy == "random":
@@ -927,6 +940,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         chosen_action = transition.resolved_action or transition.action
         if before_critical_energy:
             critical_energy_actions[chosen_action] += 1
+        if before_strained_energy:
+            strained_energy_actions[chosen_action] += 1
         low_need_recovery_count += int(
             (chosen_action == "Eat" and low_need_eat) or
             (chosen_action == "Rest" and low_need_rest))
@@ -943,7 +958,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     return _episode_summary(
         seed, policy, condition, environment, transitions, masks, trace,
         low_need_recovery_count, critical_energy_steps, critical_energy_actions,
-        high_hunger_steps, high_stress_steps, unseen_state_count, visit_evidence_steps,
+        strained_energy_actions, high_hunger_steps, high_stress_steps,
+        unseen_state_count, visit_evidence_steps,
         zero_visit_action_count, selected_action_visit_total,
         gate_seen_opportunities, gate_greedy_steps, gate_q_gap_total,
         preparation_seen_opportunities, preparation_greedy_steps,
@@ -1356,13 +1372,16 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         components = Counter()
         flags = Counter()
         critical_energy_actions = Counter()
+        strained_energy_actions = Counter()
         for episode in episodes:
             actions.update(dict(episode.action_counts))
             masked.update(dict(episode.masked_counts))
             components.update(dict(episode.reward_components))
             flags.update(episode.exploit_flags)
             critical_energy_actions.update(dict(episode.critical_energy_action_counts))
+            strained_energy_actions.update(dict(episode.strained_energy_action_counts))
         critical_decisions = sum(critical_energy_actions.values())
+        strained_decisions = sum(strained_energy_actions.values())
         return {
             "average_reward": round(sum(e.total_reward for e in episodes) / count, 3),
             "average_end_health": round(sum(e.end_health for e in episodes) / count, 3),
@@ -1378,6 +1397,13 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             },
             "critical_energy_rest_share": round(
                 critical_energy_actions["Rest"] / max(1, critical_decisions), 3),
+            "strained_energy_action_counts": dict(strained_energy_actions),
+            "strained_energy_action_frequencies": {
+                name: round(value / max(1, strained_decisions), 3)
+                for name, value in strained_energy_actions.items()
+            },
+            "strained_energy_rest_share": round(
+                strained_energy_actions["Rest"] / max(1, strained_decisions), 3),
             "average_high_hunger_share": round(
                 sum(e.high_hunger_share for e in episodes) / count, 3),
             "average_high_stress_share": round(

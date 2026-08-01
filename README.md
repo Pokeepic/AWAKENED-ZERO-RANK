@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.51.0** · **101 automated tests**
+Current release: **0.52.0** · **101 automated tests**
 
 ## Design principles
 
@@ -44,7 +44,7 @@ Current release: **0.51.0** · **101 automated tests**
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies, with opt-in unseen-state safety fallback, legacy additive exploration, and seeded progression sampling during training.
 - Count-based exploration, exact state-action visit evidence and per-action exposure summaries, phased curriculum rewards, deterministic multi-condition training schedules, per-condition state-coverage summaries, and held-out seed enforcement.
-- Reward decomposition with explicit RL-versus-utility component gaps, terminal wellbeing, resource-burden differences, and critical-energy action distributions, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences and Q-value gaps, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
+- Reward decomposition with explicit RL-versus-utility component gaps, terminal wellbeing, resource-burden differences, and critical- and strained-energy action distributions, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences and Q-value gaps, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with action/condition/fallback/exploration/visit schema validation, SHA-256 tamper detection, and authenticated version migration.
 - Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
@@ -158,6 +158,8 @@ Update 0.50 — Resource Burden Audit measures the share of post-transition step
 
 Update 0.51 — Critical-Energy Decision Audit records resolved action counts and frequencies whenever a decision begins at energy ≤25. Across the same held-out runs, Rest already represented 60.0–86.7% of RL actions at critical energy. Utility reached critical-energy decisions zero times in standard, financial-pressure, injury-recovery, and Gate-crisis episodes, and only four times in compound crisis. RL therefore reacts to depletion but fails to prevent it; increasing emergency Rest preference is not supported. No policy behavior changed, and the verdict remains **baseline remains better**.
 
+Update 0.52 — Preventive Recovery Audit records resolved action distributions while energy is strained but not yet critical (26–45). On the same held-out runs, RL rested in only 6.2–17.9% of these decisions, versus 45.5–100% for utility. Study was the dominant RL strained-energy action in every condition, accounting for 11–13 decisions per two-episode condition batch. RL therefore continues spending energy through the preventive window and recovers mainly after depletion. No recovery mechanism was adopted yet, and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -165,7 +167,7 @@ Update 0.51 — Critical-Energy Decision Audit records resolved action counts an
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — late energy recovery measured in Update 0.51 | Rest is already 60.0–86.7% of RL actions at critical energy, while utility almost never reaches that state; the failure is prevention timing, not emergency refusal | Keep exploration default-off; audit moderate-energy action timing before considering an earlier recovery mechanism | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — preventive recovery gap measured in Update 0.52 | At energy 26–45, RL rests only 6.2–17.9% versus 45.5–100% for utility, while Study dominates RL choices in every condition | Keep exploration default-off; test a bounded, opt-in early-recovery fallback without changing utility behavior or reward weights | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -233,6 +235,7 @@ Completed updates are grouped for readability:
 | 0.49 | Terminal wellbeing differences and survival-quality diagnosis without reward changes |
 | 0.50 | Critical-energy, high-hunger, and high-stress burden diagnostics |
 | 0.51 | Critical-energy action distributions and late-recovery diagnosis |
+| 0.52 | Strained-energy action distributions and preventive recovery diagnosis |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
