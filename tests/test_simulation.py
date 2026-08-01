@@ -697,6 +697,18 @@ class SimulationTests(unittest.TestCase):
         self.assertGreaterEqual(episode.portal_preparation_available_steps, 0)
         self.assertGreaterEqual(episode.portal_preparation_selection_rate, 0)
         self.assertLessEqual(episode.portal_preparation_selection_rate, 1)
+        self.assertGreaterEqual(episode.gate_mission_seen_opportunity_steps, 0)
+        self.assertGreaterEqual(episode.gate_mission_greedy_steps, 0)
+        self.assertLessEqual(episode.gate_mission_greedy_steps,
+                             episode.gate_mission_seen_opportunity_steps)
+        self.assertGreaterEqual(episode.gate_mission_greedy_rate, 0)
+        self.assertLessEqual(episode.gate_mission_greedy_rate, 1)
+        self.assertGreaterEqual(episode.portal_preparation_seen_opportunity_steps, 0)
+        self.assertGreaterEqual(episode.portal_preparation_greedy_steps, 0)
+        self.assertLessEqual(episode.portal_preparation_greedy_steps,
+                             episode.portal_preparation_seen_opportunity_steps)
+        self.assertGreaterEqual(episode.portal_preparation_greedy_rate, 0)
+        self.assertLessEqual(episode.portal_preparation_greedy_rate, 1)
 
     def test_diagnostic_batch_is_reproducible_and_ranks_worst_seeds(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
@@ -733,6 +745,13 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("gate_mission_selection_rate", report["utility"])
         self.assertIn("portal_preparation_available_steps", report["rl"])
         self.assertIn("portal_preparation_selection_rate", report["utility"])
+        self.assertIn("gate_mission_seen_opportunity_steps", report["rl"])
+        self.assertIn("gate_mission_greedy_steps", report["rl"])
+        self.assertIn("gate_mission_greedy_rate", report["rl"])
+        self.assertIn("portal_preparation_seen_opportunity_steps", report["rl"])
+        self.assertIn("portal_preparation_greedy_steps", report["rl"])
+        self.assertIn("portal_preparation_greedy_rate", report["rl"])
+        self.assertEqual(report["utility"]["gate_mission_seen_opportunity_steps"], 0)
         self.assertIn("preparation_coverage", report["rl"])
         self.assertIn("prepared_success_rate", report["utility"])
         self.assertTrue(report["worst_rl_episodes"][0]["trace"])

@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.41.0** · **100 automated tests**
+Current release: **0.42.0** · **100 automated tests**
 
 ## Design principles
 
@@ -44,7 +44,7 @@ Current release: **0.41.0** · **100 automated tests**
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies, with an opt-in safety heuristic for unseen Q-table states.
 - Count-based exploration, exact state-action visit evidence, phased curriculum rewards, deterministic multi-condition training schedules, per-condition state-coverage summaries, and held-out seed enforcement.
-- Reward decomposition, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
+- Reward decomposition, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with action/condition/fallback/visit schema validation, SHA-256 tamper detection, and authenticated version migration.
 - Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
@@ -138,6 +138,8 @@ Update 0.40 — Visit-Confidence Pilot tested minimum selected-action visit thre
 
 Update 0.41 — Mission Opportunity Audit measures how often Gate missions and portal preparation were valid versus executed, without changing either policy. On the exact 10 × 40-step pilot and ten held-out seeds, both actions were available on 348 RL decision steps; RL executed 6 Gate missions and 6 preparations (1.7% each), while utility executed 14 Gate missions (4.0%) and 2 preparations (0.6%). Compound-crisis RL used neither action despite 80 valid opportunities. The bottleneck is opportunity use rather than action masking, and the honest verdict remains **baseline remains better**.
 
+Update 0.42 — Progression Preference Audit separates unseen-state fallback decisions from learned Q-table preferences. On the same frozen pilot, only 40 of 348 valid Gate and preparation opportunities occurred in seen states: 1 standard, 16 financial-pressure, 0 injury-recovery, 9 Gate-crisis, and 14 compound-crisis. Gate mission and portal preparation were the greedy learned action in 0/40 cases; all six executions measured in Update 0.41 came from the heuristic fallback on unseen states. Both sparse state coverage and absent learned progression preference remain blockers, so behavior is unchanged and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -145,7 +147,7 @@ Update 0.41 — Mission Opportunity Audit measures how often Gate missions and p
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — mission opportunity gap measured in Update 0.41 | RL executed only 6 of 348 valid Gate opportunities (1.7%) versus 14 for utility (4.0%); compound-crisis RL used none of 80 valid opportunities | Investigate progression-aware state/action learning on the same frozen pilot before increasing training volume; keep unseen-only fallback experimental | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — learned progression gap measured in Update 0.42 | Only 40 of 348 valid progression opportunities were in seen states, and learned Q-values ranked Gate mission or preparation first in 0/40; the six executions came from unseen-state fallback | Investigate progression-aware learning and state generalization on the same frozen pilot before increasing training volume; keep unseen-only fallback experimental | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -203,6 +205,7 @@ Completed updates are grouped for readability:
 | 0.39 | Rejected Q-sign fallback and authenticated state-action visit evidence |
 | 0.40 | Rejected visit thresholds and authoritative selected-action confidence diagnostics |
 | 0.41 | Mission and portal-preparation opportunity-use diagnostics with a baseline-better audit |
+| 0.42 | Seen-state greedy progression diagnostics and an evidence-based no-tuning decision |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

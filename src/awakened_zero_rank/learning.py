@@ -571,6 +571,12 @@ class EpisodeDiagnostics:
     gate_mission_selection_rate: float
     portal_preparation_available_steps: int
     portal_preparation_selection_rate: float
+    gate_mission_seen_opportunity_steps: int
+    gate_mission_greedy_steps: int
+    gate_mission_greedy_rate: float
+    portal_preparation_seen_opportunity_steps: int
+    portal_preparation_greedy_steps: int
+    portal_preparation_greedy_rate: float
     exploit_flags: tuple[str, ...]
     trace: tuple[DiagnosticStep, ...]
 
@@ -595,7 +601,10 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      masks: list[tuple[int, ...]], trace: list[DiagnosticStep],
                      low_need_recovery_count: int, unseen_state_count: int,
                      visit_evidence_steps: int, zero_visit_action_count: int,
-                     selected_action_visit_total: int) -> EpisodeDiagnostics:
+                     selected_action_visit_total: int,
+                     gate_seen_opportunities: int, gate_greedy_steps: int,
+                     preparation_seen_opportunities: int,
+                     preparation_greedy_steps: int) -> EpisodeDiagnostics:
     actions = Counter(item.resolved_action or item.action for item in transitions)
     policy_actions = Counter(name for name, count in actions.items()
                              for _ in range(count) if name in ACTION_NAMES)
@@ -661,6 +670,14 @@ def _episode_summary(seed: int, policy: str, condition: str,
         portal_preparation_available_steps=preparation_available,
         portal_preparation_selection_rate=round(
             policy_actions["Prepare portal"] / max(1, preparation_available), 3),
+        gate_mission_seen_opportunity_steps=gate_seen_opportunities,
+        gate_mission_greedy_steps=gate_greedy_steps,
+        gate_mission_greedy_rate=round(
+            gate_greedy_steps / max(1, gate_seen_opportunities), 3),
+        portal_preparation_seen_opportunity_steps=preparation_seen_opportunities,
+        portal_preparation_greedy_steps=preparation_greedy_steps,
+        portal_preparation_greedy_rate=round(
+            preparation_greedy_steps / max(1, preparation_seen_opportunities), 3),
         exploit_flags=tuple(flags), trace=tuple(trace),
     )
 
@@ -761,6 +778,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     transitions, masks, trace = [], [], []
     low_need_recovery_count = unseen_state_count = 0
     visit_evidence_steps = zero_visit_action_count = selected_action_visit_total = 0
+    gate_seen_opportunities = gate_greedy_steps = 0
+    preparation_seen_opportunities = preparation_greedy_steps = 0
     for step in range(1, horizon + 1):
         mask = environment.action_mask()
         masks.append(mask)
@@ -782,6 +801,17 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             action, unseen = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
+            values = result.q_table.get(state)
+            if values is not None:
+                greedy = _greedy_action(values, mask)
+                gate_index = ACTION_NAMES.index("Gate mission")
+                preparation_index = ACTION_NAMES.index("Prepare portal")
+                if mask[gate_index]:
+                    gate_seen_opportunities += 1
+                    gate_greedy_steps += int(greedy == gate_index)
+                if mask[preparation_index]:
+                    preparation_seen_opportunities += 1
+                    preparation_greedy_steps += int(greedy == preparation_index)
             counts = result.visit_table.get(state)
             if counts is not None:
                 visit_evidence_steps += 1
@@ -803,7 +833,9 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     return _episode_summary(
         seed, policy, condition, environment, transitions, masks, trace,
         low_need_recovery_count, unseen_state_count, visit_evidence_steps,
-        zero_visit_action_count, selected_action_visit_total)
+        zero_visit_action_count, selected_action_visit_total,
+        gate_seen_opportunities, gate_greedy_steps,
+        preparation_seen_opportunities, preparation_greedy_steps)
 
 
 def _honest_verdict(differences: list[float]) -> str:
@@ -1239,6 +1271,21 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "portal_preparation_selection_rate": round(
                 sum(dict(e.action_counts).get("Prepare portal", 0) for e in episodes) /
                 max(1, sum(e.portal_preparation_available_steps for e in episodes)), 3),
+            "gate_mission_seen_opportunity_steps": sum(
+                e.gate_mission_seen_opportunity_steps for e in episodes),
+            "gate_mission_greedy_steps": sum(
+                e.gate_mission_greedy_steps for e in episodes),
+            "gate_mission_greedy_rate": round(
+                sum(e.gate_mission_greedy_steps for e in episodes) /
+                max(1, sum(e.gate_mission_seen_opportunity_steps for e in episodes)), 3),
+            "portal_preparation_seen_opportunity_steps": sum(
+                e.portal_preparation_seen_opportunity_steps for e in episodes),
+            "portal_preparation_greedy_steps": sum(
+                e.portal_preparation_greedy_steps for e in episodes),
+            "portal_preparation_greedy_rate": round(
+                sum(e.portal_preparation_greedy_steps for e in episodes) /
+                max(1, sum(e.portal_preparation_seen_opportunity_steps
+                           for e in episodes)), 3),
             "maximum_action_streak": max(e.longest_action_streak for e in episodes),
             "action_counts": dict(actions),
             "action_frequencies": {name: round(value / sum(actions.values()), 3)
