@@ -695,6 +695,17 @@ class SimulationTests(unittest.TestCase):
         poor.step("Eat")
         self.assertEqual(poor.state.protagonist.money, 0)
 
+    def test_clinic_assistance_preserves_treatment_without_cash(self) -> None:
+        simulation = Simulation(seed=5)
+        protagonist = simulation.state.protagonist
+        protagonist.money = 0
+        protagonist.health, protagonist.injuries, protagonist.injury_severity = 35, 1, 3
+        event = simulation.step("Seek treatment")
+        self.assertEqual(protagonist.money, 0)
+        self.assertGreater(protagonist.health, 35)
+        self.assertEqual(protagonist.injury_severity, 1)
+        self.assertIn("Emergency assistance covered ¥2,350", event.outcome)
+
     def test_injury_severity_unlocks_and_treatment_resolves_recovery(self) -> None:
         simulation = Simulation(seed=5)
         p = simulation.state.protagonist

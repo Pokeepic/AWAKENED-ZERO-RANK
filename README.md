@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.34.0** · **97 automated tests**
+Current release: **0.35.0** · **98 automated tests**
 
 ## Design principles
 
@@ -22,7 +22,7 @@ Current release: **0.34.0** · **97 automated tests**
 - Four daily periods: Morning → Afternoon → Evening → Late Night.
 - Work, meals, rest, study, physical training, commuting, rent, arrears, and partial debt repayment that preserves emergency cash.
 - Seeded weather, daily wage and meal variation, Tanabata, and Gate alerts.
-- Health, energy, hunger, stress, morale, injury severity, clinic treatment, money, equipment, and inventory.
+- Health, energy, hunger, stress, morale, injury severity, clinic treatment with explicit emergency assistance, money, equipment, and inventory.
 
 ### Hunter progression
 
@@ -124,12 +124,14 @@ Update 0.33 — Exposure Thresholds records the exact number of training episode
 
 Update 0.34 — Recovery Necessity Audit distinguishes all recovery from conservatively low-need eating and resting. Across four 40-step seeds in standard, injury-recovery, and compound-crisis conditions, low-need recovery ranged from 2.6% to 16.1% of decision steps and survival remained 4/4 in every condition. The evidence did not justify a utility nerf, so this update adds diagnostics only.
 
+Update 0.35 — Treatment Access makes the existing clinic safety net explicit. Ren already received full treatment when unable to pay the calculated price; outcomes now separate his payment from the emergency assistance covering the balance. A severe-injury test at ¥0 confirms the full treatment effect remains available without negative money. Pricing and healing behavior are unchanged.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
 | Debt behavior — resolved in Update 0.25 | Rent arrears were impossible to repay after the deadline, making paid patrols dominate | Added partial repayment while preserving ¥600 emergency cash; no patrol nerf was needed | Recovery improved from 0/4 to 4/4, survival stayed 4/4, and dominant share fell from 47.5% to 24.4% |
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
-| Recovery access — priority fixed in Update 0.28 | Compound injury and debt made repayment outrank urgent treatment | Repayment now defers under severe injury or low health; clinic pricing and assistance still need separate review | Utility and heuristic treated first in 4/4 runs, survived 4/4, and cleared arrears 4/4 |
+| Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency | Dialogue should matter without becoming a low-risk reward farm | Add context-sensitive cooldowns or diminishing utility for repeated conversations while preserving crisis support | Relationship growth remains varied and passive-policy flags do not increase |
 | Policy consistency | Repeated tabular trials remain inconclusive and vary by training seed | Improve state coverage and condition-aware diagnostics before increasing episode counts or trying neural RL | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
@@ -182,6 +184,7 @@ Completed updates are grouped for readability:
 | 0.32 | Training/evaluation condition alignment and schema-5 adoption evidence |
 | 0.33 | Minimum condition-exposure thresholds and authenticated schema-6 counts |
 | 0.34 | Low-need recovery diagnostics and an evidence-based no-nerf decision |
+| 0.35 | Explicit emergency clinic assistance with preserved treatment access |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

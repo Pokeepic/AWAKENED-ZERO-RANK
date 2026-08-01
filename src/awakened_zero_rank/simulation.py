@@ -104,7 +104,9 @@ class Simulation:
     def _seek_treatment(self) -> str:
         p = self.state.protagonist
         severity = p.injury_severity
-        cost = min(p.money, 700 + severity * 550)
+        full_cost = 700 + severity * 550
+        cost = min(p.money, full_cost)
+        assistance = full_cost - cost
         p.money -= cost
         healed = min(35 + severity * 5, 100 - p.health)
         p.health += healed
@@ -113,8 +115,10 @@ class Simulation:
         p.injury_severity = max(0, severity - 2)
         p.injuries = max(0, p.injuries - 1)
         p.treatments_received += 1
+        support = (f" Emergency assistance covered ¥{assistance:,}."
+                   if assistance else "")
         return (f"Received clinic treatment for ¥{cost:,}; recovered {healed} health "
-                f"and reduced injury severity to {p.injury_severity}.")
+                f"and reduced injury severity to {p.injury_severity}.{support}")
 
     def _update_objectives(self) -> None:
         p = self.state.protagonist
