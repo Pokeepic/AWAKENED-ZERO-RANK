@@ -51,6 +51,10 @@ def _mission_placeholder(_: Protagonist) -> str:
     return "Gate mission pending resolution."
 
 
+def _treatment_placeholder(_: Protagonist) -> str:
+    return "Treatment pending resolution."
+
+
 def _prepare_placeholder(_: Protagonist) -> str:
     return "Portal preparation pending resolution."
 
@@ -162,6 +166,12 @@ def available_actions(p: Protagonist) -> tuple[Action, ...]:
             _train,
         ),
     ]
+    if p.injury_severity > 0:
+        actions.append(Action(
+            "Seek treatment",
+            lambda p, _slot, _alert: 45 + p.injury_severity * 18 + (100 - p.health) * 0.5,
+            _treatment_placeholder,
+        ))
     if p.guild_registered:
         actions.append(Action(
             "Prepare portal",

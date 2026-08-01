@@ -25,6 +25,7 @@ class Simulation:
         clock = self.state.clock
         protagonist = self.state.protagonist
         self._update_weather()
+        self._update_economy()
         self._update_npc_schedules()
         special = self._special_event()
         if special is not None:
@@ -44,6 +45,7 @@ class Simulation:
                 raise ValueError(f"Action {selected_action!r} is unavailable")
             action = choices[selected_action]
             reason = "a learning policy selected this valid strategy (policy action)"
+        money_before = protagonist.money
         if action.name == "Visit hunter shop" and self._weather().shop_closed:
             outcome = "The hunter supply shop was closed under the severe-weather advisory."
         else:
@@ -51,6 +53,8 @@ class Simulation:
                 outcome = self._resolve_gate_mission()
             elif action.name == "Prepare portal":
                 outcome = self._prepare_portal()
+            elif action.name == "Seek treatment":
+                outcome = self._seek_treatment()
             elif action.name == "Talk with Aiko":
                 travel = action.apply(protagonist)
                 exchange, social_reason = resolve_aiko_dialogue(protagonist, clock.day)
@@ -65,7 +69,9 @@ class Simulation:
             self.state.shop_visits += 1
         self._apply_passive_needs()
         self._apply_weather_cost(action.name)
+        self._apply_economic_variation(action.name, money_before)
         self._develop_from_action(action.name)
+        self._update_objectives()
         self._update_mood(action.name)
         protagonist.clamp()
         event = Event(clock.day, clock.slot, action.name, reason, outcome)
@@ -76,6 +82,46 @@ class Simulation:
         clock.advance()
         return event
 
+    def _update_economy(self) -> None:
+        """Set one deterministic daily cost-of-living condition."""
+        day = self.state.clock.day
+        if self.state.economy_day == day:
+            return
+        self.state.economy_day = day
+        economy_rng = random.Random(self.seed * 65_537 + day)
+        self.state.wage_modifier = economy_rng.choice((85, 95, 100, 105, 115))
+        self.state.meal_cost = economy_rng.choice((500, 600, 700, 800))
+
+    def _apply_economic_variation(self, action_name: str, money_before: int) -> None:
+        p = self.state.protagonist
+        if action_name == "Part-time work":
+            p.money += 2_200 * (self.state.wage_modifier - 100) // 100
+        elif action_name == "Eat" and money_before >= 600 and self.state.meal_cost != 600:
+            difference = self.state.meal_cost - 600
+            p.money = max(0, p.money - difference)
+
+    def _seek_treatment(self) -> str:
+        p = self.state.protagonist
+        severity = p.injury_severity
+        cost = min(p.money, 700 + severity * 550)
+        p.money -= cost
+        healed = min(35 + severity * 5, 100 - p.health)
+        p.health += healed
+        p.energy += 8
+        p.stress -= 12
+        p.injury_severity = max(0, severity - 2)
+        p.injuries = max(0, p.injuries - 1)
+        p.treatments_received += 1
+        return (f"Received clinic treatment for ¥{cost:,}; recovered {healed} health "
+                f"and reduced injury severity to {p.injury_severity}.")
+
+    def _update_objectives(self) -> None:
+        p = self.state.protagonist
+        self.state.objective_progress["financial_buffer"] = min(3, p.money // p.rent_cost)
+        self.state.objective_progress["recovery"] = min(3, p.treatments_received)
+        steps = max((len(item.preparation_steps)
+                     for item in self.state.portal_investigations.values()), default=0)
+        self.state.objective_progress["portal_readiness"] = min(3, steps)
     def _weather(self):
         return next(weather for weather in SUMMER_WEATHER if weather.name == self.state.weather)
 
@@ -431,6 +477,11 @@ class Simulation:
             "forest": ("trail-anchor protocol", 8), "urban ruin": ("cinder protection", 9),
         }
         strategy, bonus = strategies[portal.environment]
+        stages = (strategy, "route rehearsal", "contingency cache")
+        stage = stages[min(len(investigation.preparation_steps), len(stages) - 1)]
+        if stage not in investigation.preparation_steps:
+            investigation.preparation_steps.append(stage)
+        bonus += (len(investigation.preparation_steps) - 1) * 3
         preferred = "Mei Kuroda" if investigation.progress < 60 else "Daichi Mori"
         ally = preferred if preferred in p.relationships else (
             "Aiko Sato" if "Aiko Sato" in p.relationships else None)
@@ -451,7 +502,7 @@ class Simulation:
         p.energy -= 10
         p.stress -= 3
         ally_text = f" with {ally}" if ally else " alone"
-        return (f"Prepared {strategy}{ally_text} for {portal.name} ({portal.environment}), "
+        return (f"Prepared {stage}{ally_text} for {portal.name} ({portal.environment}), "
                 f"banking +{bonus} mission readiness.{conflict}")
 
     def _portal_social_reaction(self, portal_name: str) -> str:

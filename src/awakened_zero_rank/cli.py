@@ -41,7 +41,7 @@ def main() -> None:
         f"Hunger: {p.hunger} | Stress: {p.stress} | Knowledge: {p.knowledge} | "
         f"Fitness: {p.fitness} | Rank: {p.hunter_rank} ({p.rank_points} RP) | "
         f"Readiness: {p.combat_readiness} | Missions: {p.missions_completed}/{p.missions_attempted} | "
-        f"Injuries: {p.injuries} | Ability: {p.ability} | Location: {p.location} | "
+        f"Injuries: {p.injuries} (severity {p.injury_severity}/5) | Ability: {p.ability} | Location: {p.location} | "
         f"Rent arrears: ¥{p.rent_arrears:,}"
     )
     print(f"Mood: {p.mood} | Morale: {p.morale}/100 | Social confidence: {p.social_confidence}")

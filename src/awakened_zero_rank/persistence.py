@@ -80,6 +80,12 @@ def load_simulation(path: str | Path) -> "Simulation":
         ],
         social_encounters_seen=raw.get("social_encounters_seen", []),
         active_portal_plan=raw.get("active_portal_plan"),
+        economy_day=raw.get("economy_day", 0),
+        wage_modifier=raw.get("wage_modifier", 100),
+        meal_cost=raw.get("meal_cost", 600),
+        objective_progress=raw.get("objective_progress", {
+            "financial_buffer": 0, "recovery": 0, "portal_readiness": 0,
+        }),
         objective_scores=raw.get("objective_scores", {
             "survival": 0, "stability": 0, "discovery": 0, "relationships": 0,
         }),

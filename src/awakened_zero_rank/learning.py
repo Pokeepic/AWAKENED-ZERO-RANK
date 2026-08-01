@@ -26,7 +26,7 @@ from .simulation import Simulation
 
 ACTION_NAMES = (
     "Eat", "Rest", "Part-time work", "Study", "Train", "Visit hunter shop",
-    "Talk with Aiko", "Guild patrol", "Prepare portal", "Gate mission",
+    "Talk with Aiko", "Guild patrol", "Prepare portal", "Gate mission", "Seek treatment",
 )
 REWARD_COMPONENTS = ("survival", "stability", "progress", "social")
 
@@ -71,6 +71,10 @@ class LearningEnvironment:
             min(1, sum(i.preparation_bonus for i in state.portal_investigations.values()) / 30),
             min(1, sum(i.joint_missions for i in state.portal_investigations.values()) / 10),
             min(1, sum(state.objective_scores.values()) / 400),
+            p.injury_severity / 5,
+            self.simulation.state.wage_modifier / 115,
+            self.simulation.state.meal_cost / 800,
+            min(1, sum(state.objective_progress.values()) / 9),
         )
 
     def action_mask(self) -> tuple[int, ...]:
@@ -141,11 +145,11 @@ class DiscreteSpace:
 
 
 class ObservationSpace:
-    shape = (18,)
+    shape = (22,)
 
     @staticmethod
     def contains(value: object) -> bool:
-        return (isinstance(value, (tuple, list)) and len(value) == 18 and
+        return (isinstance(value, (tuple, list)) and len(value) == 22 and
                 all(isinstance(item, (int, float)) and math.isfinite(item) for item in value))
 
 
@@ -160,7 +164,7 @@ class TrainingEnvironment(gym.Env if gym else object):
         if gym:
             self.action_space = gym.spaces.Discrete(len(ACTION_NAMES), seed=seed)
             self.observation_space = gym.spaces.Box(
-                low=-float("inf"), high=float("inf"), shape=(18,), dtype=np.float32
+                low=-float("inf"), high=float("inf"), shape=(22,), dtype=np.float32
             )
         else:
             self.action_space = DiscreteSpace(len(ACTION_NAMES), seed)

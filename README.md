@@ -62,7 +62,10 @@ The simulation follows Ren Takahashi across a small Tokyo map and currently incl
 - reproducible masked tabular Q-learning with auditable training and held-out evaluation seeds;
 - paired utility-versus-RL batch evaluation with a confidence-aware verdict;
 - deterministic diagnostics for reward components, action and mask frequencies, outcome quality,
-  behavioral diversity, exploit indicators, and worst-seed traces.
+  behavioral diversity, exploit indicators, and worst-seed traces;
+- seeded daily wage and meal variation without disturbing the authoritative world RNG;
+- injury severity, autonomous clinic treatment, and persistent recovery progress;
+- three-stage hazard-aware portal preparation and persistent multi-step objectives.
 - recurring patrol leader Daichi Mori, portal researcher Mei Kuroda, and supply owner Haruto Ishikawa;
 - a relationship network with personal loyalties, cooperation, and friction between NPCs;
 - identity-aware dialogue shaped by each NPC's role, personality, voice, context, and trust;
@@ -172,4 +175,6 @@ Milestone 15 diagnosed the same frozen experiment rather than scaling it. Both p
 
 ✅ Milestone 15: reward decomposition, action and mask diagnostics, outcome and diversity metrics, exploit indicators, worst-seed traces, and reproducible JSON reports.
 
-Next: broaden economic, injury, recovery, preparation, and multi-step objective scenarios before retraining.
+✅ Milestone 16: deterministic economic variation, injury severity and treatment, staged portal preparation, persistent multi-step objectives, and a 22-value learning state.
+
+Next: strengthen utility, random, and heuristic comparison baselines before the next RL iteration.

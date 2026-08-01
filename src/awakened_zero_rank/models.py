@@ -59,6 +59,8 @@ class Protagonist:
     missions_attempted: int = 0
     missions_completed: int = 0
     injuries: int = 0
+    injury_severity: int = 0
+    treatments_received: int = 0
     inventory: dict[str, int] = field(default_factory=dict)
     equipped_weapon: str | None = None
     equipped_armor: str | None = None
@@ -176,6 +178,7 @@ class PortalInvestigation:
     preparation_bonus: int = 0
     cooperating_npc: str | None = None
     joint_missions: int = 0
+    preparation_steps: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -207,6 +210,12 @@ class WorldState:
     delayed_consequences: list[DelayedConsequence] = field(default_factory=list)
     social_encounters_seen: list[str] = field(default_factory=list)
     active_portal_plan: str | None = None
+    economy_day: int = 0
+    wage_modifier: int = 100
+    meal_cost: int = 600
+    objective_progress: dict[str, int] = field(default_factory=lambda: {
+        "financial_buffer": 0, "recovery": 0, "portal_readiness": 0,
+    })
     objective_scores: dict[str, int] = field(default_factory=lambda: {
         "survival": 0, "stability": 0, "discovery": 0, "relationships": 0,
     })

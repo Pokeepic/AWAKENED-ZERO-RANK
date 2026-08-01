@@ -3,6 +3,7 @@ import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
+from awakened_zero_rank.actions import available_actions
 from awakened_zero_rank.journal import journal_entry
 from awakened_zero_rank.dialogue import choose_intention, contextual_line, resolve_aiko_dialogue
 from awakened_zero_rank.models import Relationship, TimeSlot
@@ -325,7 +326,7 @@ class SimulationTests(unittest.TestCase):
 
     def test_learning_observation_and_action_mask_are_stable(self) -> None:
         environment = LearningEnvironment(seed=5)
-        self.assertEqual(len(environment.observe()), 18)
+        self.assertEqual(len(environment.observe()), 22)
         self.assertEqual(len(environment.action_mask()), len(ACTION_NAMES))
         self.assertEqual(sum(environment.action_mask()), len(environment.valid_actions))
 
@@ -564,6 +565,58 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(report["worst_rl_episodes"][0]["trace"])
         self.assertIn(report["verdict"],
                       {"promising", "inconclusive", "baseline remains better"})
+    def test_daily_economy_is_seeded_and_changes_cash_flow(self) -> None:
+        first, second = Simulation(seed=33), Simulation(seed=33)
+        first.step("Part-time work")
+        second.step("Part-time work")
+        self.assertEqual((first.state.wage_modifier, first.state.meal_cost,
+                          first.state.protagonist.money),
+                         (second.state.wage_modifier, second.state.meal_cost,
+                          second.state.protagonist.money))
+        self.assertIn(first.state.wage_modifier, {85, 95, 100, 105, 115})
+        self.assertIn(first.state.meal_cost, {500, 600, 700, 800})
+        poor = Simulation(seed=33)
+        poor.state.protagonist.money = 0
+        poor.step("Eat")
+        self.assertEqual(poor.state.protagonist.money, 0)
+
+    def test_injury_severity_unlocks_and_treatment_resolves_recovery(self) -> None:
+        simulation = Simulation(seed=5)
+        p = simulation.state.protagonist
+        p.health, p.injuries, p.injury_severity = 45, 2, 3
+        self.assertIn("Seek treatment", {action.name for action in available_actions(p)})
+        event = simulation.step("Seek treatment")
+        self.assertGreater(p.health, 45)
+        self.assertLess(p.injury_severity, 3)
+        self.assertEqual(p.treatments_received, 1)
+        self.assertIn("clinic treatment", event.outcome)
+
+    def test_portal_preparation_advances_multiple_persistent_stages(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(29)
+        simulation.step("Prepare portal")
+        portal = simulation.state.active_portal_plan
+        first_bonus = simulation.state.portal_investigations[portal].preparation_bonus
+        simulation.step("Prepare portal")
+        investigation = simulation.state.portal_investigations[portal]
+        self.assertGreaterEqual(len(investigation.preparation_steps), 2)
+        self.assertGreater(investigation.preparation_bonus, first_bonus)
+        self.assertGreaterEqual(simulation.state.objective_progress["portal_readiness"], 2)
+
+    def test_milestone_16_state_and_expanded_observation_are_persistent(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.state.protagonist.injury_severity = 2
+        simulation.step("Seek treatment")
+        simulation.run(29)
+        simulation.step("Prepare portal")
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "milestone-16.json"
+            save_simulation(simulation, path)
+            restored = load_simulation(path)
+        self.assertEqual(restored.state, simulation.state)
+        environment = LearningEnvironment(seed=9)
+        self.assertEqual(len(environment.observe()), 22)
+        self.assertEqual(len(environment.action_mask()), len(ACTION_NAMES))
 
 if __name__ == "__main__":
     unittest.main()
