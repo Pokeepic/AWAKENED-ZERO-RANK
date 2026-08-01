@@ -270,6 +270,7 @@ class TrainingResult:
     training_rewards: tuple[float, ...] = ()
     state_count: int = 0
     episode_conditions: tuple[str, ...] = ()
+    episode_state_counts: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -279,6 +280,8 @@ class TrainingConditionSummary:
     average_reward: float
     average_training_reward: float
     worst_reward: float
+    average_unique_states: float
+    minimum_unique_states: int
 
 
 def summarize_training_conditions(
@@ -286,7 +289,8 @@ def summarize_training_conditions(
     """Summarize deterministic reward evidence for each observed condition."""
     count = len(result.episode_rewards)
     if (len(result.episode_conditions) != count or
-            len(result.training_rewards) != count):
+            len(result.training_rewards) != count or
+            len(result.episode_state_counts) != count):
         raise ValueError("Training episode diagnostics are incomplete")
     summaries = []
     for condition in dict.fromkeys(result.episode_conditions):
@@ -294,6 +298,7 @@ def summarize_training_conditions(
                    if value == condition]
         rewards = [result.episode_rewards[index] for index in indices]
         training_rewards = [result.training_rewards[index] for index in indices]
+        state_counts = [result.episode_state_counts[index] for index in indices]
         summaries.append(TrainingConditionSummary(
             condition=condition,
             episode_count=len(indices),
@@ -301,6 +306,8 @@ def summarize_training_conditions(
             average_training_reward=round(
                 sum(training_rewards) / len(training_rewards), 3),
             worst_reward=round(min(rewards), 3),
+            average_unique_states=round(sum(state_counts) / len(state_counts), 3),
+            minimum_unique_states=min(state_counts),
         ))
     return tuple(summaries)
 
@@ -341,7 +348,8 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     """Train reproducible masked Q-learning with curriculum and count exploration."""
     config = config or QLearningConfig()
     rng, table = random.Random(training_seed), {}
-    totals, shaped_totals, episode_seeds, episode_conditions, visits = [], [], [], [], Counter()
+    totals, shaped_totals, episode_seeds, episode_conditions = [], [], [], []
+    episode_state_counts, visits = [], Counter()
     for episode in range(config.episodes):
         episode_seed = rng.randrange(2**31)
         condition = config.training_conditions[episode % len(config.training_conditions)]
@@ -350,10 +358,12 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         env = TrainingEnvironment(episode_seed, config.horizon)
         observation, info = env.reset(seed=episode_seed, options={"condition": condition})
         total = shaped_total = 0.0
+        episode_states = set()
         epsilon = (config.epsilon_start if config.episodes == 1 else config.epsilon_start +
                    (config.epsilon_end - config.epsilon_start) * episode / (config.episodes - 1))
         while True:
             state = abstract_state(observation)
+            episode_states.add(state)
             values = table.setdefault(state, [0.0] * len(ACTION_NAMES))
             mask = info["action_mask"]
             valid = [index for index, allowed in enumerate(mask) if allowed]
@@ -367,6 +377,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             shaped = curriculum_reward(episode, config.episodes, reward,
                                        info["reward_components"], config.curriculum)
             next_state = abstract_state(next_observation)
+            episode_states.add(next_state)
             next_values = table.setdefault(next_state, [0.0] * len(ACTION_NAMES))
             future = 0.0 if terminated or truncated else next_values[
                 _greedy_action(next_values, info["action_mask"])]
@@ -378,9 +389,11 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                 break
         totals.append(round(total, 3))
         shaped_totals.append(round(shaped_total, 3))
+        episode_state_counts.append(len(episode_states))
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
-                          tuple(shaped_totals), len(table), tuple(episode_conditions))
-CHECKPOINT_VERSION = 3
+                          tuple(shaped_totals), len(table), tuple(episode_conditions),
+                          tuple(episode_state_counts))
+CHECKPOINT_VERSION = 4
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -393,6 +406,7 @@ def _checkpoint_data(result: TrainingResult) -> dict:
         "episode_rewards": result.episode_rewards,
         "episode_seeds": result.episode_seeds,
         "episode_conditions": result.episode_conditions,
+        "episode_state_counts": result.episode_state_counts,
         "training_rewards": result.training_rewards,
         "state_count": result.state_count,
         "q_table": [
@@ -422,7 +436,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, CHECKPOINT_VERSION):
+    if data.get("checkpoint_version") not in (2, 3, CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
         raise ValueError("Checkpoint policy schema does not match this environment")
@@ -441,6 +455,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
         training_rewards=tuple(data["training_rewards"]), state_count=data["state_count"],
         episode_conditions=tuple(data.get(
             "episode_conditions", ("standard",) * len(episode_rewards))),
+        episode_state_counts=tuple(data.get("episode_state_counts", ())),
     )
 
 @dataclass(frozen=True)
