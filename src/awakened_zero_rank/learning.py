@@ -849,6 +849,7 @@ class ScenarioComparison:
     utility_preparation_coverage: float = 0.0
     rl_prepared_success_rate: float = 0.0
     utility_prepared_success_rate: float = 0.0
+    training_condition_covered: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -878,6 +879,10 @@ def _adoption_blockers(scenarios: tuple[ScenarioComparison, ...],
     for scenario in scenarios:
         if scenario.verdict != "promising":
             blockers.append(f"{scenario.name}: verdict is {scenario.verdict}")
+        if scenario.training_condition_covered is not True:
+            status = "unknown" if scenario.training_condition_covered is None else "absent"
+            blockers.append(
+                f"{scenario.name}: training condition coverage is {status}")
         if scenario.rl_survival_rate < scenario.utility_survival_rate:
             blockers.append(f"{scenario.name}: survival regression")
         if scenario.rl_average_missions < scenario.utility_average_missions:
@@ -919,6 +924,7 @@ def evaluate_scenario_suite(result: TrainingResult,
     if len(set(evaluation_seeds)) != len(evaluation_seeds):
         raise ValueError("Evaluation seeds must be unique across scenarios")
     summaries, pooled = [], []
+    observed_conditions = set(result.episode_conditions)
     for scenario in scenarios:
         batch = diagnose_batch(result, scenario.evaluation_seeds,
                                horizon=scenario.horizon, worst_count=1,
@@ -972,6 +978,7 @@ def evaluate_scenario_suite(result: TrainingResult,
                 rl_prepared_completed / max(1, rl_prepared), 3),
             utility_prepared_success_rate=round(
                 utility_prepared_completed / max(1, utility_prepared), 3),
+            training_condition_covered=scenario.condition in observed_conditions,
         ))
     verdict = _honest_verdict(pooled)
     adoption_ready = not _adoption_blockers(tuple(summaries), verdict)
@@ -982,7 +989,7 @@ def evaluate_scenario_suite(result: TrainingResult,
         verdict=verdict, adoption_ready=adoption_ready,
     )
 
-SCENARIO_REPORT_VERSION = 4
+SCENARIO_REPORT_VERSION = 5
 
 
 def _scenario_suite_data(suite: ScenarioSuiteResult) -> dict:
@@ -1023,7 +1030,7 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
     """Load a scenario-suite report only when its version and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("report_version") not in (1, 2, 3, SCENARIO_REPORT_VERSION):
+    if data.get("report_version") not in (1, 2, 3, 4, SCENARIO_REPORT_VERSION):
         raise ValueError("Unsupported scenario report version")
     payload = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
     if digest != hashlib.sha256(payload).hexdigest():
@@ -1051,6 +1058,7 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
             utility_preparation_coverage=item.get("utility_preparation_coverage", 0.0),
             rl_prepared_success_rate=item.get("rl_prepared_success_rate", 0.0),
             utility_prepared_success_rate=item.get("utility_prepared_success_rate", 0.0),
+            training_condition_covered=item.get("training_condition_covered"),
         ) for item in data["scenarios"])
         suite = ScenarioSuiteResult(
             training_seed=data["training_seed"],

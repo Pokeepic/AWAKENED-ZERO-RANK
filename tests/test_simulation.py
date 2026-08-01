@@ -883,7 +883,25 @@ class SimulationTests(unittest.TestCase):
         ))
         self.assertEqual(tuple(item.condition for item in suite.scenarios),
                          ("financial_pressure", "gate_crisis"))
+        self.assertEqual(tuple(item.training_condition_covered
+                               for item in suite.scenarios), (False, False))
         self.assertFalse(suite.adoption_ready)
+        decision = assess_policy_adoption(trained, suite)
+        self.assertIn("financial: training condition coverage is absent",
+                      decision.blockers)
+        covered = train_q_learning(36, QLearningConfig(
+            episodes=2, horizon=5,
+            training_conditions=("financial_pressure", "gate_crisis"),
+        ))
+        covered_suite = evaluate_scenario_suite(covered, (
+            EvaluationScenario("financial", 5, (138, 139), "financial_pressure"),
+            EvaluationScenario("gate", 7, (238, 239), "gate_crisis"),
+        ))
+        self.assertTrue(all(item.training_condition_covered
+                            for item in covered_suite.scenarios))
+        self.assertFalse(any("training condition coverage" in blocker
+                             for blocker in assess_policy_adoption(
+                                 covered, covered_suite).blockers))
 
     def test_scenario_suite_is_reproducible_across_horizons(self) -> None:
         trained = train_q_learning(31, QLearningConfig(episodes=2, horizon=5))
@@ -950,7 +968,7 @@ class SimulationTests(unittest.TestCase):
         second = scenario_suite_report(suite)
         payload = json.loads(first)
         self.assertEqual(first, second)
-        self.assertEqual(payload["report_version"], 4)
+        self.assertEqual(payload["report_version"], 5)
         self.assertEqual(payload["checkpoint_sha256"], checkpoint_digest(trained))
         self.assertEqual(payload["sha256"], scenario_suite_digest(suite))
         self.assertEqual(payload["total_episodes"], 4)
@@ -961,6 +979,7 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("rl_exploit_flags", payload["scenarios"][0])
         self.assertIn("rl_preparation_coverage", payload["scenarios"][0])
         self.assertIn("rl_prepared_success_rate", payload["scenarios"][0])
+        self.assertTrue(payload["scenarios"][0]["training_condition_covered"])
         with TemporaryDirectory() as directory:
             first_path = Path(directory) / "first.json"
             second_path = Path(directory) / "second.json"
@@ -978,7 +997,8 @@ class SimulationTests(unittest.TestCase):
                               "rl_dominant_action_share", "utility_dominant_action_share",
                               "rl_exploit_flags", "rl_preparation_coverage",
                               "utility_preparation_coverage", "rl_prepared_success_rate",
-                              "utility_prepared_success_rate"):
+                              "utility_prepared_success_rate",
+                              "training_condition_covered"):
                     scenario.pop(field)
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -988,6 +1008,11 @@ class SimulationTests(unittest.TestCase):
                                 for item in restored_legacy.scenarios))
             self.assertTrue(all(item.rl_dominant_action_share == 0.0
                                 for item in restored_legacy.scenarios))
+            self.assertTrue(all(item.training_condition_covered is None
+                                for item in restored_legacy.scenarios))
+            legacy_decision = assess_policy_adoption(trained, restored_legacy)
+            self.assertTrue(any("training condition coverage is unknown" in blocker
+                                for blocker in legacy_decision.blockers))
             first_path.write_text(first, encoding="utf-8")
             tampered = json.loads(first_path.read_text(encoding="utf-8"))
             tampered["scenarios"][0]["rl_average_reward"] += 1
