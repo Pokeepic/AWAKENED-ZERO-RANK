@@ -98,6 +98,21 @@ In the improved-policy experiment, RL averaged `80.088` reward versus utility's 
 
 The repeated audit produced trial differences of `−19.965`, `+8.436`, and `−7.059`. All three trials were inconclusive, so neural-policy readiness remains **false**.
 
+## Suggested balance backlog
+
+These are hypotheses, not scheduled changes. Each patch should be isolated, evaluated on held-out seeds across all stress conditions, and rejected if it improves reward while weakening survival, rent recovery, mission coherence, or behavioral variety.
+
+| Area | Evidence or risk | Candidate patch | Acceptance check |
+|---|---|---|---|
+| Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
+| Debt behavior | Rent arrears can make paid patrols dominate utility choices | Cap the arrears-derived patrol bonus or compare patrol income against health, energy, and Gate risk before increasing it | Financial-pressure runs recover reliably without patrol loops or reduced survival |
+| Gate pacing | RL completed more missions without establishing a reward advantage | Strengthen the value of preparation, retreat, and information while keeping unprepared mission failure costly | More prepared completions, not simply more attempts; no survival regression |
+| Recovery access | Severe injury plus low cash can create a long recovery spiral | Review minimum clinic access, consumable availability, and safe income options rather than granting free healing | Injury scenarios return to stable health without erasing economic consequences |
+| Social frequency | Dialogue should matter without becoming a low-risk reward farm | Add context-sensitive cooldowns or diminishing utility for repeated conversations while preserving crisis support | Relationship growth remains varied and passive-policy flags do not increase |
+| Policy consistency | Repeated tabular trials remain inconclusive and vary by training seed | Improve state coverage and condition-aware diagnostics before increasing episode counts or trying neural RL | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+
+Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
+
 ## Project layout
 
 ```text
