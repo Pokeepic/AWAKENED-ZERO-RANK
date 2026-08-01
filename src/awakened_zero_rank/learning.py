@@ -567,6 +567,10 @@ class EpisodeDiagnostics:
     zero_visit_action_count: int
     zero_visit_action_share: float
     average_selected_action_visits: float
+    gate_mission_available_steps: int
+    gate_mission_selection_rate: float
+    portal_preparation_available_steps: int
+    portal_preparation_selection_rate: float
     exploit_flags: tuple[str, ...]
     trace: tuple[DiagnosticStep, ...]
 
@@ -622,6 +626,8 @@ def _episode_summary(seed: int, policy: str, condition: str,
         flags.append("passive-policy dominance")
     p = environment.simulation.state.protagonist
     due_reached = environment.simulation.state.clock.day > p.rent_due_day
+    gate_available = sum(mask[ACTION_NAMES.index("Gate mission")] for mask in masks)
+    preparation_available = sum(mask[ACTION_NAMES.index("Prepare portal")] for mask in masks)
     return EpisodeDiagnostics(
         seed=seed, policy=policy, condition=condition, steps=steps, decision_steps=decision_steps,
         total_reward=round(sum(item.reward for item in transitions), 3),
@@ -649,6 +655,12 @@ def _episode_summary(seed: int, policy: str, condition: str,
             zero_visit_action_count / max(1, visit_evidence_steps), 3),
         average_selected_action_visits=round(
             selected_action_visit_total / max(1, visit_evidence_steps), 3),
+        gate_mission_available_steps=gate_available,
+        gate_mission_selection_rate=round(
+            p.missions_attempted / max(1, gate_available), 3),
+        portal_preparation_available_steps=preparation_available,
+        portal_preparation_selection_rate=round(
+            policy_actions["Prepare portal"] / max(1, preparation_available), 3),
         exploit_flags=tuple(flags), trace=tuple(trace),
     )
 
@@ -1217,6 +1229,16 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.zero_visit_action_share for e in episodes) / count, 3),
             "average_selected_action_visits": round(
                 sum(e.average_selected_action_visits for e in episodes) / count, 3),
+            "gate_mission_available_steps": sum(
+                e.gate_mission_available_steps for e in episodes),
+            "gate_mission_selection_rate": round(
+                sum(e.missions_attempted for e in episodes) /
+                max(1, sum(e.gate_mission_available_steps for e in episodes)), 3),
+            "portal_preparation_available_steps": sum(
+                e.portal_preparation_available_steps for e in episodes),
+            "portal_preparation_selection_rate": round(
+                sum(dict(e.action_counts).get("Prepare portal", 0) for e in episodes) /
+                max(1, sum(e.portal_preparation_available_steps for e in episodes)), 3),
             "maximum_action_streak": max(e.longest_action_streak for e in episodes),
             "action_counts": dict(actions),
             "action_frequencies": {name: round(value / sum(actions.values()), 3)

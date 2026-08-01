@@ -691,6 +691,12 @@ class SimulationTests(unittest.TestCase):
         self.assertGreaterEqual(episode.zero_visit_action_share, 0)
         self.assertLessEqual(episode.zero_visit_action_share, 1)
         self.assertGreaterEqual(episode.average_selected_action_visits, 0)
+        self.assertGreaterEqual(episode.gate_mission_available_steps, 0)
+        self.assertGreaterEqual(episode.gate_mission_selection_rate, 0)
+        self.assertLessEqual(episode.gate_mission_selection_rate, 1)
+        self.assertGreaterEqual(episode.portal_preparation_available_steps, 0)
+        self.assertGreaterEqual(episode.portal_preparation_selection_rate, 0)
+        self.assertLessEqual(episode.portal_preparation_selection_rate, 1)
 
     def test_diagnostic_batch_is_reproducible_and_ranks_worst_seeds(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
@@ -723,6 +729,10 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("average_zero_visit_action_share", report["rl"])
         self.assertIn("average_selected_action_visits", report["rl"])
         self.assertEqual(report["utility"]["average_visit_evidence_steps"], 0)
+        self.assertIn("gate_mission_available_steps", report["rl"])
+        self.assertIn("gate_mission_selection_rate", report["utility"])
+        self.assertIn("portal_preparation_available_steps", report["rl"])
+        self.assertIn("portal_preparation_selection_rate", report["utility"])
         self.assertIn("preparation_coverage", report["rl"])
         self.assertIn("prepared_success_rate", report["utility"])
         self.assertTrue(report["worst_rl_episodes"][0]["trace"])
