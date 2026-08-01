@@ -35,6 +35,17 @@ def _work(p: Protagonist) -> str:
     return f"Worked a konbini shift for ¥{job.pay:,}; train fare cost ¥{fare:,}."
 
 
+def _pay_rent_arrears(p: Protagonist) -> str:
+    payment = min(p.rent_arrears, max(0, p.money - 600))
+    p.money -= payment
+    p.rent_arrears -= payment
+    cleared = p.rent_arrears == 0
+    p.stress -= 15 if cleared else max(3, payment // 1_000 * 2)
+    p.morale += 5 if cleared else 1
+    status = "cleared the debt" if cleared else f"left ¥{p.rent_arrears:,} outstanding"
+    return f"Paid ¥{payment:,} toward rent arrears and {status}."
+
+
 def _patrol(p: Protagonist) -> str:
     job = JOBS["guild_patrol"]
     fare = _travel(p, job.location)
@@ -166,6 +177,14 @@ def available_actions(p: Protagonist) -> tuple[Action, ...]:
             _train,
         ),
     ]
+    if p.rent_arrears > 0 and p.money > 600:
+        actions.append(Action(
+            "Pay rent arrears",
+            lambda p, _slot, _alert: (
+                70 + min(p.rent_arrears, p.money - 600) / 80 + p.rent_arrears / 200
+            ),
+            _pay_rent_arrears,
+        ))
     if p.injury_severity > 0:
         actions.append(Action(
             "Seek treatment",

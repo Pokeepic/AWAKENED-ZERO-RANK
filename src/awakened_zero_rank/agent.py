@@ -42,6 +42,7 @@ class UtilityAgent:
             "Eat": f"hunger is {p.hunger}/100",
             "Rest": f"energy is {p.energy}/100 and stress is {p.stress}/100",
             "Part-time work": f"¥{housing_debt:,} is still needed for housing",
+            "Pay rent arrears": f"¥{p.rent_arrears:,} of overdue rent remains",
             "Study": f"knowledge is only {p.knowledge}",
             "Train": f"fitness is only {p.fitness}",
             "Guild patrol": f"safe hunter experience pays while readiness is {p.combat_readiness}/100",

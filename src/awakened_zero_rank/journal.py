@@ -22,6 +22,7 @@ def journal_entry(event: Event, weather: str | None = None, temperature_c: int |
         opening += f" I feel {mood.lower()}."
     thoughts = {
         "Part-time work": "Rent will not wait for me.",
+        "Pay rent arrears": "Every payment makes the apartment feel safer.",
         "Eat": "I cannot think clearly on an empty stomach.",
         "Rest": "Pushing any farther would be reckless.",
         "Study": "Knowledge may be the only advantage I can afford.",

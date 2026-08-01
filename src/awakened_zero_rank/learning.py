@@ -27,7 +27,8 @@ from .simulation import Simulation
 
 
 ACTION_NAMES = (
-    "Eat", "Rest", "Part-time work", "Study", "Train", "Visit hunter shop",
+    "Eat", "Rest", "Part-time work", "Pay rent arrears", "Study", "Train",
+    "Visit hunter shop",
     "Talk with Aiko", "Guild patrol", "Prepare portal", "Gate mission", "Seek treatment",
 )
 REWARD_COMPONENTS = ("survival", "stability", "progress", "social")
@@ -333,7 +334,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         shaped_totals.append(round(shaped_total, 3))
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table))
-CHECKPOINT_VERSION = 1
+CHECKPOINT_VERSION = 2
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -545,6 +546,8 @@ def heuristic_action(environment: LearningEnvironment, mask: tuple[int, ...]) ->
         priorities.append("Eat")
     if p.energy <= 28 or p.health < 45:
         priorities.append("Rest")
+    if p.rent_arrears and p.money > 600:
+        priorities.append("Pay rent arrears")
     if p.money < p.rent_cost and state.clock.day <= p.rent_due_day:
         priorities.append("Part-time work")
     if state.active_portal_plan and p.health >= 60 and p.energy >= 42:

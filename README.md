@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.24.0** · **88 automated tests**
+Current release: **0.25.0** · **90 automated tests**
 
 ## Design principles
 
@@ -20,7 +20,7 @@ Current release: **0.24.0** · **88 automated tests**
 ### Life in Tokyo
 
 - Four daily periods: Morning → Afternoon → Evening → Late Night.
-- Work, meals, rest, study, physical training, commuting, rent, and arrears.
+- Work, meals, rest, study, physical training, commuting, rent, arrears, and partial debt repayment that preserves emergency cash.
 - Seeded weather, daily wage and meal variation, Tanabata, and Gate alerts.
 - Health, energy, hunger, stress, morale, injury severity, clinic treatment, money, equipment, and inventory.
 
@@ -40,7 +40,7 @@ Current release: **0.24.0** · **88 automated tests**
 
 ### Learning and evaluation
 
-- Gymnasium-compatible fixed-horizon episodes with 11 integer actions and valid-action masks.
+- Gymnasium-compatible fixed-horizon episodes with 12 integer actions and valid-action masks.
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies.
 - Count-based exploration, phased curriculum rewards, and held-out seed enforcement.
@@ -100,14 +100,16 @@ The repeated audit produced trial differences of `−19.965`, `+8.436`, and `−
 
 ## Suggested balance backlog
 
-These are hypotheses, not scheduled changes. Each patch should be isolated, evaluated on held-out seeds across all stress conditions, and rejected if it improves reward while weakening survival, rent recovery, mission coherence, or behavioral variety.
+Unless marked resolved, these are hypotheses rather than scheduled changes. Each patch should be isolated, evaluated on held-out seeds across all stress conditions, and rejected if it improves reward while weakening survival, rent recovery, mission coherence, or behavioral variety.
 
 Milestone 24 now records rent payment, average dominant-action share, and RL exploit flags in every scenario report. These measurements are adoption gates; they do not tune the simulator by themselves.
+
+Milestone 25 addressed the first measured soft-lock by adding a masked **Pay rent arrears** action that keeps a ¥600 emergency reserve. In the bounded four-seed, 40-step utility audit, financial-pressure rent recovery improved from 0/4 to 4/4, survival remained 4/4, dominant-action share fell from 47.5% to 24.4%, and no exploit flags appeared. Standard and Gate-crisis results were unchanged. The Q-table checkpoint schema advanced because the policy action set changed from 11 to 12.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition | Earlier RL diagnostics showed excessive eating and resting with weak progression | Add diminishing decision value only when recovery is unnecessary; never discourage food, sleep, or treatment under genuine need | Lower dominant-action share without worse survival or injury recovery |
-| Debt behavior | Rent arrears can make paid patrols dominate utility choices | Cap the arrears-derived patrol bonus or compare patrol income against health, energy, and Gate risk before increasing it | Financial-pressure runs recover reliably without patrol loops or reduced survival |
+| Debt behavior — resolved in M25 | Rent arrears were impossible to repay after the deadline, making paid patrols dominate | Added partial repayment while preserving ¥600 emergency cash; no patrol nerf was needed | Recovery improved from 0/4 to 4/4, survival stayed 4/4, and dominant share fell from 47.5% to 24.4% |
 | Gate pacing | RL completed more missions without establishing a reward advantage | Strengthen the value of preparation, retreat, and information while keeping unprepared mission failure costly | More prepared completions, not simply more attempts; no survival regression |
 | Recovery access | Severe injury plus low cash can create a long recovery spiral | Review minimum clinic access, consumable availability, and safe income options rather than granting free healing | Injury scenarios return to stable health without erasing economic consequences |
 | Social frequency | Dialogue should matter without becoming a low-risk reward farm | Add context-sensitive cooldowns or diminishing utility for repeated conversations while preserving crisis support | Relationship growth remains varied and passive-policy flags do not increase |
@@ -152,6 +154,7 @@ Completed milestones are grouped for readability:
 | 22 | Explainable policy-adoption decisions with identity, confidence, safety, and progression gates |
 | 23 | Deterministic financial, injury, and Gate-crisis evaluation conditions with versioned reporting |
 | 24 | Rent recovery, action dominance, and exploit metrics integrated into reports and adoption gates |
+| 25 | Partial rent-arrears repayment, emergency-cash protection, and a measured financial soft-lock fix |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

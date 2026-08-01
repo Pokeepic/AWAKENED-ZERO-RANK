@@ -724,6 +724,23 @@ class SimulationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluate_repeated_trials((1,), ((),), config)
 
+    def test_rent_arrears_can_be_repaid_without_spending_emergency_cash(self) -> None:
+        simulation = Simulation(seed=25)
+        p = simulation.state.protagonist
+        p.money, p.rent_arrears, p.stress = 3_500, 8_000, 70
+        self.assertIn("Pay rent arrears", {action.name for action in available_actions(p)})
+        event = simulation.step("Pay rent arrears")
+        self.assertEqual((p.money, p.rent_arrears), (600, 5_100))
+        self.assertLess(p.stress, 70)
+        self.assertIn("¥2,900", event.outcome)
+        p.money = 600
+        self.assertNotIn("Pay rent arrears", {action.name for action in available_actions(p)})
+
+    def test_financial_pressure_policy_can_clear_rent_arrears(self) -> None:
+        episode = diagnose_episode(501, 40, "utility", condition="financial_pressure")
+        self.assertTrue(episode.rent_paid)
+        self.assertIn("Pay rent arrears", dict(episode.action_counts))
+
     def test_conditioned_diagnostics_are_reproducible_and_auditable(self) -> None:
         first = diagnose_episode(51, 4, "utility", condition="injury_recovery")
         second = diagnose_episode(51, 4, "utility", condition="injury_recovery")
