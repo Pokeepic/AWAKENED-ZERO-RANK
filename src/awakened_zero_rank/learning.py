@@ -541,6 +541,8 @@ class EpisodeDiagnostics:
     longest_action_streak: int
     low_need_recovery_count: int
     low_need_recovery_share: float
+    social_action_count: int
+    social_action_share: float
     exploit_flags: tuple[str, ...]
     trace: tuple[DiagnosticStep, ...]
 
@@ -610,6 +612,9 @@ def _episode_summary(seed: int, policy: str, condition: str,
         low_need_recovery_count=low_need_recovery_count,
         low_need_recovery_share=round(
             low_need_recovery_count / max(1, decision_steps), 3),
+        social_action_count=policy_actions["Talk with Aiko"],
+        social_action_share=round(
+            policy_actions["Talk with Aiko"] / max(1, decision_steps), 3),
         exploit_flags=tuple(flags), trace=tuple(trace),
     )
 
@@ -1143,6 +1148,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.low_need_recovery_count for e in episodes) / count, 3),
             "average_low_need_recovery_share": round(
                 sum(e.low_need_recovery_share for e in episodes) / count, 3),
+            "average_social_action_count": round(
+                sum(e.social_action_count for e in episodes) / count, 3),
+            "average_social_action_share": round(
+                sum(e.social_action_share for e in episodes) / count, 3),
             "maximum_action_streak": max(e.longest_action_streak for e in episodes),
             "action_counts": dict(actions),
             "action_frequencies": {name: round(value / sum(actions.values()), 3)

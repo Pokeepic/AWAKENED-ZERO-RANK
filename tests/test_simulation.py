@@ -652,6 +652,10 @@ class SimulationTests(unittest.TestCase):
         self.assertGreaterEqual(episode.low_need_recovery_count, 0)
         self.assertGreaterEqual(episode.low_need_recovery_share, 0)
         self.assertLessEqual(episode.low_need_recovery_share, 1)
+        self.assertEqual(episode.social_action_count,
+                         dict(episode.action_counts).get("Talk with Aiko", 0))
+        self.assertGreaterEqual(episode.social_action_share, 0)
+        self.assertLessEqual(episode.social_action_share, 1)
 
     def test_diagnostic_batch_is_reproducible_and_ranks_worst_seeds(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
@@ -675,6 +679,8 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("average_dominant_action_share", report["rl"])
         self.assertIn("average_low_need_recovery_count", report["utility"])
         self.assertIn("average_low_need_recovery_share", report["utility"])
+        self.assertIn("average_social_action_count", report["utility"])
+        self.assertIn("average_social_action_share", report["utility"])
         self.assertIn("preparation_coverage", report["rl"])
         self.assertIn("prepared_success_rate", report["utility"])
         self.assertTrue(report["worst_rl_episodes"][0]["trace"])
