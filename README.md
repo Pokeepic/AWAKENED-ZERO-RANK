@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.19.0** · **81 automated tests**
+Current release: **0.20.0** · **83 automated tests**
 
 ## Design principles
 
@@ -47,6 +47,7 @@ Current release: **0.19.0** · **81 automated tests**
 - Reward decomposition, action/mask frequencies, safety metrics, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with schema validation and SHA-256 tamper detection.
 - Repeated independent trials with pooled confidence and a conservative adoption gate.
+- Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 
 The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or coherence regressions.
 
@@ -126,8 +127,9 @@ Completed milestones are grouped for readability:
 | 14–15 | Gymnasium episodes, reproducible Q-learning, held-out comparison, and failure diagnostics |
 | 16–17 | Broader economic/recovery scenarios and stronger utility, heuristic, and random baselines |
 | 18–19 | Improved tabular training, checkpoint integrity, repeated trials, and neural-readiness auditing |
+| 20 | Multi-horizon held-out scenario suites, pooled verdicts, and conservative adoption checks |
 
-Near-term work should improve tabular consistency and environment coverage. Neural RL remains deferred while the readiness gate is closed.
+Near-term work should use the scenario suite to improve tabular consistency across different horizons and conditions. Neural RL remains deferred while the readiness gate is closed.
 
 ### Future observer website
 

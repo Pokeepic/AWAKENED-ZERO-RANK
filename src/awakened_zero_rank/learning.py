@@ -682,6 +682,100 @@ def evaluate_repeated_trials(training_seeds: tuple[int, ...],
     return RepeatedTrialResult(tuple(summaries), round(sum(pooled) / len(pooled), 3),
                                verdict, ready)
 
+@dataclass(frozen=True)
+class EvaluationScenario:
+    """A named held-out evaluation slice with its own fixed episode horizon."""
+    name: str
+    horizon: int
+    evaluation_seeds: tuple[int, ...]
+
+    def __post_init__(self) -> None:
+        if not self.name.strip():
+            raise ValueError("Scenario name cannot be empty")
+        if self.horizon < 1:
+            raise ValueError("Scenario horizon must be at least 1")
+        if not self.evaluation_seeds:
+            raise ValueError("Scenario evaluation seeds cannot be empty")
+        if len(set(self.evaluation_seeds)) != len(self.evaluation_seeds):
+            raise ValueError("Scenario evaluation seeds must be unique")
+
+
+@dataclass(frozen=True)
+class ScenarioComparison:
+    name: str
+    horizon: int
+    evaluation_seeds: tuple[int, ...]
+    policy_ranking: tuple[str, ...]
+    rl_average_reward: float
+    utility_average_reward: float
+    mean_difference: float
+    rl_survival_rate: float
+    utility_survival_rate: float
+    rl_average_missions: float
+    utility_average_missions: float
+    verdict: str
+
+
+@dataclass(frozen=True)
+class ScenarioSuiteResult:
+    training_seed: int
+    scenarios: tuple[ScenarioComparison, ...]
+    total_episodes: int
+    pooled_mean_difference: float
+    verdict: str
+    adoption_ready: bool
+
+
+def evaluate_scenario_suite(result: TrainingResult,
+                            scenarios: tuple[EvaluationScenario, ...]
+                            ) -> ScenarioSuiteResult:
+    """Evaluate one frozen policy across named, held-out fixed-horizon scenarios."""
+    if not scenarios:
+        raise ValueError("At least one evaluation scenario is required")
+    names = [scenario.name for scenario in scenarios]
+    if len(set(names)) != len(names):
+        raise ValueError("Evaluation scenario names must be unique")
+    evaluation_seeds = [seed for scenario in scenarios for seed in scenario.evaluation_seeds]
+    if len(set(evaluation_seeds)) != len(evaluation_seeds):
+        raise ValueError("Evaluation seeds must be unique across scenarios")
+    summaries, pooled = [], []
+    for scenario in scenarios:
+        batch = diagnose_batch(result, scenario.evaluation_seeds,
+                               horizon=scenario.horizon, worst_count=1)
+        rl_rewards = [episode.total_reward for episode in batch.rl_episodes]
+        utility_rewards = [episode.total_reward for episode in batch.utility_episodes]
+        differences = [rl - utility for rl, utility in zip(rl_rewards, utility_rewards)]
+        pooled.extend(differences)
+        count = len(scenario.evaluation_seeds)
+        summaries.append(ScenarioComparison(
+            name=scenario.name, horizon=scenario.horizon,
+            evaluation_seeds=scenario.evaluation_seeds,
+            policy_ranking=batch.policy_ranking,
+            rl_average_reward=round(sum(rl_rewards) / count, 3),
+            utility_average_reward=round(sum(utility_rewards) / count, 3),
+            mean_difference=round(sum(differences) / count, 3),
+            rl_survival_rate=round(sum(e.survived for e in batch.rl_episodes) / count, 3),
+            utility_survival_rate=round(
+                sum(e.survived for e in batch.utility_episodes) / count, 3),
+            rl_average_missions=round(
+                sum(e.missions_completed for e in batch.rl_episodes) / count, 3),
+            utility_average_missions=round(
+                sum(e.missions_completed for e in batch.utility_episodes) / count, 3),
+            verdict=batch.verdict,
+        ))
+    verdict = _honest_verdict(pooled)
+    adoption_ready = (verdict == "promising" and
+                      all(item.verdict == "promising" for item in summaries) and
+                      all(item.rl_survival_rate >= item.utility_survival_rate and
+                          item.rl_average_missions >= item.utility_average_missions
+                          for item in summaries))
+    return ScenarioSuiteResult(
+        training_seed=result.training_seed, scenarios=tuple(summaries),
+        total_episodes=len(pooled),
+        pooled_mean_difference=round(sum(pooled) / len(pooled), 3),
+        verdict=verdict, adoption_ready=adoption_ready,
+    )
+
 def diagnostics_report(batch: DiagnosticBatch) -> str:
     """Render a deterministic JSON report suitable for versioned experiment records."""
     def aggregate(episodes: tuple[EpisodeDiagnostics, ...]) -> dict:

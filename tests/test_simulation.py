@@ -13,10 +13,12 @@ from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
 from awakened_zero_rank.learning import (
     ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
+    EvaluationScenario,
     abstract_state, checkpoint_digest, compare_utility_and_rl, curriculum_reward,
     diagnose_batch,
     diagnose_episode, diagnostics_report, heuristic_action,
-    evaluate_repeated_trials, evaluate_scenario, load_checkpoint, save_checkpoint,
+    evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
+    load_checkpoint, save_checkpoint,
     train_q_learning,
 )
 
@@ -716,6 +718,40 @@ class SimulationTests(unittest.TestCase):
             evaluate_repeated_trials((1, 2), ((101,),), config)
         with self.assertRaises(ValueError):
             evaluate_repeated_trials((1,), ((),), config)
+
+    def test_scenario_suite_is_reproducible_across_horizons(self) -> None:
+        trained = train_q_learning(31, QLearningConfig(episodes=2, horizon=5))
+        scenarios = (
+            EvaluationScenario("early survival", 5, (131, 132)),
+            EvaluationScenario("longer stability", 9, (231, 232)),
+        )
+        first = evaluate_scenario_suite(trained, scenarios)
+        second = evaluate_scenario_suite(trained, scenarios)
+        self.assertEqual(first, second)
+        self.assertEqual(tuple(item.horizon for item in first.scenarios), (5, 9))
+        self.assertEqual(first.total_episodes, 4)
+        self.assertIn(first.verdict, {"promising", "inconclusive", "baseline remains better"})
+
+    def test_scenario_suite_validates_names_horizons_and_held_out_seeds(self) -> None:
+        trained = train_q_learning(41, QLearningConfig(episodes=2, horizon=5))
+        with self.assertRaises(ValueError):
+            EvaluationScenario("", 5, (141,))
+        with self.assertRaises(ValueError):
+            EvaluationScenario("invalid", 0, (141,))
+        with self.assertRaises(ValueError):
+            evaluate_scenario_suite(trained, (
+                EvaluationScenario("duplicate", 5, (141,)),
+                EvaluationScenario("duplicate", 7, (241,)),
+            ))
+        with self.assertRaises(ValueError):
+            evaluate_scenario_suite(trained, (
+                EvaluationScenario("leaked", 5, (41,)),
+            ))
+        with self.assertRaises(ValueError):
+            evaluate_scenario_suite(trained, (
+                EvaluationScenario("first", 5, (141,)),
+                EvaluationScenario("reused seed", 7, (141,)),
+            ))
 
 if __name__ == "__main__":
     unittest.main()
