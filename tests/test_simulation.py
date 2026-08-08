@@ -770,6 +770,12 @@ class SimulationTests(unittest.TestCase):
         self.assertLessEqual(episode.gate_mission_greedy_rate, 1)
         self.assertGreaterEqual(episode.gate_mission_q_gap_total, 0)
         self.assertGreaterEqual(episode.gate_mission_average_q_gap, 0)
+        self.assertGreaterEqual(episode.gate_mission_unseen_opportunity_steps, 0)
+        self.assertGreaterEqual(episode.gate_mission_fallback_steps, 0)
+        self.assertLessEqual(episode.gate_mission_fallback_steps,
+                             episode.gate_mission_unseen_opportunity_steps)
+        self.assertGreaterEqual(episode.gate_mission_fallback_rate, 0)
+        self.assertLessEqual(episode.gate_mission_fallback_rate, 1)
         self.assertGreaterEqual(episode.portal_preparation_seen_opportunity_steps, 0)
         self.assertGreaterEqual(episode.portal_preparation_greedy_steps, 0)
         self.assertLessEqual(episode.portal_preparation_greedy_steps,
@@ -778,6 +784,14 @@ class SimulationTests(unittest.TestCase):
         self.assertLessEqual(episode.portal_preparation_greedy_rate, 1)
         self.assertGreaterEqual(episode.portal_preparation_q_gap_total, 0)
         self.assertGreaterEqual(episode.portal_preparation_average_q_gap, 0)
+        self.assertGreaterEqual(
+            episode.portal_preparation_unseen_opportunity_steps, 0)
+        self.assertGreaterEqual(episode.portal_preparation_fallback_steps, 0)
+        self.assertLessEqual(
+            episode.portal_preparation_fallback_steps,
+            episode.portal_preparation_unseen_opportunity_steps)
+        self.assertGreaterEqual(episode.portal_preparation_fallback_rate, 0)
+        self.assertLessEqual(episode.portal_preparation_fallback_rate, 1)
 
     def test_diagnostic_batch_is_reproducible_and_ranks_worst_seeds(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
@@ -846,10 +860,17 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("gate_mission_greedy_steps", report["rl"])
         self.assertIn("gate_mission_greedy_rate", report["rl"])
         self.assertIn("gate_mission_average_q_gap", report["rl"])
+        self.assertIn("gate_mission_unseen_opportunity_steps", report["rl"])
+        self.assertIn("gate_mission_fallback_steps", report["rl"])
+        self.assertIn("gate_mission_fallback_rate", report["rl"])
         self.assertIn("portal_preparation_seen_opportunity_steps", report["rl"])
         self.assertIn("portal_preparation_greedy_steps", report["rl"])
         self.assertIn("portal_preparation_greedy_rate", report["rl"])
         self.assertIn("portal_preparation_average_q_gap", report["rl"])
+        self.assertIn("portal_preparation_unseen_opportunity_steps",
+                      report["rl"])
+        self.assertIn("portal_preparation_fallback_steps", report["rl"])
+        self.assertIn("portal_preparation_fallback_rate", report["rl"])
         self.assertEqual(report["utility"]["gate_mission_seen_opportunity_steps"], 0)
         self.assertIn("preparation_coverage", report["rl"])
         self.assertIn("prepared_success_rate", report["utility"])
