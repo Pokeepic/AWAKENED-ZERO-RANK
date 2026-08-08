@@ -688,6 +688,9 @@ class EpisodeDiagnostics:
     gate_mission_ready_fallback_rate: float
     gate_mission_ready_displacement_counts: tuple[tuple[str, int], ...]
     gate_mission_ready_displacement_reason_counts: tuple[tuple[str, int], ...]
+    gate_mission_priority_clear_unseen_steps: int
+    gate_mission_priority_clear_selection_steps: int
+    gate_mission_priority_clear_selection_rate: float
     portal_preparation_seen_opportunity_steps: int
     portal_preparation_greedy_steps: int
     portal_preparation_greedy_rate: float
@@ -701,6 +704,9 @@ class EpisodeDiagnostics:
     portal_preparation_ready_fallback_rate: float
     portal_preparation_ready_displacement_counts: tuple[tuple[str, int], ...]
     portal_preparation_ready_displacement_reason_counts: tuple[tuple[str, int], ...]
+    portal_preparation_priority_clear_unseen_steps: int
+    portal_preparation_priority_clear_selection_steps: int
+    portal_preparation_priority_clear_selection_rate: float
     exploit_flags: tuple[str, ...]
     trace: tuple[DiagnosticStep, ...]
 
@@ -742,6 +748,8 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      gate_ready_fallback_steps: int,
                      gate_ready_displacements: Counter,
                      gate_ready_displacement_reasons: Counter,
+                     gate_priority_clear_steps: int,
+                     gate_priority_clear_selections: int,
                      preparation_seen_opportunities: int,
                      preparation_greedy_steps: int,
                      preparation_q_gap_total: float,
@@ -750,7 +758,9 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      preparation_ready_opportunities: int,
                      preparation_ready_fallback_steps: int,
                      preparation_ready_displacements: Counter,
-                     preparation_ready_displacement_reasons: Counter) -> EpisodeDiagnostics:
+                     preparation_ready_displacement_reasons: Counter,
+                     preparation_priority_clear_steps: int,
+                     preparation_priority_clear_selections: int) -> EpisodeDiagnostics:
     actions = Counter(item.resolved_action or item.action for item in transitions)
     policy_actions = Counter(name for name, count in actions.items()
                              for _ in range(count) if name in ACTION_NAMES)
@@ -859,6 +869,12 @@ def _episode_summary(seed: int, policy: str, condition: str,
             sorted(gate_ready_displacements.items())),
         gate_mission_ready_displacement_reason_counts=tuple(
             sorted(gate_ready_displacement_reasons.items())),
+        gate_mission_priority_clear_unseen_steps=gate_priority_clear_steps,
+        gate_mission_priority_clear_selection_steps=(
+            gate_priority_clear_selections),
+        gate_mission_priority_clear_selection_rate=round(
+            gate_priority_clear_selections /
+            max(1, gate_priority_clear_steps), 3),
         portal_preparation_seen_opportunity_steps=preparation_seen_opportunities,
         portal_preparation_greedy_steps=preparation_greedy_steps,
         portal_preparation_greedy_rate=round(
@@ -883,6 +899,13 @@ def _episode_summary(seed: int, policy: str, condition: str,
             sorted(preparation_ready_displacements.items())),
         portal_preparation_ready_displacement_reason_counts=tuple(
             sorted(preparation_ready_displacement_reasons.items())),
+        portal_preparation_priority_clear_unseen_steps=(
+            preparation_priority_clear_steps),
+        portal_preparation_priority_clear_selection_steps=(
+            preparation_priority_clear_selections),
+        portal_preparation_priority_clear_selection_rate=round(
+            preparation_priority_clear_selections /
+            max(1, preparation_priority_clear_steps), 3),
         exploit_flags=tuple(flags), trace=tuple(trace),
     )
 
@@ -1032,11 +1055,13 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     gate_ready_opportunities = gate_ready_fallback_steps = 0
     gate_ready_displacements = Counter()
     gate_ready_displacement_reasons = Counter()
+    gate_priority_clear_steps = gate_priority_clear_selections = 0
     preparation_seen_opportunities = preparation_greedy_steps = 0
     preparation_unseen_opportunities = preparation_fallback_steps = 0
     preparation_ready_opportunities = preparation_ready_fallback_steps = 0
     preparation_ready_displacements = Counter()
     preparation_ready_displacement_reasons = Counter()
+    preparation_priority_clear_steps = preparation_priority_clear_selections = 0
     gate_q_gap_total = preparation_q_gap_total = 0.0
     for step in range(1, horizon + 1):
         mask = environment.action_mask()
@@ -1063,6 +1088,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             unseen_state_count += int(unseen)
             gate_index = ACTION_NAMES.index("Gate mission")
             preparation_index = ACTION_NAMES.index("Prepare portal")
+            fallback_action = replaced_action if preventive_rest else action
             if unseen:
                 if mask[gate_index]:
                     gate_unseen_opportunities += 1
@@ -1077,6 +1103,10 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                             gate_ready_displacement_reasons[
                                 _progression_displacement_reason(
                                     environment, chosen, preventive_rest)] += 1
+                        if (result.config.unseen_state_fallback == "heuristic" and
+                                fallback_action == gate_index):
+                            gate_priority_clear_steps += 1
+                            gate_priority_clear_selections += int(action == gate_index)
                 if mask[preparation_index]:
                     preparation_unseen_opportunities += 1
                     preparation_fallback_steps += int(action == preparation_index)
@@ -1091,6 +1121,11 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                             preparation_ready_displacement_reasons[
                                 _progression_displacement_reason(
                                     environment, chosen, preventive_rest)] += 1
+                        if (result.config.unseen_state_fallback == "heuristic" and
+                                fallback_action == preparation_index):
+                            preparation_priority_clear_steps += 1
+                            preparation_priority_clear_selections += int(
+                                action == preparation_index)
             if preventive_rest:
                 values = result.q_table.get(state)
                 rest_index = ACTION_NAMES.index("Rest")
@@ -1156,12 +1191,15 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         gate_unseen_opportunities, gate_fallback_steps,
         gate_ready_opportunities, gate_ready_fallback_steps,
         gate_ready_displacements, gate_ready_displacement_reasons,
+        gate_priority_clear_steps, gate_priority_clear_selections,
         preparation_seen_opportunities, preparation_greedy_steps,
         preparation_q_gap_total,
         preparation_unseen_opportunities, preparation_fallback_steps,
         preparation_ready_opportunities, preparation_ready_fallback_steps,
         preparation_ready_displacements,
-        preparation_ready_displacement_reasons)
+        preparation_ready_displacement_reasons,
+        preparation_priority_clear_steps,
+        preparation_priority_clear_selections)
 
 
 def _honest_verdict(differences: list[float]) -> str:
@@ -1714,6 +1752,15 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 gate_ready_displacements),
             "gate_mission_ready_displacement_reason_counts": dict(
                 gate_ready_displacement_reasons),
+            "gate_mission_priority_clear_unseen_steps": sum(
+                e.gate_mission_priority_clear_unseen_steps for e in episodes),
+            "gate_mission_priority_clear_selection_steps": sum(
+                e.gate_mission_priority_clear_selection_steps for e in episodes),
+            "gate_mission_priority_clear_selection_rate": round(
+                sum(e.gate_mission_priority_clear_selection_steps
+                    for e in episodes) /
+                max(1, sum(e.gate_mission_priority_clear_unseen_steps
+                           for e in episodes)), 3),
             "portal_preparation_seen_opportunity_steps": sum(
                 e.portal_preparation_seen_opportunity_steps for e in episodes),
             "portal_preparation_greedy_steps": sum(
@@ -1747,6 +1794,17 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 preparation_ready_displacements),
             "portal_preparation_ready_displacement_reason_counts": dict(
                 preparation_ready_displacement_reasons),
+            "portal_preparation_priority_clear_unseen_steps": sum(
+                e.portal_preparation_priority_clear_unseen_steps
+                for e in episodes),
+            "portal_preparation_priority_clear_selection_steps": sum(
+                e.portal_preparation_priority_clear_selection_steps
+                for e in episodes),
+            "portal_preparation_priority_clear_selection_rate": round(
+                sum(e.portal_preparation_priority_clear_selection_steps
+                    for e in episodes) /
+                max(1, sum(e.portal_preparation_priority_clear_unseen_steps
+                           for e in episodes)), 3),
             "maximum_action_streak": max(e.longest_action_streak for e in episodes),
             "action_counts": dict(actions),
             "action_frequencies": {name: round(value / sum(actions.values()), 3)
