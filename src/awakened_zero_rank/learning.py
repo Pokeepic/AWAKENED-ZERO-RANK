@@ -306,6 +306,9 @@ class TrainingResult:
     episode_gate_priority_clear_selections: tuple[int, ...] = ()
     episode_preparation_priority_clear_steps: tuple[int, ...] = ()
     episode_preparation_priority_clear_selections: tuple[int, ...] = ()
+    episode_preparation_ready_steps: tuple[int, ...] = ()
+    episode_preparation_blocker_counts: tuple[
+        tuple[tuple[str, int], ...], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -389,6 +392,31 @@ def summarize_training_progression(
     return tuple(summaries)
 
 
+def summarize_training_preparation_blockers(
+        result: TrainingResult) -> tuple[tuple[str, int], ...]:
+    """Aggregate authenticated blockers on preparation-ready training steps."""
+    episode_count = len(result.episode_rewards)
+    if (len(result.episode_preparation_ready_steps) != episode_count or
+            len(result.episode_preparation_blocker_counts) != episode_count or
+            len(result.episode_preparation_priority_clear_steps) != episode_count):
+        raise ValueError("Training preparation blocker diagnostics are unavailable")
+    blockers = Counter()
+    for episode_blockers in result.episode_preparation_blocker_counts:
+        for reason, count in episode_blockers:
+            if not isinstance(reason, str) or type(count) is not int or count < 0:
+                raise ValueError("Training preparation blocker diagnostics are invalid")
+            blockers[reason] += count
+    ready = result.episode_preparation_ready_steps
+    if any(type(value) is not int or value < 0 for value in ready):
+        raise ValueError("Training preparation blocker diagnostics are invalid")
+    for ready_steps, clear_steps, episode_blockers in zip(
+            ready, result.episode_preparation_priority_clear_steps,
+            result.episode_preparation_blocker_counts):
+        if clear_steps + sum(count for _, count in episode_blockers) != ready_steps:
+            raise ValueError("Training preparation blockers do not reconcile")
+    return tuple(sorted(blockers.items()))
+
+
 @dataclass(frozen=True)
 class TrainingActionExposure:
     action: str
@@ -462,6 +490,8 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     gate_clear_steps_by_episode, gate_clear_selections_by_episode = [], []
     preparation_clear_steps_by_episode = []
     preparation_clear_selections_by_episode = []
+    preparation_ready_steps_by_episode = []
+    preparation_blockers_by_episode = []
     for episode in range(config.episodes):
         episode_seed = rng.randrange(2**31)
         condition = config.training_conditions[episode % len(config.training_conditions)]
@@ -472,6 +502,8 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         total = shaped_total = 0.0
         gate_clear_steps = gate_clear_selections = 0
         preparation_clear_steps = preparation_clear_selections = 0
+        preparation_ready_steps = 0
+        preparation_blockers = Counter()
         episode_states = set()
         epsilon = (config.epsilon_start if config.episodes == 1 else config.epsilon_start +
                    (config.epsilon_end - config.epsilon_start) * episode / (config.episodes - 1))
@@ -488,6 +520,12 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             preparation_index = ACTION_NAMES.index("Prepare portal")
             gate_clear_steps += int(heuristic == gate_index)
             preparation_clear_steps += int(heuristic == preparation_index)
+            if _portal_preparation_ready(env.environment):
+                preparation_ready_steps += 1
+                if heuristic != preparation_index:
+                    blocker = ACTION_NAMES[heuristic]
+                    preparation_blockers[_progression_displacement_reason(
+                        env.environment, blocker, False)] += 1
             clear_progression = (heuristic if heuristic in progression else None)
             if (config.priority_clear_progression_sampling_rate > 0 and
                     clear_progression is not None and
@@ -533,6 +571,9 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         preparation_clear_steps_by_episode.append(preparation_clear_steps)
         preparation_clear_selections_by_episode.append(
             preparation_clear_selections)
+        preparation_ready_steps_by_episode.append(preparation_ready_steps)
+        preparation_blockers_by_episode.append(tuple(
+            sorted(preparation_blockers.items())))
     visit_table = {
         state: [visits[(state, index)] for index in range(len(ACTION_NAMES))]
         for state in table
@@ -543,8 +584,10 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(gate_clear_steps_by_episode),
                           tuple(gate_clear_selections_by_episode),
                           tuple(preparation_clear_steps_by_episode),
-                          tuple(preparation_clear_selections_by_episode))
-CHECKPOINT_VERSION = 12
+                          tuple(preparation_clear_selections_by_episode),
+                          tuple(preparation_ready_steps_by_episode),
+                          tuple(preparation_blockers_by_episode))
+CHECKPOINT_VERSION = 13
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -576,6 +619,10 @@ def _checkpoint_data(result: TrainingResult) -> dict:
             result.episode_preparation_priority_clear_steps),
         "episode_preparation_priority_clear_selections": (
             result.episode_preparation_priority_clear_selections),
+        "episode_preparation_ready_steps": (
+            result.episode_preparation_ready_steps),
+        "episode_preparation_blocker_counts": (
+            result.episode_preparation_blocker_counts),
     }
 
 
@@ -599,7 +646,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -642,6 +689,11 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
             "episode_preparation_priority_clear_steps", ())),
         episode_preparation_priority_clear_selections=tuple(data.get(
             "episode_preparation_priority_clear_selections", ())),
+        episode_preparation_ready_steps=tuple(data.get(
+            "episode_preparation_ready_steps", ())),
+        episode_preparation_blocker_counts=tuple(
+            tuple((str(reason), int(count)) for reason, count in episode)
+            for episode in data.get("episode_preparation_blocker_counts", ())),
     )
 
 @dataclass(frozen=True)
@@ -1065,12 +1117,17 @@ def _progression_displacement_reason(environment: LearningEnvironment,
                                      action: str,
                                      preventive_rest: bool) -> str:
     p, state = environment.simulation.state.protagonist, environment.simulation.state
+    if action == "Seek treatment" and (
+            p.injury_severity >= 2 or (p.injury_severity and p.health < 65)):
+        return "urgent treatment"
     if action == "Eat" and p.hunger >= 65:
         return "urgent hunger"
     if action == "Rest" and preventive_rest:
         return "preventive recovery"
     if action == "Rest" and (p.energy <= 28 or p.health < 45):
         return "urgent recovery"
+    if action == "Pay rent arrears" and p.rent_arrears and p.money > 600:
+        return "rent recovery"
     if (action == "Part-time work" and p.money < p.rent_cost and
             state.clock.day <= p.rent_due_day):
         return "rent preparation"

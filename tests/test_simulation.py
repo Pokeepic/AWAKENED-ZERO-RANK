@@ -24,7 +24,8 @@ from awakened_zero_rank.learning import (
     load_checkpoint, load_scenario_suite_report, save_checkpoint,
     save_scenario_suite_report,
     scenario_suite_digest, scenario_suite_report, summarize_training_actions,
-    summarize_training_conditions, summarize_training_progression,
+    summarize_training_conditions, summarize_training_preparation_blockers,
+    summarize_training_progression,
     train_q_learning,
 )
 
@@ -604,6 +605,9 @@ class SimulationTests(unittest.TestCase):
         trained = train_q_learning(129, QLearningConfig(episodes=3, horizon=8))
         self.assertEqual(len(trained.episode_gate_priority_clear_steps), 3)
         self.assertEqual(len(trained.episode_preparation_priority_clear_steps), 3)
+        self.assertEqual(len(trained.episode_preparation_ready_steps), 3)
+        self.assertEqual(len(trained.episode_preparation_blocker_counts), 3)
+        summarize_training_preparation_blockers(trained)
         summaries = summarize_training_progression(trained)
         self.assertEqual(tuple(item.action for item in summaries),
                          ("Gate mission", "Prepare portal"))
@@ -615,12 +619,23 @@ class SimulationTests(unittest.TestCase):
             episode_gate_priority_clear_selections=(1, 1, 0),
             episode_preparation_priority_clear_steps=(0, 0, 0),
             episode_preparation_priority_clear_selections=(0, 0, 0),
+            episode_preparation_ready_steps=(2, 1, 0),
+            episode_preparation_blocker_counts=(
+                (("urgent hunger", 2),), (("rent preparation", 1),), ()),
         )
         measured_summaries = summarize_training_progression(measured)
         self.assertEqual(measured_summaries[0].priority_clear_steps, 3)
         self.assertEqual(measured_summaries[0].selection_count, 2)
         self.assertEqual(measured_summaries[0].selection_rate, 0.667)
         self.assertIsNone(measured_summaries[1].selection_rate)
+        self.assertEqual(
+            summarize_training_preparation_blockers(measured),
+            (("rent preparation", 1), ("urgent hunger", 2)))
+        with self.assertRaises(ValueError):
+            summarize_training_preparation_blockers(replace(
+                measured, episode_preparation_blocker_counts=(
+                    (("urgent hunger", 1),),
+                    (("rent preparation", 1),), ())))
         with self.assertRaises(ValueError):
             summarize_training_progression(replace(
                 trained, episode_gate_priority_clear_steps=()))
@@ -1206,12 +1221,26 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 12
+            legacy.pop("episode_preparation_ready_steps")
+            legacy.pop("episode_preparation_blocker_counts")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            legacy_blockers = replace(
+                trained, episode_preparation_ready_steps=(),
+                episode_preparation_blocker_counts=())
+            migrated_v12 = load_checkpoint(first)
+            self.assertEqual(migrated_v12, legacy_blockers)
+            with self.assertRaises(ValueError):
+                summarize_training_preparation_blockers(migrated_v12)
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 11
             legacy["config"].pop("priority_clear_progression_sampling_rate")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
-            self.assertEqual(load_checkpoint(first), trained)
+            self.assertEqual(load_checkpoint(first), legacy_blockers)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 10
             legacy.pop("episode_gate_priority_clear_steps")
@@ -1222,7 +1251,7 @@ class SimulationTests(unittest.TestCase):
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
             legacy_training = replace(
-                trained, episode_gate_priority_clear_steps=(),
+                legacy_blockers, episode_gate_priority_clear_steps=(),
                 episode_gate_priority_clear_selections=(),
                 episode_preparation_priority_clear_steps=(),
                 episode_preparation_priority_clear_selections=())

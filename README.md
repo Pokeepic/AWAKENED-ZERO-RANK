@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.64.0** · **102 automated tests**
+Current release: **0.65.0** · **102 automated tests**
 
 ## Design principles
 
@@ -184,6 +184,8 @@ Update 0.63 — Authenticated Training Readiness records per-episode priority-cl
 
 Update 0.64 — Priority-Clear Sampling Pilot adds a separate, seeded training-only probability of selecting Gate mission or preparation when that action already leads the heuristic's valid priorities. The option defaults to zero, is mutually exclusive with older progression exploration modes, and advances checkpoints to schema 12. On the established pilot, 10% and 25% rates still produced zero clear preparation exposure, reduced clear Gate exposure from 30 steps to three, completed six missions versus the broad sampler's seven, and changed the pooled deficit only from 13.879 to 13.825. Both retained 100% survival and rent recovery with no exploit flags, but remained **baseline remains better**. No nonzero default was adopted.
 
+Update 0.65 — Training Preparation Blocker Audit records every preparation-ready training step and its higher-priority reason per episode, with exact reconciliation against priority-clear steps. In the established broad-sampler pilot, training reached 15 preparation-ready steps and all 15 were blocked by rent preparation: two in standard, three in injury recovery, and ten in Gate crisis. No safety, preventive-safeguard, or unexplained blocker appeared. Checkpoint schema 13 authenticates the evidence; schema-12 checkpoints load with blocker diagnostics explicitly unavailable. Rent priority remains unchanged, no larger experiment was run, and the honest verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -191,7 +193,7 @@ Update 0.64 — Priority-Clear Sampling Pilot adds a separate, seeded training-o
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — clear sampler rejected in Update 0.64 | Priority-clear sampling at 10% and 25% still produced zero clear preparation exposure, reduced Gate coverage and missions, and left the pooled deficit at 13.825 | Keep every progression sampler default-off; diagnose which prerequisite priority prevents clear preparation states during training before trying another sampler | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — rent blocker isolated in Update 0.65 | All 15 preparation-ready training steps were blocked by the legitimate rent-preparation priority, concentrated in Gate crisis; no safety or unexplained blocker appeared | Keep fallback rent priority intact; test a training-only economically prepared curriculum variant before altering sampling or rewards | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -272,6 +274,7 @@ Completed updates are grouped for readability:
 | 0.62 | Priority-clear seen-state Q evidence with honest null reporting |
 | 0.63 | Schema-11 authenticated priority-clear training coverage |
 | 0.64 | Default-off priority-clear sampler, schema 12, and rejected bounded sweep |
+| 0.65 | Schema-13 authenticated preparation blockers with rent priority isolated |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 
