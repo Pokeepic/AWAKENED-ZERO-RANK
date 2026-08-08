@@ -683,6 +683,9 @@ class EpisodeDiagnostics:
     gate_mission_unseen_opportunity_steps: int
     gate_mission_fallback_steps: int
     gate_mission_fallback_rate: float
+    gate_mission_ready_unseen_opportunity_steps: int
+    gate_mission_ready_fallback_steps: int
+    gate_mission_ready_fallback_rate: float
     portal_preparation_seen_opportunity_steps: int
     portal_preparation_greedy_steps: int
     portal_preparation_greedy_rate: float
@@ -691,6 +694,9 @@ class EpisodeDiagnostics:
     portal_preparation_unseen_opportunity_steps: int
     portal_preparation_fallback_steps: int
     portal_preparation_fallback_rate: float
+    portal_preparation_ready_unseen_opportunity_steps: int
+    portal_preparation_ready_fallback_steps: int
+    portal_preparation_ready_fallback_rate: float
     exploit_flags: tuple[str, ...]
     trace: tuple[DiagnosticStep, ...]
 
@@ -728,11 +734,15 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      gate_q_gap_total: float,
                      gate_unseen_opportunities: int,
                      gate_fallback_steps: int,
+                     gate_ready_opportunities: int,
+                     gate_ready_fallback_steps: int,
                      preparation_seen_opportunities: int,
                      preparation_greedy_steps: int,
                      preparation_q_gap_total: float,
                      preparation_unseen_opportunities: int,
-                     preparation_fallback_steps: int) -> EpisodeDiagnostics:
+                     preparation_fallback_steps: int,
+                     preparation_ready_opportunities: int,
+                     preparation_ready_fallback_steps: int) -> EpisodeDiagnostics:
     actions = Counter(item.resolved_action or item.action for item in transitions)
     policy_actions = Counter(name for name, count in actions.items()
                              for _ in range(count) if name in ACTION_NAMES)
@@ -833,6 +843,10 @@ def _episode_summary(seed: int, policy: str, condition: str,
         gate_mission_fallback_steps=gate_fallback_steps,
         gate_mission_fallback_rate=round(
             gate_fallback_steps / max(1, gate_unseen_opportunities), 3),
+        gate_mission_ready_unseen_opportunity_steps=gate_ready_opportunities,
+        gate_mission_ready_fallback_steps=gate_ready_fallback_steps,
+        gate_mission_ready_fallback_rate=round(
+            gate_ready_fallback_steps / max(1, gate_ready_opportunities), 3),
         portal_preparation_seen_opportunity_steps=preparation_seen_opportunities,
         portal_preparation_greedy_steps=preparation_greedy_steps,
         portal_preparation_greedy_rate=round(
@@ -846,9 +860,26 @@ def _episode_summary(seed: int, policy: str, condition: str,
         portal_preparation_fallback_rate=round(
             preparation_fallback_steps /
             max(1, preparation_unseen_opportunities), 3),
+        portal_preparation_ready_unseen_opportunity_steps=(
+            preparation_ready_opportunities),
+        portal_preparation_ready_fallback_steps=(
+            preparation_ready_fallback_steps),
+        portal_preparation_ready_fallback_rate=round(
+            preparation_ready_fallback_steps /
+            max(1, preparation_ready_opportunities), 3),
         exploit_flags=tuple(flags), trace=tuple(trace),
     )
 
+
+def _gate_mission_ready(environment: LearningEnvironment) -> bool:
+    p = environment.simulation.state.protagonist
+    return (environment.simulation.state.active_portal_plan is not None and
+            p.health >= 60 and p.energy >= 42)
+
+
+def _portal_preparation_ready(environment: LearningEnvironment) -> bool:
+    p, state = environment.simulation.state.protagonist, environment.simulation.state
+    return p.guild_registered and state.gate_alert_level >= 2 and p.health >= 65
 
 def heuristic_action(environment: LearningEnvironment, mask: tuple[int, ...]) -> int:
     """Choose from explicit safety and progression rules, independent of utility scores."""
@@ -865,9 +896,9 @@ def heuristic_action(environment: LearningEnvironment, mask: tuple[int, ...]) ->
         priorities.append("Pay rent arrears")
     if p.money < p.rent_cost and state.clock.day <= p.rent_due_day:
         priorities.append("Part-time work")
-    if state.active_portal_plan and p.health >= 60 and p.energy >= 42:
+    if _gate_mission_ready(environment):
         priorities.append("Gate mission")
-    if p.guild_registered and state.gate_alert_level >= 2 and p.health >= 65:
+    if _portal_preparation_ready(environment):
         priorities.append("Prepare portal")
     if p.guild_registered and p.energy >= 45:
         priorities.append("Guild patrol")
@@ -963,8 +994,10 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     visit_evidence_steps = zero_visit_action_count = selected_action_visit_total = 0
     gate_seen_opportunities = gate_greedy_steps = 0
     gate_unseen_opportunities = gate_fallback_steps = 0
+    gate_ready_opportunities = gate_ready_fallback_steps = 0
     preparation_seen_opportunities = preparation_greedy_steps = 0
     preparation_unseen_opportunities = preparation_fallback_steps = 0
+    preparation_ready_opportunities = preparation_ready_fallback_steps = 0
     gate_q_gap_total = preparation_q_gap_total = 0.0
     for step in range(1, horizon + 1):
         mask = environment.action_mask()
@@ -995,9 +1028,18 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                 if mask[gate_index]:
                     gate_unseen_opportunities += 1
                     gate_fallback_steps += int(action == gate_index)
+                    gate_ready = _gate_mission_ready(environment)
+                    if gate_ready:
+                        gate_ready_opportunities += 1
+                        gate_ready_fallback_steps += int(action == gate_index)
                 if mask[preparation_index]:
                     preparation_unseen_opportunities += 1
                     preparation_fallback_steps += int(action == preparation_index)
+                    preparation_ready = _portal_preparation_ready(environment)
+                    if preparation_ready:
+                        preparation_ready_opportunities += 1
+                        preparation_ready_fallback_steps += int(
+                            action == preparation_index)
             if preventive_rest:
                 values = result.q_table.get(state)
                 rest_index = ACTION_NAMES.index("Rest")
@@ -1061,9 +1103,11 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         zero_visit_action_count, selected_action_visit_total,
         gate_seen_opportunities, gate_greedy_steps, gate_q_gap_total,
         gate_unseen_opportunities, gate_fallback_steps,
+        gate_ready_opportunities, gate_ready_fallback_steps,
         preparation_seen_opportunities, preparation_greedy_steps,
         preparation_q_gap_total, preparation_unseen_opportunities,
-        preparation_fallback_steps)
+        preparation_fallback_steps, preparation_ready_opportunities,
+        preparation_ready_fallback_steps)
 
 
 def _honest_verdict(differences: list[float]) -> str:
@@ -1592,6 +1636,14 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.gate_mission_fallback_steps for e in episodes) /
                 max(1, sum(e.gate_mission_unseen_opportunity_steps
                            for e in episodes)), 3),
+            "gate_mission_ready_unseen_opportunity_steps": sum(
+                e.gate_mission_ready_unseen_opportunity_steps for e in episodes),
+            "gate_mission_ready_fallback_steps": sum(
+                e.gate_mission_ready_fallback_steps for e in episodes),
+            "gate_mission_ready_fallback_rate": round(
+                sum(e.gate_mission_ready_fallback_steps for e in episodes) /
+                max(1, sum(e.gate_mission_ready_unseen_opportunity_steps
+                           for e in episodes)), 3),
             "portal_preparation_seen_opportunity_steps": sum(
                 e.portal_preparation_seen_opportunity_steps for e in episodes),
             "portal_preparation_greedy_steps": sum(
@@ -1611,6 +1663,15 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "portal_preparation_fallback_rate": round(
                 sum(e.portal_preparation_fallback_steps for e in episodes) /
                 max(1, sum(e.portal_preparation_unseen_opportunity_steps
+                           for e in episodes)), 3),
+            "portal_preparation_ready_unseen_opportunity_steps": sum(
+                e.portal_preparation_ready_unseen_opportunity_steps
+                for e in episodes),
+            "portal_preparation_ready_fallback_steps": sum(
+                e.portal_preparation_ready_fallback_steps for e in episodes),
+            "portal_preparation_ready_fallback_rate": round(
+                sum(e.portal_preparation_ready_fallback_steps for e in episodes) /
+                max(1, sum(e.portal_preparation_ready_unseen_opportunity_steps
                            for e in episodes)), 3),
             "maximum_action_streak": max(e.longest_action_streak for e in episodes),
             "action_counts": dict(actions),
