@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.66.0** · **103 automated tests**
+Current release: **0.67.0** · **103 automated tests**
 
 ## Design principles
 
@@ -188,6 +188,8 @@ Update 0.65 — Training Preparation Blocker Audit records every preparation-rea
 
 Update 0.66 — Training Rent Reserve Pilot adds a validated, checkpoint-authenticated option that raises cash to exactly one rent payment only for before-due, no-arrears training starts; financial-pressure and evaluation states remain untouched. The option defaults off and advances checkpoints to schema 14. With the broad 10% sampler, the reserve created two clear preparation steps but selected neither and left the pooled deficit and seven missions exactly unchanged. Combining it with priority-clear sampling at 10% or 25% still selected 0/2 preparation steps, reduced missions to six or five, and worsened the deficit to 15.244 or 17.780. Survival, rent recovery, and behavior variety remained intact, but all variants were **baseline remains better**, so no option was adopted by default.
 
+Update 0.67 — Horizon Alignment Evidence records whether each evaluation scenario exactly matches the fixed horizon used to train its policy and makes missing or mismatched evidence an explicit adoption blocker. Scenario-report schema 7 authenticates this field; schema-6 and older reports load with alignment explicitly unknown. The existing multi-horizon test now identifies its five-step scenario as aligned and its nine-step scenario as mismatched. This is diagnostics only: training, evaluation behavior, checkpoints, and the honest **baseline remains better** verdict are unchanged.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -278,6 +280,7 @@ Completed updates are grouped for readability:
 | 0.64 | Default-off priority-clear sampler, schema 12, and rejected bounded sweep |
 | 0.65 | Schema-13 authenticated preparation blockers with rent priority isolated |
 | 0.66 | Default-off training rent reserve, schema 14, and rejected bounded pilot |
+| 0.67 | Authenticated fixed-horizon alignment evidence and scenario-report schema 7 |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

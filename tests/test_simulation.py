@@ -1468,6 +1468,10 @@ class SimulationTests(unittest.TestCase):
         second = evaluate_scenario_suite(trained, scenarios)
         self.assertEqual(first, second)
         self.assertEqual(tuple(item.horizon for item in first.scenarios), (5, 9))
+        self.assertEqual(tuple(item.training_horizon_matches for item in first.scenarios),
+                         (True, False))
+        self.assertIn("longer stability: training horizon alignment is mismatched",
+                      assess_policy_adoption(trained, first).blockers)
         self.assertEqual(first.total_episodes, 4)
         self.assertIn(first.verdict, {"promising", "inconclusive", "baseline remains better"})
 
@@ -1523,7 +1527,7 @@ class SimulationTests(unittest.TestCase):
         second = scenario_suite_report(suite)
         payload = json.loads(first)
         self.assertEqual(first, second)
-        self.assertEqual(payload["report_version"], 6)
+        self.assertEqual(payload["report_version"], 7)
         self.assertEqual(payload["checkpoint_sha256"], checkpoint_digest(trained))
         self.assertEqual(payload["sha256"], scenario_suite_digest(suite))
         self.assertEqual(payload["total_episodes"], 4)
@@ -1536,6 +1540,7 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("rl_prepared_success_rate", payload["scenarios"][0])
         self.assertTrue(payload["scenarios"][0]["training_condition_covered"])
         self.assertEqual(payload["scenarios"][0]["training_condition_episodes"], 2)
+        self.assertTrue(payload["scenarios"][0]["training_horizon_matches"])
         with TemporaryDirectory() as directory:
             first_path = Path(directory) / "first.json"
             second_path = Path(directory) / "second.json"
@@ -1546,20 +1551,20 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(load_scenario_suite_report(first_path), suite)
             legacy = json.loads(first_path.read_text(encoding="utf-8"))
             legacy.pop("sha256")
-            legacy["report_version"] = 5
+            legacy["report_version"] = 6
             for scenario in legacy["scenarios"]:
-                scenario.pop("training_condition_episodes")
+                scenario.pop("training_horizon_matches")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first_path.write_text(json.dumps(legacy), encoding="utf-8")
-            restored_v5 = load_scenario_suite_report(first_path)
+            restored_v6 = load_scenario_suite_report(first_path)
             self.assertTrue(all(item.training_condition_covered
-                                for item in restored_v5.scenarios))
-            self.assertTrue(all(item.training_condition_episodes is None
-                                for item in restored_v5.scenarios))
-            self.assertTrue(any("training condition exposure is unknown" in blocker
+                                for item in restored_v6.scenarios))
+            self.assertTrue(all(item.training_horizon_matches is None
+                                for item in restored_v6.scenarios))
+            self.assertTrue(any("training horizon alignment is unknown" in blocker
                                 for blocker in assess_policy_adoption(
-                                    trained, restored_v5).blockers))
+                                    trained, restored_v6).blockers))
             legacy = json.loads(first)
             legacy.pop("sha256")
             legacy["report_version"] = 1
@@ -1571,7 +1576,8 @@ class SimulationTests(unittest.TestCase):
                               "utility_preparation_coverage", "rl_prepared_success_rate",
                               "utility_prepared_success_rate",
                               "training_condition_covered",
-                              "training_condition_episodes"):
+                              "training_condition_episodes",
+                              "training_horizon_matches"):
                     scenario.pop(field)
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -1584,6 +1590,8 @@ class SimulationTests(unittest.TestCase):
             self.assertTrue(all(item.training_condition_covered is None
                                 for item in restored_legacy.scenarios))
             self.assertTrue(all(item.training_condition_episodes is None
+                                for item in restored_legacy.scenarios))
+            self.assertTrue(all(item.training_horizon_matches is None
                                 for item in restored_legacy.scenarios))
             legacy_decision = assess_policy_adoption(trained, restored_legacy)
             self.assertTrue(any("training condition coverage is unknown" in blocker
