@@ -244,6 +244,7 @@ class QLearningConfig:
     preventive_rest_threshold: int = 0
     preventive_rest_max_injury_severity: int = 0
     curriculum: bool = True
+    training_rent_reserve: bool = False
     training_conditions: tuple[str, ...] = ("standard",)
     unseen_state_fallback: str = "first_valid"
 
@@ -283,6 +284,8 @@ class QLearningConfig:
                 not 0 <= self.preventive_rest_max_injury_severity <= 4):
             raise ValueError(
                 "preventive_rest_max_injury_severity must be an integer from 0 to 4")
+        if type(self.training_rent_reserve) is not bool:
+            raise ValueError("training_rent_reserve must be a boolean")
         if self.unseen_state_fallback not in {"first_valid", "heuristic"}:
             raise ValueError("unknown unseen-state fallback")
 
@@ -481,6 +484,16 @@ def _greedy_action(values: list[float], mask: tuple[int, ...]) -> int:
     return max(valid, key=lambda index: (values[index], -index))
 
 
+def _apply_training_rent_reserve(environment: TrainingEnvironment) -> bool:
+    """Provide a training-only rent reserve without altering arrears scenarios."""
+    p, clock = environment.simulation.state.protagonist, environment.simulation.state.clock
+    if p.rent_arrears or clock.day > p.rent_due_day:
+        return False
+    previous = p.money
+    p.money = max(p.money, p.rent_cost)
+    return p.money != previous
+
+
 def train_q_learning(training_seed: int, config: QLearningConfig | None = None) -> TrainingResult:
     """Train reproducible masked Q-learning with curriculum and count exploration."""
     config = config or QLearningConfig()
@@ -499,6 +512,10 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         episode_conditions.append(condition)
         env = TrainingEnvironment(episode_seed, config.horizon)
         observation, info = env.reset(seed=episode_seed, options={"condition": condition})
+        if config.training_rent_reserve and _apply_training_rent_reserve(env):
+            observation = env.environment.observe()
+            if np is not None:
+                observation = np.asarray(observation, dtype=np.float32)
         total = shaped_total = 0.0
         gate_clear_steps = gate_clear_selections = 0
         preparation_clear_steps = preparation_clear_selections = 0
@@ -587,7 +604,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(preparation_clear_selections_by_episode),
                           tuple(preparation_ready_steps_by_episode),
                           tuple(preparation_blockers_by_episode))
-CHECKPOINT_VERSION = 13
+CHECKPOINT_VERSION = 14
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -646,7 +663,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -666,6 +683,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data.setdefault("progression_exploration_bonus", 0.0)
     config_data.setdefault("progression_sampling_rate", 0.0)
     config_data.setdefault("priority_clear_progression_sampling_rate", 0.0)
+    config_data.setdefault("training_rent_reserve", False)
     config_data.setdefault("preventive_rest_threshold", 0)
     config_data.setdefault(
         "preventive_rest_max_injury_severity",

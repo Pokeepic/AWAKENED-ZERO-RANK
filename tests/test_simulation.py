@@ -15,6 +15,7 @@ from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
 from awakened_zero_rank.learning import (
     ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
+    _apply_training_rent_reserve,
     EvaluationScenario,
     abstract_state, assess_policy_adoption, checkpoint_digest,
     compare_utility_and_rl, curriculum_reward,
@@ -1193,6 +1194,8 @@ class SimulationTests(unittest.TestCase):
             QLearningConfig(preventive_rest_max_injury_severity=5)
         with self.assertRaises(ValueError):
             QLearningConfig(preventive_rest_max_injury_severity=True)
+        with self.assertRaises(ValueError):
+            QLearningConfig(training_rent_reserve=1)
         config = QLearningConfig(episodes=2, horizon=5,
                                  progression_sampling_rate=0.1)
         self.assertEqual(train_q_learning(131, config), train_q_learning(131, config))
@@ -1201,6 +1204,24 @@ class SimulationTests(unittest.TestCase):
             priority_clear_progression_sampling_rate=0.1)
         self.assertEqual(train_q_learning(133, clear_config),
                          train_q_learning(133, clear_config))
+        reserve_config = QLearningConfig(
+            episodes=2, horizon=5, training_rent_reserve=True)
+        self.assertEqual(train_q_learning(135, reserve_config),
+                         train_q_learning(135, reserve_config))
+
+    def test_training_rent_reserve_preserves_arrears_conditions(self) -> None:
+        standard = TrainingEnvironment(seed=7, horizon=3)
+        standard.reset(seed=7)
+        p = standard.simulation.state.protagonist
+        self.assertLess(p.money, p.rent_cost)
+        self.assertTrue(_apply_training_rent_reserve(standard))
+        self.assertEqual(p.money, p.rent_cost)
+        financial = TrainingEnvironment(seed=7, horizon=3)
+        financial.reset(seed=7, options={"condition": "financial_pressure"})
+        p = financial.simulation.state.protagonist
+        before = (p.money, p.rent_arrears)
+        self.assertFalse(_apply_training_rent_reserve(financial))
+        self.assertEqual((p.money, p.rent_arrears), before)
 
     def test_training_records_environment_and_curriculum_returns(self) -> None:
         result = train_q_learning(18, QLearningConfig(episodes=3, horizon=8))
@@ -1220,6 +1241,13 @@ class SimulationTests(unittest.TestCase):
             save_checkpoint(restored, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
+            legacy.pop("sha256")
+            legacy["checkpoint_version"] = 13
+            legacy["config"].pop("training_rent_reserve")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_checkpoint(first), trained)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 12
             legacy.pop("episode_preparation_ready_steps")
