@@ -544,7 +544,7 @@ class SimulationTests(unittest.TestCase):
 
     def test_training_cycles_conditions_reproducibly(self) -> None:
         config = QLearningConfig(
-            episodes=4, horizon=5,
+            episodes=4, horizon=5, training_horizons=(3, 5),
             training_conditions=("standard", "compound_crisis"),
         )
         first = train_q_learning(109, config)
@@ -553,10 +553,15 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(first.episode_conditions, (
             "standard", "compound_crisis", "standard", "compound_crisis",
         ))
+        self.assertEqual(first.episode_horizons, (3, 5, 3, 5))
         with TemporaryDirectory() as directory:
             path = Path(directory) / "conditioned.json"
             save_checkpoint(first, path)
             self.assertEqual(load_checkpoint(path), first)
+        with self.assertRaises(ValueError):
+            QLearningConfig(training_horizons=(3, 0))
+        with self.assertRaises(ValueError):
+            QLearningConfig(training_horizons=(True,))
         with self.assertRaises(ValueError):
             QLearningConfig(training_conditions=())
         with self.assertRaises(ValueError):
@@ -1228,6 +1233,7 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(len(result.episode_rewards), 3)
         self.assertEqual(len(result.training_rewards), 3)
         self.assertEqual(result.state_count, len(result.q_table))
+        self.assertEqual(result.episode_horizons, (8, 8, 8))
         self.assertEqual(len(result.episode_state_counts), 3)
         self.assertTrue(all(1 <= count <= 9 for count in result.episode_state_counts))
         self.assertNotEqual(result.episode_rewards, result.training_rewards)
@@ -1241,6 +1247,14 @@ class SimulationTests(unittest.TestCase):
             save_checkpoint(restored, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
+            legacy.pop("sha256")
+            legacy["checkpoint_version"] = 14
+            legacy["config"].pop("training_horizons")
+            legacy.pop("episode_horizons")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_checkpoint(first), trained)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 13
             legacy["config"].pop("training_rent_reserve")

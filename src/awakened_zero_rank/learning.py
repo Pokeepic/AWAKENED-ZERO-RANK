@@ -233,6 +233,7 @@ GymnasiumEnvironment = TrainingEnvironment
 class QLearningConfig:
     episodes: int = 40
     horizon: int = 120
+    training_horizons: tuple[int, ...] = ()
     learning_rate: float = 0.15
     discount_factor: float = 0.95
     epsilon_start: float = 0.30
@@ -250,6 +251,10 @@ class QLearningConfig:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "training_conditions", tuple(self.training_conditions))
+        horizons = tuple(self.training_horizons) or (self.horizon,)
+        object.__setattr__(self, "training_horizons", horizons)
+        if any(type(value) is not int or value < 1 for value in horizons):
+            raise ValueError("training_horizons must contain positive integers")
         if not self.training_conditions:
             raise ValueError("At least one training condition is required")
         unknown = set(self.training_conditions) - set(EVALUATION_CONDITIONS)
@@ -303,6 +308,7 @@ class TrainingResult:
     training_rewards: tuple[float, ...] = ()
     state_count: int = 0
     episode_conditions: tuple[str, ...] = ()
+    episode_horizons: tuple[int, ...] = ()
     episode_state_counts: tuple[int, ...] = ()
     visit_table: dict[tuple[int, ...], list[int]] = field(default_factory=dict)
     episode_gate_priority_clear_steps: tuple[int, ...] = ()
@@ -499,7 +505,8 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     config = config or QLearningConfig()
     rng, table = random.Random(training_seed), {}
     totals, shaped_totals, episode_seeds, episode_conditions = [], [], [], []
-    episode_state_counts, visits, action_visits = [], Counter(), Counter()
+    episode_horizons, episode_state_counts = [], []
+    visits, action_visits = Counter(), Counter()
     gate_clear_steps_by_episode, gate_clear_selections_by_episode = [], []
     preparation_clear_steps_by_episode = []
     preparation_clear_selections_by_episode = []
@@ -508,9 +515,11 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     for episode in range(config.episodes):
         episode_seed = rng.randrange(2**31)
         condition = config.training_conditions[episode % len(config.training_conditions)]
+        episode_horizon = config.training_horizons[episode % len(config.training_horizons)]
         episode_seeds.append(episode_seed)
         episode_conditions.append(condition)
-        env = TrainingEnvironment(episode_seed, config.horizon)
+        episode_horizons.append(episode_horizon)
+        env = TrainingEnvironment(episode_seed, episode_horizon)
         observation, info = env.reset(seed=episode_seed, options={"condition": condition})
         if config.training_rent_reserve and _apply_training_rent_reserve(env):
             observation = env.environment.observe()
@@ -597,14 +606,14 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     }
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table), tuple(episode_conditions),
-                          tuple(episode_state_counts), visit_table,
+                          tuple(episode_horizons), tuple(episode_state_counts), visit_table,
                           tuple(gate_clear_steps_by_episode),
                           tuple(gate_clear_selections_by_episode),
                           tuple(preparation_clear_steps_by_episode),
                           tuple(preparation_clear_selections_by_episode),
                           tuple(preparation_ready_steps_by_episode),
                           tuple(preparation_blockers_by_episode))
-CHECKPOINT_VERSION = 14
+CHECKPOINT_VERSION = 15
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -617,6 +626,7 @@ def _checkpoint_data(result: TrainingResult) -> dict:
         "episode_rewards": result.episode_rewards,
         "episode_seeds": result.episode_seeds,
         "episode_conditions": result.episode_conditions,
+        "episode_horizons": result.episode_horizons,
         "episode_state_counts": result.episode_state_counts,
         "training_rewards": result.training_rewards,
         "state_count": result.state_count,
@@ -663,7 +673,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -679,6 +689,8 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data = dict(data["config"])
     config_data["training_conditions"] = tuple(
         config_data.get("training_conditions", ("standard",)))
+    config_data["training_horizons"] = tuple(
+        config_data.get("training_horizons", (config_data["horizon"],)))
     config_data.setdefault("unseen_state_fallback", "first_valid")
     config_data.setdefault("progression_exploration_bonus", 0.0)
     config_data.setdefault("progression_sampling_rate", 0.0)
@@ -697,6 +709,8 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
         training_rewards=tuple(data["training_rewards"]), state_count=data["state_count"],
         episode_conditions=tuple(data.get(
             "episode_conditions", ("standard",) * len(episode_rewards))),
+        episode_horizons=tuple(data.get(
+            "episode_horizons", (config_data["horizon"],) * len(episode_rewards))),
         episode_state_counts=tuple(data.get("episode_state_counts", ())),
         visit_table=visit_table,
         episode_gate_priority_clear_steps=tuple(data.get(
@@ -1689,6 +1703,7 @@ def evaluate_scenario_suite(result: TrainingResult,
         raise ValueError("Evaluation seeds must be unique across scenarios")
     summaries, pooled = [], []
     condition_episode_counts = Counter(result.episode_conditions)
+    trained_horizons = set(result.episode_horizons)
     for scenario in scenarios:
         batch = diagnose_batch(result, scenario.evaluation_seeds,
                                horizon=scenario.horizon, worst_count=1,
@@ -1744,7 +1759,7 @@ def evaluate_scenario_suite(result: TrainingResult,
                 utility_prepared_completed / max(1, utility_prepared), 3),
             training_condition_covered=condition_episode_counts[scenario.condition] > 0,
             training_condition_episodes=condition_episode_counts[scenario.condition],
-            training_horizon_matches=scenario.horizon == result.config.horizon,
+            training_horizon_matches=scenario.horizon in trained_horizons,
         ))
     verdict = _honest_verdict(pooled)
     adoption_ready = not _adoption_blockers(tuple(summaries), verdict)
