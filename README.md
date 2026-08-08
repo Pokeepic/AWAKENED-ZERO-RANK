@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.59.0** · **101 automated tests**
+Current release: **0.60.0** · **101 automated tests**
 
 ## Design principles
 
@@ -174,6 +174,8 @@ Update 0.58 — Progression Readiness Audit applies the heuristic fallback's exi
 
 Update 0.59 — Ready Progression Displacement Audit records the exact fallback action chosen whenever a strategically ready progression action is skipped, with counts that reconcile to ready opportunities minus selections. The three missed ready Gate steps in the frozen pilot were displaced by Eat twice and Part-time work once, all in standard episodes. The 12 missed preparation steps were displaced by Eat four times, Rest four times, Part-time work twice, and Gate mission twice. These are safety, economy, or direct-progression choices rather than passive loops, so no priority change was adopted. Policy behavior, checkpoint schema 10, and the honest **baseline remains better** verdict are unchanged.
 
+Update 0.60 — Displacement Need Audit classifies each missed ready progression step as urgent hunger, urgent or preventive recovery, rent preparation, direct progression, or unexplained. All 15 misses in the frozen pilot were explained: Gate misses were urgent hunger twice and rent preparation once; preparation misses were urgent hunger four times, urgent recovery four times, rent preparation twice, and direct Gate progression twice. There were zero preventive-safeguard or unexplained displacements. Current priorities are behaving coherently, so no policy change was adopted. Checkpoint schema 10 and the honest **baseline remains better** verdict are unchanged.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -181,7 +183,7 @@ Update 0.59 — Ready Progression Displacement Audit records the exact fallback 
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — displacement audit in Update 0.59 | Every missed ready progression step was displaced by food, rest, income, or the Gate mission itself; every displacement served an immediate resource, economic, or progression objective | Retain existing priorities and default-off Rest safeguard; refine readiness to account for urgent resource and economic needs before considering another policy lever | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — need audit in Update 0.60 | All 15 missed ready progression steps were explained by urgent hunger, urgent recovery, rent preparation, or direct Gate progression; none were unexplained or caused by the preventive safeguard | Retain current priorities and default-off Rest safeguard; define priority-clear readiness for more honest opportunity reporting before considering another policy lever | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -257,6 +259,7 @@ Completed updates are grouped for readability:
 | 0.57 | Unseen-state progression opportunity and fallback-use diagnostics |
 | 0.58 | Strategically ready unseen progression opportunities and selection rates |
 | 0.59 | Exact action attribution for missed ready progression steps |
+| 0.60 | Need classification for progression displacements with zero unexplained misses |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

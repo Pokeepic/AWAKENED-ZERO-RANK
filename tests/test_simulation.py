@@ -791,6 +791,11 @@ class SimulationTests(unittest.TestCase):
                 episode.gate_mission_ready_displacement_counts),
             episode.gate_mission_ready_unseen_opportunity_steps -
             episode.gate_mission_ready_fallback_steps)
+        self.assertEqual(
+            sum(count for _, count in
+                episode.gate_mission_ready_displacement_reason_counts),
+            sum(count for _, count in
+                episode.gate_mission_ready_displacement_counts))
         self.assertGreaterEqual(episode.portal_preparation_seen_opportunity_steps, 0)
         self.assertGreaterEqual(episode.portal_preparation_greedy_steps, 0)
         self.assertLessEqual(episode.portal_preparation_greedy_steps,
@@ -823,6 +828,11 @@ class SimulationTests(unittest.TestCase):
                 episode.portal_preparation_ready_displacement_counts),
             episode.portal_preparation_ready_unseen_opportunity_steps -
             episode.portal_preparation_ready_fallback_steps)
+        self.assertEqual(
+            sum(count for _, count in
+                episode.portal_preparation_ready_displacement_reason_counts),
+            sum(count for _, count in
+                episode.portal_preparation_ready_displacement_counts))
 
     def test_diagnostic_batch_is_reproducible_and_ranks_worst_seeds(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
@@ -899,6 +909,8 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("gate_mission_ready_fallback_steps", report["rl"])
         self.assertIn("gate_mission_ready_fallback_rate", report["rl"])
         self.assertIn("gate_mission_ready_displacement_counts", report["rl"])
+        self.assertIn("gate_mission_ready_displacement_reason_counts",
+                      report["rl"])
         self.assertIn("portal_preparation_seen_opportunity_steps", report["rl"])
         self.assertIn("portal_preparation_greedy_steps", report["rl"])
         self.assertIn("portal_preparation_greedy_rate", report["rl"])
@@ -913,6 +925,8 @@ class SimulationTests(unittest.TestCase):
                       report["rl"])
         self.assertIn("portal_preparation_ready_fallback_rate", report["rl"])
         self.assertIn("portal_preparation_ready_displacement_counts",
+                      report["rl"])
+        self.assertIn("portal_preparation_ready_displacement_reason_counts",
                       report["rl"])
         self.assertEqual(report["utility"]["gate_mission_seen_opportunity_steps"], 0)
         self.assertIn("preparation_coverage", report["rl"])
