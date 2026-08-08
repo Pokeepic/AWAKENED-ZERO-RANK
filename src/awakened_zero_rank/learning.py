@@ -613,6 +613,10 @@ class PreventiveRestOverride:
     stress: int
     injury_severity: int
     slot: str
+    unseen_state: bool
+    replaced_action_q_value: float | None
+    rest_q_value: float | None
+    replaced_action_q_advantage: float | None
 
 
 @dataclass(frozen=True)
@@ -964,12 +968,22 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
             if preventive_rest:
+                values = result.q_table.get(state)
+                rest_index = ACTION_NAMES.index("Rest")
+                replaced_q = values[replaced_action] if values is not None else None
+                rest_q = values[rest_index] if values is not None else None
                 preventive_rest_overrides.append(PreventiveRestOverride(
                     step=step, replaced_action=ACTION_NAMES[replaced_action],
                     energy=before_p.energy, health=before_p.health,
                     hunger=before_p.hunger, stress=before_p.stress,
                     injury_severity=before_p.injury_severity,
-                    slot=before_slot.value,
+                    slot=before_slot.value, unseen_state=unseen,
+                    replaced_action_q_value=(
+                        round(replaced_q, 6) if replaced_q is not None else None),
+                    rest_q_value=round(rest_q, 6) if rest_q is not None else None,
+                    replaced_action_q_advantage=(
+                        round(replaced_q - rest_q, 6)
+                        if replaced_q is not None and rest_q is not None else None),
                 ))
             values = result.q_table.get(state)
             if values is not None:
@@ -1429,6 +1443,7 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         critical_energy_actions = Counter()
         strained_energy_actions = Counter()
         preventive_replaced_actions = Counter()
+        preventive_seen_advantages = []
         for episode in episodes:
             actions.update(dict(episode.action_counts))
             masked.update(dict(episode.masked_counts))
@@ -1438,6 +1453,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             strained_energy_actions.update(dict(episode.strained_energy_action_counts))
             preventive_replaced_actions.update(
                 item.replaced_action for item in episode.preventive_rest_overrides)
+            preventive_seen_advantages.extend(
+                item.replaced_action_q_advantage
+                for item in episode.preventive_rest_overrides
+                if item.replaced_action_q_advantage is not None)
         critical_decisions = sum(critical_energy_actions.values())
         strained_decisions = sum(strained_energy_actions.values())
         return {
@@ -1499,6 +1518,15 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.preventive_rest_override_share for e in episodes) / count, 3),
             "preventive_rest_replaced_action_counts": dict(
                 preventive_replaced_actions),
+            "preventive_rest_seen_override_count": len(
+                preventive_seen_advantages),
+            "preventive_rest_unseen_override_count": (
+                sum(e.preventive_rest_override_count for e in episodes) -
+                len(preventive_seen_advantages)),
+            "preventive_rest_average_replaced_q_advantage": (
+                round(sum(preventive_seen_advantages) /
+                      len(preventive_seen_advantages), 6)
+                if preventive_seen_advantages else None),
             "average_visit_evidence_steps": round(
                 sum(e.visit_evidence_steps for e in episodes) / count, 3),
             "average_zero_visit_action_share": round(

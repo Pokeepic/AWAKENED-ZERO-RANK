@@ -647,6 +647,21 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(preventive_episode.preventive_rest_override_count, 1)
         self.assertEqual(preventive_episode.preventive_rest_overrides[0].replaced_action,
                          "Eat")
+        self.assertTrue(preventive_episode.preventive_rest_overrides[0].unseen_state)
+        self.assertIsNone(
+            preventive_episode.preventive_rest_overrides[0].replaced_action_q_advantage)
+        seen_values = [0.0] * len(ACTION_NAMES)
+        seen_values[ACTION_NAMES.index("Eat")] = 2.0
+        seen_values[ACTION_NAMES.index("Rest")] = 0.5
+        seen_state = abstract_state(LearningEnvironment(201).observe())
+        seen = replace(
+            preventive, q_table={seen_state: seen_values})
+        seen_episode = diagnose_episode(201, 1, "rl", seen)
+        seen_override = seen_episode.preventive_rest_overrides[0]
+        self.assertFalse(seen_override.unseen_state)
+        self.assertEqual(seen_override.replaced_action_q_value, 2.0)
+        self.assertEqual(seen_override.rest_q_value, 0.5)
+        self.assertEqual(seen_override.replaced_action_q_advantage, 1.5)
         self.assertEqual(injured_episode.trace[0].action, "Seek treatment")
         self.assertEqual(injured_episode.preventive_rest_override_count, 0)
         self.assertEqual(first, second)
@@ -814,6 +829,11 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("average_preventive_rest_override_count", report["rl"])
         self.assertEqual(report["utility"]["average_preventive_rest_override_count"], 0)
         self.assertIn("preventive_rest_replaced_action_counts", report["rl"])
+        self.assertIn("preventive_rest_seen_override_count", report["rl"])
+        self.assertIn("preventive_rest_unseen_override_count", report["rl"])
+        self.assertIn("preventive_rest_average_replaced_q_advantage", report["rl"])
+        self.assertIsNone(
+            report["utility"]["preventive_rest_average_replaced_q_advantage"])
         self.assertIn("average_visit_evidence_steps", report["rl"])
         self.assertIn("average_zero_visit_action_share", report["rl"])
         self.assertIn("average_selected_action_visits", report["rl"])
