@@ -770,6 +770,23 @@ class SimulationTests(unittest.TestCase):
         self.assertLessEqual(episode.gate_mission_greedy_rate, 1)
         self.assertGreaterEqual(episode.gate_mission_q_gap_total, 0)
         self.assertGreaterEqual(episode.gate_mission_average_q_gap, 0)
+        self.assertLessEqual(
+            episode.gate_mission_priority_clear_seen_steps,
+            episode.gate_mission_seen_opportunity_steps)
+        self.assertLessEqual(
+            episode.gate_mission_priority_clear_greedy_steps,
+            episode.gate_mission_priority_clear_seen_steps)
+        if episode.gate_mission_priority_clear_seen_steps:
+            self.assertGreaterEqual(
+                episode.gate_mission_priority_clear_greedy_rate, 0)
+            self.assertLessEqual(
+                episode.gate_mission_priority_clear_greedy_rate, 1)
+            self.assertGreaterEqual(
+                episode.gate_mission_priority_clear_average_q_gap, 0)
+        else:
+            self.assertIsNone(episode.gate_mission_priority_clear_greedy_rate)
+            self.assertIsNone(
+                episode.gate_mission_priority_clear_average_q_gap)
         self.assertGreaterEqual(episode.gate_mission_unseen_opportunity_steps, 0)
         self.assertGreaterEqual(episode.gate_mission_fallback_steps, 0)
         self.assertLessEqual(episode.gate_mission_fallback_steps,
@@ -814,6 +831,24 @@ class SimulationTests(unittest.TestCase):
         self.assertLessEqual(episode.portal_preparation_greedy_rate, 1)
         self.assertGreaterEqual(episode.portal_preparation_q_gap_total, 0)
         self.assertGreaterEqual(episode.portal_preparation_average_q_gap, 0)
+        self.assertLessEqual(
+            episode.portal_preparation_priority_clear_seen_steps,
+            episode.portal_preparation_seen_opportunity_steps)
+        self.assertLessEqual(
+            episode.portal_preparation_priority_clear_greedy_steps,
+            episode.portal_preparation_priority_clear_seen_steps)
+        if episode.portal_preparation_priority_clear_seen_steps:
+            self.assertGreaterEqual(
+                episode.portal_preparation_priority_clear_greedy_rate, 0)
+            self.assertLessEqual(
+                episode.portal_preparation_priority_clear_greedy_rate, 1)
+            self.assertGreaterEqual(
+                episode.portal_preparation_priority_clear_average_q_gap, 0)
+        else:
+            self.assertIsNone(
+                episode.portal_preparation_priority_clear_greedy_rate)
+            self.assertIsNone(
+                episode.portal_preparation_priority_clear_average_q_gap)
         self.assertGreaterEqual(
             episode.portal_preparation_unseen_opportunity_steps, 0)
         self.assertGreaterEqual(episode.portal_preparation_fallback_steps, 0)
@@ -921,6 +956,10 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("gate_mission_greedy_steps", report["rl"])
         self.assertIn("gate_mission_greedy_rate", report["rl"])
         self.assertIn("gate_mission_average_q_gap", report["rl"])
+        self.assertIn("gate_mission_priority_clear_seen_steps", report["rl"])
+        self.assertIn("gate_mission_priority_clear_greedy_steps", report["rl"])
+        self.assertIn("gate_mission_priority_clear_greedy_rate", report["rl"])
+        self.assertIn("gate_mission_priority_clear_average_q_gap", report["rl"])
         self.assertIn("gate_mission_unseen_opportunity_steps", report["rl"])
         self.assertIn("gate_mission_fallback_steps", report["rl"])
         self.assertIn("gate_mission_fallback_rate", report["rl"])
@@ -940,6 +979,14 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("portal_preparation_greedy_steps", report["rl"])
         self.assertIn("portal_preparation_greedy_rate", report["rl"])
         self.assertIn("portal_preparation_average_q_gap", report["rl"])
+        self.assertIn("portal_preparation_priority_clear_seen_steps",
+                      report["rl"])
+        self.assertIn("portal_preparation_priority_clear_greedy_steps",
+                      report["rl"])
+        self.assertIn("portal_preparation_priority_clear_greedy_rate",
+                      report["rl"])
+        self.assertIn("portal_preparation_priority_clear_average_q_gap",
+                      report["rl"])
         self.assertIn("portal_preparation_unseen_opportunity_steps",
                       report["rl"])
         self.assertIn("portal_preparation_fallback_steps", report["rl"])

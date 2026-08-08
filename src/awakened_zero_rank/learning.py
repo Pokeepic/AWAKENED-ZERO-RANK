@@ -680,6 +680,11 @@ class EpisodeDiagnostics:
     gate_mission_greedy_rate: float
     gate_mission_q_gap_total: float
     gate_mission_average_q_gap: float
+    gate_mission_priority_clear_seen_steps: int
+    gate_mission_priority_clear_greedy_steps: int
+    gate_mission_priority_clear_greedy_rate: float | None
+    gate_mission_priority_clear_q_gap_total: float
+    gate_mission_priority_clear_average_q_gap: float | None
     gate_mission_unseen_opportunity_steps: int
     gate_mission_fallback_steps: int
     gate_mission_fallback_rate: float
@@ -696,6 +701,11 @@ class EpisodeDiagnostics:
     portal_preparation_greedy_rate: float
     portal_preparation_q_gap_total: float
     portal_preparation_average_q_gap: float
+    portal_preparation_priority_clear_seen_steps: int
+    portal_preparation_priority_clear_greedy_steps: int
+    portal_preparation_priority_clear_greedy_rate: float | None
+    portal_preparation_priority_clear_q_gap_total: float
+    portal_preparation_priority_clear_average_q_gap: float | None
     portal_preparation_unseen_opportunity_steps: int
     portal_preparation_fallback_steps: int
     portal_preparation_fallback_rate: float
@@ -742,6 +752,9 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      selected_action_visit_total: int,
                      gate_seen_opportunities: int, gate_greedy_steps: int,
                      gate_q_gap_total: float,
+                     gate_clear_seen_steps: int,
+                     gate_clear_greedy_steps: int,
+                     gate_clear_q_gap_total: float,
                      gate_unseen_opportunities: int,
                      gate_fallback_steps: int,
                      gate_ready_opportunities: int,
@@ -753,6 +766,9 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      preparation_seen_opportunities: int,
                      preparation_greedy_steps: int,
                      preparation_q_gap_total: float,
+                     preparation_clear_seen_steps: int,
+                     preparation_clear_greedy_steps: int,
+                     preparation_clear_q_gap_total: float,
                      preparation_unseen_opportunities: int,
                      preparation_fallback_steps: int,
                      preparation_ready_opportunities: int,
@@ -857,6 +873,16 @@ def _episode_summary(seed: int, policy: str, condition: str,
         gate_mission_q_gap_total=round(gate_q_gap_total, 3),
         gate_mission_average_q_gap=round(
             gate_q_gap_total / max(1, gate_seen_opportunities), 3),
+        gate_mission_priority_clear_seen_steps=gate_clear_seen_steps,
+        gate_mission_priority_clear_greedy_steps=gate_clear_greedy_steps,
+        gate_mission_priority_clear_greedy_rate=(
+            round(gate_clear_greedy_steps / gate_clear_seen_steps, 3)
+            if gate_clear_seen_steps else None),
+        gate_mission_priority_clear_q_gap_total=round(
+            gate_clear_q_gap_total, 3),
+        gate_mission_priority_clear_average_q_gap=(
+            round(gate_clear_q_gap_total / gate_clear_seen_steps, 3)
+            if gate_clear_seen_steps else None),
         gate_mission_unseen_opportunity_steps=gate_unseen_opportunities,
         gate_mission_fallback_steps=gate_fallback_steps,
         gate_mission_fallback_rate=round(
@@ -882,6 +908,20 @@ def _episode_summary(seed: int, policy: str, condition: str,
         portal_preparation_q_gap_total=round(preparation_q_gap_total, 3),
         portal_preparation_average_q_gap=round(
             preparation_q_gap_total / max(1, preparation_seen_opportunities), 3),
+        portal_preparation_priority_clear_seen_steps=(
+            preparation_clear_seen_steps),
+        portal_preparation_priority_clear_greedy_steps=(
+            preparation_clear_greedy_steps),
+        portal_preparation_priority_clear_greedy_rate=(
+            round(preparation_clear_greedy_steps /
+                  preparation_clear_seen_steps, 3)
+            if preparation_clear_seen_steps else None),
+        portal_preparation_priority_clear_q_gap_total=round(
+            preparation_clear_q_gap_total, 3),
+        portal_preparation_priority_clear_average_q_gap=(
+            round(preparation_clear_q_gap_total /
+                  preparation_clear_seen_steps, 3)
+            if preparation_clear_seen_steps else None),
         portal_preparation_unseen_opportunity_steps=(
             preparation_unseen_opportunities),
         portal_preparation_fallback_steps=preparation_fallback_steps,
@@ -1051,12 +1091,16 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     strained_energy_actions = Counter()
     visit_evidence_steps = zero_visit_action_count = selected_action_visit_total = 0
     gate_seen_opportunities = gate_greedy_steps = 0
+    gate_clear_seen_steps = gate_clear_greedy_steps = 0
+    gate_clear_q_gap_total = 0.0
     gate_unseen_opportunities = gate_fallback_steps = 0
     gate_ready_opportunities = gate_ready_fallback_steps = 0
     gate_ready_displacements = Counter()
     gate_ready_displacement_reasons = Counter()
     gate_priority_clear_steps = gate_priority_clear_selections = 0
     preparation_seen_opportunities = preparation_greedy_steps = 0
+    preparation_clear_seen_steps = preparation_clear_greedy_steps = 0
+    preparation_clear_q_gap_total = 0.0
     preparation_unseen_opportunities = preparation_fallback_steps = 0
     preparation_ready_opportunities = preparation_ready_fallback_steps = 0
     preparation_ready_displacements = Counter()
@@ -1148,14 +1192,26 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             if values is not None:
                 greedy = _greedy_action(values, mask)
                 best_valid_value = max(value for value, valid in zip(values, mask) if valid)
+                heuristic = heuristic_action(environment, mask)
                 if mask[gate_index]:
                     gate_seen_opportunities += 1
                     gate_greedy_steps += int(greedy == gate_index)
                     gate_q_gap_total += best_valid_value - values[gate_index]
+                    if heuristic == gate_index:
+                        gate_clear_seen_steps += 1
+                        gate_clear_greedy_steps += int(greedy == gate_index)
+                        gate_clear_q_gap_total += (
+                            best_valid_value - values[gate_index])
                 if mask[preparation_index]:
                     preparation_seen_opportunities += 1
                     preparation_greedy_steps += int(greedy == preparation_index)
                     preparation_q_gap_total += best_valid_value - values[preparation_index]
+                    if heuristic == preparation_index:
+                        preparation_clear_seen_steps += 1
+                        preparation_clear_greedy_steps += int(
+                            greedy == preparation_index)
+                        preparation_clear_q_gap_total += (
+                            best_valid_value - values[preparation_index])
             counts = result.visit_table.get(state)
             if counts is not None:
                 visit_evidence_steps += 1
@@ -1188,12 +1244,14 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         unseen_state_count, preventive_rest_overrides, visit_evidence_steps,
         zero_visit_action_count, selected_action_visit_total,
         gate_seen_opportunities, gate_greedy_steps, gate_q_gap_total,
-        gate_unseen_opportunities, gate_fallback_steps,
+        gate_clear_seen_steps, gate_clear_greedy_steps,
+        gate_clear_q_gap_total, gate_unseen_opportunities, gate_fallback_steps,
         gate_ready_opportunities, gate_ready_fallback_steps,
         gate_ready_displacements, gate_ready_displacement_reasons,
         gate_priority_clear_steps, gate_priority_clear_selections,
         preparation_seen_opportunities, preparation_greedy_steps,
-        preparation_q_gap_total,
+        preparation_q_gap_total, preparation_clear_seen_steps,
+        preparation_clear_greedy_steps, preparation_clear_q_gap_total,
         preparation_unseen_opportunities, preparation_fallback_steps,
         preparation_ready_opportunities, preparation_ready_fallback_steps,
         preparation_ready_displacements,
@@ -1732,6 +1790,24 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "gate_mission_average_q_gap": round(
                 sum(e.gate_mission_q_gap_total for e in episodes) /
                 max(1, sum(e.gate_mission_seen_opportunity_steps for e in episodes)), 3),
+            "gate_mission_priority_clear_seen_steps": sum(
+                e.gate_mission_priority_clear_seen_steps for e in episodes),
+            "gate_mission_priority_clear_greedy_steps": sum(
+                e.gate_mission_priority_clear_greedy_steps for e in episodes),
+            "gate_mission_priority_clear_greedy_rate": (
+                round(sum(e.gate_mission_priority_clear_greedy_steps
+                          for e in episodes) /
+                      sum(e.gate_mission_priority_clear_seen_steps
+                          for e in episodes), 3)
+                if any(e.gate_mission_priority_clear_seen_steps
+                       for e in episodes) else None),
+            "gate_mission_priority_clear_average_q_gap": (
+                round(sum(e.gate_mission_priority_clear_q_gap_total
+                          for e in episodes) /
+                      sum(e.gate_mission_priority_clear_seen_steps
+                          for e in episodes), 3)
+                if any(e.gate_mission_priority_clear_seen_steps
+                       for e in episodes) else None),
             "gate_mission_unseen_opportunity_steps": sum(
                 e.gate_mission_unseen_opportunity_steps for e in episodes),
             "gate_mission_fallback_steps": sum(
@@ -1773,6 +1849,26 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.portal_preparation_q_gap_total for e in episodes) /
                 max(1, sum(e.portal_preparation_seen_opportunity_steps
                            for e in episodes)), 3),
+            "portal_preparation_priority_clear_seen_steps": sum(
+                e.portal_preparation_priority_clear_seen_steps
+                for e in episodes),
+            "portal_preparation_priority_clear_greedy_steps": sum(
+                e.portal_preparation_priority_clear_greedy_steps
+                for e in episodes),
+            "portal_preparation_priority_clear_greedy_rate": (
+                round(sum(e.portal_preparation_priority_clear_greedy_steps
+                          for e in episodes) /
+                      sum(e.portal_preparation_priority_clear_seen_steps
+                          for e in episodes), 3)
+                if any(e.portal_preparation_priority_clear_seen_steps
+                       for e in episodes) else None),
+            "portal_preparation_priority_clear_average_q_gap": (
+                round(sum(e.portal_preparation_priority_clear_q_gap_total
+                          for e in episodes) /
+                      sum(e.portal_preparation_priority_clear_seen_steps
+                          for e in episodes), 3)
+                if any(e.portal_preparation_priority_clear_seen_steps
+                       for e in episodes) else None),
             "portal_preparation_unseen_opportunity_steps": sum(
                 e.portal_preparation_unseen_opportunity_steps for e in episodes),
             "portal_preparation_fallback_steps": sum(
