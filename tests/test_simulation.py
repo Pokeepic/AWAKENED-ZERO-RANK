@@ -1161,8 +1161,13 @@ class SimulationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             QLearningConfig(progression_sampling_rate=1.1)
         with self.assertRaises(ValueError):
+            QLearningConfig(priority_clear_progression_sampling_rate=1.1)
+        with self.assertRaises(ValueError):
             QLearningConfig(progression_exploration_bonus=0.1,
                             progression_sampling_rate=0.1)
+        with self.assertRaises(ValueError):
+            QLearningConfig(progression_sampling_rate=0.1,
+                            priority_clear_progression_sampling_rate=0.1)
         with self.assertRaises(ValueError):
             QLearningConfig(preventive_rest_threshold=101)
         with self.assertRaises(ValueError):
@@ -1176,6 +1181,11 @@ class SimulationTests(unittest.TestCase):
         config = QLearningConfig(episodes=2, horizon=5,
                                  progression_sampling_rate=0.1)
         self.assertEqual(train_q_learning(131, config), train_q_learning(131, config))
+        clear_config = QLearningConfig(
+            episodes=2, horizon=5,
+            priority_clear_progression_sampling_rate=0.1)
+        self.assertEqual(train_q_learning(133, clear_config),
+                         train_q_learning(133, clear_config))
 
     def test_training_records_environment_and_curriculum_returns(self) -> None:
         result = train_q_learning(18, QLearningConfig(episodes=3, horizon=8))
@@ -1195,6 +1205,13 @@ class SimulationTests(unittest.TestCase):
             save_checkpoint(restored, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
+            legacy.pop("sha256")
+            legacy["checkpoint_version"] = 11
+            legacy["config"].pop("priority_clear_progression_sampling_rate")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_checkpoint(first), trained)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 10
             legacy.pop("episode_gate_priority_clear_steps")

@@ -240,6 +240,7 @@ class QLearningConfig:
     exploration_bonus: float = 0.40
     progression_exploration_bonus: float = 0.0
     progression_sampling_rate: float = 0.0
+    priority_clear_progression_sampling_rate: float = 0.0
     preventive_rest_threshold: int = 0
     preventive_rest_max_injury_severity: int = 0
     curriculum: bool = True
@@ -265,7 +266,15 @@ class QLearningConfig:
             raise ValueError("progression_exploration_bonus cannot be negative")
         if not 0 <= self.progression_sampling_rate <= 1:
             raise ValueError("progression_sampling_rate must be between 0 and 1")
-        if self.progression_exploration_bonus and self.progression_sampling_rate:
+        if not 0 <= self.priority_clear_progression_sampling_rate <= 1:
+            raise ValueError(
+                "priority_clear_progression_sampling_rate must be between 0 and 1")
+        progression_modes = (
+            bool(self.progression_exploration_bonus),
+            bool(self.progression_sampling_rate),
+            bool(self.priority_clear_progression_sampling_rate),
+        )
+        if sum(progression_modes) > 1:
             raise ValueError("progression exploration modes are mutually exclusive")
         if (type(self.preventive_rest_threshold) is not int or
                 not 0 <= self.preventive_rest_threshold <= 100):
@@ -479,7 +488,12 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             preparation_index = ACTION_NAMES.index("Prepare portal")
             gate_clear_steps += int(heuristic == gate_index)
             preparation_clear_steps += int(heuristic == preparation_index)
-            if (config.progression_sampling_rate > 0 and progression and
+            clear_progression = (heuristic if heuristic in progression else None)
+            if (config.priority_clear_progression_sampling_rate > 0 and
+                    clear_progression is not None and
+                    rng.random() < config.priority_clear_progression_sampling_rate):
+                action = clear_progression
+            elif (config.progression_sampling_rate > 0 and progression and
                     rng.random() < config.progression_sampling_rate):
                 action = rng.choice(progression)
             elif rng.random() < epsilon:
@@ -530,7 +544,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(gate_clear_selections_by_episode),
                           tuple(preparation_clear_steps_by_episode),
                           tuple(preparation_clear_selections_by_episode))
-CHECKPOINT_VERSION = 11
+CHECKPOINT_VERSION = 12
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -585,7 +599,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -604,6 +618,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data.setdefault("unseen_state_fallback", "first_valid")
     config_data.setdefault("progression_exploration_bonus", 0.0)
     config_data.setdefault("progression_sampling_rate", 0.0)
+    config_data.setdefault("priority_clear_progression_sampling_rate", 0.0)
     config_data.setdefault("preventive_rest_threshold", 0)
     config_data.setdefault(
         "preventive_rest_max_injury_severity",
