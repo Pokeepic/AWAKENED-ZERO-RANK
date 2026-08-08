@@ -24,7 +24,8 @@ from awakened_zero_rank.learning import (
     load_checkpoint, load_scenario_suite_report, save_checkpoint,
     save_scenario_suite_report,
     scenario_suite_digest, scenario_suite_report, summarize_training_actions,
-    summarize_training_conditions, train_q_learning,
+    summarize_training_conditions, summarize_training_progression,
+    train_q_learning,
 )
 
 
@@ -599,6 +600,35 @@ class SimulationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             summarize_training_actions(replace(trained, visit_table={}))
 
+    def test_training_progression_coverage_is_exact_and_auditable(self) -> None:
+        trained = train_q_learning(129, QLearningConfig(episodes=3, horizon=8))
+        self.assertEqual(len(trained.episode_gate_priority_clear_steps), 3)
+        self.assertEqual(len(trained.episode_preparation_priority_clear_steps), 3)
+        summaries = summarize_training_progression(trained)
+        self.assertEqual(tuple(item.action for item in summaries),
+                         ("Gate mission", "Prepare portal"))
+        self.assertTrue(all(item.selection_count <= item.priority_clear_steps
+                            for item in summaries))
+        measured = replace(
+            trained,
+            episode_gate_priority_clear_steps=(2, 1, 0),
+            episode_gate_priority_clear_selections=(1, 1, 0),
+            episode_preparation_priority_clear_steps=(0, 0, 0),
+            episode_preparation_priority_clear_selections=(0, 0, 0),
+        )
+        measured_summaries = summarize_training_progression(measured)
+        self.assertEqual(measured_summaries[0].priority_clear_steps, 3)
+        self.assertEqual(measured_summaries[0].selection_count, 2)
+        self.assertEqual(measured_summaries[0].selection_rate, 0.667)
+        self.assertIsNone(measured_summaries[1].selection_rate)
+        with self.assertRaises(ValueError):
+            summarize_training_progression(replace(
+                trained, episode_gate_priority_clear_steps=()))
+        with self.assertRaises(ValueError):
+            summarize_training_progression(replace(
+                trained, episode_gate_priority_clear_steps=(0, 2, 0),
+                episode_gate_priority_clear_selections=(1, 0, 0)))
+
     def test_integer_actions_enforce_current_mask(self) -> None:
         environment = TrainingEnvironment(seed=5, horizon=4)
         _, info = environment.reset()
@@ -1166,6 +1196,24 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 10
+            legacy.pop("episode_gate_priority_clear_steps")
+            legacy.pop("episode_gate_priority_clear_selections")
+            legacy.pop("episode_preparation_priority_clear_steps")
+            legacy.pop("episode_preparation_priority_clear_selections")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            legacy_training = replace(
+                trained, episode_gate_priority_clear_steps=(),
+                episode_gate_priority_clear_selections=(),
+                episode_preparation_priority_clear_steps=(),
+                episode_preparation_priority_clear_selections=())
+            migrated_v10 = load_checkpoint(first)
+            self.assertEqual(migrated_v10, legacy_training)
+            with self.assertRaises(ValueError):
+                summarize_training_progression(migrated_v10)
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 9
             legacy["config"].pop("preventive_rest_max_injury_severity")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
@@ -1185,14 +1233,14 @@ class SimulationTests(unittest.TestCase):
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
             migrated_v5 = load_checkpoint(first)
-            self.assertEqual(migrated_v5, replace(trained, visit_table={}))
+            self.assertEqual(migrated_v5, replace(legacy_training, visit_table={}))
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 4
             legacy["config"].pop("unseen_state_fallback")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
-            self.assertEqual(load_checkpoint(first), replace(trained, visit_table={}))
+            self.assertEqual(load_checkpoint(first), replace(legacy_training, visit_table={}))
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 3
             legacy.pop("episode_state_counts")
@@ -1201,7 +1249,7 @@ class SimulationTests(unittest.TestCase):
             first.write_text(json.dumps(legacy), encoding="utf-8")
             migrated = load_checkpoint(first)
             self.assertEqual(migrated, replace(
-                trained, episode_state_counts=(), visit_table={}))
+                legacy_training, episode_state_counts=(), visit_table={}))
             with self.assertRaises(ValueError):
                 summarize_training_conditions(migrated)
             legacy.pop("sha256")
@@ -1212,7 +1260,7 @@ class SimulationTests(unittest.TestCase):
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
             self.assertEqual(load_checkpoint(first), replace(
-                trained, episode_state_counts=(), visit_table={}))
+                legacy_training, episode_state_counts=(), visit_table={}))
         self.assertEqual(restored, trained)
         self.assertEqual(len(checkpoint_digest(restored)), 64)
 

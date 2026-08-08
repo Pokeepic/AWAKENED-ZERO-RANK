@@ -293,6 +293,10 @@ class TrainingResult:
     episode_conditions: tuple[str, ...] = ()
     episode_state_counts: tuple[int, ...] = ()
     visit_table: dict[tuple[int, ...], list[int]] = field(default_factory=dict)
+    episode_gate_priority_clear_steps: tuple[int, ...] = ()
+    episode_gate_priority_clear_selections: tuple[int, ...] = ()
+    episode_preparation_priority_clear_steps: tuple[int, ...] = ()
+    episode_preparation_priority_clear_selections: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -330,6 +334,48 @@ def summarize_training_conditions(
             worst_reward=round(min(rewards), 3),
             average_unique_states=round(sum(state_counts) / len(state_counts), 3),
             minimum_unique_states=min(state_counts),
+        ))
+    return tuple(summaries)
+
+
+@dataclass(frozen=True)
+class TrainingProgressionCoverage:
+    action: str
+    priority_clear_steps: int
+    selection_count: int
+    selection_rate: float | None
+
+
+def summarize_training_progression(
+        result: TrainingResult) -> tuple[TrainingProgressionCoverage, ...]:
+    """Summarize authenticated priority-clear progression exposure in training."""
+    episode_count = len(result.episode_rewards)
+    evidence = (
+        result.episode_gate_priority_clear_steps,
+        result.episode_gate_priority_clear_selections,
+        result.episode_preparation_priority_clear_steps,
+        result.episode_preparation_priority_clear_selections,
+    )
+    if any(len(values) != episode_count for values in evidence):
+        raise ValueError("Training progression diagnostics are unavailable or incomplete")
+    if any(type(value) is not int or value < 0
+           for values in evidence for value in values):
+        raise ValueError("Training progression diagnostics are invalid")
+    if any(selection > step
+           for steps, selections in ((evidence[0], evidence[1]),
+                                      (evidence[2], evidence[3]))
+           for step, selection in zip(steps, selections)):
+        raise ValueError("Training progression selections exceed opportunities")
+    summaries = []
+    for action, steps, selections in (
+            ("Gate mission", evidence[0], evidence[1]),
+            ("Prepare portal", evidence[2], evidence[3])):
+        total_steps, total_selections = sum(steps), sum(selections)
+        summaries.append(TrainingProgressionCoverage(
+            action=action, priority_clear_steps=total_steps,
+            selection_count=total_selections,
+            selection_rate=(round(total_selections / total_steps, 3)
+                            if total_steps else None),
         ))
     return tuple(summaries)
 
@@ -404,6 +450,9 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     rng, table = random.Random(training_seed), {}
     totals, shaped_totals, episode_seeds, episode_conditions = [], [], [], []
     episode_state_counts, visits, action_visits = [], Counter(), Counter()
+    gate_clear_steps_by_episode, gate_clear_selections_by_episode = [], []
+    preparation_clear_steps_by_episode = []
+    preparation_clear_selections_by_episode = []
     for episode in range(config.episodes):
         episode_seed = rng.randrange(2**31)
         condition = config.training_conditions[episode % len(config.training_conditions)]
@@ -412,6 +461,8 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         env = TrainingEnvironment(episode_seed, config.horizon)
         observation, info = env.reset(seed=episode_seed, options={"condition": condition})
         total = shaped_total = 0.0
+        gate_clear_steps = gate_clear_selections = 0
+        preparation_clear_steps = preparation_clear_selections = 0
         episode_states = set()
         epsilon = (config.epsilon_start if config.episodes == 1 else config.epsilon_start +
                    (config.epsilon_end - config.epsilon_start) * episode / (config.episodes - 1))
@@ -423,6 +474,11 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             valid = [index for index, allowed in enumerate(mask) if allowed]
             progression = [index for index in valid
                            if ACTION_NAMES[index] in {"Prepare portal", "Gate mission"}]
+            heuristic = heuristic_action(env.environment, mask)
+            gate_index = ACTION_NAMES.index("Gate mission")
+            preparation_index = ACTION_NAMES.index("Prepare portal")
+            gate_clear_steps += int(heuristic == gate_index)
+            preparation_clear_steps += int(heuristic == preparation_index)
             if (config.progression_sampling_rate > 0 and progression and
                     rng.random() < config.progression_sampling_rate):
                 action = rng.choice(progression)
@@ -436,6 +492,10 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                      math.sqrt(action_visits[index] + 1)
                      if ACTION_NAMES[index] in {"Prepare portal", "Gate mission"}
                      else 0.0), -index))
+            gate_clear_selections += int(
+                heuristic == gate_index and action == gate_index)
+            preparation_clear_selections += int(
+                heuristic == preparation_index and action == preparation_index)
             next_observation, reward, terminated, truncated, info = env.step(action)
             shaped = curriculum_reward(episode, config.episodes, reward,
                                        info["reward_components"], config.curriculum)
@@ -454,14 +514,23 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         totals.append(round(total, 3))
         shaped_totals.append(round(shaped_total, 3))
         episode_state_counts.append(len(episode_states))
+        gate_clear_steps_by_episode.append(gate_clear_steps)
+        gate_clear_selections_by_episode.append(gate_clear_selections)
+        preparation_clear_steps_by_episode.append(preparation_clear_steps)
+        preparation_clear_selections_by_episode.append(
+            preparation_clear_selections)
     visit_table = {
         state: [visits[(state, index)] for index in range(len(ACTION_NAMES))]
         for state in table
     }
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table), tuple(episode_conditions),
-                          tuple(episode_state_counts), visit_table)
-CHECKPOINT_VERSION = 10
+                          tuple(episode_state_counts), visit_table,
+                          tuple(gate_clear_steps_by_episode),
+                          tuple(gate_clear_selections_by_episode),
+                          tuple(preparation_clear_steps_by_episode),
+                          tuple(preparation_clear_selections_by_episode))
+CHECKPOINT_VERSION = 11
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -485,6 +554,14 @@ def _checkpoint_data(result: TrainingResult) -> dict:
             {"state": state, "counts": counts}
             for state, counts in sorted(result.visit_table.items())
         ],
+        "episode_gate_priority_clear_steps": (
+            result.episode_gate_priority_clear_steps),
+        "episode_gate_priority_clear_selections": (
+            result.episode_gate_priority_clear_selections),
+        "episode_preparation_priority_clear_steps": (
+            result.episode_preparation_priority_clear_steps),
+        "episode_preparation_priority_clear_selections": (
+            result.episode_preparation_priority_clear_selections),
     }
 
 
@@ -508,7 +585,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -542,6 +619,14 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
             "episode_conditions", ("standard",) * len(episode_rewards))),
         episode_state_counts=tuple(data.get("episode_state_counts", ())),
         visit_table=visit_table,
+        episode_gate_priority_clear_steps=tuple(data.get(
+            "episode_gate_priority_clear_steps", ())),
+        episode_gate_priority_clear_selections=tuple(data.get(
+            "episode_gate_priority_clear_selections", ())),
+        episode_preparation_priority_clear_steps=tuple(data.get(
+            "episode_preparation_priority_clear_steps", ())),
+        episode_preparation_priority_clear_selections=tuple(data.get(
+            "episode_preparation_priority_clear_selections", ())),
     )
 
 @dataclass(frozen=True)
