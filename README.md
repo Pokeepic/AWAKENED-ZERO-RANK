@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.108.0** · **113 automated tests**
+Current release: **0.109.0** · **113 automated tests**
 
 ## Design principles
 
@@ -272,6 +272,8 @@ Update 0.107 — Downstream Critical-Entry Controller Traces record every actual
 
 Update 0.108 — Utility-Normalized Critical-Sequence Comparison applies the same entry traces to baseline utility and normalizes for the selective evaluation's three-policy episode count. On seeds 1001–1020, selective recovery produced 18 entries versus 21 scaled utility entries; on 1101–1120 it produced 13 versus 12. Seek treatment → Guild patrol occurred 12 versus 12, then nine versus 12. The previously suspicious sequence is ordinary utility behavior and is not consistently amplified by selective recovery. A deterministic regression now verifies utility controller and Prepare portal → Gate mission sequence labels. The safety evidence no longer supports calling this a selective-control regression, but reward evidence remains **inconclusive**, so the control stays default-off and unadopted. Behavior and checkpoint schema 25 remain unchanged; the overall verdict remains **baseline remains better**.
 
+Update 0.109 — Final Untouched-Seed Selective Decision evaluates seeds 1201–1220 without tuning. Against utility, the default utility-guided policy scored +1.914 and selective recovery +3.386; both were **inconclusive**. Direct paired selective-minus-default improvement was +1.472 with a ±5.407 95% margin: 34 wins, 21 losses, five ties, and training-seed means of −1.255, +4.987, and +0.685. Survival stayed 60/60 and prepared completions improved 5→10, but critical steps rose 12→31, entries 10→16, and missions fell 113→99. Scaled utility recorded 18 critical steps, nine entries, 69 missions, and nine prepared completions. Selective recovery is not adoption-ready; the fallback-tuning branch is closed, all controls remain default-off, behavior and checkpoint schema 25 are unchanged, and the honest overall verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -404,8 +406,9 @@ Completed updates are grouped for readability:
 | 0.106 | Exact selective-delegation pre/post energy attribution |
 | 0.107 | Controller and preceding-sequence critical-entry traces |
 | 0.108 | Utility-normalized critical-sequence comparison |
+| 0.109 | Final untouched-seed selective-control adoption decision |
 
-Near-term work should measure the selective control against its default utility-guided counterpart on a final untouched seed group, with reward improvement and safety assessed together; further controller-specific safeguards and blind floor tuning are rejected. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should return to learned-state coverage and representation quality rather than further fallback or safeguard tuning. Selective recovery, controller-specific constraints, blind floor sweeps, similarity fallback, and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 
