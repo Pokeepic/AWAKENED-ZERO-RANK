@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.79.0** · **104 automated tests**
+Current release: **0.80.0** · **104 automated tests**
 
 ## Design principles
 
@@ -214,6 +214,8 @@ Update 0.78 — Authenticated Training Plan Use records resolved portal preparat
 
 Update 0.79 — Plan Acquisition Transfer Audit compares schema-17 training evidence with the exact frozen held-out states. Training selected Prepare portal 49 times across 49 distinct strategic states, so every selected state-action pair had only one visit; 45 commands resolved. Held-out evaluation exposed 696 valid preparation decisions, but only 57 were in seen states and the learned policy chose preparation greedily in 0/57. The other 639 were unseen; the heuristic fallback selected six and five resolved. No seen opportunity was priority-clear. Broad sampling therefore creates one-shot breadth without repeat evidence, while the 16-feature abstraction fragments transfer. Preparation rewards and priorities remain unchanged, and the honest verdict remains **baseline remains better**.
 
+Update 0.80 — Preparation Abstraction Dimension Audit replays the exact held-out policy and projects its 696 valid preparation decisions against the 49 training states where preparation was selected. Exact selected-state overlap was only 7/696 events and 2/549 unique held-out states. Dropping energy gave the best single-dimension overlap at 19/696; dropping energy plus hunger was the best pair at 39/696, only 5.6%, while removing two safety-critical signals. Stress alone reached 14 and no other single dimension exceeded 11. Fragmentation is distributed rather than caused by one dispensable feature, so no observation dimension is removed. The next candidate must preserve safety context while adding action-conditional generalization; the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -221,7 +223,7 @@ Update 0.79 — Plan Acquisition Transfer Audit compares schema-17 training evid
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Plan generalization — one-shot state fragmentation isolated in Update 0.79 | Training selected preparation 49 times in 49 distinct states; held-out evaluation saw only 57/696 preparation opportunities and chose preparation greedily in 0/57 | Audit which abstraction dimensions fragment preparation-equivalent states before increasing episodes, exploration, or rewards | A frozen policy transfers plan acquisition across every condition/horizon pair while retaining safety, rent recovery, and prepared mission value |
+| Plan generalization — simple feature deletion rejected in Update 0.80 | Exact selected-state overlap was 7/696; the best single deletion reached 19 and the best pair reached only 39 while removing energy and hunger | Preserve safety features; prototype default-off action-conditional similarity with explicit distance and visit evidence before altering the encoder | A frozen policy transfers plan acquisition across every condition/horizon pair while retaining safety, rent recovery, and prepared mission value |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -317,8 +319,9 @@ Completed updates are grouped for readability:
 | 0.77 | Paired prepared/unprepared mission counterfactuals |
 | 0.78 | Schema-17 authenticated training plan acquisition and use evidence |
 | 0.79 | Training-to-held-out plan acquisition state-transfer audit |
+| 0.80 | Leave-one-dimension-out preparation abstraction audit |
 
-Near-term work should audit which strategic abstraction dimensions fragment otherwise equivalent preparation decisions before increasing training scale or exploration. Neural RL remains deferred while the readiness gate is closed.
+Near-term work should prototype default-off action-conditional state similarity that preserves safety dimensions and requires explicit distance and visit evidence. Neural RL remains deferred while the readiness gate is closed.
 
 ### Future international expansion
 
