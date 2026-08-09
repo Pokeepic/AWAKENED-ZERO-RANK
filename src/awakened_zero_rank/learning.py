@@ -300,6 +300,14 @@ QTable = dict[tuple[int, ...], list[float]]
 
 
 @dataclass(frozen=True)
+class PreparationReturnSample:
+    state: tuple[int, ...]
+    discounted_return: float
+    steps: int
+    plan_consumed: bool
+
+
+@dataclass(frozen=True)
 class TrainingResult:
     training_seed: int
     config: QLearningConfig
@@ -325,6 +333,7 @@ class TrainingResult:
     reward_table: dict[tuple[int, ...], list[float]] = field(default_factory=dict)
     discounted_return_table: dict[
         tuple[int, ...], list[float]] = field(default_factory=dict)
+    preparation_return_samples: tuple[PreparationReturnSample, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -642,6 +651,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     portal_preparations_by_episode = []
     prepared_attempts_by_episode = []
     prepared_completions_by_episode = []
+    preparation_return_samples = []
     training_schedule = tuple(
         (condition, horizon)
         for condition in config.training_conditions
@@ -666,6 +676,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         preparation_blockers = Counter()
         episode_states = set()
         episode_transitions = []
+        pending_preparations = []
         epsilon = (config.epsilon_start if config.episodes == 1 else config.epsilon_start +
                    (config.epsilon_end - config.epsilon_start) * episode / (config.episodes - 1))
         while True:
@@ -709,8 +720,10 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                 heuristic == gate_index and action == gate_index)
             preparation_clear_selections += int(
                 heuristic == preparation_index and action == preparation_index)
+            before_plan = env.simulation.state.active_portal_plan is not None
             next_observation, reward, terminated, truncated, info = env.step(action)
-            portal_preparations += int(info["resolved_action"] == "Prepare portal")
+            resolved_preparation = info["resolved_action"] == "Prepare portal"
+            portal_preparations += int(resolved_preparation)
             shaped = curriculum_reward(episode, config.episodes, reward,
                                        info["reward_components"], config.curriculum)
             next_state = abstract_state(next_observation)
@@ -722,11 +735,43 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             action_visits[action] += 1
             reward_sums[(state, action)] += reward
             episode_transitions.append((state, action, reward))
+            if resolved_preparation:
+                pending_preparations.append(len(episode_transitions) - 1)
+            plan_consumed = (
+                before_plan and
+                env.simulation.state.active_portal_plan is None and
+                info["resolved_action"] == "Gate mission")
+            if plan_consumed:
+                for start in pending_preparations:
+                    window_return = 0.0
+                    for _, _, window_reward in reversed(
+                            episode_transitions[start:]):
+                        window_return = (
+                            window_reward +
+                            config.discount_factor * window_return)
+                    preparation_return_samples.append(
+                        PreparationReturnSample(
+                            state=episode_transitions[start][0],
+                            discounted_return=round(window_return, 6),
+                            steps=len(episode_transitions) - start,
+                            plan_consumed=True))
+                pending_preparations.clear()
             values[action] += config.learning_rate * (
                 shaped + config.discount_factor * future - values[action])
             observation, total, shaped_total = next_observation, total + reward, shaped_total + shaped
             if terminated or truncated:
                 break
+        for start in pending_preparations:
+            window_return = 0.0
+            for _, _, window_reward in reversed(episode_transitions[start:]):
+                window_return = (
+                    window_reward + config.discount_factor * window_return)
+            preparation_return_samples.append(
+                PreparationReturnSample(
+                    state=episode_transitions[start][0],
+                    discounted_return=round(window_return, 6),
+                    steps=len(episode_transitions) - start,
+                    plan_consumed=False))
         discounted_return = 0.0
         for previous_state, previous_action, previous_reward in reversed(
                 episode_transitions):
@@ -776,8 +821,9 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(prepared_attempts_by_episode),
                           tuple(prepared_completions_by_episode),
                           reward_table,
-                          discounted_return_table)
-CHECKPOINT_VERSION = 19
+                          discounted_return_table,
+                          tuple(preparation_return_samples))
+CHECKPOINT_VERSION = 20
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -809,6 +855,9 @@ def _checkpoint_data(result: TrainingResult) -> dict:
         "discounted_return_table": [
             {"state": state, "returns": returns}
             for state, returns in sorted(result.discounted_return_table.items())
+        ],
+        "preparation_return_samples": [
+            asdict(sample) for sample in result.preparation_return_samples
         ],
         "episode_gate_priority_clear_steps": (
             result.episode_gate_priority_clear_steps),
@@ -850,7 +899,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -919,6 +968,14 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
             "episode_prepared_missions_completed", ())),
         reward_table=reward_table,
         discounted_return_table=discounted_return_table,
+        preparation_return_samples=tuple(
+            PreparationReturnSample(
+                state=tuple(item["state"]),
+                discounted_return=float(item["discounted_return"]),
+                steps=int(item["steps"]),
+                plan_consumed=bool(item["plan_consumed"]),
+            )
+            for item in data.get("preparation_return_samples", ())),
     )
 
 @dataclass(frozen=True)

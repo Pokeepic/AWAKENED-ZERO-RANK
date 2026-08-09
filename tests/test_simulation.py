@@ -686,6 +686,22 @@ class SimulationTests(unittest.TestCase):
             round(sum(sum(rewards) for rewards in first.reward_table.values()), 3),
             round(sum(first.episode_rewards), 3))
 
+    def test_preparation_returns_are_plan_bounded_and_reproducible(self) -> None:
+        config = QLearningConfig(
+            episodes=2, horizon=20, training_conditions=("gate_crisis",),
+            progression_sampling_rate=1.0)
+        first = train_q_learning(211, config)
+        second = train_q_learning(211, config)
+        self.assertEqual(first.preparation_return_samples,
+                         second.preparation_return_samples)
+        self.assertEqual(
+            len(first.preparation_return_samples),
+            sum(first.episode_portal_preparations))
+        self.assertTrue(first.preparation_return_samples)
+        self.assertTrue(all(sample.steps >= 1 and
+                            len(sample.state) == 16
+                            for sample in first.preparation_return_samples))
+
     def test_one_step_discounted_returns_equal_realized_rewards(self) -> None:
         trained = train_q_learning(111, QLearningConfig(episodes=3, horizon=1))
         self.assertEqual(trained.discounted_return_table, trained.reward_table)
@@ -1413,12 +1429,22 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 19
+            legacy.pop("preparation_return_samples")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            legacy_preparation_return = replace(
+                trained, preparation_return_samples=())
+            self.assertEqual(load_checkpoint(first), legacy_preparation_return)
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 18
             legacy.pop("discounted_return_table")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
-            legacy_return = replace(trained, discounted_return_table={})
+            legacy_return = replace(
+                legacy_preparation_return, discounted_return_table={})
             self.assertEqual(load_checkpoint(first), legacy_return)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 17
@@ -1571,6 +1597,14 @@ class SimulationTests(unittest.TestCase):
             save_checkpoint(trained, path)
             data = json.loads(path.read_text(encoding="utf-8"))
             data["discounted_return_table"][0]["returns"][0] += 1
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_checkpoint(path)
+            save_checkpoint(trained, path)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["preparation_return_samples"].append({
+                "state": [0] * 16, "discounted_return": 1.0,
+                "steps": 1, "plan_consumed": True})
             path.write_text(json.dumps(data), encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_checkpoint(path)
