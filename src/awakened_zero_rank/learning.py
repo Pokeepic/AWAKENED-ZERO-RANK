@@ -1810,7 +1810,10 @@ class SimilarityCoverageSummary:
     unsupported_decisions: int
     coverage_share: float
     average_supported_distance: float | None
+    feature_weights: tuple[int, ...]
     supported_distance_counts: tuple[tuple[int, int], ...]
+    supported_feature_distance_totals: tuple[tuple[str, int], ...]
+    conflicting_feature_counts: tuple[tuple[str, int], ...]
 
 
 def audit_similarity_coverage(
@@ -1818,6 +1821,7 @@ def audit_similarity_coverage(
         horizon: int, condition: str = "standard", max_distance: int = 2,
         min_state_visits: int = 2,
         safety_indices: tuple[int, ...] = ACTION_NEIGHBOR_SAFETY_INDICES,
+        feature_weights: tuple[int, ...] = (1,) * 16,
         ) -> SimilarityCoverageSummary:
     """Audit conservative nearest-state coverage without changing policy behavior."""
     evaluation_seeds = tuple(evaluation_seeds)
@@ -1838,6 +1842,11 @@ def audit_similarity_coverage(
             any(type(index) is not int or not 0 <= index < 16
                 for index in safety_indices)):
         raise ValueError("Safety indices must be unique strategic-state indices")
+    feature_weights = tuple(feature_weights)
+    if (len(feature_weights) != len(ABSTRACT_STATE_FEATURES) or
+            any(type(weight) is not int or weight < 1
+                for weight in feature_weights)):
+        raise ValueError("Feature weights must be 16 positive integers")
     if condition not in EVALUATION_CONDITIONS:
         raise ValueError(f"Unknown evaluation condition {condition!r}")
     summarize_training_recurrence(result)
@@ -1850,6 +1859,8 @@ def audit_similarity_coverage(
             candidates.append((state, winners[0]))
     exact = supported = conflicting = invalid = unsupported = total_decisions = 0
     distances = Counter()
+    supported_feature_distances = Counter()
+    conflicting_features = Counter()
     for seed in evaluation_seeds:
         environment = LearningEnvironment(seed)
         _configure_evaluation_condition(environment, condition)
@@ -1867,24 +1878,35 @@ def audit_similarity_coverage(
                            for index in safety_indices):
                         continue
                     distance = sum(
-                        abs(left - right)
+                        feature_weights[index] * abs(left - right)
                         for index, (left, right) in enumerate(zip(state, candidate))
                         if index not in safety_indices)
                     if distance <= max_distance:
-                        neighbors.append((distance, action))
+                        neighbors.append((distance, action, candidate))
                 if not neighbors:
                     unsupported += 1
                 else:
-                    minimum = min(distance for distance, _ in neighbors)
-                    actions = {action for distance, action in neighbors
-                               if distance == minimum}
+                    minimum = min(distance for distance, _, _ in neighbors)
+                    nearest = [(action, candidate)
+                               for distance, action, candidate in neighbors
+                               if distance == minimum]
+                    actions = {action for action, _ in nearest}
                     if len(actions) != 1:
                         conflicting += 1
+                        for index, feature in enumerate(ABSTRACT_STATE_FEATURES):
+                            if any(candidate[index] != state[index]
+                                   for _, candidate in nearest):
+                                conflicting_features[feature] += 1
                     elif not mask[next(iter(actions))]:
                         invalid += 1
                     else:
                         supported += 1
                         distances[minimum] += 1
+                        representative = min(candidate for _, candidate in nearest)
+                        for index, feature in enumerate(ABSTRACT_STATE_FEATURES):
+                            supported_feature_distances[feature] += (
+                                feature_weights[index] * abs(
+                                    representative[index] - state[index]))
             environment.baseline_step()
     unseen = total_decisions - exact
     return SimilarityCoverageSummary(
@@ -1899,7 +1921,14 @@ def audit_similarity_coverage(
         average_supported_distance=(
             round(sum(distance * count for distance, count in distances.items()) /
                   supported, 3) if supported else None),
+        feature_weights=feature_weights,
         supported_distance_counts=tuple(sorted(distances.items())),
+        supported_feature_distance_totals=tuple(
+            (feature, supported_feature_distances[feature])
+            for feature in ABSTRACT_STATE_FEATURES),
+        conflicting_feature_counts=tuple(
+            (feature, conflicting_features[feature])
+            for feature in ABSTRACT_STATE_FEATURES),
     )
 
 

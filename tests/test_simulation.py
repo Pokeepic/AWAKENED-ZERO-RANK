@@ -1777,12 +1777,40 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual((first.total_decisions, first.unseen_decisions,
                           first.conflicting_decisions,
                           first.supported_decisions), (1, 1, 1, 0))
+        conflicts = dict(first.conflicting_feature_counts)
+        self.assertEqual((conflicts["money"], conflicts["rank_points"]), (1, 1))
+        self.assertEqual(sum(dict(
+            first.supported_feature_distance_totals).values()), 0)
+        agreement_visits = dict(visit_table)
+        for offset in (4, 6):
+            candidate = list(target)
+            candidate[offset] = (candidate[offset] + 1) % 4
+            counts = [0] * len(ACTION_NAMES)
+            counts[ACTION_NAMES.index("Eat")] = 2
+            agreement_visits[tuple(candidate)] = counts
+        weights = [1] * 16
+        weights[4] = weights[6] = 2
+        agreement = audit_similarity_coverage(
+            replace(result, visit_table=agreement_visits), (207,), horizon=1,
+            max_distance=2, feature_weights=tuple(weights))
+        self.assertEqual((agreement.supported_decisions,
+                          agreement.average_supported_distance), (1, 2.0))
+        self.assertEqual(sum(dict(
+            agreement.supported_feature_distance_totals).values()), 2)
+        self.assertEqual(agreement.feature_weights, tuple(weights))
         with self.assertRaises(ValueError):
             audit_similarity_coverage(result, (107,), horizon=1)
         with self.assertRaises(ValueError):
             audit_similarity_coverage(result, (207, 207), horizon=1)
         with self.assertRaises(ValueError):
             audit_similarity_coverage(result, (207,), horizon=0)
+        with self.assertRaises(ValueError):
+            audit_similarity_coverage(
+                result, (207,), horizon=1, feature_weights=(1,) * 15)
+        with self.assertRaises(ValueError):
+            audit_similarity_coverage(
+                result, (207,), horizon=1,
+                feature_weights=(1,) * 15 + (True,))
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
         components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}
