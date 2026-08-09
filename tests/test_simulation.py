@@ -1520,6 +1520,22 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(first[2])
         self.assertEqual(ACTION_NAMES[first[3]], "Part-time work")
 
+    def test_selective_recovery_and_energy_floor_compose_reproducibly(self) -> None:
+        trained = train_q_learning(143, QLearningConfig(episodes=2, horizon=5))
+        combined = replace(
+            trained, config=replace(
+                trained.config, unseen_state_fallback="utility",
+                seen_recovery_utility_override=True, energy_preemption_floor=20))
+        first = diagnose_episode(243, 8, "rl", combined, "gate_crisis")
+        second = diagnose_episode(243, 8, "rl", combined, "gate_crisis")
+        self.assertEqual(first, second)
+        self.assertLessEqual(first.preventive_rest_override_count, first.decision_steps)
+        self.assertLessEqual(
+            first.selective_recovery_override_count, first.seen_state_decision_count)
+        self.assertTrue(all(action in ACTION_NAMES or action.startswith((
+            "Awakening", "Guild", "Rent", "Tanabata", "Investigation", "Meet "))
+                            for action, _ in first.action_counts))
+
     def test_training_rent_reserve_preserves_arrears_conditions(self) -> None:
         standard = TrainingEnvironment(seed=7, horizon=3)
         standard.reset(seed=7)

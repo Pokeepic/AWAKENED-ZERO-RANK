@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.104.0** · **111 automated tests**
+Current release: **0.105.0** · **112 automated tests**
 
 ## Design principles
 
@@ -264,6 +264,8 @@ Update 0.103 — Selective Seen-State Recovery Control adds a validated, checkpo
 
 Update 0.104 — Fresh-Seed Selective-Control Confirmation preserves the Q-table action and final selected action separately, records exact delegation counts and action pairs, and evaluates untouched seeds 1001–1020. The default utility-guided control scored −3.376 versus utility; selective recovery improved that to +0.033 (+3.409), but both verdicts were **inconclusive** and training-seed means were mixed (−0.708, −4.483, +5.290). Survival stayed 60/60, missions changed 118→115, prepared completions 4→9, and critical-energy steps rose 9→30 across 268 delegations. Critical entries doubled from nine to 18: default entries split across Gate, patrol, and work, while selective entries came from Gate six and patrol 12. The improvement direction confirms, but the safety burden does too. The control remains **promising but inconclusive**, default-off, and unadopted; checkpoint schema remains 25 and the overall verdict remains **baseline remains better**.
 
+Update 0.105 — Selective-Control Energy-Floor Interaction tests the existing floor 20 without adding another policy lever. On seeds 1001–1020, floor 20 changed the selective gap only from +0.033 to −0.035, reduced critical steps 30→26, and changed missions 115→116. On untouched seeds 1101–1120, floor zero and floor 20 were identical: +3.831 gap, 25 critical steps, 124 missions, eight prepared completions, 60/60 survival, and an **inconclusive** verdict; the floor triggered once with no aggregate effect. A regression test now confirms deterministic composition and bounded override accounting. Floor 20 does not reliably address the selective control's energy burden and the interaction is rejected. Both controls remain default-off, checkpoint schema stays 25, and the overall verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -392,8 +394,9 @@ Completed updates are grouped for readability:
 | 0.102 | Fixed four-step paired seen-state continuation returns |
 | 0.103 | Default-off selective seen-state recovery control and schema 25 |
 | 0.104 | Fresh-seed selective-control confirmation and exact override attribution |
+| 0.105 | Selective-control energy-floor interaction and fresh confirmation |
 
-Near-term work should test whether the existing default-off energy floor can contain the selective control's patrol/Gate energy entries without erasing its reward improvement or mission value. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should measure the pre-action energy distribution of selective patrol/Gate entries before considering any narrower safety condition; further blind floor tuning is rejected. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 
