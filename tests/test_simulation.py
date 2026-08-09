@@ -28,6 +28,7 @@ from awakened_zero_rank.learning import (
     nearest_action_neighbors,
     scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
     summarize_training_actions,
+    summarize_preparation_plan_contexts,
     summarize_training_conditions, summarize_training_preparation_blockers,
     summarize_training_progression,
     train_q_learning,
@@ -717,6 +718,22 @@ class SimulationTests(unittest.TestCase):
                             sample.steps >= sample.preparation_steps and
                             len(sample.initial_state) == 16
                             for sample in first.preparation_plan_returns))
+        summary = summarize_preparation_plan_contexts(first)
+        self.assertEqual(len(summary), 1)
+        self.assertEqual(
+            (summary[0].condition, summary[0].horizon,
+             summary[0].plan_count, summary[0].consumed_count,
+             summary[0].positive_consumed_count, summary[0].censored_count),
+            ("gate_crisis", 20, len(first.preparation_plan_returns),
+             sum(sample.plan_consumed
+                 for sample in first.preparation_plan_returns),
+             sum(sample.plan_consumed and sample.discounted_return > 0
+                 for sample in first.preparation_plan_returns),
+             sum(not sample.plan_consumed
+                 for sample in first.preparation_plan_returns)))
+        with self.assertRaises(ValueError):
+            summarize_preparation_plan_contexts(
+                replace(first, preparation_plan_contexts=()))
 
     def test_one_step_discounted_returns_equal_realized_rewards(self) -> None:
         trained = train_q_learning(111, QLearningConfig(episodes=3, horizon=1))

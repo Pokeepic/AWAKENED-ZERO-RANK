@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.88.0** · **110 automated tests**
+Current release: **0.89.0** · **110 automated tests**
 
 ## Design principles
 
@@ -232,6 +232,8 @@ Update 0.87 — Independent Plan Lifecycle Returns add one authenticated record 
 
 Update 0.88 — Authenticated Plan Contexts align every independent preparation-plan lifecycle with its training condition and fixed horizon, advancing checkpoints to schema 22 while schema-21 policies retain lifecycle results with context explicitly unavailable. In the balanced-grid replay, 20-step cells produced only one consumed plan in total and injury-recovery plus compound-crisis produced no plan; 60-step cells produced 18 consumed plans. Long-horizon consumed returns were positive on average in standard (+7.702), financial pressure (+9.250), Gate crisis (+15.743), and compound crisis (+11.619), while the single injury-recovery consumption was negative (−11.405). Preparation value remains **promising but inconclusive** because evidence is long-horizon concentrated and sparse within cells. No reward or policy change was made, and the overall verdict remains **baseline remains better**.
 
+Update 0.89 — Multi-Seed Plan Replication adds a validated reusable summary of independent plan outcomes by condition and horizon, then repeats the exact 800-step balanced-grid training with seeds 701–703. The three runs produced 47 consumed plans, 41 positive (87.2%), with seed-level averages of +9.624, +12.458, and +5.233. Every cell containing a consumed plan had positive pooled return, but 20-step compound crisis still had zero consumption and 60-step injury recovery was weakest at 2/4 positive and +2.703 average. Preparation value is **promising but inconclusive** because this is training-side evidence from three seeds and does not establish held-out policy improvement. No reward or policy change was made; checkpoint schema remains 22 and the overall verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -344,8 +346,9 @@ Completed updates are grouped for readability:
 | 0.86 | Schema-20 plan-bounded preparation return samples |
 | 0.87 | Schema-21 independent preparation-plan lifecycle returns |
 | 0.88 | Schema-22 condition–horizon plan lifecycle contexts |
+| 0.89 | Three-training-seed plan lifecycle replication |
 
-Near-term work should replicate condition–horizon plan outcomes across a small set of independent training seeds before changing rewards or training exposure. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should compare the three frozen replicated policies on identical held-out seeds to determine whether strong training-side plan value transfers into policy behavior. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 

@@ -387,6 +387,50 @@ def summarize_training_conditions(
 
 
 @dataclass(frozen=True)
+class PreparationPlanContextSummary:
+    condition: str
+    horizon: int
+    plan_count: int
+    consumed_count: int
+    positive_consumed_count: int
+    average_consumed_return: float | None
+    censored_count: int
+
+
+def summarize_preparation_plan_contexts(
+        result: TrainingResult) -> tuple[PreparationPlanContextSummary, ...]:
+    """Summarize independent preparation-plan outcomes by training cell."""
+    if (not result.preparation_plan_returns or
+            len(result.preparation_plan_contexts) !=
+            len(result.preparation_plan_returns)):
+        raise ValueError("Preparation plan context evidence is unavailable")
+    grouped: dict[tuple[str, int], list[PreparationPlanReturn]] = {}
+    for context, sample in zip(
+            result.preparation_plan_contexts, result.preparation_plan_returns):
+        condition, horizon = context
+        if (condition not in EVALUATION_CONDITIONS or
+                not isinstance(horizon, int) or isinstance(horizon, bool) or
+                horizon < 1 or sample.preparation_steps < 1 or sample.steps < 1 or
+                not math.isfinite(sample.discounted_return)):
+            raise ValueError("Preparation plan context evidence is invalid")
+        grouped.setdefault(context, []).append(sample)
+    summaries = []
+    for (condition, horizon), samples in grouped.items():
+        consumed = [sample for sample in samples if sample.plan_consumed]
+        summaries.append(PreparationPlanContextSummary(
+            condition=condition, horizon=horizon, plan_count=len(samples),
+            consumed_count=len(consumed),
+            positive_consumed_count=sum(
+                sample.discounted_return > 0 for sample in consumed),
+            average_consumed_return=(
+                round(sum(sample.discounted_return for sample in consumed) /
+                      len(consumed), 3) if consumed else None),
+            censored_count=len(samples) - len(consumed),
+        ))
+    return tuple(summaries)
+
+
+@dataclass(frozen=True)
 class TrainingProgressionCoverage:
     action: str
     priority_clear_steps: int
