@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.95.0** · **111 automated tests**
+Current release: **0.96.0** · **111 automated tests**
 
 ## Design principles
 
@@ -246,6 +246,8 @@ Update 0.94 — Action-Cost Energy Preemption adds a validated, checkpoint-authe
 
 Update 0.95 — Lower Energy-Floor Sweep compares floors 15 and 20 on the same frozen policies and evaluation seeds. Floor 15 was effectively neutral: combined deficit −24.777, 378 critical-energy steps, 68 overrides, and 31 missions. Floor 20 improved every policy individually and achieved the best balance: combined deficit −23.476, 289 critical-energy steps, 169 overrides, and 34 missions, compared with base −24.803/393/52/31 and floor 25 −23.617/176/289/28. Floor 20 is **promising but inconclusive** because it was selected on seeds 801–820; those seeds now serve as tuning evidence rather than confirmation. The default remains zero, checkpoint schema remains 23, and the overall verdict remains **baseline remains better**.
 
+Update 0.96 — Fresh-Seed Energy Confirmation evaluates floor 20 against floor zero on new held-out seeds 901–920, never used for training or threshold selection. The combined deficit changed only from −17.408 to −17.364 (+0.044), while critical-energy steps fell from 375 to 279, overrides rose from 49 to 146, and missions increased from 36 to 37. Seeds 701 and 702 improved slightly, seed 703 regressed, and all three verdicts remained **baseline remains better**. The targeted energy reduction generalizes, but meaningful policy-performance improvement does not; floor 20 remains default-off and further threshold tuning is rejected. Checkpoint schema remains 23 and the overall verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -365,8 +367,9 @@ Completed updates are grouped for readability:
 | 0.93 | Critical-energy entry action and controller attribution |
 | 0.94 | Default-off action-cost energy preemption and schema 23 |
 | 0.95 | Bounded action-cost energy-floor sweep |
+| 0.96 | Fresh-seed action-cost energy confirmation |
 
-Near-term work should confirm floor 20 against a fresh held-out seed set that was not used to select the threshold. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should stop threshold tuning and return to the dominant 97% unseen-state fallback bottleneck, beginning with a replicated heuristic-versus-utility attribution. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 
