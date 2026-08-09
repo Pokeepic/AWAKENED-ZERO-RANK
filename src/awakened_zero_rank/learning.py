@@ -2508,6 +2508,10 @@ def experiment_bundle_summary_json(summary: ExperimentBundleSummary) -> str:
 class ExperimentBundleComparison:
     left_catalog_sha256: str
     right_catalog_sha256: str
+    left_report_count: int
+    right_report_count: int
+    difference_count: int
+    identical: bool
     added_files: tuple[str, ...]
     removed_files: tuple[str, ...]
     changed_files: tuple[str, ...]
@@ -2555,6 +2559,12 @@ def compare_experiment_bundles(
     return ExperimentBundleComparison(
         left_catalog_sha256=experiment_catalog_digest(left),
         right_catalog_sha256=experiment_catalog_digest(right),
+        left_report_count=len(left.entries),
+        right_report_count=len(right.entries),
+        difference_count=(len(right_files - left_files) +
+                          len(left_files - right_files) + len(changed)),
+        identical=not (right_files - left_files or
+                       left_files - right_files or changed),
         added_files=tuple(sorted(right_files - left_files)),
         removed_files=tuple(sorted(left_files - right_files)),
         changed_files=changed, unchanged_files=unchanged,

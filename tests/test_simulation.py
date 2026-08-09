@@ -2117,6 +2117,10 @@ class SimulationTests(unittest.TestCase):
             comparison = compare_experiment_bundles(left, right)
             payload = json.loads(
                 experiment_bundle_comparison_json(comparison))
+            self.assertEqual(payload["left_report_count"], 3)
+            self.assertEqual(payload["right_report_count"], 3)
+            self.assertEqual(payload["difference_count"], 3)
+            self.assertFalse(payload["identical"])
             self.assertEqual(payload["added_files"], ["scenarios/added.json"])
             self.assertEqual(
                 payload["removed_files"], ["scenarios/removed.json"])
@@ -2138,6 +2142,24 @@ class SimulationTests(unittest.TestCase):
                     "--compare-experiment-bundles", str(left), str(right),
                 ))
             self.assertEqual(json.loads(output.getvalue()), payload)
+            identical_output = StringIO()
+            with redirect_stdout(identical_output):
+                cli_main((
+                    "--compare-experiment-bundles", str(left), str(left),
+                    "--require-identical",
+                ))
+            identical_payload = json.loads(identical_output.getvalue())
+            self.assertTrue(identical_payload["identical"])
+            self.assertEqual(identical_payload["difference_count"], 0)
+            different_output = StringIO()
+            with (redirect_stdout(different_output),
+                  self.assertRaises(SystemExit) as exit_context):
+                cli_main((
+                    "--compare-experiment-bundles", str(left), str(right),
+                    "--require-identical",
+                ))
+            self.assertEqual(exit_context.exception.code, 1)
+            self.assertEqual(json.loads(different_output.getvalue()), payload)
             errors = StringIO()
             with redirect_stderr(errors), self.assertRaises(SystemExit):
                 cli_main((
@@ -2145,6 +2167,11 @@ class SimulationTests(unittest.TestCase):
                     "--days", "1",
                 ))
             self.assertIn("cannot use simulation options", errors.getvalue())
+            errors = StringIO()
+            with redirect_stderr(errors), self.assertRaises(SystemExit):
+                cli_main(("--require-identical",))
+            self.assertIn(
+                "requires --compare-experiment-bundles", errors.getvalue())
             changed_path = right / "similarity" / "current.json"
             tampered = json.loads(changed_path.read_text(encoding="utf-8"))
             tampered["summary"]["supported_decisions"] += 1

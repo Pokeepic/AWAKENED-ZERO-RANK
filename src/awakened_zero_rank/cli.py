@@ -24,6 +24,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--compare-experiment-bundles", nargs=2, metavar=("LEFT", "RIGHT"),
         help="verify and compare two published experiment bundles",
     )
+    parser.add_argument(
+        "--require-identical", action="store_true",
+        help="exit 1 when compared bundles differ",
+    )
     return parser
 
 
@@ -31,6 +35,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     parser = build_parser()
     arguments = tuple(sys.argv[1:] if argv is None else argv)
     args = parser.parse_args(arguments)
+    if args.require_identical and not args.compare_experiment_bundles:
+        parser.error("--require-identical requires --compare-experiment-bundles")
     if args.inspect_experiment_bundle or args.compare_experiment_bundles:
         mode_name = (
             "--inspect-experiment-bundle" if args.inspect_experiment_bundle
@@ -58,6 +64,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
         except (OSError, ValueError) as error:
             parser.error(str(error))
         print(output)
+        if args.require_identical and not result.identical:
+            raise SystemExit(1)
         return
     if args.days < 1:
         raise SystemExit("--days must be at least 1")
