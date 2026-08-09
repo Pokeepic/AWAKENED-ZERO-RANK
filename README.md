@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.90.0** · **110 automated tests**
+Current release: **0.91.0** · **110 automated tests**
 
 ## Design principles
 
@@ -236,6 +236,8 @@ Update 0.89 — Multi-Seed Plan Replication adds a validated reusable summary of
 
 Update 0.90 — Replicated Held-Out Transfer freezes the three balanced-grid policies trained with seeds 701–703 and evaluates each on the identical 20 held-out episodes covering every condition–horizon cell. Their pooled RL-minus-utility deficits were −25.979, −28.595, and −19.834; all three verdicts were **baseline remains better**, and the combined mean deficit was −24.803. Every cell was negative when averaged across policies; only seed 703 on 20-step financial pressure beat utility in an individual cell (+11.244). Strong training-side preparation value therefore does not transfer into general held-out policy performance. No reward, training, or policy change was made; checkpoint schema remains 22 and the overall verdict remains **baseline remains better**.
 
+Update 0.91 — Replicated Deficit Attribution replays diagnostics for the same 60 RL-versus-utility episode pairs. RL encountered unseen states on 2,127/2,193 decision steps (97.0%); average component gaps were −13.543 survival, −12.007 progress, −0.250 social, and +0.997 stability. RL spent 393 steps at critical energy versus utility's 30 and completed 31 missions versus 99, although prepared completions favored RL 15–9. Gate and preparation each had 1,906 unseen versus 182 seen opportunities; fallback selected Gate 17 times and preparation 21 times, while preparation was greedy in 0/182 seen opportunities. Sparse transfer, fallback behavior, energy burden, and missed mission progress—not preparation quality—dominate the deficit. No behavior changed; checkpoint schema remains 22 and the verdict is **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -350,8 +352,9 @@ Completed updates are grouped for readability:
 | 0.88 | Schema-22 condition–horizon plan lifecycle contexts |
 | 0.89 | Three-training-seed plan lifecycle replication |
 | 0.90 | Three-policy identical-seed held-out transfer comparison |
+| 0.91 | Replicated held-out deficit attribution |
 
-Near-term work should attribute the replicated held-out deficit to unseen-state fallback, learned action selection, and safety/resource burdens before considering any new training lever. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should attribute critical-energy actions to unseen fallback versus seen learned decisions before considering a narrowly scoped energy safeguard. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 
