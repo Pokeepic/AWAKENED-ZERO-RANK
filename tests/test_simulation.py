@@ -26,7 +26,8 @@ from awakened_zero_rank.learning import (
     checkpoint_digest,
     compare_experiment_bundles, compare_utility_and_ensemble,
     compare_utility_and_rl, curriculum_reward,
-    experiment_bundle_comparison_json, experiment_bundle_summary_json,
+    experiment_bundle_comparison_digest, experiment_bundle_comparison_json,
+    experiment_bundle_summary_json,
     experiment_catalog_digest,
     experiment_catalog_report, inspect_experiment_bundle,
     diagnose_batch,
@@ -2121,6 +2122,16 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(payload["right_report_count"], 3)
             self.assertEqual(payload["difference_count"], 3)
             self.assertFalse(payload["identical"])
+            self.assertEqual(
+                payload["comparison_sha256"],
+                experiment_bundle_comparison_digest(comparison),
+            )
+            self.assertEqual(len(payload["comparison_sha256"]), 64)
+            reverse = compare_experiment_bundles(right, left)
+            self.assertNotEqual(
+                experiment_bundle_comparison_digest(reverse),
+                payload["comparison_sha256"],
+            )
             self.assertEqual(payload["added_files"], ["scenarios/added.json"])
             self.assertEqual(
                 payload["removed_files"], ["scenarios/removed.json"])

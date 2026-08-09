@@ -2652,10 +2652,21 @@ def compare_experiment_bundles(
     )
 
 
+def experiment_bundle_comparison_digest(
+        comparison: ExperimentBundleComparison) -> str:
+    """Return a stable content identity for a verified bundle comparison."""
+    payload = json.dumps(
+        asdict(comparison), sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def experiment_bundle_comparison_json(
         comparison: ExperimentBundleComparison) -> str:
-    """Render deterministic JSON for verified bundle differences."""
-    return json.dumps(asdict(comparison), indent=2, sort_keys=True)
+    """Render deterministic content-addressed JSON for bundle differences."""
+    data = asdict(comparison)
+    data["comparison_sha256"] = experiment_bundle_comparison_digest(comparison)
+    return json.dumps(data, indent=2, sort_keys=True)
 
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                            horizon: int | None = None) -> BatchComparison:
