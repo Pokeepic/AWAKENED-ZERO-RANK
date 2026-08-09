@@ -808,6 +808,15 @@ class PreventiveRestOverride:
 
 
 @dataclass(frozen=True)
+class MissionOutcome:
+    step: int
+    prepared: bool
+    completed: bool
+    reward: float
+    reward_components: tuple[tuple[str, float], ...]
+
+
+@dataclass(frozen=True)
 class EpisodeDiagnostics:
     seed: int
     policy: str
@@ -843,6 +852,7 @@ class EpisodeDiagnostics:
     missions_completed: int
     prepared_missions_attempted: int
     prepared_missions_completed: int
+    mission_outcomes: tuple[MissionOutcome, ...]
     unique_actions: int
     dominant_action_share: float
     longest_action_streak: int
@@ -937,6 +947,7 @@ class DiagnosticBatch:
 def _episode_summary(seed: int, policy: str, condition: str,
                      environment: LearningEnvironment, transitions: list[Transition],
                      masks: list[tuple[int, ...]], trace: list[DiagnosticStep],
+                     mission_outcomes: list[MissionOutcome],
                      low_need_recovery_count: int, critical_energy_steps: int,
                      critical_energy_actions: Counter,
                      strained_energy_actions: Counter,
@@ -1042,6 +1053,7 @@ def _episode_summary(seed: int, policy: str, condition: str,
         missions_attempted=p.missions_attempted, missions_completed=p.missions_completed,
         prepared_missions_attempted=p.prepared_missions_attempted,
         prepared_missions_completed=p.prepared_missions_completed,
+        mission_outcomes=tuple(mission_outcomes),
         unique_actions=len(policy_actions), dominant_action_share=round(dominant, 3),
         longest_action_streak=longest,
         low_need_recovery_count=low_need_recovery_count,
@@ -1324,6 +1336,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     _configure_evaluation_condition(environment, condition)
     policy_rng = random.Random(seed * 97_409 + 17)
     transitions, masks, trace = [], [], []
+    mission_outcomes = []
     low_need_recovery_count = unseen_state_count = 0
     preventive_rest_overrides = []
     critical_energy_steps = high_hunger_steps = high_stress_steps = 0
@@ -1379,6 +1392,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                         _progression_displacement_reason(
                             environment, chosen, False)] += 1
         before_p = environment.simulation.state.protagonist
+        before_missions_completed = before_p.missions_completed
+        before_plan = environment.simulation.state.active_portal_plan is not None
         before_slot = environment.simulation.state.clock.slot
         low_need_eat = is_low_need_recovery("Eat", before_p, before_slot)
         low_need_rest = is_low_need_recovery("Rest", before_p, before_slot)
@@ -1486,6 +1501,14 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             transition = environment.step(ACTION_NAMES[action])
         transitions.append(transition)
         chosen_action = transition.resolved_action or transition.action
+        after_p = environment.simulation.state.protagonist
+        if chosen_action == "Gate mission":
+            mission_outcomes.append(MissionOutcome(
+                step=step, prepared=before_plan,
+                completed=after_p.missions_completed > before_missions_completed,
+                reward=transition.reward,
+                reward_components=transition.reward_components,
+            ))
         if before_critical_energy:
             critical_energy_actions[chosen_action] += 1
         if before_strained_energy:
@@ -1493,7 +1516,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         low_need_recovery_count += int(
             (chosen_action == "Eat" and low_need_eat) or
             (chosen_action == "Rest" and low_need_rest))
-        p = environment.simulation.state.protagonist
+        p = after_p
         critical_energy_steps += int(p.energy <= 25)
         high_hunger_steps += int(p.hunger >= 75)
         high_stress_steps += int(p.stress >= 75)
@@ -1505,7 +1528,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             break
     return _episode_summary(
         seed, policy, condition, environment, transitions, masks, trace,
-        low_need_recovery_count, critical_energy_steps, critical_energy_actions,
+        mission_outcomes, low_need_recovery_count, critical_energy_steps, critical_energy_actions,
         strained_energy_actions, high_hunger_steps, high_stress_steps,
         unseen_state_count, preventive_rest_overrides, visit_evidence_steps,
         zero_visit_action_count, selected_action_visit_total,
@@ -1970,8 +1993,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         preparation_heuristic_displacement_reasons = Counter()
         preparation_ready_displacements = Counter()
         preparation_ready_displacement_reasons = Counter()
+        mission_outcomes = []
         for episode in episodes:
             actions.update(dict(episode.action_counts))
+            mission_outcomes.extend(episode.mission_outcomes)
             masked.update(dict(episode.masked_counts))
             components.update(dict(episode.reward_components))
             flags.update(episode.exploit_flags)
@@ -2001,6 +2026,29 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 episode.portal_preparation_ready_displacement_reason_counts))
         critical_decisions = sum(critical_energy_actions.values())
         strained_decisions = sum(strained_energy_actions.values())
+
+        def mission_group(prepared: bool) -> dict:
+            outcomes = [item for item in mission_outcomes
+                        if item.prepared is prepared]
+            return {
+                "attempts": len(outcomes),
+                "completed": sum(item.completed for item in outcomes),
+                "success_rate": (round(sum(item.completed for item in outcomes) /
+                                       len(outcomes), 3)
+                                 if outcomes else None),
+                "average_reward": (round(sum(item.reward for item in outcomes) /
+                                         len(outcomes), 3)
+                                   if outcomes else None),
+                "average_progress_reward": (
+                    round(sum(dict(item.reward_components).get("progress", 0.0)
+                              for item in outcomes) / len(outcomes), 3)
+                    if outcomes else None),
+                "average_survival_reward": (
+                    round(sum(dict(item.reward_components).get("survival", 0.0)
+                              for item in outcomes) / len(outcomes), 3)
+                    if outcomes else None),
+            }
+
         return {
             "average_reward": round(sum(e.total_reward for e in episodes) / count, 3),
             "average_end_health": round(sum(e.end_health for e in episodes) / count, 3),
@@ -2028,6 +2076,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "average_high_stress_share": round(
                 sum(e.high_stress_share for e in episodes) / count, 3),
             "average_missions": round(sum(e.missions_completed for e in episodes) / count, 3),
+            "mission_outcomes": {
+                "prepared": mission_group(True),
+                "unprepared": mission_group(False),
+            },
             "preparation_coverage": round(
                 sum(e.prepared_missions_attempted for e in episodes) /
                 max(1, sum(e.missions_attempted for e in episodes)), 3),

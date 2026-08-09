@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.75.0** · **103 automated tests**
+Current release: **0.76.0** · **103 automated tests**
 
 ## Design principles
 
@@ -206,6 +206,8 @@ Update 0.74 — All-State Preparation Readiness Attribution adds the same exact 
 
 Update 0.75 — All-State Preparation Displacement Attribution reconciles every strategically ready preparation moment into heuristic-clear or one exact higher-priority action and reason, independent of Q-table coverage. In the frozen 20-step episodes, one of 11 ready moments was clear; Part-time work displaced eight for rent preparation and Rest displaced two for urgent recovery. In the 60-step episodes, eight of 28 were clear; Part-time work displaced ten for rent preparation, Eat displaced six for urgent hunger, and Rest displaced four for urgent recovery. All 30 displacements are explained by legitimate economy or safety priorities, with zero unexplained cases. Raising preparation priority is therefore unsupported. Policy behavior and schemas are unchanged, and the honest verdict remains **baseline remains better**.
 
+Update 0.76 — Prepared Mission Outcome Evidence records every mission transition with its step, plan status, completion, immediate reward, and reward components, with exact reconciliation against episode counters and prepared/unprepared batch summaries. On the frozen held-out episodes, RL completed 4/4 prepared missions at 14.581 average reward and 2/2 unprepared missions at 20.970. Utility completed 3/4 prepared missions at 14.652 and 30/30 unprepared missions at 13.250. Each prepared group has only four context-dependent attempts, so success and reward comparisons are confounded and the preparation-benefit verdict is **inconclusive**. No preparation requirement or reward changed; the overall RL verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -213,7 +215,7 @@ Update 0.75 — All-State Preparation Displacement Attribution reconciles every 
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — preparation priorities validated in Update 0.75 | All 30 ready-but-not-clear preparation moments were displaced by rent preparation, urgent hunger, or urgent recovery; none were unexplained | Preserve safety and economy priorities; measure prepared versus unprepared mission benefit before deciding whether plan-aware opportunity cost is balanced | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Preparation value — observational evidence inconclusive in Update 0.76 | Prepared samples were only 4 attempts per policy and occurred in different states; neither success nor immediate reward showed a consistent advantage over unprepared missions | Run paired counterfactual missions from identical saved states with and without the matching active plan before changing preparation mechanics | Preparation produces a repeatable positive success or reward effect without weakening survival or creating guaranteed wins |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -305,8 +307,9 @@ Completed updates are grouped for readability:
 | 0.73 | All-state Gate-mission readiness blocker attribution |
 | 0.74 | All-state portal-preparation readiness blocker attribution |
 | 0.75 | All-state preparation priority displacement attribution |
+| 0.76 | Per-mission prepared/unprepared outcome and reward evidence |
 
-Near-term work should measure prepared versus unprepared mission outcomes and rewards to determine whether preparation benefit justifies its opportunity cost. Neural RL remains deferred while the readiness gate is closed.
+Near-term work should run paired prepared/unprepared mission counterfactuals from identical states to isolate preparation value from policy and state selection. Neural RL remains deferred while the readiness gate is closed.
 
 ### Future international expansion
 

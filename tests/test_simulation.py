@@ -779,6 +779,14 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(all(0 <= value <= 1 for value in (
             episode.critical_energy_share, episode.high_hunger_share,
             episode.high_stress_share)))
+        self.assertEqual(len(episode.mission_outcomes), episode.missions_attempted)
+        self.assertEqual(sum(item.completed for item in episode.mission_outcomes),
+                         episode.missions_completed)
+        self.assertEqual(sum(item.prepared for item in episode.mission_outcomes),
+                         episode.prepared_missions_attempted)
+        self.assertEqual(sum(item.completed for item in episode.mission_outcomes
+                             if item.prepared),
+                         episode.prepared_missions_completed)
         self.assertEqual(episode.critical_energy_decision_steps,
                          sum(count for _, count in episode.critical_energy_action_counts))
         self.assertGreaterEqual(episode.critical_energy_rest_count, 0)
@@ -1005,6 +1013,11 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("masked_counts", report["rl"])
         self.assertIn("action_frequencies", report["rl"])
         self.assertIn("average_dominant_action_share", report["rl"])
+        self.assertIn("mission_outcomes", report["rl"])
+        self.assertEqual(
+            report["rl"]["mission_outcomes"]["prepared"]["attempts"] +
+            report["rl"]["mission_outcomes"]["unprepared"]["attempts"],
+            report["rl"]["action_counts"].get("Gate mission", 0))
         self.assertIn("average_low_need_recovery_count", report["utility"])
         self.assertIn("average_low_need_recovery_share", report["utility"])
         self.assertIn("average_social_action_count", report["utility"])
