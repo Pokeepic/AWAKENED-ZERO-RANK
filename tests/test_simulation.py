@@ -1303,6 +1303,13 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(result.state_count, len(result.q_table))
         self.assertEqual(result.episode_horizons, (8, 8, 8))
         self.assertEqual(len(result.episode_state_counts), 3)
+        self.assertEqual(len(result.episode_portal_preparations), 3)
+        self.assertEqual(len(result.episode_prepared_missions_attempted), 3)
+        self.assertEqual(len(result.episode_prepared_missions_completed), 3)
+        self.assertTrue(all(completed <= attempted
+                            for attempted, completed in zip(
+                                result.episode_prepared_missions_attempted,
+                                result.episode_prepared_missions_completed)))
         self.assertTrue(all(1 <= count <= 9 for count in result.episode_state_counts))
         self.assertNotEqual(result.episode_rewards, result.training_rewards)
     def test_q_checkpoint_round_trip_is_exact_and_stable(self) -> None:
@@ -1316,11 +1323,24 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 16
+            legacy.pop("episode_portal_preparations")
+            legacy.pop("episode_prepared_missions_attempted")
+            legacy.pop("episode_prepared_missions_completed")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            legacy_plan = replace(
+                trained, episode_portal_preparations=(),
+                episode_prepared_missions_attempted=(),
+                episode_prepared_missions_completed=())
+            self.assertEqual(load_checkpoint(first), legacy_plan)
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 15
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
-            self.assertEqual(load_checkpoint(first), trained)
+            self.assertEqual(load_checkpoint(first), legacy_plan)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 14
             legacy["config"].pop("training_horizons")
@@ -1328,14 +1348,14 @@ class SimulationTests(unittest.TestCase):
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
-            self.assertEqual(load_checkpoint(first), trained)
+            self.assertEqual(load_checkpoint(first), legacy_plan)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 13
             legacy["config"].pop("training_rent_reserve")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
-            self.assertEqual(load_checkpoint(first), trained)
+            self.assertEqual(load_checkpoint(first), legacy_plan)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 12
             legacy.pop("episode_preparation_ready_steps")
@@ -1344,7 +1364,7 @@ class SimulationTests(unittest.TestCase):
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
             legacy_blockers = replace(
-                trained, episode_preparation_ready_steps=(),
+                legacy_plan, episode_preparation_ready_steps=(),
                 episode_preparation_blocker_counts=())
             migrated_v12 = load_checkpoint(first)
             self.assertEqual(migrated_v12, legacy_blockers)

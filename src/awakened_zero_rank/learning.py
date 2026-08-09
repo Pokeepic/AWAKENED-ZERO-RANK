@@ -319,6 +319,9 @@ class TrainingResult:
     episode_preparation_ready_steps: tuple[int, ...] = ()
     episode_preparation_blocker_counts: tuple[
         tuple[tuple[str, int], ...], ...] = ()
+    episode_portal_preparations: tuple[int, ...] = ()
+    episode_prepared_missions_attempted: tuple[int, ...] = ()
+    episode_prepared_missions_completed: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -513,6 +516,9 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     preparation_clear_selections_by_episode = []
     preparation_ready_steps_by_episode = []
     preparation_blockers_by_episode = []
+    portal_preparations_by_episode = []
+    prepared_attempts_by_episode = []
+    prepared_completions_by_episode = []
     training_schedule = tuple(
         (condition, horizon)
         for condition in config.training_conditions
@@ -533,7 +539,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         total = shaped_total = 0.0
         gate_clear_steps = gate_clear_selections = 0
         preparation_clear_steps = preparation_clear_selections = 0
-        preparation_ready_steps = 0
+        preparation_ready_steps = portal_preparations = 0
         preparation_blockers = Counter()
         episode_states = set()
         epsilon = (config.epsilon_start if config.episodes == 1 else config.epsilon_start +
@@ -580,6 +586,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             preparation_clear_selections += int(
                 heuristic == preparation_index and action == preparation_index)
             next_observation, reward, terminated, truncated, info = env.step(action)
+            portal_preparations += int(info["resolved_action"] == "Prepare portal")
             shaped = curriculum_reward(episode, config.episodes, reward,
                                        info["reward_components"], config.curriculum)
             next_state = abstract_state(next_observation)
@@ -605,6 +612,10 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         preparation_ready_steps_by_episode.append(preparation_ready_steps)
         preparation_blockers_by_episode.append(tuple(
             sorted(preparation_blockers.items())))
+        protagonist = env.simulation.state.protagonist
+        portal_preparations_by_episode.append(portal_preparations)
+        prepared_attempts_by_episode.append(protagonist.prepared_missions_attempted)
+        prepared_completions_by_episode.append(protagonist.prepared_missions_completed)
     visit_table = {
         state: [visits[(state, index)] for index in range(len(ACTION_NAMES))]
         for state in table
@@ -617,8 +628,11 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(preparation_clear_steps_by_episode),
                           tuple(preparation_clear_selections_by_episode),
                           tuple(preparation_ready_steps_by_episode),
-                          tuple(preparation_blockers_by_episode))
-CHECKPOINT_VERSION = 16
+                          tuple(preparation_blockers_by_episode),
+                          tuple(portal_preparations_by_episode),
+                          tuple(prepared_attempts_by_episode),
+                          tuple(prepared_completions_by_episode))
+CHECKPOINT_VERSION = 17
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -655,6 +669,11 @@ def _checkpoint_data(result: TrainingResult) -> dict:
             result.episode_preparation_ready_steps),
         "episode_preparation_blocker_counts": (
             result.episode_preparation_blocker_counts),
+        "episode_portal_preparations": result.episode_portal_preparations,
+        "episode_prepared_missions_attempted": (
+            result.episode_prepared_missions_attempted),
+        "episode_prepared_missions_completed": (
+            result.episode_prepared_missions_completed),
     }
 
 
@@ -678,7 +697,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -731,6 +750,12 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
         episode_preparation_blocker_counts=tuple(
             tuple((str(reason), int(count)) for reason, count in episode)
             for episode in data.get("episode_preparation_blocker_counts", ())),
+        episode_portal_preparations=tuple(data.get(
+            "episode_portal_preparations", ())),
+        episode_prepared_missions_attempted=tuple(data.get(
+            "episode_prepared_missions_attempted", ())),
+        episode_prepared_missions_completed=tuple(data.get(
+            "episode_prepared_missions_completed", ())),
     )
 
 @dataclass(frozen=True)
