@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.78.0** · **104 automated tests**
+Current release: **0.79.0** · **104 automated tests**
 
 ## Design principles
 
@@ -212,6 +212,8 @@ Update 0.77 — Paired Preparation Counterfactuals clone an identical Gate-crisi
 
 Update 0.78 — Authenticated Training Plan Use records resolved portal preparations plus prepared mission attempts and completions for every training episode, advancing checkpoints to schema 17; schema-16 and older policies load with this evidence explicitly unavailable. In the exact 800-step balanced-grid run, training created 45 plans, used 19 in missions, and completed all 19. Short episodes created nine plans but used one; long episodes created 36 and used 18. Short injury-recovery and compound-crisis episodes created none. All preparations occurred outside priority-clear sampling, showing that the broad sampler creates substantial blocked-context exposure that does not transfer to the frozen held-out policy. Preparation value is validated, but plan acquisition generalization is weak; the overall verdict remains **baseline remains better**.
 
+Update 0.79 — Plan Acquisition Transfer Audit compares schema-17 training evidence with the exact frozen held-out states. Training selected Prepare portal 49 times across 49 distinct strategic states, so every selected state-action pair had only one visit; 45 commands resolved. Held-out evaluation exposed 696 valid preparation decisions, but only 57 were in seen states and the learned policy chose preparation greedily in 0/57. The other 639 were unseen; the heuristic fallback selected six and five resolved. No seen opportunity was priority-clear. Broad sampling therefore creates one-shot breadth without repeat evidence, while the 16-feature abstraction fragments transfer. Preparation rewards and priorities remain unchanged, and the honest verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -219,7 +221,7 @@ Update 0.78 — Authenticated Training Plan Use records resolved portal preparat
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Plan generalization — training/evaluation gap isolated in Update 0.78 | Balanced-grid training created 45 plans and completed 19/19 prepared missions, but held-out RL resolved only five preparations and six total missions; short injury and compound training created no plans | Preserve preparation mechanics; compare plan-acquisition state coverage and selected-action evidence between training and held-out horizons before changing exploration | A frozen policy transfers plan acquisition across every condition/horizon pair while retaining safety, rent recovery, and prepared mission value |
+| Plan generalization — one-shot state fragmentation isolated in Update 0.79 | Training selected preparation 49 times in 49 distinct states; held-out evaluation saw only 57/696 preparation opportunities and chose preparation greedily in 0/57 | Audit which abstraction dimensions fragment preparation-equivalent states before increasing episodes, exploration, or rewards | A frozen policy transfers plan acquisition across every condition/horizon pair while retaining safety, rent recovery, and prepared mission value |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -314,8 +316,9 @@ Completed updates are grouped for readability:
 | 0.76 | Per-mission prepared/unprepared outcome and reward evidence |
 | 0.77 | Paired prepared/unprepared mission counterfactuals |
 | 0.78 | Schema-17 authenticated training plan acquisition and use evidence |
+| 0.79 | Training-to-held-out plan acquisition state-transfer audit |
 
-Near-term work should compare plan-acquisition state coverage and selected-action evidence between balanced-grid training and held-out horizons to isolate the transfer failure. Neural RL remains deferred while the readiness gate is closed.
+Near-term work should audit which strategic abstraction dimensions fragment otherwise equivalent preparation decisions before increasing training scale or exploration. Neural RL remains deferred while the readiness gate is closed.
 
 ### Future international expansion
 
