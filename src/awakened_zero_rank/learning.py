@@ -44,6 +44,15 @@ ACTION_ENERGY_COSTS = {
     "Prepare portal": 10, "Gate mission": 28,
 }
 
+ABSTRACT_STATE_FEATURES = (
+    "health", "energy", "hunger", "stress", "money", "combat_readiness",
+    "rank_points", "gate_alert", "time_slot", "morale", "discovered_portals",
+    "active_plan", "injury_severity", "wage_modifier", "meal_cost",
+    "objective_progress",
+)
+ABSTRACT_STATE_OBSERVATION_INDICES = (
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 14, 18, 19, 20, 21,
+)
 
 @dataclass(frozen=True)
 class Transition:
@@ -618,6 +627,51 @@ def summarize_training_recurrence(
 
 
 @dataclass(frozen=True)
+class StateFeatureCoverage:
+    feature: str
+    state_index: int
+    observed_categories: tuple[int, ...]
+    visited_state_counts: tuple[int, ...]
+    selection_visit_counts: tuple[int, ...]
+    constant: bool
+
+
+def summarize_training_state_features(
+        result: TrainingResult) -> tuple[StateFeatureCoverage, ...]:
+    """Report authenticated categorical coverage in selected training states."""
+    if not result.visit_table:
+        raise ValueError("Training feature evidence is unavailable")
+    states = []
+    for state, counts in result.visit_table.items():
+        if (len(state) != len(ABSTRACT_STATE_FEATURES) or
+                len(counts) != len(ACTION_NAMES) or
+                any(not isinstance(value, int) or isinstance(value, bool) or
+                    not 0 <= value <= 3 for value in state) or
+                any(not isinstance(count, int) or isinstance(count, bool) or
+                    count < 0 for count in counts)):
+            raise ValueError("Training feature evidence is invalid")
+        if sum(counts) > 0:
+            states.append((state, sum(counts)))
+    if not states:
+        raise ValueError("Training feature evidence is unavailable")
+    summaries = []
+    for index, feature in enumerate(ABSTRACT_STATE_FEATURES):
+        state_counts = Counter(state[index] for state, _ in states)
+        visit_counts = Counter()
+        for state, visits in states:
+            visit_counts[state[index]] += visits
+        categories = tuple(sorted(state_counts))
+        summaries.append(StateFeatureCoverage(
+            feature=feature,
+            state_index=index,
+            observed_categories=categories,
+            visited_state_counts=tuple(state_counts[category] for category in categories),
+            selection_visit_counts=tuple(visit_counts[category] for category in categories),
+            constant=len(categories) == 1,
+        ))
+    return tuple(summaries)
+
+@dataclass(frozen=True)
 class StateProjectionSummary:
     retained_indices: tuple[int, ...]
     original_visited_states: int
@@ -804,9 +858,8 @@ def nearest_action_neighbors(
 
 def abstract_state(observation) -> tuple[int, ...]:
     """Compress the 22-value observation into strategic categorical features."""
-    indices = (0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 14, 18, 19, 20, 21)
     return tuple(max(0, min(3, math.floor(float(observation[index]) * 4)))
-                 for index in indices)
+                 for index in ABSTRACT_STATE_OBSERVATION_INDICES)
 
 
 def discretize(observation) -> tuple[int, ...]:

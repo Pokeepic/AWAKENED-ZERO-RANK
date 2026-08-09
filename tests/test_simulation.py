@@ -29,6 +29,7 @@ from awakened_zero_rank.learning import (
     scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
     summarize_state_projection,
     summarize_training_actions, summarize_training_recurrence,
+    summarize_training_state_features,
     summarize_preparation_plan_contexts,
     summarize_training_conditions, summarize_training_preparation_blockers,
     summarize_training_progression,
@@ -644,6 +645,21 @@ class SimulationTests(unittest.TestCase):
         invalid[state] = [-1] + [0] * (len(ACTION_NAMES) - 1)
         with self.assertRaises(ValueError):
             summarize_training_recurrence(replace(trained, visit_table=invalid))
+
+    def test_training_state_feature_coverage_is_exact_and_auditable(self) -> None:
+        trained = train_q_learning(131, QLearningConfig(episodes=3, horizon=8))
+        coverage = summarize_training_state_features(trained)
+        self.assertEqual(len(coverage), 16)
+        self.assertEqual(tuple(item.state_index for item in coverage), tuple(range(16)))
+        for item in coverage:
+            self.assertEqual(sum(item.visited_state_counts), sum(
+                sum(counts) > 0 for counts in trained.visit_table.values()))
+            self.assertEqual(sum(item.selection_visit_counts), 24)
+            self.assertEqual(item.constant, len(item.observed_categories) == 1)
+        money = coverage[4]
+        self.assertEqual(money.feature, "money")
+        with self.assertRaises(ValueError):
+            summarize_training_state_features(replace(trained, visit_table={}))
 
     def test_state_projection_balances_recurrence_and_action_conflicts(self) -> None:
         trained = train_q_learning(130, QLearningConfig(episodes=3, horizon=8))
