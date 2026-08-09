@@ -27,7 +27,7 @@ from awakened_zero_rank.learning import (
     save_scenario_suite_report,
     nearest_action_neighbors,
     scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
-    summarize_training_actions,
+    summarize_training_actions, summarize_training_recurrence,
     summarize_preparation_plan_contexts,
     summarize_training_conditions, summarize_training_preparation_blockers,
     summarize_training_progression,
@@ -616,6 +616,33 @@ class SimulationTests(unittest.TestCase):
                                1.0, places=2)
         with self.assertRaises(ValueError):
             summarize_training_actions(replace(trained, visit_table={}))
+
+    def test_training_recurrence_is_exact_and_auditable(self) -> None:
+        trained = train_q_learning(128, QLearningConfig(episodes=3, horizon=8))
+        summary = summarize_training_recurrence(trained)
+        self.assertEqual(summary.state_count, len(trained.visit_table))
+        self.assertEqual(
+            summary.total_state_visits,
+            sum(sum(counts) for counts in trained.visit_table.values()))
+        self.assertEqual(
+            summary.visited_state_count + summary.unvisited_state_count,
+            summary.state_count)
+        self.assertEqual(
+            summary.singleton_state_count + summary.repeated_state_count,
+            summary.visited_state_count)
+        self.assertEqual(
+            summary.singleton_state_action_pairs +
+            summary.repeated_state_action_pairs,
+            summary.visited_state_action_pairs)
+        self.assertGreaterEqual(summary.maximum_state_visits, 1)
+        self.assertGreaterEqual(summary.maximum_state_action_visits, 1)
+        with self.assertRaises(ValueError):
+            summarize_training_recurrence(replace(trained, visit_table={}))
+        invalid = dict(trained.visit_table)
+        state = next(iter(invalid))
+        invalid[state] = [-1] + [0] * (len(ACTION_NAMES) - 1)
+        with self.assertRaises(ValueError):
+            summarize_training_recurrence(replace(trained, visit_table=invalid))
 
     def test_training_progression_coverage_is_exact_and_auditable(self) -> None:
         trained = train_q_learning(129, QLearningConfig(episodes=3, horizon=8))

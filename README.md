@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.109.0** · **113 automated tests**
+Current release: **0.110.0** · **114 automated tests**
 
 ## Design principles
 
@@ -274,6 +274,8 @@ Update 0.108 — Utility-Normalized Critical-Sequence Comparison applies the sam
 
 Update 0.109 — Final Untouched-Seed Selective Decision evaluates seeds 1201–1220 without tuning. Against utility, the default utility-guided policy scored +1.914 and selective recovery +3.386; both were **inconclusive**. Direct paired selective-minus-default improvement was +1.472 with a ±5.407 95% margin: 34 wins, 21 losses, five ties, and training-seed means of −1.255, +4.987, and +0.685. Survival stayed 60/60 and prepared completions improved 5→10, but critical steps rose 12→31, entries 10→16, and missions fell 113→99. Scaled utility recorded 18 critical steps, nine entries, 69 missions, and nine prepared completions. Selective recovery is not adoption-ready; the fallback-tuning branch is closed, all controls remain default-off, behavior and checkpoint schema 25 are unchanged, and the honest overall verdict remains **baseline remains better**.
 
+Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -407,8 +409,9 @@ Completed updates are grouped for readability:
 | 0.107 | Controller and preceding-sequence critical-entry traces |
 | 0.108 | Utility-normalized critical-sequence comparison |
 | 0.109 | Final untouched-seed selective-control adoption decision |
+| 0.110 | Authenticated state and state-action recurrence audit |
 
-Near-term work should return to learned-state coverage and representation quality rather than further fallback or safeguard tuning. Selective recovery, controller-specific constraints, blind floor sweeps, similarity fallback, and neural RL remain deferred while the readiness gate is closed.
+Near-term work should audit safety-preserving state projections for recurrence gains and conflicting action evidence before changing the encoder. Selective recovery, controller-specific constraints, blind floor sweeps, similarity fallback, and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 

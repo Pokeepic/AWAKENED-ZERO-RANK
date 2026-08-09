@@ -563,6 +563,60 @@ def summarize_training_actions(
     )
 
 
+@dataclass(frozen=True)
+class TrainingRecurrenceSummary:
+    state_count: int
+    visited_state_count: int
+    unvisited_state_count: int
+    total_state_visits: int
+    singleton_state_count: int
+    repeated_state_count: int
+    state_recurrence_share: float
+    maximum_state_visits: int
+    visited_state_action_pairs: int
+    singleton_state_action_pairs: int
+    repeated_state_action_pairs: int
+    state_action_recurrence_share: float
+    maximum_state_action_visits: int
+
+
+def summarize_training_recurrence(
+        result: TrainingResult) -> TrainingRecurrenceSummary:
+    """Measure how often training revisits states and state-action pairs."""
+    if not result.visit_table:
+        raise ValueError("Training recurrence evidence is unavailable")
+    if any(len(state) != 16 or len(counts) != len(ACTION_NAMES) or
+           any(not isinstance(count, int) or isinstance(count, bool) or count < 0
+               for count in counts)
+           for state, counts in result.visit_table.items()):
+        raise ValueError("Training recurrence evidence is invalid")
+    all_state_visits = [sum(counts) for counts in result.visit_table.values()]
+    state_visits = [visits for visits in all_state_visits if visits > 0]
+    if not state_visits:
+        raise ValueError("Training recurrence evidence is unavailable")
+    pair_visits = [
+        count for counts in result.visit_table.values() for count in counts
+        if count > 0
+    ]
+    return TrainingRecurrenceSummary(
+        state_count=len(all_state_visits),
+        visited_state_count=len(state_visits),
+        unvisited_state_count=sum(visits == 0 for visits in all_state_visits),
+        total_state_visits=sum(state_visits),
+        singleton_state_count=sum(visits == 1 for visits in state_visits),
+        repeated_state_count=sum(visits >= 2 for visits in state_visits),
+        state_recurrence_share=round(
+            sum(visits >= 2 for visits in state_visits) / len(state_visits), 3),
+        maximum_state_visits=max(state_visits),
+        visited_state_action_pairs=len(pair_visits),
+        singleton_state_action_pairs=sum(visits == 1 for visits in pair_visits),
+        repeated_state_action_pairs=sum(visits >= 2 for visits in pair_visits),
+        state_action_recurrence_share=round(
+            sum(visits >= 2 for visits in pair_visits) / max(1, len(pair_visits)), 3),
+        maximum_state_action_visits=max(pair_visits, default=0),
+    )
+
+
 def summarize_action_safety_groups(
         result: TrainingResult, action: str,
         safety_indices: tuple[int, ...] = ACTION_NEIGHBOR_SAFETY_INDICES,
