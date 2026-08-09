@@ -2668,6 +2668,46 @@ def experiment_bundle_comparison_json(
     data["comparison_sha256"] = experiment_bundle_comparison_digest(comparison)
     return json.dumps(data, indent=2, sort_keys=True)
 
+def load_experiment_bundle_comparison_artifact(
+        path: str | Path) -> dict:
+    """Load comparison JSON only when its content identity is intact."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("Bundle comparison artifact must be a JSON object")
+    digest = data.pop("comparison_sha256", None)
+    expected_fields = set(ExperimentBundleComparison.__dataclass_fields__)
+    if set(data) != expected_fields:
+        raise ValueError("Bundle comparison artifact fields are invalid")
+    payload = json.dumps(
+        data, sort_keys=True, separators=(",", ":"),
+    ).encode("utf-8")
+    if digest != hashlib.sha256(payload).hexdigest():
+        raise ValueError("Bundle comparison artifact integrity verification failed")
+    data["comparison_sha256"] = digest
+    return data
+
+
+def save_experiment_bundle_comparison(
+        comparison: ExperimentBundleComparison, path: str | Path) -> Path:
+    """Stage, verify, and publish a non-overwriting comparison artifact."""
+    target = Path(path)
+    if target.exists():
+        raise ValueError("Bundle comparison destination already exists")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(
+            prefix=f".{target.name}.staging-", dir=target.parent) as temporary:
+        staging = Path(temporary) / target.name
+        staging.write_text(
+            experiment_bundle_comparison_json(comparison), encoding="utf-8")
+        loaded = load_experiment_bundle_comparison_artifact(staging)
+        if loaded != json.loads(experiment_bundle_comparison_json(comparison)):
+            raise ValueError("Bundle comparison artifact verification failed")
+        if target.exists():
+            raise ValueError(
+                "Bundle comparison destination appeared during staging")
+        staging.rename(target)
+    return target
+
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                            horizon: int | None = None) -> BatchComparison:
     """Evaluate frozen RL and utility policies on identical held-out world seeds."""

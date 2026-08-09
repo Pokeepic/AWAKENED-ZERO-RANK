@@ -25,6 +25,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="verify and compare two published experiment bundles",
     )
     parser.add_argument(
+        "--comparison-output", metavar="FILE",
+        help="save verified comparison JSON without overwriting",
+    )
+    parser.add_argument(
         "--require-identical", action="store_true",
         help="exit 1 when compared bundles differ",
     )
@@ -37,6 +41,9 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     args = parser.parse_args(arguments)
     if args.require_identical and not args.compare_experiment_bundles:
         parser.error("--require-identical requires --compare-experiment-bundles")
+    if args.comparison_output and not args.compare_experiment_bundles:
+        parser.error(
+            "--comparison-output requires --compare-experiment-bundles")
     if args.inspect_experiment_bundle or args.compare_experiment_bundles:
         mode_name = (
             "--inspect-experiment-bundle" if args.inspect_experiment_bundle
@@ -51,6 +58,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
         from .learning import (
             compare_experiment_bundles, experiment_bundle_comparison_json,
             experiment_bundle_summary_json, inspect_experiment_bundle,
+            save_experiment_bundle_comparison,
         )
         try:
             if args.inspect_experiment_bundle:
@@ -61,6 +69,9 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 result = compare_experiment_bundles(
                     *args.compare_experiment_bundles)
                 output = experiment_bundle_comparison_json(result)
+                if args.comparison_output:
+                    save_experiment_bundle_comparison(
+                        result, args.comparison_output)
         except (OSError, ValueError) as error:
             parser.error(str(error))
         print(output)

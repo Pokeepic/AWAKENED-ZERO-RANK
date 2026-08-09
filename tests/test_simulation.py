@@ -35,7 +35,8 @@ from awakened_zero_rank.learning import (
     is_low_need_recovery, utility_action,
     evaluate_preparation_counterfactual,
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
-    load_checkpoint, load_experiment_catalog, load_scenario_suite_report,
+    load_checkpoint, load_experiment_bundle_comparison_artifact,
+    load_experiment_catalog, load_scenario_suite_report,
     load_similarity_audit_report,
     save_checkpoint, save_experiment_bundle, save_experiment_catalog,
     save_scenario_suite_report, save_similarity_audit_report,
@@ -2179,6 +2180,28 @@ class SimulationTests(unittest.TestCase):
                     "--compare-experiment-bundles", str(left), str(right),
                 ))
             self.assertEqual(json.loads(output.getvalue()), payload)
+            artifact = Path(directory) / "comparison.json"
+            artifact_output = StringIO()
+            with redirect_stdout(artifact_output):
+                cli_main((
+                    "--compare-experiment-bundles", str(left), str(right),
+                    "--comparison-output", str(artifact),
+                ))
+            self.assertEqual(json.loads(artifact_output.getvalue()), payload)
+            self.assertEqual(
+                load_experiment_bundle_comparison_artifact(artifact), payload)
+            errors = StringIO()
+            with redirect_stderr(errors), self.assertRaises(SystemExit):
+                cli_main((
+                    "--compare-experiment-bundles", str(left), str(right),
+                    "--comparison-output", str(artifact),
+                ))
+            self.assertIn("destination already exists", errors.getvalue())
+            tampered_artifact = json.loads(artifact.read_text(encoding="utf-8"))
+            tampered_artifact["added_files"].append("forged.json")
+            artifact.write_text(json.dumps(tampered_artifact), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "integrity verification"):
+                load_experiment_bundle_comparison_artifact(artifact)
             identical_output = StringIO()
             with redirect_stdout(identical_output):
                 cli_main((
@@ -2210,6 +2233,11 @@ class SimulationTests(unittest.TestCase):
             errors = StringIO()
             with redirect_stderr(errors), self.assertRaises(SystemExit):
                 cli_main(("--require-identical",))
+            self.assertIn(
+                "requires --compare-experiment-bundles", errors.getvalue())
+            errors = StringIO()
+            with redirect_stderr(errors), self.assertRaises(SystemExit):
+                cli_main(("--comparison-output", "comparison.json"))
             self.assertIn(
                 "requires --compare-experiment-bundles", errors.getvalue())
             changed_path = right / "similarity" / "current.json"
