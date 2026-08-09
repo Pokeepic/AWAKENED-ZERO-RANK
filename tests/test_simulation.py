@@ -27,7 +27,7 @@ from awakened_zero_rank.learning import (
     save_scenario_suite_report,
     nearest_action_neighbors,
     scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
-    summarize_pooled_training_recurrence,
+    summarize_pooled_training_recurrence, summarize_pooled_training_slice,
     summarize_state_projection,
     summarize_training_actions, summarize_training_recurrence,
     summarize_training_feature_slice, summarize_training_state_features,
@@ -680,6 +680,17 @@ class SimulationTests(unittest.TestCase):
         mismatched = train_q_learning(137, QLearningConfig(episodes=2, horizon=8))
         with self.assertRaises(ValueError):
             summarize_pooled_training_recurrence((trained, mismatched))
+
+    def test_pooled_training_slice_authenticates_episode_labels(self) -> None:
+        trained = train_q_learning(138, QLearningConfig(
+            episodes=2, horizon=8, training_conditions=("gate_crisis",)))
+        replica = replace(trained, training_seed=139)
+        summary = summarize_pooled_training_slice((trained, replica))
+        self.assertEqual((summary.condition, summary.horizon), ("gate_crisis", 8))
+        self.assertEqual(summary.recurrence.training_seeds, (138, 139))
+        tampered = replace(replica, episode_conditions=("standard", "standard"))
+        with self.assertRaises(ValueError):
+            summarize_pooled_training_slice((trained, tampered))
 
     def test_training_state_feature_coverage_is_exact_and_auditable(self) -> None:
         trained = train_q_learning(131, QLearningConfig(episodes=3, horizon=8))

@@ -779,6 +779,28 @@ def summarize_training_feature_slice(
 
 
 @dataclass(frozen=True)
+class PooledTrainingSliceSummary:
+    condition: str
+    horizon: int
+    recurrence: PooledTrainingRecurrenceSummary
+
+
+def summarize_pooled_training_slice(
+        results: tuple[TrainingResult, ...],
+        ) -> PooledTrainingSliceSummary:
+    """Pool exact-state evidence for one authenticated condition-horizon slice."""
+    results = tuple(results)
+    recurrence = summarize_pooled_training_recurrence(results)
+    slices = tuple(summarize_training_feature_slice(result) for result in results)
+    condition_horizons = {(item.condition, item.horizon) for item in slices}
+    if len(condition_horizons) != 1:
+        raise ValueError("Pooled slice metadata must identify one condition and horizon")
+    condition, horizon = next(iter(condition_horizons))
+    return PooledTrainingSliceSummary(
+        condition=condition, horizon=horizon, recurrence=recurrence)
+
+
+@dataclass(frozen=True)
 class StateProjectionSummary:
     retained_indices: tuple[int, ...]
     original_visited_states: int
