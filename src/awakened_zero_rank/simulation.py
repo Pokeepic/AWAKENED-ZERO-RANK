@@ -367,7 +367,7 @@ class Simulation:
         else:
             p.current_goal = f"Build a stable life as a Rank {p.hunter_rank} hunter"
 
-    def _resolve_gate_mission(self) -> str:
+    def _resolve_gate_mission(self, use_preparation: bool = True) -> str:
         p = self.state.protagonist
         fare = min(p.money, travel_cost(p.location, "Adachi Gate Zone"))
         p.money -= fare
@@ -392,7 +392,8 @@ class Simulation:
         difficulty += environmental_difficulty
         preparation_bonus = 0
         cooperation_text = ""
-        used_preparation = self.state.active_portal_plan == portal.name
+        used_preparation = (use_preparation and
+                            self.state.active_portal_plan == portal.name)
         if used_preparation:
             p.prepared_missions_attempted += 1
             preparation_bonus = investigation.preparation_bonus

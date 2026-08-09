@@ -7,6 +7,7 @@ its compatible fallback spaces to Gymnasium's official Env, Discrete, and Box ty
 from __future__ import annotations
 
 from collections import Counter
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 import hashlib
 import json
@@ -808,6 +809,21 @@ class PreventiveRestOverride:
 
 
 @dataclass(frozen=True)
+class PreparationCounterfactual:
+    seed: int
+    portal: str
+    preparation_bonus: int
+    prepared_completed: bool
+    unprepared_completed: bool
+    prepared_health_delta: int
+    unprepared_health_delta: int
+    prepared_money_delta: int
+    unprepared_money_delta: int
+    prepared_rank_points: int
+    unprepared_rank_points: int
+
+
+@dataclass(frozen=True)
 class MissionOutcome:
     step: int
     prepared: bool
@@ -1320,6 +1336,51 @@ def is_low_need_recovery(action: str, protagonist: Protagonist, slot: TimeSlot) 
         return (protagonist.energy > 70 and protagonist.stress < 40
                 and protagonist.injury_severity == 0 and slot is not TimeSlot.LATE_NIGHT)
     return False
+
+
+def evaluate_preparation_counterfactual(seed: int) -> PreparationCounterfactual:
+    """Run paired missions with identical state and RNG but different plan use."""
+    environment = LearningEnvironment(seed)
+    _configure_evaluation_condition(environment, "gate_crisis")
+    simulation = environment.simulation
+    p, state = simulation.state.protagonist, simulation.state
+    p.guild_registered = True
+    p.health, p.energy, p.injury_severity = 80, 80, 0
+    state.gate_alert_level = 3
+    state.active_portal_plan = None
+    energy, stress = p.energy, p.stress
+    objective_scores = dict(state.objective_scores)
+    simulation._prepare_portal()
+    p.energy, p.stress = energy, stress
+    state.objective_scores = objective_scores
+    portal = state.active_portal_plan
+    if portal is None:
+        raise RuntimeError("Preparation did not create an active portal plan")
+    bonus = state.portal_investigations[portal].preparation_bonus
+    prepared, unprepared = deepcopy(simulation), deepcopy(simulation)
+
+    def run(twin: Simulation, use_preparation: bool) -> tuple[bool, int, int, int]:
+        before = twin.state.protagonist
+        completed, health = before.missions_completed, before.health
+        money, rank_points = before.money, before.rank_points
+        twin._resolve_gate_mission(use_preparation=use_preparation)
+        after = twin.state.protagonist
+        return (after.missions_completed > completed, after.health - health,
+                after.money - money, after.rank_points - rank_points)
+
+    prepared_result = run(prepared, True)
+    unprepared_result = run(unprepared, False)
+    return PreparationCounterfactual(
+        seed=seed, portal=portal, preparation_bonus=bonus,
+        prepared_completed=prepared_result[0],
+        unprepared_completed=unprepared_result[0],
+        prepared_health_delta=prepared_result[1],
+        unprepared_health_delta=unprepared_result[1],
+        prepared_money_delta=prepared_result[2],
+        unprepared_money_delta=unprepared_result[2],
+        prepared_rank_points=prepared_result[3],
+        unprepared_rank_points=unprepared_result[3],
+    )
 
 
 def diagnose_episode(seed: int, horizon: int, policy: str,

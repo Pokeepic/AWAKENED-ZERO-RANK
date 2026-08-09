@@ -21,6 +21,7 @@ from awakened_zero_rank.learning import (
     compare_utility_and_rl, curriculum_reward,
     diagnose_batch,
     diagnose_episode, diagnostics_report, heuristic_action, is_low_need_recovery,
+    evaluate_preparation_counterfactual,
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
     load_checkpoint, load_scenario_suite_report, save_checkpoint,
     save_scenario_suite_report,
@@ -758,6 +759,15 @@ class SimulationTests(unittest.TestCase):
         protagonist.injury_severity = 0
         self.assertFalse(is_low_need_recovery("Rest", protagonist, TimeSlot.LATE_NIGHT))
         self.assertFalse(is_low_need_recovery("Study", protagonist, TimeSlot.MORNING))
+
+    def test_preparation_counterfactual_is_paired_and_reproducible(self) -> None:
+        first = evaluate_preparation_counterfactual(211)
+        second = evaluate_preparation_counterfactual(211)
+        self.assertEqual(first, second)
+        self.assertTrue(first.portal)
+        self.assertGreater(first.preparation_bonus, 0)
+        self.assertGreaterEqual(first.prepared_rank_points, first.unprepared_rank_points)
+        self.assertGreaterEqual(first.prepared_money_delta, first.unprepared_money_delta)
 
     def test_episode_diagnostics_count_actions_masks_and_outcomes(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
