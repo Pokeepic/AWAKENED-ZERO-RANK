@@ -1205,7 +1205,9 @@ class SeenStateDecisionOutcome:
     step: int
     learned_action: str
     utility_action: str
+    selected_action: str
     disagreed: bool
+    selective_recovery_override: bool
     reward: float
     reward_components: tuple[tuple[str, float], ...]
     utility_reward: float
@@ -1273,6 +1275,8 @@ class EpisodeDiagnostics:
     seen_utility_disagreement_count: int
     seen_utility_disagreement_share: float
     seen_state_decision_outcomes: tuple[SeenStateDecisionOutcome, ...]
+    selective_recovery_override_count: int
+    selective_recovery_override_pairs: tuple[tuple[str, str], ...]
     preventive_rest_override_count: int
     preventive_rest_override_share: float
     preventive_rest_overrides: tuple[PreventiveRestOverride, ...]
@@ -1405,6 +1409,10 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      preparation_priority_clear_steps: int,
                      preparation_priority_clear_selections: int) -> EpisodeDiagnostics:
     actions = Counter(item.resolved_action or item.action for item in transitions)
+    selective_recovery_pairs = Counter(
+        (item.learned_action, item.selected_action)
+        for item in seen_state_decision_outcomes
+        if item.selective_recovery_override)
     policy_actions = Counter(name for name, count in actions.items()
                              for _ in range(count) if name in ACTION_NAMES)
     masked = Counter()
@@ -1483,6 +1491,10 @@ def _episode_summary(seed: int, policy: str, condition: str,
         seen_utility_disagreement_share=round(
             seen_utility_disagreement_count / max(1, seen_state_decision_count), 3),
         seen_state_decision_outcomes=tuple(seen_state_decision_outcomes),
+        selective_recovery_override_count=sum(selective_recovery_pairs.values()),
+        selective_recovery_override_pairs=tuple(
+            (f"{learned} -> {selected}", count)
+            for (learned, selected), count in sorted(selective_recovery_pairs.items())),
         preventive_rest_override_count=len(preventive_rest_overrides),
         preventive_rest_override_share=round(
             len(preventive_rest_overrides) / max(1, steps), 3),
@@ -1690,6 +1702,11 @@ def utility_action(environment: LearningEnvironment, mask: tuple[int, ...]) -> i
     return action
 
 
+def _seen_recovery_override_eligible(action: str, p: Protagonist) -> bool:
+    return ((action == "Eat" and p.hunger < 65) or
+            (action == "Rest" and p.energy > 28 and p.health >= 45))
+
+
 def _frozen_policy_action(
         result: TrainingResult, environment: LearningEnvironment,
         observation, mask: tuple[int, ...]) -> tuple[int, bool, bool, int | None]:
@@ -1704,8 +1721,7 @@ def _frozen_policy_action(
         action = _greedy_action(values, mask)
     p = environment.simulation.state.protagonist
     if (not unseen and result.config.seen_recovery_utility_override and
-            ((ACTION_NAMES[action] == "Eat" and p.hunger < 65) or
-             (ACTION_NAMES[action] == "Rest" and p.energy > 28 and p.health >= 45))):
+            _seen_recovery_override_eligible(ACTION_NAMES[action], p)):
         action = utility_action(environment, mask)
     rest_index = ACTION_NAMES.index("Rest")
     projected_energy = p.energy - ACTION_ENERGY_COSTS.get(
@@ -1912,6 +1928,9 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                 utility_counterfactual = utility_action(environment, mask)
                 environment.simulation.rng.setstate(rng_state)
                 counterfactual_environment = deepcopy(environment)
+            learned_action = (
+                _greedy_action(result.q_table[state], mask)
+                if state in result.q_table else None)
             action, unseen, preventive_rest, replaced_action = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
@@ -2005,7 +2024,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                     (transition.resolved_action or transition.action) in ACTION_NAMES):
                 seen_state_decision_count += 1
                 seen_utility_disagreement_count += int(
-                    action != utility_counterfactual)
+                    learned_action != utility_counterfactual)
                 utility_transition = counterfactual_environment.step(
                     ACTION_NAMES[utility_counterfactual])
                 if ((utility_transition.resolved_action or utility_transition.action) !=
@@ -2027,9 +2046,14 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                     learned_components.update(dict(learned_followup.reward_components))
                     utility_components.update(dict(utility_followup.reward_components))
                 seen_state_decision_outcomes.append(SeenStateDecisionOutcome(
-                    step=step, learned_action=ACTION_NAMES[action],
+                    step=step, learned_action=ACTION_NAMES[learned_action],
                     utility_action=ACTION_NAMES[utility_counterfactual],
-                    disagreed=action != utility_counterfactual,
+                    selected_action=ACTION_NAMES[action],
+                    disagreed=learned_action != utility_counterfactual,
+                    selective_recovery_override=(
+                        result.config.seen_recovery_utility_override and
+                        _seen_recovery_override_eligible(
+                            ACTION_NAMES[learned_action], before_p)),
                     reward=transition.reward,
                     reward_components=transition.reward_components,
                     utility_reward=utility_transition.reward,
@@ -2721,6 +2745,11 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 item.window_missions_completed -
                 item.utility_window_missions_completed
                 for item in seen_state_outcomes if item.disagreed),
+            "average_selective_recovery_override_count": round(
+                sum(e.selective_recovery_override_count for e in episodes) / count, 3),
+            "selective_recovery_override_pair_counts": dict(Counter(
+                pair for e in episodes for pair, amount in
+                e.selective_recovery_override_pairs for _ in range(amount))),
             "average_preventive_rest_override_count": round(
                 sum(e.preventive_rest_override_count for e in episodes) / count, 3),
             "average_preventive_rest_override_share": round(

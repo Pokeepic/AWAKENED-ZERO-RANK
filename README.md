@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.103.0** · **111 automated tests**
+Current release: **0.104.0** · **111 automated tests**
 
 ## Design principles
 
@@ -262,6 +262,8 @@ Update 0.102 — Four-Step Seen-State Counterfactuals extend every paired decisi
 
 Update 0.103 — Selective Seen-State Recovery Control adds a validated, checkpoint-authenticated, default-off option that delegates only non-urgent seen-state learned Eat/Rest choices to utility. Urgent hunger, low energy, low health, masks, preventive recovery, and learned Gate choices remain protected. On the same three policies and fresh seeds 901–920, the pooled gap improved from +0.427 to +4.292 and every training-seed mean improved to +8.482, +3.201, and +1.192, but the verdict remained **inconclusive**. Survival stayed 60/60 and prepared completions rose 2→5, while critical-energy steps worsened 8→26 and missions fell 110→89. The control is **promising but inconclusive**, remains default-off, and is not adopted. Checkpoints advance to schema 25 with exact schema-24 migration; the overall learned-policy verdict remains **baseline remains better**.
 
+Update 0.104 — Fresh-Seed Selective-Control Confirmation preserves the Q-table action and final selected action separately, records exact delegation counts and action pairs, and evaluates untouched seeds 1001–1020. The default utility-guided control scored −3.376 versus utility; selective recovery improved that to +0.033 (+3.409), but both verdicts were **inconclusive** and training-seed means were mixed (−0.708, −4.483, +5.290). Survival stayed 60/60, missions changed 118→115, prepared completions 4→9, and critical-energy steps rose 9→30 across 268 delegations. Critical entries doubled from nine to 18: default entries split across Gate, patrol, and work, while selective entries came from Gate six and patrol 12. The improvement direction confirms, but the safety burden does too. The control remains **promising but inconclusive**, default-off, and unadopted; checkpoint schema remains 25 and the overall verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -389,8 +391,9 @@ Completed updates are grouped for readability:
 | 0.101 | RNG-aligned paired seen-state counterfactual transitions |
 | 0.102 | Fixed four-step paired seen-state continuation returns |
 | 0.103 | Default-off selective seen-state recovery control and schema 25 |
+| 0.104 | Fresh-seed selective-control confirmation and exact override attribution |
 
-Near-term work should confirm the selective recovery control on a new seed set and attribute its critical-energy and mission regressions before adoption. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should test whether the existing default-off energy floor can contain the selective control's patrol/Gate energy entries without erasing its reward improvement or mission value. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 

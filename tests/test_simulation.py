@@ -792,7 +792,8 @@ class SimulationTests(unittest.TestCase):
             float(seen_episode.seen_utility_disagreement_count))
         self.assertEqual(len(seen_episode.seen_state_decision_outcomes), 1)
         seen_outcome = seen_episode.seen_state_decision_outcomes[0]
-        self.assertEqual(seen_outcome.learned_action, "Rest")
+        self.assertEqual(seen_outcome.learned_action, "Eat")
+        self.assertEqual(seen_outcome.selected_action, "Rest")
         self.assertIn(seen_outcome.utility_action, ACTION_NAMES)
         self.assertEqual(seen_outcome.disagreed,
                          seen_outcome.learned_action != seen_outcome.utility_action)
@@ -822,6 +823,10 @@ class SimulationTests(unittest.TestCase):
         selective_second = diagnose_episode(201, 1, "rl", selective)
         self.assertEqual(selective_first, selective_second)
         self.assertNotEqual(selective_first.trace[0].action, "Eat")
+        self.assertEqual(selective_first.selective_recovery_override_count, 1)
+        self.assertEqual(
+            selective_first.selective_recovery_override_pairs,
+            ((f"Eat -> {selective_first.trace[0].action}", 1),))
         urgent_environment = LearningEnvironment(201)
         urgent_environment.simulation.state.protagonist.hunger = 70
         urgent_state = abstract_state(urgent_environment.observe())
@@ -1159,6 +1164,8 @@ class SimulationTests(unittest.TestCase):
             report["rl"])
         self.assertIn("average_unseen_state_share", report["rl"])
         self.assertEqual(report["utility"]["average_unseen_state_count"], 0)
+        self.assertIn("average_selective_recovery_override_count", report["rl"])
+        self.assertIn("selective_recovery_override_pair_counts", report["rl"])
         self.assertIn("average_preventive_rest_override_count", report["rl"])
         self.assertEqual(report["utility"]["average_preventive_rest_override_count"], 0)
         self.assertIn("preventive_rest_replaced_action_counts", report["rl"])
