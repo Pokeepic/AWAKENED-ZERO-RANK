@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.92.0** · **110 automated tests**
+Current release: **0.93.0** · **110 automated tests**
 
 ## Design principles
 
@@ -240,6 +240,8 @@ Update 0.91 — Replicated Deficit Attribution replays diagnostics for the same 
 
 Update 0.92 — Critical-Energy Control Attribution replays the same three frozen policies and splits all 381 critical-energy decisions by controller. Unseen heuristic fallback controlled 380, choosing Rest 319 times and Eat 61 times; the remaining decision was an existing preventive Rest override. Seen Q-table choices controlled zero critical-energy decisions. A new critical-energy safeguard would therefore duplicate existing recovery behavior rather than fix the burden; the unresolved cause is how episodes enter or remain in critical energy. No safeguard was added, checkpoint schema remains 22, and the verdict is **baseline remains better**.
 
+Update 0.93 — Critical-Energy Entry Attribution traces every transition from energy above 25 to 25 or lower across the same replicated episodes. RL entered critical energy 351 times versus utility's 18; 347 RL entries were controlled by unseen fallback and four by seen Q-table choices. The preceding RL actions were Study 156 times, Guild patrol 134, Part-time work 48, Gate mission 10, and Prepare portal three; utility entries came only from Guild patrol 12 and Gate mission six. Current recovery reacts once energy is already critical, while costly fallback actions can cross the boundary in one step. No balance or safeguard change was made; checkpoint schema remains 22 and the verdict is **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -356,8 +358,9 @@ Completed updates are grouped for readability:
 | 0.90 | Three-policy identical-seed held-out transfer comparison |
 | 0.91 | Replicated held-out deficit attribution |
 | 0.92 | Critical-energy controller and action attribution |
+| 0.93 | Critical-energy entry action and controller attribution |
 
-Near-term work should trace transitions into critical energy, including the preceding action and controller, before considering any recovery or action-cost adjustment. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should prototype a default-off, action-cost-aware energy preemption rule and test it on the frozen replicated policies before changing fallback priorities. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 
