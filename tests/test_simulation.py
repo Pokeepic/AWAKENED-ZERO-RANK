@@ -783,6 +783,11 @@ class SimulationTests(unittest.TestCase):
         seen_episode = diagnose_episode(201, 1, "rl", seen)
         seen_override = seen_episode.preventive_rest_overrides[0]
         self.assertFalse(seen_override.unseen_state)
+        self.assertEqual(seen_episode.seen_state_decision_count, 1)
+        self.assertIn(seen_episode.seen_utility_disagreement_count, (0, 1))
+        self.assertEqual(
+            seen_episode.seen_utility_disagreement_share,
+            float(seen_episode.seen_utility_disagreement_count))
         self.assertEqual(seen_override.replaced_action_q_value, 2.0)
         self.assertEqual(seen_override.rest_q_value, 0.5)
         self.assertEqual(seen_override.replaced_action_q_advantage, 1.5)
@@ -1101,6 +1106,7 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("average_social_action_count", report["utility"])
         self.assertIn("average_social_action_share", report["utility"])
         self.assertIn("average_unseen_state_count", report["rl"])
+        self.assertIn("seen_utility_disagreement_share", report["rl"])
         self.assertIn("average_unseen_state_share", report["rl"])
         self.assertEqual(report["utility"]["average_unseen_state_count"], 0)
         self.assertIn("average_preventive_rest_override_count", report["rl"])

@@ -1241,6 +1241,9 @@ class EpisodeDiagnostics:
     social_action_share: float
     unseen_state_count: int
     unseen_state_share: float
+    seen_state_decision_count: int
+    seen_utility_disagreement_count: int
+    seen_utility_disagreement_share: float
     preventive_rest_override_count: int
     preventive_rest_override_share: float
     preventive_rest_overrides: tuple[PreventiveRestOverride, ...]
@@ -1332,6 +1335,8 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      strained_energy_actions: Counter,
                      high_hunger_steps: int, high_stress_steps: int,
                      unseen_state_count: int,
+                     seen_state_decision_count: int,
+                     seen_utility_disagreement_count: int,
                      preventive_rest_overrides: list[PreventiveRestOverride],
                      visit_evidence_steps: int, zero_visit_action_count: int,
                      selected_action_visit_total: int,
@@ -1443,6 +1448,10 @@ def _episode_summary(seed: int, policy: str, condition: str,
             policy_actions["Talk with Aiko"] / max(1, decision_steps), 3),
         unseen_state_count=unseen_state_count,
         unseen_state_share=round(unseen_state_count / max(1, steps), 3),
+        seen_state_decision_count=seen_state_decision_count,
+        seen_utility_disagreement_count=seen_utility_disagreement_count,
+        seen_utility_disagreement_share=round(
+            seen_utility_disagreement_count / max(1, seen_state_decision_count), 3),
         preventive_rest_override_count=len(preventive_rest_overrides),
         preventive_rest_override_share=round(
             len(preventive_rest_overrides) / max(1, steps), 3),
@@ -1787,6 +1796,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     transitions, masks, trace = [], [], []
     mission_outcomes = []
     low_need_recovery_count = unseen_state_count = 0
+    seen_state_decision_count = seen_utility_disagreement_count = 0
     preventive_rest_overrides = []
     critical_energy_steps = high_hunger_steps = high_stress_steps = 0
     critical_energy_actions = Counter()
@@ -1859,6 +1869,11 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         else:
             observation = environment.observe()
             state = discretize(observation)
+            utility_counterfactual = None
+            if state in result.q_table:
+                rng_state = environment.simulation.rng.getstate()
+                utility_counterfactual = utility_action(environment, mask)
+                environment.simulation.rng.setstate(rng_state)
             action, unseen, preventive_rest, replaced_action = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
@@ -1948,6 +1963,11 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                 selected_action_visit_total += counts[action]
                 zero_visit_action_count += int(counts[action] == 0)
             transition = environment.step(ACTION_NAMES[action])
+            if (not unseen and
+                    (transition.resolved_action or transition.action) in ACTION_NAMES):
+                seen_state_decision_count += 1
+                seen_utility_disagreement_count += int(
+                    action != utility_counterfactual)
         transitions.append(transition)
         chosen_action = transition.resolved_action or transition.action
         after_p = environment.simulation.state.protagonist
@@ -1979,7 +1999,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         seed, policy, condition, environment, transitions, masks, trace,
         mission_outcomes, low_need_recovery_count, critical_energy_steps, critical_energy_actions,
         strained_energy_actions, high_hunger_steps, high_stress_steps,
-        unseen_state_count, preventive_rest_overrides, visit_evidence_steps,
+        unseen_state_count, seen_state_decision_count,
+        seen_utility_disagreement_count, preventive_rest_overrides, visit_evidence_steps,
         zero_visit_action_count, selected_action_visit_total,
         gate_ready_steps, gate_readiness_blockers,
         gate_seen_opportunities, gate_greedy_steps, gate_q_gap_total,
@@ -2555,6 +2576,13 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 sum(e.unseen_state_count for e in episodes) / count, 3),
             "average_unseen_state_share": round(
                 sum(e.unseen_state_share for e in episodes) / count, 3),
+            "average_seen_state_decision_count": round(
+                sum(e.seen_state_decision_count for e in episodes) / count, 3),
+            "average_seen_utility_disagreement_count": round(
+                sum(e.seen_utility_disagreement_count for e in episodes) / count, 3),
+            "seen_utility_disagreement_share": round(
+                sum(e.seen_utility_disagreement_count for e in episodes) /
+                max(1, sum(e.seen_state_decision_count for e in episodes)), 3),
             "average_preventive_rest_override_count": round(
                 sum(e.preventive_rest_override_count for e in episodes) / count, 3),
             "average_preventive_rest_override_share": round(
