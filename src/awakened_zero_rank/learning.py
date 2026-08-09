@@ -865,6 +865,8 @@ class EpisodeDiagnostics:
     gate_mission_readiness_blocker_counts: tuple[tuple[str, int], ...]
     portal_preparation_available_steps: int
     portal_preparation_selection_rate: float
+    portal_preparation_ready_steps: int
+    portal_preparation_readiness_blocker_counts: tuple[tuple[str, int], ...]
     gate_mission_seen_opportunity_steps: int
     gate_mission_greedy_steps: int
     gate_mission_greedy_rate: float
@@ -955,6 +957,8 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      gate_ready_displacement_reasons: Counter,
                      gate_priority_clear_steps: int,
                      gate_priority_clear_selections: int,
+                     preparation_ready_steps: int,
+                     preparation_readiness_blockers: Counter,
                      preparation_seen_opportunities: int,
                      preparation_greedy_steps: int,
                      preparation_q_gap_total: float,
@@ -1061,6 +1065,9 @@ def _episode_summary(seed: int, policy: str, condition: str,
         portal_preparation_available_steps=preparation_available,
         portal_preparation_selection_rate=round(
             policy_actions["Prepare portal"] / max(1, preparation_available), 3),
+        portal_preparation_ready_steps=preparation_ready_steps,
+        portal_preparation_readiness_blocker_counts=tuple(
+            sorted(preparation_readiness_blockers.items())),
         gate_mission_seen_opportunity_steps=gate_seen_opportunities,
         gate_mission_greedy_steps=gate_greedy_steps,
         gate_mission_greedy_rate=round(
@@ -1161,9 +1168,20 @@ def _gate_mission_ready(environment: LearningEnvironment) -> bool:
     return _gate_mission_readiness_blocker(environment) is None
 
 
-def _portal_preparation_ready(environment: LearningEnvironment) -> bool:
+def _portal_preparation_readiness_blocker(
+        environment: LearningEnvironment) -> str | None:
     p, state = environment.simulation.state.protagonist, environment.simulation.state
-    return p.guild_registered and state.gate_alert_level >= 2 and p.health >= 65
+    if not p.guild_registered:
+        return "not guild registered"
+    if state.gate_alert_level < 2:
+        return "Gate alert below 2"
+    if p.health < 65:
+        return "health below 65"
+    return None
+
+
+def _portal_preparation_ready(environment: LearningEnvironment) -> bool:
+    return _portal_preparation_readiness_blocker(environment) is None
 
 
 def _progression_displacement_reason(environment: LearningEnvironment,
@@ -1310,6 +1328,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     gate_ready_displacements = Counter()
     gate_ready_displacement_reasons = Counter()
     gate_priority_clear_steps = gate_priority_clear_selections = 0
+    preparation_ready_steps = 0
+    preparation_readiness_blockers = Counter()
     preparation_seen_opportunities = preparation_greedy_steps = 0
     preparation_clear_seen_steps = preparation_clear_greedy_steps = 0
     preparation_clear_q_gap_total = 0.0
@@ -1323,11 +1343,17 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         mask = environment.action_mask()
         masks.append(mask)
         gate_index = ACTION_NAMES.index("Gate mission")
+        preparation_index = ACTION_NAMES.index("Prepare portal")
         if mask[gate_index]:
             readiness_blocker = _gate_mission_readiness_blocker(environment)
             gate_ready_steps += int(readiness_blocker is None)
             if readiness_blocker is not None:
                 gate_readiness_blockers[readiness_blocker] += 1
+        if mask[preparation_index]:
+            readiness_blocker = _portal_preparation_readiness_blocker(environment)
+            preparation_ready_steps += int(readiness_blocker is None)
+            if readiness_blocker is not None:
+                preparation_readiness_blockers[readiness_blocker] += 1
         before_p = environment.simulation.state.protagonist
         before_slot = environment.simulation.state.clock.slot
         low_need_eat = is_low_need_recovery("Eat", before_p, before_slot)
@@ -1348,7 +1374,6 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             action, unseen, preventive_rest, replaced_action = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
-            preparation_index = ACTION_NAMES.index("Prepare portal")
             fallback_action = replaced_action if preventive_rest else action
             if unseen:
                 if mask[gate_index]:
@@ -1467,6 +1492,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         gate_ready_opportunities, gate_ready_fallback_steps,
         gate_ready_displacements, gate_ready_displacement_reasons,
         gate_priority_clear_steps, gate_priority_clear_selections,
+        preparation_ready_steps, preparation_readiness_blockers,
         preparation_seen_opportunities, preparation_greedy_steps,
         preparation_q_gap_total, preparation_clear_seen_steps,
         preparation_clear_greedy_steps, preparation_clear_q_gap_total,
@@ -1912,6 +1938,7 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         gate_readiness_blockers = Counter()
         gate_ready_displacements = Counter()
         gate_ready_displacement_reasons = Counter()
+        preparation_readiness_blockers = Counter()
         preparation_ready_displacements = Counter()
         preparation_ready_displacement_reasons = Counter()
         for episode in episodes:
@@ -1933,6 +1960,8 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 episode.gate_mission_ready_displacement_counts))
             gate_ready_displacement_reasons.update(dict(
                 episode.gate_mission_ready_displacement_reason_counts))
+            preparation_readiness_blockers.update(dict(
+                episode.portal_preparation_readiness_blocker_counts))
             preparation_ready_displacements.update(dict(
                 episode.portal_preparation_ready_displacement_counts))
             preparation_ready_displacement_reasons.update(dict(
@@ -2027,6 +2056,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "portal_preparation_selection_rate": round(
                 sum(dict(e.action_counts).get("Prepare portal", 0) for e in episodes) /
                 max(1, sum(e.portal_preparation_available_steps for e in episodes)), 3),
+            "portal_preparation_ready_steps": sum(
+                e.portal_preparation_ready_steps for e in episodes),
+            "portal_preparation_readiness_blocker_counts": dict(
+                preparation_readiness_blockers),
             "gate_mission_seen_opportunity_steps": sum(
                 e.gate_mission_seen_opportunity_steps for e in episodes),
             "gate_mission_greedy_steps": sum(

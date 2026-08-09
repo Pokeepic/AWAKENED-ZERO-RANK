@@ -820,6 +820,12 @@ class SimulationTests(unittest.TestCase):
         self.assertGreaterEqual(episode.gate_mission_selection_rate, 0)
         self.assertLessEqual(episode.gate_mission_selection_rate, 1)
         self.assertGreaterEqual(episode.portal_preparation_available_steps, 0)
+        self.assertGreaterEqual(episode.portal_preparation_ready_steps, 0)
+        self.assertEqual(
+            episode.portal_preparation_ready_steps + sum(
+                count for _, count in
+                episode.portal_preparation_readiness_blocker_counts),
+            episode.portal_preparation_available_steps)
         self.assertGreaterEqual(episode.portal_preparation_selection_rate, 0)
         self.assertLessEqual(episode.portal_preparation_selection_rate, 1)
         self.assertGreaterEqual(episode.gate_mission_seen_opportunity_steps, 0)
@@ -1018,6 +1024,12 @@ class SimulationTests(unittest.TestCase):
             report["rl"]["gate_mission_available_steps"])
         self.assertIn("portal_preparation_available_steps", report["rl"])
         self.assertIn("portal_preparation_selection_rate", report["utility"])
+        self.assertIn("portal_preparation_ready_steps", report["rl"])
+        self.assertIn("portal_preparation_readiness_blocker_counts", report["rl"])
+        self.assertEqual(
+            report["rl"]["portal_preparation_ready_steps"] + sum(
+                report["rl"]["portal_preparation_readiness_blocker_counts"].values()),
+            report["rl"]["portal_preparation_available_steps"])
         self.assertIn("gate_mission_seen_opportunity_steps", report["rl"])
         self.assertIn("gate_mission_greedy_steps", report["rl"])
         self.assertIn("gate_mission_greedy_rate", report["rl"])
