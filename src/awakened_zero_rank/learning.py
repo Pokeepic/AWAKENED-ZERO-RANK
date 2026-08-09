@@ -2393,6 +2393,41 @@ def load_experiment_catalog(path: str | Path) -> ExperimentCatalog:
     return catalog
 
 
+def verify_experiment_catalog(
+        catalog: ExperimentCatalog, report_root: str | Path,
+        ) -> tuple[ScenarioSuiteResult | SimilarityAuditSummary, ...]:
+    """Load and verify every report referenced beneath an explicit root."""
+    _validate_experiment_catalog(catalog)
+    root = Path(report_root).resolve()
+    if not root.is_dir():
+        raise ValueError("Experiment report root must be an existing directory")
+    reports = []
+    for entry in catalog.entries:
+        relative = PurePosixPath(entry.filename)
+        candidate = root.joinpath(*relative.parts).resolve()
+        try:
+            candidate.relative_to(root)
+        except ValueError as error:
+            raise ValueError("Experiment report resolves outside its root") from error
+        if not candidate.is_file():
+            raise ValueError(f"Experiment report is missing: {entry.filename}")
+        if entry.report_type == "scenario_suite":
+            report: ScenarioSuiteResult | SimilarityAuditSummary = (
+                load_scenario_suite_report(candidate))
+        else:
+            report = load_similarity_audit_report(candidate)
+            expected_type = (
+                "similarity_single" if isinstance(report, SimilarityCoverageSummary)
+                else "similarity_ensemble")
+            if expected_type != entry.report_type:
+                raise ValueError("Experiment report type does not match its catalog entry")
+        expected = build_experiment_catalog(((entry.label, entry.filename, report),))
+        if expected.entries[0] != entry:
+            raise ValueError("Experiment report metadata does not match its catalog entry")
+        reports.append(report)
+    return tuple(reports)
+
+
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                            horizon: int | None = None) -> BatchComparison:
     """Evaluate frozen RL and utility policies on identical held-out world seeds."""

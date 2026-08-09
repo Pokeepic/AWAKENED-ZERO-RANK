@@ -2,6 +2,6 @@
 
 from .simulation import Simulation
 
-__version__ = "0.124.0"
+__version__ = "0.125.0"
 
 __all__ = ["Simulation", "__version__"]

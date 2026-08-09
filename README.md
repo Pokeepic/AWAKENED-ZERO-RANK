@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.124.0** · **128 automated tests**
+Current release: **0.125.0** · **128 automated tests**
 
 ## Design principles
 
@@ -51,7 +51,7 @@ Current release: **0.124.0** · **128 automated tests**
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 - Deterministic evaluation starts for standard life, financial pressure, injury recovery, Gate crises, and a compound medical/debt/Gate crisis.
 - Versioned scenario-suite and similarity-audit JSON reports with SHA-256 identity, exact reload, semantic reconciliation, tamper rejection, and schema validation.
-- Portable authenticated experiment catalogs that index report filenames, types, digests, training seeds, conditions, horizons, and honest status for offline tooling.
+- Portable authenticated experiment catalogs that index report filenames, types, digests, training seeds, conditions, horizons, and honest status, with strict root-contained referenced-file verification for offline tooling.
 - Explainable offline adoption decisions with checkpoint verification and explicit confidence, safety, progression, rent-recovery, action-dominance, and exploit blockers.
 
 The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or progression regressions; every failed gate now returns explicit blocker reasons.
@@ -304,6 +304,8 @@ Update 0.123 — Authenticated Similarity Audit Reports add canonical schema-1 J
 
 Update 0.124 — Authenticated Experiment Catalogs add a canonical schema-1 discovery layer over scenario-suite and similarity-audit reports. Catalog entries derive rather than accept report digests and metadata, use portable relative JSON filenames, sort deterministically, and expose report type, training seeds, conditions, horizons, and status. Duplicate labels, filenames, or digests; absolute, parent-traversing, or platform-specific paths; malformed metadata; unsupported versions; and tampered catalogs are rejected, including re-hashed invalid inputs. This gives a future developer dashboard one safe index without embedding machine-specific paths or running experiments. No RL experiment, policy behavior, checkpoint schema, or verdict changed; single-policy RL remains **baseline remains better** and the corrected return-evidence ensemble remains **inconclusive**.
 
+Update 0.125 — Catalog Reference Verification completes the offline report boundary by resolving every indexed portable path beneath an explicit existing report root, rejecting resolution outside that root, loading each file through its authenticated schema, and re-deriving its entire catalog entry. Missing roots or files, tampered reports, swapped report types, digest differences, and metadata mismatches fail before data reaches dashboard tooling. A deterministic mixed scenario/similarity fixture verifies exact ordered reload while retaining all previous catalog safeguards. No RL experiment, policy behavior, checkpoint schema, or verdict changed; single-policy RL remains **baseline remains better** and the corrected return-evidence ensemble remains **inconclusive**.
+
 Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
@@ -454,6 +456,7 @@ Completed updates are grouped for readability:
 | 0.122 | Cross-policy similarity consensus audit and early branch rejection |
 | 0.123 | Canonical authenticated similarity reports for offline tooling |
 | 0.124 | Portable authenticated mixed-report experiment catalogs |
+| 0.125 | Strict root-contained catalog reference verification |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
 
@@ -465,6 +468,6 @@ International travel should remain grounded: passports or clearance, airfare, lo
 
 ### Future observer website
 
-A later presentation update can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports and their portable authenticated catalog can feed a separate developer-facing experiment view without coupling the website to training code.
+A later presentation update can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports and their portable authenticated catalog can feed a separate developer-facing experiment view without coupling the website to training code; every referenced report can be verified beneath an explicit data root before display.
 
 The website must remain a view of the authoritative deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him.

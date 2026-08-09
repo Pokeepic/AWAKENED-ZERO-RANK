@@ -44,7 +44,7 @@ from awakened_zero_rank.learning import (
     summarize_preparation_plan_contexts,
     summarize_training_conditions, summarize_training_preparation_blockers,
     summarize_training_progression,
-    train_q_learning,
+    train_q_learning, verify_experiment_catalog,
 )
 
 
@@ -1945,6 +1945,31 @@ class SimulationTests(unittest.TestCase):
             save_experiment_catalog(catalog, duplicate)
             self.assertEqual(path.read_bytes(), duplicate.read_bytes())
             self.assertEqual(load_experiment_catalog(path), catalog)
+            with self.assertRaises(ValueError):
+                verify_experiment_catalog(
+                    catalog, Path(directory) / "missing-root")
+            with self.assertRaises(ValueError):
+                verify_experiment_catalog(catalog, directory)
+            scenario_path = Path(directory) / "scenarios" / "baseline.json"
+            similarity_path = Path(directory) / "similarity" / "standard.json"
+            save_scenario_suite_report(suite, scenario_path)
+            save_similarity_audit_report(similarity, similarity_path)
+            self.assertEqual(
+                verify_experiment_catalog(catalog, directory),
+                (suite, similarity),
+            )
+            similarity_data = json.loads(
+                similarity_path.read_text(encoding="utf-8"))
+            similarity_data["summary"]["supported_decisions"] += 1
+            similarity_path.write_text(
+                json.dumps(similarity_data), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                verify_experiment_catalog(catalog, directory)
+            save_similarity_audit_report(similarity, similarity_path)
+            save_similarity_audit_report(similarity, scenario_path)
+            with self.assertRaises(ValueError):
+                verify_experiment_catalog(catalog, directory)
+            save_scenario_suite_report(suite, scenario_path)
             tampered = json.loads(path.read_text(encoding="utf-8"))
             tampered["entries"][0]["status"] = "promising"
             path.write_text(json.dumps(tampered), encoding="utf-8")
