@@ -14,6 +14,7 @@ import json
 import math
 import random
 from pathlib import Path, PurePosixPath
+from tempfile import TemporaryDirectory
 
 try:
     import gymnasium as gym
@@ -2426,6 +2427,41 @@ def verify_experiment_catalog(
             raise ValueError("Experiment report metadata does not match its catalog entry")
         reports.append(report)
     return tuple(reports)
+
+
+def save_experiment_bundle(
+        items: tuple[tuple[str, str,
+                          ScenarioSuiteResult | SimilarityAuditSummary], ...],
+        destination: str | Path,
+        ) -> Path:
+    """Stage, verify, and publish a new non-overwriting report bundle."""
+    items = tuple(items)
+    catalog = build_experiment_catalog(items)
+    if any(entry.filename == "catalog.json" for entry in catalog.entries):
+        raise ValueError("catalog.json is reserved for the experiment catalog")
+    target = Path(destination)
+    if target.exists():
+        raise ValueError("Experiment bundle destination already exists")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(
+            prefix=f".{target.name}.staging-", dir=target.parent) as temporary:
+        staging = Path(temporary) / target.name
+        staging.mkdir()
+        reports_by_filename = {filename: report for _, filename, report in items}
+        for entry in catalog.entries:
+            report = reports_by_filename[entry.filename]
+            report_path = staging.joinpath(*PurePosixPath(entry.filename).parts)
+            if isinstance(report, ScenarioSuiteResult):
+                save_scenario_suite_report(report, report_path)
+            else:
+                save_similarity_audit_report(report, report_path)
+        save_experiment_catalog(catalog, staging / "catalog.json")
+        loaded_catalog = load_experiment_catalog(staging / "catalog.json")
+        verify_experiment_catalog(loaded_catalog, staging)
+        if target.exists():
+            raise ValueError("Experiment bundle destination appeared during staging")
+        staging.rename(target)
+    return target
 
 
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],

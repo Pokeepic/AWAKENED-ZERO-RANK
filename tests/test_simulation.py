@@ -30,7 +30,7 @@ from awakened_zero_rank.learning import (
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
     load_checkpoint, load_experiment_catalog, load_scenario_suite_report,
     load_similarity_audit_report,
-    save_checkpoint, save_experiment_catalog,
+    save_checkpoint, save_experiment_bundle, save_experiment_catalog,
     save_scenario_suite_report, save_similarity_audit_report,
     nearest_action_neighbors,
     scenario_suite_digest, scenario_suite_report, similarity_audit_digest,
@@ -1994,6 +1994,45 @@ class SimulationTests(unittest.TestCase):
                 ("Duplicate", "a.json", similarity),
                 ("Duplicate", "b.json", suite),
             ))
+
+    def test_experiment_bundle_is_staged_verified_and_non_overwriting(self) -> None:
+        trained = train_q_learning(117, QLearningConfig(episodes=2, horizon=3))
+        suite = evaluate_scenario_suite(trained, (
+            EvaluationScenario("standard", 3, (217, 218)),
+        ))
+        similarity = audit_similarity_coverage(
+            trained, (219,), horizon=3, min_state_visits=1)
+        items = (
+            ("Similarity", "similarity/standard.json", similarity),
+            ("Scenarios", "scenarios/baseline.json", suite),
+        )
+        with TemporaryDirectory() as directory:
+            first = Path(directory) / "first"
+            second = Path(directory) / "second"
+            self.assertEqual(save_experiment_bundle(items, first), first)
+            self.assertEqual(save_experiment_bundle(items, second), second)
+            first_catalog = load_experiment_catalog(first / "catalog.json")
+            second_catalog = load_experiment_catalog(second / "catalog.json")
+            self.assertEqual(first_catalog, second_catalog)
+            self.assertEqual(
+                verify_experiment_catalog(first_catalog, first),
+                (suite, similarity),
+            )
+            for relative in (
+                    "catalog.json", "scenarios/baseline.json",
+                    "similarity/standard.json"):
+                self.assertEqual(
+                    (first / relative).read_bytes(),
+                    (second / relative).read_bytes(),
+                )
+            with self.assertRaises(ValueError):
+                save_experiment_bundle(items, first)
+            reserved = Path(directory) / "reserved"
+            with self.assertRaises(ValueError):
+                save_experiment_bundle((
+                    ("Reserved", "catalog.json", similarity),
+                ), reserved)
+            self.assertFalse(reserved.exists())
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
         components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}
