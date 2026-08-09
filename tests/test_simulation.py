@@ -794,6 +794,8 @@ class SimulationTests(unittest.TestCase):
         seen_outcome = seen_episode.seen_state_decision_outcomes[0]
         self.assertEqual(seen_outcome.learned_action, "Eat")
         self.assertEqual(seen_outcome.selected_action, "Rest")
+        self.assertEqual(seen_outcome.energy_before, 65)
+        self.assertEqual(seen_outcome.energy_after, seen_episode.trace[0].energy)
         self.assertIn(seen_outcome.utility_action, ACTION_NAMES)
         self.assertEqual(seen_outcome.disagreed,
                          seen_outcome.learned_action != seen_outcome.utility_action)
@@ -1166,6 +1168,9 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(report["utility"]["average_unseen_state_count"], 0)
         self.assertIn("average_selective_recovery_override_count", report["rl"])
         self.assertIn("selective_recovery_override_pair_counts", report["rl"])
+        self.assertIn("selective_recovery_critical_entry_count", report["rl"])
+        self.assertIn("selective_recovery_critical_entry_action_counts", report["rl"])
+        self.assertIn("selective_recovery_pre_action_energy_counts", report["rl"])
         self.assertIn("average_preventive_rest_override_count", report["rl"])
         self.assertEqual(report["utility"]["average_preventive_rest_override_count"], 0)
         self.assertIn("preventive_rest_replaced_action_counts", report["rl"])

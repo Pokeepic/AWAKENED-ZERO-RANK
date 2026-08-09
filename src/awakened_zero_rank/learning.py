@@ -1208,6 +1208,8 @@ class SeenStateDecisionOutcome:
     selected_action: str
     disagreed: bool
     selective_recovery_override: bool
+    energy_before: int
+    energy_after: int
     reward: float
     reward_components: tuple[tuple[str, float], ...]
     utility_reward: float
@@ -1904,6 +1906,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                             environment, chosen, False)] += 1
         before_p = environment.simulation.state.protagonist
         before_missions_completed = before_p.missions_completed
+        before_energy = before_p.energy
         before_plan = environment.simulation.state.active_portal_plan is not None
         before_slot = environment.simulation.state.clock.slot
         low_need_eat = is_low_need_recovery("Eat", before_p, before_slot)
@@ -2054,6 +2057,9 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                         result.config.seen_recovery_utility_override and
                         _seen_recovery_override_eligible(
                             ACTION_NAMES[learned_action], before_p)),
+                    energy_before=before_energy,
+                    energy_after=(
+                        environment.simulation.state.protagonist.energy),
                     reward=transition.reward,
                     reward_components=transition.reward_components,
                     utility_reward=utility_transition.reward,
@@ -2750,6 +2756,17 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "selective_recovery_override_pair_counts": dict(Counter(
                 pair for e in episodes for pair, amount in
                 e.selective_recovery_override_pairs for _ in range(amount))),
+            "selective_recovery_critical_entry_count": sum(
+                item.selective_recovery_override and item.energy_before > 25 and
+                item.energy_after <= 25
+                for item in seen_state_outcomes),
+            "selective_recovery_critical_entry_action_counts": dict(Counter(
+                item.selected_action for item in seen_state_outcomes
+                if item.selective_recovery_override and item.energy_before > 25 and
+                item.energy_after <= 25)),
+            "selective_recovery_pre_action_energy_counts": dict(sorted(Counter(
+                item.energy_before for item in seen_state_outcomes
+                if item.selective_recovery_override).items())),
             "average_preventive_rest_override_count": round(
                 sum(e.preventive_rest_override_count for e in episodes) / count, 3),
             "average_preventive_rest_override_share": round(
