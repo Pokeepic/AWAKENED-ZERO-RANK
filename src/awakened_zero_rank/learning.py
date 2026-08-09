@@ -1616,6 +1616,7 @@ class ScenarioComparison:
     training_condition_covered: bool | None = None
     training_condition_episodes: int | None = None
     training_horizon_matches: bool | None = None
+    training_scenario_episodes: int | None = None
 
 
 @dataclass(frozen=True)
@@ -1661,6 +1662,13 @@ def _adoption_blockers(scenarios: tuple[ScenarioComparison, ...],
                       else "mismatched")
             blockers.append(
                 f"{scenario.name}: training horizon alignment is {status}")
+        if (scenario.training_scenario_episodes is None or
+                scenario.training_scenario_episodes < MIN_TRAINING_CONDITION_EPISODES):
+            count = scenario.training_scenario_episodes
+            status = "unknown" if count is None else str(count)
+            blockers.append(
+                f"{scenario.name}: joint training exposure is {status}; "
+                f"require {MIN_TRAINING_CONDITION_EPISODES}")
         if scenario.rl_survival_rate < scenario.utility_survival_rate:
             blockers.append(f"{scenario.name}: survival regression")
         if scenario.rl_average_missions < scenario.utility_average_missions:
@@ -1704,6 +1712,8 @@ def evaluate_scenario_suite(result: TrainingResult,
     summaries, pooled = [], []
     condition_episode_counts = Counter(result.episode_conditions)
     trained_horizons = set(result.episode_horizons)
+    scenario_episode_counts = Counter(zip(
+        result.episode_conditions, result.episode_horizons))
     for scenario in scenarios:
         batch = diagnose_batch(result, scenario.evaluation_seeds,
                                horizon=scenario.horizon, worst_count=1,
@@ -1760,6 +1770,8 @@ def evaluate_scenario_suite(result: TrainingResult,
             training_condition_covered=condition_episode_counts[scenario.condition] > 0,
             training_condition_episodes=condition_episode_counts[scenario.condition],
             training_horizon_matches=scenario.horizon in trained_horizons,
+            training_scenario_episodes=scenario_episode_counts[
+                (scenario.condition, scenario.horizon)],
         ))
     verdict = _honest_verdict(pooled)
     adoption_ready = not _adoption_blockers(tuple(summaries), verdict)
@@ -1770,7 +1782,7 @@ def evaluate_scenario_suite(result: TrainingResult,
         verdict=verdict, adoption_ready=adoption_ready,
     )
 
-SCENARIO_REPORT_VERSION = 7
+SCENARIO_REPORT_VERSION = 8
 
 
 def _scenario_suite_data(suite: ScenarioSuiteResult) -> dict:
@@ -1811,7 +1823,7 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
     """Load a scenario-suite report only when its version and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("report_version") not in (1, 2, 3, 4, 5, 6, SCENARIO_REPORT_VERSION):
+    if data.get("report_version") not in (1, 2, 3, 4, 5, 6, 7, SCENARIO_REPORT_VERSION):
         raise ValueError("Unsupported scenario report version")
     payload = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
     if digest != hashlib.sha256(payload).hexdigest():
@@ -1842,6 +1854,7 @@ def load_scenario_suite_report(path: str | Path) -> ScenarioSuiteResult:
             training_condition_covered=item.get("training_condition_covered"),
             training_condition_episodes=item.get("training_condition_episodes"),
             training_horizon_matches=item.get("training_horizon_matches"),
+            training_scenario_episodes=item.get("training_scenario_episodes"),
         ) for item in data["scenarios"])
         suite = ScenarioSuiteResult(
             training_seed=data["training_seed"],

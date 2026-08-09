@@ -1457,7 +1457,7 @@ class SimulationTests(unittest.TestCase):
                             for blocker in assess_policy_adoption(
                                 thin, thin_suite).blockers))
         covered = train_q_learning(37, QLearningConfig(
-            episodes=4, horizon=5,
+            episodes=4, horizon=5, training_horizons=(5, 7),
             training_conditions=("financial_pressure", "gate_crisis"),
         ))
         covered_suite = evaluate_scenario_suite(covered, (
@@ -1468,9 +1468,21 @@ class SimulationTests(unittest.TestCase):
                             for item in covered_suite.scenarios))
         self.assertEqual(tuple(item.training_condition_episodes
                                for item in covered_suite.scenarios), (2, 2))
+        self.assertEqual(tuple(item.training_scenario_episodes
+                               for item in covered_suite.scenarios), (2, 2))
+        covered_blockers = assess_policy_adoption(covered, covered_suite).blockers
         self.assertFalse(any("training condition" in blocker
-                             for blocker in assess_policy_adoption(
-                                 covered, covered_suite).blockers))
+                             for blocker in covered_blockers))
+        self.assertFalse(any("joint training" in blocker
+                             for blocker in covered_blockers))
+        crossed = evaluate_scenario_suite(covered, (
+            EvaluationScenario("crossed", 7, (340, 341), "financial_pressure"),
+        ))
+        self.assertEqual(crossed.scenarios[0].training_condition_episodes, 2)
+        self.assertTrue(crossed.scenarios[0].training_horizon_matches)
+        self.assertEqual(crossed.scenarios[0].training_scenario_episodes, 0)
+        self.assertIn("crossed: joint training exposure is 0; require 2",
+                      assess_policy_adoption(covered, crossed).blockers)
 
     def test_scenario_suite_is_reproducible_across_horizons(self) -> None:
         trained = train_q_learning(31, QLearningConfig(episodes=2, horizon=5))
@@ -1541,7 +1553,7 @@ class SimulationTests(unittest.TestCase):
         second = scenario_suite_report(suite)
         payload = json.loads(first)
         self.assertEqual(first, second)
-        self.assertEqual(payload["report_version"], 7)
+        self.assertEqual(payload["report_version"], 8)
         self.assertEqual(payload["checkpoint_sha256"], checkpoint_digest(trained))
         self.assertEqual(payload["sha256"], scenario_suite_digest(suite))
         self.assertEqual(payload["total_episodes"], 4)
@@ -1555,6 +1567,7 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(payload["scenarios"][0]["training_condition_covered"])
         self.assertEqual(payload["scenarios"][0]["training_condition_episodes"], 2)
         self.assertTrue(payload["scenarios"][0]["training_horizon_matches"])
+        self.assertEqual(payload["scenarios"][0]["training_scenario_episodes"], 2)
         with TemporaryDirectory() as directory:
             first_path = Path(directory) / "first.json"
             second_path = Path(directory) / "second.json"
@@ -1565,20 +1578,21 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(load_scenario_suite_report(first_path), suite)
             legacy = json.loads(first_path.read_text(encoding="utf-8"))
             legacy.pop("sha256")
-            legacy["report_version"] = 6
+            legacy["report_version"] = 7
             for scenario in legacy["scenarios"]:
-                scenario.pop("training_horizon_matches")
+                scenario.pop("training_scenario_episodes")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first_path.write_text(json.dumps(legacy), encoding="utf-8")
-            restored_v6 = load_scenario_suite_report(first_path)
+            restored_v7 = load_scenario_suite_report(first_path)
             self.assertTrue(all(item.training_condition_covered
-                                for item in restored_v6.scenarios))
-            self.assertTrue(all(item.training_horizon_matches is None
-                                for item in restored_v6.scenarios))
-            self.assertTrue(any("training horizon alignment is unknown" in blocker
+                                for item in restored_v7.scenarios))
+            self.assertTrue(restored_v7.scenarios[0].training_horizon_matches)
+            self.assertTrue(all(item.training_scenario_episodes is None
+                                for item in restored_v7.scenarios))
+            self.assertTrue(any("joint training exposure is unknown" in blocker
                                 for blocker in assess_policy_adoption(
-                                    trained, restored_v6).blockers))
+                                    trained, restored_v7).blockers))
             legacy = json.loads(first)
             legacy.pop("sha256")
             legacy["report_version"] = 1
@@ -1591,7 +1605,8 @@ class SimulationTests(unittest.TestCase):
                               "utility_prepared_success_rate",
                               "training_condition_covered",
                               "training_condition_episodes",
-                              "training_horizon_matches"):
+                              "training_horizon_matches",
+                              "training_scenario_episodes"):
                     scenario.pop(field)
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -1606,6 +1621,8 @@ class SimulationTests(unittest.TestCase):
             self.assertTrue(all(item.training_condition_episodes is None
                                 for item in restored_legacy.scenarios))
             self.assertTrue(all(item.training_horizon_matches is None
+                                for item in restored_legacy.scenarios))
+            self.assertTrue(all(item.training_scenario_episodes is None
                                 for item in restored_legacy.scenarios))
             legacy_decision = assess_policy_adoption(trained, restored_legacy)
             self.assertTrue(any("training condition coverage is unknown" in blocker
