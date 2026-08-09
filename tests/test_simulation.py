@@ -18,7 +18,8 @@ from awakened_zero_rank.learning import (
     QLearningConfig, TrainingEnvironment,
     _apply_training_rent_reserve, _frozen_policy_action,
     EvaluationScenario,
-    abstract_state, assess_policy_adoption, audit_similarity_coverage,
+    abstract_state, assess_policy_adoption, audit_ensemble_similarity_coverage,
+    audit_similarity_coverage,
     checkpoint_digest,
     compare_utility_and_ensemble, compare_utility_and_rl, curriculum_reward,
     diagnose_batch,
@@ -1811,6 +1812,56 @@ class SimulationTests(unittest.TestCase):
             audit_similarity_coverage(
                 result, (207,), horizon=1,
                 feature_weights=(1,) * 15 + (True,))
+
+    def test_ensemble_similarity_requires_cross_policy_action_agreement(self) -> None:
+        trained = train_q_learning(108, QLearningConfig(episodes=1, horizon=2))
+        environment = LearningEnvironment(208)
+        target = abstract_state(environment.observe())
+        candidate = list(target)
+        candidate[4] = (candidate[4] + 1) % 4
+        candidate = tuple(candidate)
+
+        def policy(seed: int, action: str):
+            counts = [0] * len(ACTION_NAMES)
+            counts[ACTION_NAMES.index(action)] = 2
+            return replace(
+                trained, training_seed=seed,
+                visit_table={candidate: counts},
+                q_table={candidate: [0.0] * len(ACTION_NAMES)},
+            )
+
+        agreeing = (policy(108, "Eat"), policy(109, "Eat"),
+                    policy(110, "Eat"))
+        first = audit_ensemble_similarity_coverage(
+            agreeing, (208,), horizon=1, max_distance=1,
+            min_state_visits=2)
+        second = audit_ensemble_similarity_coverage(
+            agreeing, (208,), horizon=1, max_distance=1,
+            min_state_visits=2)
+        self.assertEqual(first, second)
+        self.assertEqual((first.eligible_decisions, first.supported_decisions,
+                          first.coverage_share), (1, 1, 1.0))
+        self.assertEqual(first.supported_action_counts, (("Eat", 1),))
+        self.assertEqual(
+            first.supported_decisions +
+            first.within_policy_conflict_decisions +
+            first.cross_policy_conflict_decisions +
+            first.invalid_consensus_decisions +
+            first.insufficient_support_decisions,
+            first.eligible_decisions,
+        )
+        disagreeing = agreeing[:2] + (policy(110, "Rest"),)
+        conflict = audit_ensemble_similarity_coverage(
+            disagreeing, (208,), horizon=1, max_distance=1,
+            min_state_visits=2)
+        self.assertEqual((conflict.supported_decisions,
+                          conflict.cross_policy_conflict_decisions), (0, 1))
+        with self.assertRaises(ValueError):
+            audit_ensemble_similarity_coverage(
+                agreeing, (108,), horizon=1, min_state_visits=2)
+        with self.assertRaises(ValueError):
+            audit_ensemble_similarity_coverage(
+                agreeing, (208,), horizon=1, minimum_policy_support=4)
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
         components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}

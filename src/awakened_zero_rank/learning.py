@@ -1932,6 +1932,152 @@ def audit_similarity_coverage(
     )
 
 
+@dataclass(frozen=True)
+class EnsembleSimilarityCoverageSummary:
+    training_seeds: tuple[int, ...]
+    evaluation_seeds: tuple[int, ...]
+    condition: str
+    horizon: int
+    minimum_policy_support: int
+    total_decisions: int
+    exact_multi_policy_decisions: int
+    eligible_decisions: int
+    supported_decisions: int
+    within_policy_conflict_decisions: int
+    cross_policy_conflict_decisions: int
+    invalid_consensus_decisions: int
+    insufficient_support_decisions: int
+    coverage_share: float
+    supported_action_counts: tuple[tuple[str, int], ...]
+
+
+def audit_ensemble_similarity_coverage(
+        results: tuple[TrainingResult, ...], evaluation_seeds: tuple[int, ...], *,
+        horizon: int, condition: str = "standard", max_distance: int = 2,
+        min_state_visits: int = 4, minimum_policy_support: int = 2,
+        safety_indices: tuple[int, ...] = ACTION_NEIGHBOR_SAFETY_INDICES,
+        feature_weights: tuple[int, ...] = (1,) * 16,
+        ) -> EnsembleSimilarityCoverageSummary:
+    """Audit cross-policy nearest-action agreement without executing it."""
+    results = tuple(results)
+    evaluation_seeds = tuple(evaluation_seeds)
+    if (type(minimum_policy_support) is not int or minimum_policy_support < 2 or
+            minimum_policy_support > len(results)):
+        raise ValueError("Minimum policy support must be from 2 through policy count")
+    training_seeds = tuple(result.training_seed for result in results)
+    if len(set(training_seeds)) != len(training_seeds):
+        raise ValueError("Similarity ensemble training seeds must be unique")
+    if any(result.config != results[0].config for result in results[1:]):
+        raise ValueError("Similarity ensemble policies must use identical configs")
+    if (not evaluation_seeds or
+            any(type(seed) is not int for seed in evaluation_seeds) or
+            len(set(evaluation_seeds)) != len(evaluation_seeds)):
+        raise ValueError("Evaluation seeds must be unique integers")
+    all_training_seeds = {
+        seed for result in results
+        for seed in (result.training_seed, *result.episode_seeds)
+    }
+    if all_training_seeds.intersection(evaluation_seeds):
+        raise ValueError("Evaluation seeds must be held out from all training seeds")
+    if type(horizon) is not int or horizon < 1:
+        raise ValueError("Horizon must be a positive integer")
+    if type(max_distance) is not int or max_distance < 0:
+        raise ValueError("Maximum distance must be a non-negative integer")
+    if type(min_state_visits) is not int or min_state_visits < 1:
+        raise ValueError("Minimum state visits must be a positive integer")
+    if (len(set(safety_indices)) != len(safety_indices) or
+            any(type(index) is not int or not 0 <= index < 16
+                for index in safety_indices)):
+        raise ValueError("Safety indices must be unique strategic-state indices")
+    feature_weights = tuple(feature_weights)
+    if (len(feature_weights) != len(ABSTRACT_STATE_FEATURES) or
+            any(type(weight) is not int or weight < 1
+                for weight in feature_weights)):
+        raise ValueError("Feature weights must be 16 positive integers")
+    if condition not in EVALUATION_CONDITIONS:
+        raise ValueError(f"Unknown evaluation condition {condition!r}")
+    policy_candidates = []
+    for result in results:
+        summarize_training_recurrence(result)
+        candidates = []
+        for state, counts in result.visit_table.items():
+            total = sum(counts)
+            winners = [index for index, count in enumerate(counts)
+                       if count == max(counts) and count > 0]
+            if total >= min_state_visits and len(winners) == 1:
+                candidates.append((state, winners[0]))
+        policy_candidates.append(tuple(candidates))
+    total = exact = supported = within = cross = invalid = insufficient = 0
+    action_counts = Counter()
+    for seed in evaluation_seeds:
+        environment = LearningEnvironment(seed)
+        _configure_evaluation_condition(environment, condition)
+        for _ in range(horizon):
+            state = abstract_state(environment.observe())
+            mask = environment.action_mask()
+            total += 1
+            exact_policies = sum(
+                state in result.visit_table and sum(result.visit_table[state]) > 0
+                for result in results)
+            if exact_policies >= minimum_policy_support:
+                exact += 1
+                environment.baseline_step()
+                continue
+            recommendations = []
+            within_conflict = invalid_consensus = False
+            for candidates in policy_candidates:
+                neighbors = []
+                for candidate, action in candidates:
+                    if any(candidate[index] != state[index]
+                           for index in safety_indices):
+                        continue
+                    distance = sum(
+                        feature_weights[index] * abs(left - right)
+                        for index, (left, right) in enumerate(zip(state, candidate))
+                        if index not in safety_indices)
+                    if distance <= max_distance:
+                        neighbors.append((distance, action))
+                if not neighbors:
+                    continue
+                minimum = min(distance for distance, _ in neighbors)
+                actions = {action for distance, action in neighbors
+                           if distance == minimum}
+                if len(actions) != 1:
+                    within_conflict = True
+                else:
+                    action = next(iter(actions))
+                    if not mask[action]:
+                        invalid_consensus = True
+                    else:
+                        recommendations.append(action)
+            if within_conflict:
+                within += 1
+            elif invalid_consensus:
+                invalid += 1
+            elif len(set(recommendations)) > 1:
+                cross += 1
+            elif len(recommendations) >= minimum_policy_support:
+                supported += 1
+                action_counts[ACTION_NAMES[recommendations[0]]] += 1
+            else:
+                insufficient += 1
+            environment.baseline_step()
+    eligible = total - exact
+    return EnsembleSimilarityCoverageSummary(
+        training_seeds=training_seeds, evaluation_seeds=evaluation_seeds,
+        condition=condition, horizon=horizon,
+        minimum_policy_support=minimum_policy_support,
+        total_decisions=total, exact_multi_policy_decisions=exact,
+        eligible_decisions=eligible, supported_decisions=supported,
+        within_policy_conflict_decisions=within,
+        cross_policy_conflict_decisions=cross,
+        invalid_consensus_decisions=invalid,
+        insufficient_support_decisions=insufficient,
+        coverage_share=round(supported / max(1, eligible), 3),
+        supported_action_counts=tuple(sorted(action_counts.items())),
+    )
+
+
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                            horizon: int | None = None) -> BatchComparison:
     """Evaluate frozen RL and utility policies on identical held-out world seeds."""
