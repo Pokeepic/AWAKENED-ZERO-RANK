@@ -867,6 +867,9 @@ class EpisodeDiagnostics:
     portal_preparation_selection_rate: float
     portal_preparation_ready_steps: int
     portal_preparation_readiness_blocker_counts: tuple[tuple[str, int], ...]
+    portal_preparation_heuristic_clear_steps: int
+    portal_preparation_heuristic_displacement_counts: tuple[tuple[str, int], ...]
+    portal_preparation_heuristic_displacement_reason_counts: tuple[tuple[str, int], ...]
     gate_mission_seen_opportunity_steps: int
     gate_mission_greedy_steps: int
     gate_mission_greedy_rate: float
@@ -959,6 +962,9 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      gate_priority_clear_selections: int,
                      preparation_ready_steps: int,
                      preparation_readiness_blockers: Counter,
+                     preparation_heuristic_clear_steps: int,
+                     preparation_heuristic_displacements: Counter,
+                     preparation_heuristic_displacement_reasons: Counter,
                      preparation_seen_opportunities: int,
                      preparation_greedy_steps: int,
                      preparation_q_gap_total: float,
@@ -1068,6 +1074,12 @@ def _episode_summary(seed: int, policy: str, condition: str,
         portal_preparation_ready_steps=preparation_ready_steps,
         portal_preparation_readiness_blocker_counts=tuple(
             sorted(preparation_readiness_blockers.items())),
+        portal_preparation_heuristic_clear_steps=(
+            preparation_heuristic_clear_steps),
+        portal_preparation_heuristic_displacement_counts=tuple(
+            sorted(preparation_heuristic_displacements.items())),
+        portal_preparation_heuristic_displacement_reason_counts=tuple(
+            sorted(preparation_heuristic_displacement_reasons.items())),
         gate_mission_seen_opportunity_steps=gate_seen_opportunities,
         gate_mission_greedy_steps=gate_greedy_steps,
         gate_mission_greedy_rate=round(
@@ -1328,8 +1340,10 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     gate_ready_displacements = Counter()
     gate_ready_displacement_reasons = Counter()
     gate_priority_clear_steps = gate_priority_clear_selections = 0
-    preparation_ready_steps = 0
+    preparation_ready_steps = preparation_heuristic_clear_steps = 0
     preparation_readiness_blockers = Counter()
+    preparation_heuristic_displacements = Counter()
+    preparation_heuristic_displacement_reasons = Counter()
     preparation_seen_opportunities = preparation_greedy_steps = 0
     preparation_clear_seen_steps = preparation_clear_greedy_steps = 0
     preparation_clear_q_gap_total = 0.0
@@ -1354,6 +1368,16 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             preparation_ready_steps += int(readiness_blocker is None)
             if readiness_blocker is not None:
                 preparation_readiness_blockers[readiness_blocker] += 1
+            else:
+                heuristic = heuristic_action(environment, mask)
+                preparation_heuristic_clear_steps += int(
+                    heuristic == preparation_index)
+                if heuristic != preparation_index:
+                    chosen = ACTION_NAMES[heuristic]
+                    preparation_heuristic_displacements[chosen] += 1
+                    preparation_heuristic_displacement_reasons[
+                        _progression_displacement_reason(
+                            environment, chosen, False)] += 1
         before_p = environment.simulation.state.protagonist
         before_slot = environment.simulation.state.clock.slot
         low_need_eat = is_low_need_recovery("Eat", before_p, before_slot)
@@ -1493,6 +1517,9 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         gate_ready_displacements, gate_ready_displacement_reasons,
         gate_priority_clear_steps, gate_priority_clear_selections,
         preparation_ready_steps, preparation_readiness_blockers,
+        preparation_heuristic_clear_steps,
+        preparation_heuristic_displacements,
+        preparation_heuristic_displacement_reasons,
         preparation_seen_opportunities, preparation_greedy_steps,
         preparation_q_gap_total, preparation_clear_seen_steps,
         preparation_clear_greedy_steps, preparation_clear_q_gap_total,
@@ -1939,6 +1966,8 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         gate_ready_displacements = Counter()
         gate_ready_displacement_reasons = Counter()
         preparation_readiness_blockers = Counter()
+        preparation_heuristic_displacements = Counter()
+        preparation_heuristic_displacement_reasons = Counter()
         preparation_ready_displacements = Counter()
         preparation_ready_displacement_reasons = Counter()
         for episode in episodes:
@@ -1962,6 +1991,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 episode.gate_mission_ready_displacement_reason_counts))
             preparation_readiness_blockers.update(dict(
                 episode.portal_preparation_readiness_blocker_counts))
+            preparation_heuristic_displacements.update(dict(
+                episode.portal_preparation_heuristic_displacement_counts))
+            preparation_heuristic_displacement_reasons.update(dict(
+                episode.portal_preparation_heuristic_displacement_reason_counts))
             preparation_ready_displacements.update(dict(
                 episode.portal_preparation_ready_displacement_counts))
             preparation_ready_displacement_reasons.update(dict(
@@ -2060,6 +2093,12 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 e.portal_preparation_ready_steps for e in episodes),
             "portal_preparation_readiness_blocker_counts": dict(
                 preparation_readiness_blockers),
+            "portal_preparation_heuristic_clear_steps": sum(
+                e.portal_preparation_heuristic_clear_steps for e in episodes),
+            "portal_preparation_heuristic_displacement_counts": dict(
+                preparation_heuristic_displacements),
+            "portal_preparation_heuristic_displacement_reason_counts": dict(
+                preparation_heuristic_displacement_reasons),
             "gate_mission_seen_opportunity_steps": sum(
                 e.gate_mission_seen_opportunity_steps for e in episodes),
             "gate_mission_greedy_steps": sum(

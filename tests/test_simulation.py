@@ -826,6 +826,16 @@ class SimulationTests(unittest.TestCase):
                 count for _, count in
                 episode.portal_preparation_readiness_blocker_counts),
             episode.portal_preparation_available_steps)
+        self.assertEqual(
+            episode.portal_preparation_heuristic_clear_steps + sum(
+                count for _, count in
+                episode.portal_preparation_heuristic_displacement_counts),
+            episode.portal_preparation_ready_steps)
+        self.assertEqual(
+            sum(count for _, count in
+                episode.portal_preparation_heuristic_displacement_reason_counts),
+            sum(count for _, count in
+                episode.portal_preparation_heuristic_displacement_counts))
         self.assertGreaterEqual(episode.portal_preparation_selection_rate, 0)
         self.assertLessEqual(episode.portal_preparation_selection_rate, 1)
         self.assertGreaterEqual(episode.gate_mission_seen_opportunity_steps, 0)
@@ -1030,6 +1040,14 @@ class SimulationTests(unittest.TestCase):
             report["rl"]["portal_preparation_ready_steps"] + sum(
                 report["rl"]["portal_preparation_readiness_blocker_counts"].values()),
             report["rl"]["portal_preparation_available_steps"])
+        self.assertIn("portal_preparation_heuristic_clear_steps", report["rl"])
+        self.assertIn("portal_preparation_heuristic_displacement_counts", report["rl"])
+        self.assertIn(
+            "portal_preparation_heuristic_displacement_reason_counts", report["rl"])
+        self.assertEqual(
+            report["rl"]["portal_preparation_heuristic_clear_steps"] + sum(
+                report["rl"]["portal_preparation_heuristic_displacement_counts"].values()),
+            report["rl"]["portal_preparation_ready_steps"])
         self.assertIn("gate_mission_seen_opportunity_steps", report["rl"])
         self.assertIn("gate_mission_greedy_steps", report["rl"])
         self.assertIn("gate_mission_greedy_rate", report["rl"])
