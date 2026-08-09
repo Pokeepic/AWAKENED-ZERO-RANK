@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.72.0** · **103 automated tests**
+Current release: **0.73.0** · **103 automated tests**
 
 ## Design principles
 
@@ -200,6 +200,8 @@ Update 0.71 — Balanced Multi-Horizon Pilot compares equal-budget policies trai
 
 Update 0.72 — Horizon Mission Funnel Audit uses the frozen Update 0.71 checkpoint to separate valid opportunity, attempt, preparation, and completion. At 20 steps, RL attempted 2/148 valid mission steps and completed 2/2, versus utility at 9/148 and 9/9. At 60 steps, RL attempted 4/548 and completed 4/4, versus utility at 25/548 and 24/25. RL selected every priority-clear unseen opportunity at both horizons (1/1 and 3/3). It chose Gate mission greedily in only 1/29 and 1/28 seen opportunities, but zero seen opportunities were priority-clear, so those raw gaps do not justify a reward boost. Mission execution is reliable once chosen; the remaining bottleneck is reaching or creating actionable mission states. Policy behavior, schemas, and the honest **baseline remains better** verdict are unchanged.
 
+Update 0.73 — All-State Mission Readiness Attribution records one deterministic strategic blocker for every valid Gate-mission decision across RL, utility, heuristic, and random diagnostics, with exact ready-plus-blocked reconciliation in episode and batch reports. On the frozen balanced-grid policy, 143/148 valid 20-step RL decisions lacked an active portal plan and one lacked energy; only four were strategically ready, with two attempts. At 60 steps, 540/548 lacked a plan and four lacked energy; all four ready moments became attempts. Utility can validly attempt without the conservative plan-aware heuristic, so its attempts may exceed this readiness count; that is not evidence to weaken preparation. Missing portal plans, not mission execution or health, dominate the RL funnel. Policy behavior and schemas are unchanged, and the honest verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -207,7 +209,7 @@ Update 0.72 — Horizon Mission Funnel Audit uses the frozen Update 0.71 checkpo
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — mission funnel isolated in Update 0.72 | RL completed 6/6 attempted missions and selected all 4/4 priority-clear unseen opportunities, but attempted far fewer missions than utility; raw seen Q gaps occurred only in blocked contexts | Keep experimental schedules default-off; attribute why mission-valid states fail readiness across both seen and unseen states before changing rewards or priorities | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — plan bottleneck isolated in Update 0.73 | Missing active portal plans explained 683/696 valid RL mission decisions across both horizons; health explained none, energy explained five, and ready moments produced six attempts | Keep experimental schedules default-off; audit the portal-preparation funnel before changing Gate rewards, mission readiness, or preparation requirements | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -296,8 +298,9 @@ Completed updates are grouped for readability:
 | 0.70 | Balanced Cartesian condition–horizon training grid and checkpoint schema 16 |
 | 0.71 | Equal-budget balanced multi-horizon pilot and baseline-better verdict |
 | 0.72 | Horizon-specific mission funnel audit and pre-execution bottleneck diagnosis |
+| 0.73 | All-state Gate-mission readiness blocker attribution |
 
-Near-term work should attribute why mission-valid states fail strategic readiness across both seen and unseen decisions on the frozen balanced-grid policy. Neural RL remains deferred while the readiness gate is closed.
+Near-term work should audit the portal-preparation funnel on the frozen balanced-grid policy, because missing active plans dominate mission readiness. Neural RL remains deferred while the readiness gate is closed.
 
 ### Future international expansion
 

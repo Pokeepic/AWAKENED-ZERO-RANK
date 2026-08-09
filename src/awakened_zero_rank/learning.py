@@ -861,6 +861,8 @@ class EpisodeDiagnostics:
     average_selected_action_visits: float
     gate_mission_available_steps: int
     gate_mission_selection_rate: float
+    gate_mission_ready_steps: int
+    gate_mission_readiness_blocker_counts: tuple[tuple[str, int], ...]
     portal_preparation_available_steps: int
     portal_preparation_selection_rate: float
     gate_mission_seen_opportunity_steps: int
@@ -938,6 +940,8 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      preventive_rest_overrides: list[PreventiveRestOverride],
                      visit_evidence_steps: int, zero_visit_action_count: int,
                      selected_action_visit_total: int,
+                     gate_ready_steps: int,
+                     gate_readiness_blockers: Counter,
                      gate_seen_opportunities: int, gate_greedy_steps: int,
                      gate_q_gap_total: float,
                      gate_clear_seen_steps: int,
@@ -1051,6 +1055,9 @@ def _episode_summary(seed: int, policy: str, condition: str,
         gate_mission_available_steps=gate_available,
         gate_mission_selection_rate=round(
             p.missions_attempted / max(1, gate_available), 3),
+        gate_mission_ready_steps=gate_ready_steps,
+        gate_mission_readiness_blocker_counts=tuple(
+            sorted(gate_readiness_blockers.items())),
         portal_preparation_available_steps=preparation_available,
         portal_preparation_selection_rate=round(
             policy_actions["Prepare portal"] / max(1, preparation_available), 3),
@@ -1138,10 +1145,20 @@ def _episode_summary(seed: int, policy: str, condition: str,
     )
 
 
+def _gate_mission_readiness_blocker(
+        environment: LearningEnvironment) -> str | None:
+    p, state = environment.simulation.state.protagonist, environment.simulation.state
+    if state.active_portal_plan is None:
+        return "no active portal plan"
+    if p.health < 60:
+        return "health below 60"
+    if p.energy < 42:
+        return "energy below 42"
+    return None
+
+
 def _gate_mission_ready(environment: LearningEnvironment) -> bool:
-    p = environment.simulation.state.protagonist
-    return (environment.simulation.state.active_portal_plan is not None and
-            p.health >= 60 and p.energy >= 42)
+    return _gate_mission_readiness_blocker(environment) is None
 
 
 def _portal_preparation_ready(environment: LearningEnvironment) -> bool:
@@ -1283,6 +1300,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     critical_energy_actions = Counter()
     strained_energy_actions = Counter()
     visit_evidence_steps = zero_visit_action_count = selected_action_visit_total = 0
+    gate_ready_steps = 0
+    gate_readiness_blockers = Counter()
     gate_seen_opportunities = gate_greedy_steps = 0
     gate_clear_seen_steps = gate_clear_greedy_steps = 0
     gate_clear_q_gap_total = 0.0
@@ -1303,6 +1322,12 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     for step in range(1, horizon + 1):
         mask = environment.action_mask()
         masks.append(mask)
+        gate_index = ACTION_NAMES.index("Gate mission")
+        if mask[gate_index]:
+            readiness_blocker = _gate_mission_readiness_blocker(environment)
+            gate_ready_steps += int(readiness_blocker is None)
+            if readiness_blocker is not None:
+                gate_readiness_blockers[readiness_blocker] += 1
         before_p = environment.simulation.state.protagonist
         before_slot = environment.simulation.state.clock.slot
         low_need_eat = is_low_need_recovery("Eat", before_p, before_slot)
@@ -1323,7 +1348,6 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             action, unseen, preventive_rest, replaced_action = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
-            gate_index = ACTION_NAMES.index("Gate mission")
             preparation_index = ACTION_NAMES.index("Prepare portal")
             fallback_action = replaced_action if preventive_rest else action
             if unseen:
@@ -1436,6 +1460,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         strained_energy_actions, high_hunger_steps, high_stress_steps,
         unseen_state_count, preventive_rest_overrides, visit_evidence_steps,
         zero_visit_action_count, selected_action_visit_total,
+        gate_ready_steps, gate_readiness_blockers,
         gate_seen_opportunities, gate_greedy_steps, gate_q_gap_total,
         gate_clear_seen_steps, gate_clear_greedy_steps,
         gate_clear_q_gap_total, gate_unseen_opportunities, gate_fallback_steps,
@@ -1884,6 +1909,7 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         strained_energy_actions = Counter()
         preventive_replaced_actions = Counter()
         preventive_seen_advantages = []
+        gate_readiness_blockers = Counter()
         gate_ready_displacements = Counter()
         gate_ready_displacement_reasons = Counter()
         preparation_ready_displacements = Counter()
@@ -1901,6 +1927,8 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 item.replaced_action_q_advantage
                 for item in episode.preventive_rest_overrides
                 if item.replaced_action_q_advantage is not None)
+            gate_readiness_blockers.update(dict(
+                episode.gate_mission_readiness_blocker_counts))
             gate_ready_displacements.update(dict(
                 episode.gate_mission_ready_displacement_counts))
             gate_ready_displacement_reasons.update(dict(
@@ -1990,6 +2018,10 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "gate_mission_selection_rate": round(
                 sum(e.missions_attempted for e in episodes) /
                 max(1, sum(e.gate_mission_available_steps for e in episodes)), 3),
+            "gate_mission_ready_steps": sum(
+                e.gate_mission_ready_steps for e in episodes),
+            "gate_mission_readiness_blocker_counts": dict(
+                gate_readiness_blockers),
             "portal_preparation_available_steps": sum(
                 e.portal_preparation_available_steps for e in episodes),
             "portal_preparation_selection_rate": round(
