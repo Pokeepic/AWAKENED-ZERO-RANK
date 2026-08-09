@@ -2505,6 +2505,33 @@ def experiment_bundle_summary_json(summary: ExperimentBundleSummary) -> str:
 
 
 @dataclass(frozen=True)
+class ExperimentReportSnapshot:
+    label: str
+    report_type: str
+    sha256: str
+    training_seeds: tuple[int, ...]
+    conditions: tuple[str, ...]
+    horizons: tuple[int, ...]
+    status: str
+
+
+@dataclass(frozen=True)
+class ExperimentReportChange:
+    filename: str
+    changed_fields: tuple[str, ...]
+    left: ExperimentReportSnapshot
+    right: ExperimentReportSnapshot
+
+
+def _experiment_report_snapshot(
+        entry: ExperimentReportEntry) -> ExperimentReportSnapshot:
+    return ExperimentReportSnapshot(
+        label=entry.label, report_type=entry.report_type, sha256=entry.sha256,
+        training_seeds=entry.training_seeds, conditions=entry.conditions,
+        horizons=entry.horizons, status=entry.status,
+    )
+
+@dataclass(frozen=True)
 class ExperimentBundleComparison:
     left_catalog_sha256: str
     right_catalog_sha256: str
@@ -2516,6 +2543,7 @@ class ExperimentBundleComparison:
     removed_files: tuple[str, ...]
     changed_files: tuple[str, ...]
     unchanged_files: tuple[str, ...]
+    changed_reports: tuple[ExperimentReportChange, ...]
     status_changes: tuple[tuple[str, str, str], ...]
     report_type_changes: tuple[tuple[str, str, str], ...]
     added_training_seeds: tuple[int, ...]
@@ -2568,6 +2596,21 @@ def compare_experiment_bundles(
         added_files=tuple(sorted(right_files - left_files)),
         removed_files=tuple(sorted(left_files - right_files)),
         changed_files=changed, unchanged_files=unchanged,
+        changed_reports=tuple(
+            ExperimentReportChange(
+                filename=filename,
+                changed_fields=tuple(
+                    field for field in (
+                        "label", "report_type", "sha256", "training_seeds",
+                        "conditions", "horizons", "status",
+                    )
+                    if (getattr(left_entries[filename], field) !=
+                        getattr(right_entries[filename], field))),
+                left=_experiment_report_snapshot(left_entries[filename]),
+                right=_experiment_report_snapshot(right_entries[filename]),
+            )
+            for filename in changed
+        ),
         status_changes=tuple(
             (filename, left_entries[filename].status,
              right_entries[filename].status)

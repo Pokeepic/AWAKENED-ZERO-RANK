@@ -2128,6 +2128,17 @@ class SimulationTests(unittest.TestCase):
                 payload["changed_files"], ["similarity/current.json"])
             self.assertEqual(
                 payload["unchanged_files"], ["similarity/stable.json"])
+            self.assertEqual(len(payload["changed_reports"]), 1)
+            report_change = payload["changed_reports"][0]
+            self.assertEqual(
+                report_change["filename"], "similarity/current.json")
+            self.assertEqual(report_change["changed_fields"], [
+                "sha256", "training_seeds", "horizons",
+            ])
+            self.assertEqual(report_change["left"]["training_seeds"], [123])
+            self.assertEqual(report_change["right"]["training_seeds"], [124])
+            self.assertEqual(report_change["left"]["horizons"], [3])
+            self.assertEqual(report_change["right"]["horizons"], [4])
             self.assertEqual(payload["added_training_seeds"], [124])
             self.assertEqual(payload["removed_training_seeds"], [])
             self.assertEqual(
@@ -2151,6 +2162,7 @@ class SimulationTests(unittest.TestCase):
             identical_payload = json.loads(identical_output.getvalue())
             self.assertTrue(identical_payload["identical"])
             self.assertEqual(identical_payload["difference_count"], 0)
+            self.assertEqual(identical_payload["changed_reports"], [])
             different_output = StringIO()
             with (redirect_stdout(different_output),
                   self.assertRaises(SystemExit) as exit_context):

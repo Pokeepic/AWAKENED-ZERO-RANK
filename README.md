@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.129.0** · **131 automated tests**
+Current release: **0.130.0** · **131 automated tests**
 
 ## Design principles
 
@@ -51,7 +51,7 @@ Current release: **0.129.0** · **131 automated tests**
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 - Deterministic evaluation starts for standard life, financial pressure, injury recovery, Gate crises, and a compound medical/debt/Gate crisis.
 - Versioned scenario-suite and similarity-audit JSON reports with SHA-256 identity, exact reload, semantic reconciliation, tamper rejection, and schema validation.
-- Portable authenticated experiment catalogs and staged non-overwriting bundles that index, publish, strictly verify, inspect, and compare compact deterministic metadata through dedicated CLI modes, including an opt-in CI equality gate.
+- Portable authenticated experiment catalogs and staged non-overwriting bundles that index, publish, strictly verify, inspect, and compare compact deterministic metadata through dedicated CLI modes, including field-level before/after metadata and an opt-in CI equality gate.
 - Explainable offline adoption decisions with checkpoint verification and explicit confidence, safety, progression, rent-recovery, action-dominance, and exploit blockers.
 
 The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or progression regressions; every failed gate now returns explicit blocker reasons.
@@ -328,6 +328,8 @@ Update 0.128 — Verified Bundle Comparison fully authenticates two published bu
 
 Update 0.129 — Verified Bundle Equality Gate adds explicit left/right report counts, total difference count, and an `identical` boolean to canonical comparison JSON. The optional `--require-identical` flag preserves JSON output but exits with status 1 after successful verification when bundles differ, allowing CI to distinguish authenticated drift from invalid or tampered input without parsing arrays. The flag is rejected outside comparison mode. No RL experiment, policy behavior, checkpoint schema, or verdict changed; single-policy RL remains **baseline remains better** and the corrected return-evidence ensemble remains **inconclusive**.
 
+Update 0.130 — Detailed Bundle Change Records add a canonical entry for every changed report path, naming the exact metadata fields that differ and retaining complete authenticated left/right snapshots of labels, report types, SHA-256 identities, training seeds, conditions, horizons, and statuses. Existing summary arrays, equality signals, CLI output mode, and CI exit behavior remain compatible. The focused fixture uses only two-episode policies already needed for bundle verification; no larger RL experiment, policy behavior, checkpoint schema, or verdict changed. Single-policy RL remains **baseline remains better** and the corrected return-evidence ensemble remains **inconclusive**.
+
 Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
@@ -483,6 +485,7 @@ Completed updates are grouped for readability:
 | 0.127 | Verified bundle summary API and deterministic inspection CLI |
 | 0.128 | Deterministic comparison of fully verified experiment bundles |
 | 0.129 | Explicit bundle equality signal and opt-in CI gate |
+| 0.130 | Field-level authenticated before/after bundle change records |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
 
@@ -494,6 +497,6 @@ International travel should remain grounded: passports or clearance, airfare, lo
 
 ### Future observer website
 
-A later presentation update can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports and their portable authenticated catalog and verified bundle comparisons can feed a separate developer-facing experiment view without coupling the website to training code; staged bundles publish only after every referenced report verifies beneath an explicit data root.
+A later presentation update can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports and their portable authenticated catalog and field-level verified bundle comparisons can feed a separate developer-facing experiment view without coupling the website to training code; staged bundles publish only after every referenced report verifies beneath an explicit data root.
 
 The website must remain a view of the authoritative deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him.
