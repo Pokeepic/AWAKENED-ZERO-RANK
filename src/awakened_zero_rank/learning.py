@@ -13,7 +13,7 @@ import hashlib
 import json
 import math
 import random
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 try:
     import gymnasium as gym
@@ -2228,6 +2228,169 @@ def load_similarity_audit_report(path: str | Path) -> SimilarityAuditSummary:
         raise ValueError("Invalid similarity report schema") from error
     _validate_similarity_summary(summary)
     return summary
+
+
+EXPERIMENT_CATALOG_VERSION = 1
+
+
+@dataclass(frozen=True)
+class ExperimentReportEntry:
+    label: str
+    filename: str
+    report_type: str
+    sha256: str
+    training_seeds: tuple[int, ...]
+    conditions: tuple[str, ...]
+    horizons: tuple[int, ...]
+    status: str
+
+
+@dataclass(frozen=True)
+class ExperimentCatalog:
+    entries: tuple[ExperimentReportEntry, ...]
+
+
+def _validate_experiment_catalog(catalog: ExperimentCatalog) -> None:
+    if not catalog.entries:
+        raise ValueError("Experiment catalog requires at least one report")
+    if any(
+            type(entry.label) is not str or type(entry.filename) is not str or
+            type(entry.report_type) is not str or
+            type(entry.sha256) is not str or type(entry.status) is not str
+            for entry in catalog.entries):
+        raise ValueError("Experiment catalog entry metadata is invalid")
+    labels = [entry.label for entry in catalog.entries]
+    filenames = [entry.filename for entry in catalog.entries]
+    digests = [entry.sha256 for entry in catalog.entries]
+    if (len(set(labels)) != len(labels) or
+            len(set(filenames)) != len(filenames) or
+            len(set(digests)) != len(digests)):
+        raise ValueError("Experiment catalog entries must be unique")
+    if tuple(catalog.entries) != tuple(sorted(
+            catalog.entries, key=lambda entry: entry.filename)):
+        raise ValueError("Experiment catalog entries must be filename-sorted")
+    for entry in catalog.entries:
+        path = PurePosixPath(entry.filename)
+        if (not entry.label.strip() or entry.label != entry.label.strip() or
+                not entry.filename.endswith(".json") or
+                path.is_absolute() or ".." in path.parts or
+                "\\" in entry.filename or str(path) != entry.filename):
+            raise ValueError("Experiment catalog paths and labels must be portable")
+        if (entry.report_type not in
+                {"scenario_suite", "similarity_single", "similarity_ensemble"} or
+                len(entry.sha256) != 64 or
+                any(character not in "0123456789abcdef" for character in entry.sha256) or
+                not entry.training_seeds or
+                any(type(seed) is not int for seed in entry.training_seeds) or
+                len(set(entry.training_seeds)) != len(entry.training_seeds) or
+                not entry.conditions or
+                any(condition not in EVALUATION_CONDITIONS
+                    for condition in entry.conditions) or
+                len(set(entry.conditions)) != len(entry.conditions) or
+                entry.conditions != tuple(sorted(entry.conditions)) or
+                not entry.horizons or
+                any(type(horizon) is not int or horizon < 1
+                    for horizon in entry.horizons) or
+                len(set(entry.horizons)) != len(entry.horizons) or
+                entry.horizons != tuple(sorted(entry.horizons)) or
+                not entry.status):
+            raise ValueError("Experiment catalog entry metadata is invalid")
+
+
+def build_experiment_catalog(
+        items: tuple[tuple[str, str, ScenarioSuiteResult | SimilarityAuditSummary], ...],
+        ) -> ExperimentCatalog:
+    """Build a canonical catalog from validated report objects and relative names."""
+    entries = []
+    for label, filename, report in items:
+        if isinstance(report, ScenarioSuiteResult):
+            entry = ExperimentReportEntry(
+                label=label, filename=filename, report_type="scenario_suite",
+                sha256=scenario_suite_digest(report),
+                training_seeds=(report.training_seed,),
+                conditions=tuple(sorted({item.condition for item in report.scenarios})),
+                horizons=tuple(sorted({item.horizon for item in report.scenarios})),
+                status=report.verdict,
+            )
+        elif isinstance(report, SimilarityCoverageSummary):
+            _validate_similarity_summary(report)
+            entry = ExperimentReportEntry(
+                label=label, filename=filename, report_type="similarity_single",
+                sha256=similarity_audit_digest(report),
+                training_seeds=(report.training_seed,),
+                conditions=(report.condition,), horizons=(report.horizon,),
+                status="diagnostic_only",
+            )
+        elif isinstance(report, EnsembleSimilarityCoverageSummary):
+            _validate_similarity_summary(report)
+            entry = ExperimentReportEntry(
+                label=label, filename=filename, report_type="similarity_ensemble",
+                sha256=similarity_audit_digest(report),
+                training_seeds=report.training_seeds,
+                conditions=(report.condition,), horizons=(report.horizon,),
+                status="diagnostic_only",
+            )
+        else:
+            raise ValueError("Unknown experiment report type")
+        entries.append(entry)
+    catalog = ExperimentCatalog(tuple(sorted(
+        entries, key=lambda entry: entry.filename)))
+    _validate_experiment_catalog(catalog)
+    return catalog
+
+
+def _experiment_catalog_data(catalog: ExperimentCatalog) -> dict:
+    _validate_experiment_catalog(catalog)
+    return {
+        "catalog_version": EXPERIMENT_CATALOG_VERSION,
+        "entries": [asdict(entry) for entry in catalog.entries],
+    }
+
+
+def experiment_catalog_digest(catalog: ExperimentCatalog) -> str:
+    """Return the stable identity of an offline experiment catalog."""
+    payload = json.dumps(_experiment_catalog_data(catalog), sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def experiment_catalog_report(catalog: ExperimentCatalog) -> str:
+    """Render a deterministic integrity-identified experiment catalog."""
+    data = _experiment_catalog_data(catalog)
+    data["sha256"] = experiment_catalog_digest(catalog)
+    return json.dumps(data, indent=2, sort_keys=True)
+
+
+def save_experiment_catalog(catalog: ExperimentCatalog, path: str | Path) -> Path:
+    """Save a canonical catalog for offline dashboard discovery."""
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(experiment_catalog_report(catalog), encoding="utf-8")
+    return destination
+
+
+def load_experiment_catalog(path: str | Path) -> ExperimentCatalog:
+    """Load a catalog only when its schema, metadata, and digest are intact."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    digest = data.pop("sha256", None)
+    if data.get("catalog_version") != EXPERIMENT_CATALOG_VERSION:
+        raise ValueError("Unsupported experiment catalog version")
+    payload = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if digest != hashlib.sha256(payload).hexdigest():
+        raise ValueError("Experiment catalog integrity verification failed")
+    try:
+        entries = tuple(ExperimentReportEntry(
+            label=item["label"], filename=item["filename"],
+            report_type=item["report_type"], sha256=item["sha256"],
+            training_seeds=tuple(item["training_seeds"]),
+            conditions=tuple(item["conditions"]),
+            horizons=tuple(item["horizons"]), status=item["status"],
+        ) for item in data["entries"])
+        catalog = ExperimentCatalog(entries)
+    except (KeyError, TypeError) as error:
+        raise ValueError("Invalid experiment catalog schema") from error
+    _validate_experiment_catalog(catalog)
+    return catalog
 
 
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],

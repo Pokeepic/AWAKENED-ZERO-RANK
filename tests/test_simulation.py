@@ -19,16 +19,18 @@ from awakened_zero_rank.learning import (
     _apply_training_rent_reserve, _frozen_policy_action,
     EvaluationScenario,
     abstract_state, assess_policy_adoption, audit_ensemble_similarity_coverage,
-    audit_similarity_coverage,
+    audit_similarity_coverage, build_experiment_catalog,
     checkpoint_digest,
     compare_utility_and_ensemble, compare_utility_and_rl, curriculum_reward,
+    experiment_catalog_digest, experiment_catalog_report,
     diagnose_batch,
     diagnose_episode, diagnostics_report, ensemble_policy_action, heuristic_action,
     is_low_need_recovery, utility_action,
     evaluate_preparation_counterfactual,
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
-    load_checkpoint, load_scenario_suite_report, load_similarity_audit_report,
-    save_checkpoint,
+    load_checkpoint, load_experiment_catalog, load_scenario_suite_report,
+    load_similarity_audit_report,
+    save_checkpoint, save_experiment_catalog,
     save_scenario_suite_report, save_similarity_audit_report,
     nearest_action_neighbors,
     scenario_suite_digest, scenario_suite_report, similarity_audit_digest,
@@ -1914,6 +1916,59 @@ class SimulationTests(unittest.TestCase):
             single_path.write_text(json.dumps(invalid), encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_similarity_audit_report(single_path)
+
+    def test_experiment_catalog_is_portable_canonical_and_tamper_evident(self) -> None:
+        trained = train_q_learning(114, QLearningConfig(episodes=2, horizon=3))
+        suite = evaluate_scenario_suite(trained, (
+            EvaluationScenario("standard", 3, (214, 215)),
+        ))
+        similarity = audit_similarity_coverage(
+            trained, (216,), horizon=3, min_state_visits=1)
+        catalog = build_experiment_catalog((
+            ("Similarity coverage", "similarity/standard.json", similarity),
+            ("Scenario baseline", "scenarios/baseline.json", suite),
+        ))
+        self.assertEqual(tuple(entry.filename for entry in catalog.entries), (
+            "scenarios/baseline.json", "similarity/standard.json",
+        ))
+        first = experiment_catalog_report(catalog)
+        self.assertEqual(first, experiment_catalog_report(catalog))
+        payload = json.loads(first)
+        self.assertEqual(payload["catalog_version"], 1)
+        self.assertEqual(payload["sha256"], experiment_catalog_digest(catalog))
+        self.assertEqual(payload["entries"][0]["status"], suite.verdict)
+        self.assertEqual(payload["entries"][1]["status"], "diagnostic_only")
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "catalog.json"
+            duplicate = Path(directory) / "duplicate.json"
+            save_experiment_catalog(catalog, path)
+            save_experiment_catalog(catalog, duplicate)
+            self.assertEqual(path.read_bytes(), duplicate.read_bytes())
+            self.assertEqual(load_experiment_catalog(path), catalog)
+            tampered = json.loads(path.read_text(encoding="utf-8"))
+            tampered["entries"][0]["status"] = "promising"
+            path.write_text(json.dumps(tampered), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_experiment_catalog(path)
+            malformed = json.loads(first)
+            malformed.pop("sha256")
+            malformed["entries"][0]["filename"] = 7
+            canonical = json.dumps(
+                malformed, sort_keys=True, separators=(",", ":"))
+            malformed["sha256"] = hashlib.sha256(
+                canonical.encode("utf-8")).hexdigest()
+            path.write_text(json.dumps(malformed), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_experiment_catalog(path)
+        with self.assertRaises(ValueError):
+            build_experiment_catalog((
+                ("Unsafe", "../escape.json", similarity),
+            ))
+        with self.assertRaises(ValueError):
+            build_experiment_catalog((
+                ("Duplicate", "a.json", similarity),
+                ("Duplicate", "b.json", suite),
+            ))
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
         components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}
