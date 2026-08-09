@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.69.0** · **103 automated tests**
+Current release: **0.70.0** · **103 automated tests**
 
 ## Design principles
 
@@ -194,6 +194,8 @@ Update 0.68 — Deterministic Multi-Horizon Training adds an optional validated 
 
 Update 0.69 — Joint Scenario Exposure closes a coverage false positive by counting exact condition–horizon pairs in authenticated training episodes. A policy can no longer pass adoption merely because a condition and horizon appeared separately: every evaluation pair requires at least two matching training episodes. Scenario-report schema 8 stores the joint count; schema-7 and older reports load it as explicitly unknown. A focused crossed-pair test confirms separate coverage can coexist with zero joint exposure. Policy behavior, checkpoint schema 15, and the honest **baseline remains better** verdict are unchanged.
 
+Update 0.70 — Balanced Training Grid makes multi-condition, multi-horizon training traverse the deterministic Cartesian product instead of advancing both cycles in lockstep. Every configured pair is therefore reached once per grid cycle; single-condition and single-horizon schedules retain their historical ordering. Checkpoint schema 16 identifies the new scheduling semantics while schema-15 and older policies remain exactly loadable. Focused tests cover all four pairs in a 2 × 2 grid and retain a synthetic sparse-pair audit proving the Update 0.69 gate still catches missing combinations. No RL pilot was run, and the honest **baseline remains better** verdict is unchanged.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -287,6 +289,7 @@ Completed updates are grouped for readability:
 | 0.67 | Authenticated fixed-horizon alignment evidence and scenario-report schema 7 |
 | 0.68 | Deterministic multi-horizon training schedules and checkpoint schema 15 |
 | 0.69 | Authenticated joint condition–horizon exposure and scenario-report schema 8 |
+| 0.70 | Balanced Cartesian condition–horizon training grid and checkpoint schema 16 |
 
 Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
 

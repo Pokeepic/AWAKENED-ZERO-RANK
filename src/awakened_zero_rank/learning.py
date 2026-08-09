@@ -512,10 +512,14 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     preparation_clear_selections_by_episode = []
     preparation_ready_steps_by_episode = []
     preparation_blockers_by_episode = []
+    training_schedule = tuple(
+        (condition, horizon)
+        for condition in config.training_conditions
+        for horizon in config.training_horizons
+    )
     for episode in range(config.episodes):
         episode_seed = rng.randrange(2**31)
-        condition = config.training_conditions[episode % len(config.training_conditions)]
-        episode_horizon = config.training_horizons[episode % len(config.training_horizons)]
+        condition, episode_horizon = training_schedule[episode % len(training_schedule)]
         episode_seeds.append(episode_seed)
         episode_conditions.append(condition)
         episode_horizons.append(episode_horizon)
@@ -613,7 +617,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(preparation_clear_selections_by_episode),
                           tuple(preparation_ready_steps_by_episode),
                           tuple(preparation_blockers_by_episode))
-CHECKPOINT_VERSION = 15
+CHECKPOINT_VERSION = 16
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -673,7 +677,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":

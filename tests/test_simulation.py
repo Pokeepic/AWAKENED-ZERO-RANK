@@ -551,9 +551,13 @@ class SimulationTests(unittest.TestCase):
         second = train_q_learning(109, config)
         self.assertEqual(first, second)
         self.assertEqual(first.episode_conditions, (
-            "standard", "compound_crisis", "standard", "compound_crisis",
+            "standard", "standard", "compound_crisis", "compound_crisis",
         ))
         self.assertEqual(first.episode_horizons, (3, 5, 3, 5))
+        self.assertEqual(set(zip(first.episode_conditions, first.episode_horizons)), {
+            ("standard", 3), ("standard", 5),
+            ("compound_crisis", 3), ("compound_crisis", 5),
+        })
         with TemporaryDirectory() as directory:
             path = Path(directory) / "conditioned.json"
             save_checkpoint(first, path)
@@ -1248,6 +1252,12 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 15
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_checkpoint(first), trained)
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 14
             legacy["config"].pop("training_horizons")
             legacy.pop("episode_horizons")
@@ -1457,7 +1467,7 @@ class SimulationTests(unittest.TestCase):
                             for blocker in assess_policy_adoption(
                                 thin, thin_suite).blockers))
         covered = train_q_learning(37, QLearningConfig(
-            episodes=4, horizon=5, training_horizons=(5, 7),
+            episodes=8, horizon=5, training_horizons=(5, 7),
             training_conditions=("financial_pressure", "gate_crisis"),
         ))
         covered_suite = evaluate_scenario_suite(covered, (
@@ -1467,7 +1477,7 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(all(item.training_condition_covered
                             for item in covered_suite.scenarios))
         self.assertEqual(tuple(item.training_condition_episodes
-                               for item in covered_suite.scenarios), (2, 2))
+                               for item in covered_suite.scenarios), (4, 4))
         self.assertEqual(tuple(item.training_scenario_episodes
                                for item in covered_suite.scenarios), (2, 2))
         covered_blockers = assess_policy_adoption(covered, covered_suite).blockers
@@ -1478,11 +1488,22 @@ class SimulationTests(unittest.TestCase):
         crossed = evaluate_scenario_suite(covered, (
             EvaluationScenario("crossed", 7, (340, 341), "financial_pressure"),
         ))
-        self.assertEqual(crossed.scenarios[0].training_condition_episodes, 2)
+        self.assertEqual(crossed.scenarios[0].training_condition_episodes, 4)
         self.assertTrue(crossed.scenarios[0].training_horizon_matches)
-        self.assertEqual(crossed.scenarios[0].training_scenario_episodes, 0)
-        self.assertIn("crossed: joint training exposure is 0; require 2",
-                      assess_policy_adoption(covered, crossed).blockers)
+        self.assertEqual(crossed.scenarios[0].training_scenario_episodes, 2)
+        sparse_pairs = replace(
+            covered,
+            episode_conditions=("financial_pressure", "gate_crisis") * 4,
+            episode_horizons=(5, 7) * 4,
+        )
+        missed = evaluate_scenario_suite(sparse_pairs, (
+            EvaluationScenario("missed pair", 7, (342, 343), "financial_pressure"),
+        ))
+        self.assertEqual(missed.scenarios[0].training_condition_episodes, 4)
+        self.assertTrue(missed.scenarios[0].training_horizon_matches)
+        self.assertEqual(missed.scenarios[0].training_scenario_episodes, 0)
+        self.assertIn("missed pair: joint training exposure is 0; require 2",
+                      assess_policy_adoption(sparse_pairs, missed).blockers)
 
     def test_scenario_suite_is_reproducible_across_horizons(self) -> None:
         trained = train_q_learning(31, QLearningConfig(episodes=2, horizon=5))
