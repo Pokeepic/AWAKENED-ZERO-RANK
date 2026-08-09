@@ -671,6 +671,45 @@ def summarize_training_state_features(
         ))
     return tuple(summaries)
 
+
+@dataclass(frozen=True)
+class TrainingFeatureSliceSummary:
+    condition: str
+    horizon: int
+    episode_count: int
+    selection_visits: int
+    sparse_features: tuple[StateFeatureCoverage, ...]
+
+
+def summarize_training_feature_slice(
+        result: TrainingResult, max_categories: int = 2,
+        ) -> TrainingFeatureSliceSummary:
+    """Summarize sparse features for one authenticated condition-horizon slice."""
+    if type(max_categories) is not int or not 1 <= max_categories <= 4:
+        raise ValueError("max_categories must be an integer from 1 to 4")
+    conditions = set(result.episode_conditions)
+    horizons = set(result.episode_horizons)
+    if (len(conditions) != 1 or len(horizons) != 1 or
+            len(result.episode_conditions) != result.config.episodes or
+            len(result.episode_horizons) != result.config.episodes):
+        raise ValueError("Feature slices require one authenticated condition and horizon")
+    condition = next(iter(conditions))
+    horizon = next(iter(horizons))
+    if (result.config.training_conditions != (condition,) or
+            result.config.training_horizons != (horizon,)):
+        raise ValueError("Feature slice metadata does not match its training config")
+    coverage = summarize_training_state_features(result)
+    return TrainingFeatureSliceSummary(
+        condition=condition,
+        horizon=horizon,
+        episode_count=result.config.episodes,
+        selection_visits=sum(sum(counts) for counts in result.visit_table.values()),
+        sparse_features=tuple(
+            item for item in coverage
+            if len(item.observed_categories) <= max_categories),
+    )
+
+
 @dataclass(frozen=True)
 class StateProjectionSummary:
     retained_indices: tuple[int, ...]

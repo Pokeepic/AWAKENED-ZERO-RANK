@@ -29,7 +29,7 @@ from awakened_zero_rank.learning import (
     scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
     summarize_state_projection,
     summarize_training_actions, summarize_training_recurrence,
-    summarize_training_state_features,
+    summarize_training_feature_slice, summarize_training_state_features,
     summarize_preparation_plan_contexts,
     summarize_training_conditions, summarize_training_preparation_blockers,
     summarize_training_progression,
@@ -660,6 +660,25 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(money.feature, "money")
         with self.assertRaises(ValueError):
             summarize_training_state_features(replace(trained, visit_table={}))
+
+    def test_training_feature_slice_requires_single_authenticated_slice(self) -> None:
+        config = QLearningConfig(
+            episodes=2, horizon=8, training_conditions=("financial_pressure",))
+        trained = train_q_learning(132, config)
+        summary = summarize_training_feature_slice(trained)
+        self.assertEqual((summary.condition, summary.horizon),
+                         ("financial_pressure", 8))
+        self.assertEqual(summary.episode_count, 2)
+        self.assertEqual(summary.selection_visits, 16)
+        self.assertTrue(all(len(item.observed_categories) <= 2
+                            for item in summary.sparse_features))
+        mixed = train_q_learning(133, QLearningConfig(
+            episodes=2, horizon=8,
+            training_conditions=("standard", "financial_pressure")))
+        with self.assertRaises(ValueError):
+            summarize_training_feature_slice(mixed)
+        with self.assertRaises(ValueError):
+            summarize_training_feature_slice(trained, max_categories=0)
 
     def test_state_projection_balances_recurrence_and_action_conflicts(self) -> None:
         trained = train_q_learning(130, QLearningConfig(episodes=3, horizon=8))
