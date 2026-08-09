@@ -2504,6 +2504,85 @@ def experiment_bundle_summary_json(summary: ExperimentBundleSummary) -> str:
     return json.dumps(asdict(summary), indent=2, sort_keys=True)
 
 
+@dataclass(frozen=True)
+class ExperimentBundleComparison:
+    left_catalog_sha256: str
+    right_catalog_sha256: str
+    added_files: tuple[str, ...]
+    removed_files: tuple[str, ...]
+    changed_files: tuple[str, ...]
+    unchanged_files: tuple[str, ...]
+    status_changes: tuple[tuple[str, str, str], ...]
+    report_type_changes: tuple[tuple[str, str, str], ...]
+    added_training_seeds: tuple[int, ...]
+    removed_training_seeds: tuple[int, ...]
+    added_conditions: tuple[str, ...]
+    removed_conditions: tuple[str, ...]
+    added_horizons: tuple[int, ...]
+    removed_horizons: tuple[int, ...]
+
+
+def compare_experiment_bundles(
+        left_root: str | Path, right_root: str | Path,
+        ) -> ExperimentBundleComparison:
+    """Verify and compare two published experiment bundles deterministically."""
+    left_path, right_path = Path(left_root), Path(right_root)
+    left = load_experiment_catalog(left_path / "catalog.json")
+    right = load_experiment_catalog(right_path / "catalog.json")
+    verify_experiment_catalog(left, left_path)
+    verify_experiment_catalog(right, right_path)
+    left_entries = {entry.filename: entry for entry in left.entries}
+    right_entries = {entry.filename: entry for entry in right.entries}
+    left_files, right_files = set(left_entries), set(right_entries)
+    common = left_files & right_files
+    unchanged = tuple(sorted(
+        filename for filename in common
+        if left_entries[filename] == right_entries[filename]))
+    changed = tuple(sorted(common - set(unchanged)))
+
+    def aggregate(entries, attribute: str) -> set:
+        return {
+            value for entry in entries
+            for value in getattr(entry, attribute)
+        }
+
+    left_seeds = aggregate(left.entries, "training_seeds")
+    right_seeds = aggregate(right.entries, "training_seeds")
+    left_conditions = aggregate(left.entries, "conditions")
+    right_conditions = aggregate(right.entries, "conditions")
+    left_horizons = aggregate(left.entries, "horizons")
+    right_horizons = aggregate(right.entries, "horizons")
+    return ExperimentBundleComparison(
+        left_catalog_sha256=experiment_catalog_digest(left),
+        right_catalog_sha256=experiment_catalog_digest(right),
+        added_files=tuple(sorted(right_files - left_files)),
+        removed_files=tuple(sorted(left_files - right_files)),
+        changed_files=changed, unchanged_files=unchanged,
+        status_changes=tuple(
+            (filename, left_entries[filename].status,
+             right_entries[filename].status)
+            for filename in changed
+            if left_entries[filename].status != right_entries[filename].status),
+        report_type_changes=tuple(
+            (filename, left_entries[filename].report_type,
+             right_entries[filename].report_type)
+            for filename in changed
+            if (left_entries[filename].report_type !=
+                right_entries[filename].report_type)),
+        added_training_seeds=tuple(sorted(right_seeds - left_seeds)),
+        removed_training_seeds=tuple(sorted(left_seeds - right_seeds)),
+        added_conditions=tuple(sorted(right_conditions - left_conditions)),
+        removed_conditions=tuple(sorted(left_conditions - right_conditions)),
+        added_horizons=tuple(sorted(right_horizons - left_horizons)),
+        removed_horizons=tuple(sorted(left_horizons - right_horizons)),
+    )
+
+
+def experiment_bundle_comparison_json(
+        comparison: ExperimentBundleComparison) -> str:
+    """Render deterministic JSON for verified bundle differences."""
+    return json.dumps(asdict(comparison), indent=2, sort_keys=True)
+
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                            horizon: int | None = None) -> BatchComparison:
     """Evaluate frozen RL and utility policies on identical held-out world seeds."""

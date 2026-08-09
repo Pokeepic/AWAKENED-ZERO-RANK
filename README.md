@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.127.0** · **130 automated tests**
+Current release: **0.128.0** · **131 automated tests**
 
 ## Design principles
 
@@ -51,7 +51,7 @@ Current release: **0.127.0** · **130 automated tests**
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 - Deterministic evaluation starts for standard life, financial pressure, injury recovery, Gate crises, and a compound medical/debt/Gate crisis.
 - Versioned scenario-suite and similarity-audit JSON reports with SHA-256 identity, exact reload, semantic reconciliation, tamper rejection, and schema validation.
-- Portable authenticated experiment catalogs and staged non-overwriting bundles that index, publish, strictly verify, and expose compact deterministic metadata through a dedicated CLI mode.
+- Portable authenticated experiment catalogs and staged non-overwriting bundles that index, publish, strictly verify, inspect, and compare compact deterministic metadata through dedicated CLI modes.
 - Explainable offline adoption decisions with checkpoint verification and explicit confidence, safety, progression, rent-recovery, action-dominance, and exploit blockers.
 
 The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or progression regressions; every failed gate now returns explicit blocker reasons.
@@ -84,6 +84,12 @@ Verify a published offline experiment bundle and print dashboard-safe JSON:
 
 ```bash
 python -m awakened_zero_rank --inspect-experiment-bundle reports/run-001
+```
+
+Compare two fully verified bundles without running simulation or training:
+
+```bash
+python -m awakened_zero_rank --compare-experiment-bundles reports/run-001 reports/run-002
 ```
 
 Run the tests:
@@ -316,6 +322,8 @@ Update 0.126 — Staged Experiment Bundle Export validates report objects and po
 
 Update 0.127 — Verified Bundle Inspection adds a compact immutable summary of a published bundle after full catalog-to-file verification: catalog digest, report count and type counts, unique training seeds, conditions, horizons, and status counts. The new `--inspect-experiment-bundle DIR` CLI mode emits deterministic JSON only, rejects explicit simulation options, and exits cleanly on missing or tampered data. Existing simulation defaults remain seven days and seed 42 when those options are omitted. This provides a scriptable ingestion point for future dashboard work without running training or simulation. No RL experiment, policy behavior, checkpoint schema, or verdict changed; single-policy RL remains **baseline remains better** and the corrected return-evidence ensemble remains **inconclusive**.
 
+Update 0.128 — Verified Bundle Comparison fully authenticates two published bundles before producing canonical JSON differences for added, removed, changed, and unchanged report files; per-file status and report-type transitions; and aggregate training-seed, condition, and horizon changes. The new `--compare-experiment-bundles LEFT RIGHT` mode is mutually exclusive with inspection and rejects simulation options. This update ran only tiny two-episode fixtures, not a new RL experiment; policy behavior and checkpoint schema 26 are unchanged, single-policy RL remains **baseline remains better**, and the corrected return-evidence ensemble remains **inconclusive**.
+
 Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
@@ -469,6 +477,7 @@ Completed updates are grouped for readability:
 | 0.125 | Strict root-contained catalog reference verification |
 | 0.126 | Staged verified non-overwriting experiment bundle export |
 | 0.127 | Verified bundle summary API and deterministic inspection CLI |
+| 0.128 | Deterministic comparison of fully verified experiment bundles |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
 
@@ -480,6 +489,6 @@ International travel should remain grounded: passports or clearance, airfare, lo
 
 ### Future observer website
 
-A later presentation update can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports and their portable authenticated catalog can feed a separate developer-facing experiment view without coupling the website to training code; staged bundles publish only after every referenced report verifies beneath an explicit data root.
+A later presentation update can add a read-only web dashboard showing time, weather, Ren's condition, current concern, decision journal, relationships, finances, inventory, Gate investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity. Versioned evaluation reports and their portable authenticated catalog and verified bundle comparisons can feed a separate developer-facing experiment view without coupling the website to training code; staged bundles publish only after every referenced report verifies beneath an explicit data root.
 
 The website must remain a view of the authoritative deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him.

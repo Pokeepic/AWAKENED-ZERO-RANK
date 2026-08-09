@@ -15,9 +15,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--load", metavar="FILE", help="continue an existing save")
     parser.add_argument("--save", metavar="FILE", help="save after this run")
     parser.add_argument("--technical-log", action="store_true", help="show decision reasons")
-    parser.add_argument(
+    bundle_modes = parser.add_mutually_exclusive_group()
+    bundle_modes.add_argument(
         "--inspect-experiment-bundle", metavar="DIR",
         help="verify a published experiment bundle and print JSON metadata",
+    )
+    bundle_modes.add_argument(
+        "--compare-experiment-bundles", nargs=2, metavar=("LEFT", "RIGHT"),
+        help="verify and compare two published experiment bundles",
     )
     return parser
 
@@ -26,23 +31,33 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     parser = build_parser()
     arguments = tuple(sys.argv[1:] if argv is None else argv)
     args = parser.parse_args(arguments)
-    if args.inspect_experiment_bundle:
+    if args.inspect_experiment_bundle or args.compare_experiment_bundles:
+        mode_name = (
+            "--inspect-experiment-bundle" if args.inspect_experiment_bundle
+            else "--compare-experiment-bundles")
         simulation_options = (
             "--days", "--seed", "--load", "--save", "--technical-log",
         )
         if any(
                 argument == option or argument.startswith(f"{option}=")
                 for argument in arguments for option in simulation_options):
-            parser.error(
-                "--inspect-experiment-bundle cannot use simulation options")
+            parser.error(f"{mode_name} cannot use simulation options")
         from .learning import (
+            compare_experiment_bundles, experiment_bundle_comparison_json,
             experiment_bundle_summary_json, inspect_experiment_bundle,
         )
         try:
-            summary = inspect_experiment_bundle(args.inspect_experiment_bundle)
+            if args.inspect_experiment_bundle:
+                result = inspect_experiment_bundle(
+                    args.inspect_experiment_bundle)
+                output = experiment_bundle_summary_json(result)
+            else:
+                result = compare_experiment_bundles(
+                    *args.compare_experiment_bundles)
+                output = experiment_bundle_comparison_json(result)
         except (OSError, ValueError) as error:
             parser.error(str(error))
-        print(experiment_bundle_summary_json(summary))
+        print(output)
         return
     if args.days < 1:
         raise SystemExit("--days must be at least 1")

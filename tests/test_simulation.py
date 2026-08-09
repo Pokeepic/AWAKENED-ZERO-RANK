@@ -24,8 +24,10 @@ from awakened_zero_rank.learning import (
     abstract_state, assess_policy_adoption, audit_ensemble_similarity_coverage,
     audit_similarity_coverage, build_experiment_catalog,
     checkpoint_digest,
-    compare_utility_and_ensemble, compare_utility_and_rl, curriculum_reward,
-    experiment_bundle_summary_json, experiment_catalog_digest,
+    compare_experiment_bundles, compare_utility_and_ensemble,
+    compare_utility_and_rl, curriculum_reward,
+    experiment_bundle_comparison_json, experiment_bundle_summary_json,
+    experiment_catalog_digest,
     experiment_catalog_report, inspect_experiment_bundle,
     diagnose_batch,
     diagnose_episode, diagnostics_report, ensemble_policy_action, heuristic_action,
@@ -2079,6 +2081,79 @@ class SimulationTests(unittest.TestCase):
             errors = StringIO()
             with redirect_stderr(errors), self.assertRaises(SystemExit):
                 cli_main(("--inspect-experiment-bundle", str(bundle)))
+            self.assertIn("integrity verification failed", errors.getvalue())
+
+    def test_bundle_comparison_api_and_cli_report_verified_changes(self) -> None:
+        config = QLearningConfig(episodes=2, horizon=3)
+        left_training = train_q_learning(123, config)
+        right_training = train_q_learning(124, config)
+        stable = audit_similarity_coverage(
+            left_training, (223,), horizon=3, min_state_visits=1)
+        left_changed = audit_similarity_coverage(
+            left_training, (224,), horizon=3, min_state_visits=1)
+        right_changed = audit_similarity_coverage(
+            right_training, (225,), horizon=4, min_state_visits=1)
+        removed = evaluate_scenario_suite(left_training, (
+            EvaluationScenario(
+                "removed", 3, (226, 227), condition="injury_recovery"),
+        ))
+        added = evaluate_scenario_suite(right_training, (
+            EvaluationScenario(
+                "added", 4, (228, 229), condition="financial_pressure"),
+        ))
+        with TemporaryDirectory() as directory:
+            left = Path(directory) / "left"
+            right = Path(directory) / "right"
+            save_experiment_bundle((
+                ("Stable", "similarity/stable.json", stable),
+                ("Current", "similarity/current.json", left_changed),
+                ("Removed", "scenarios/removed.json", removed),
+            ), left)
+            save_experiment_bundle((
+                ("Stable", "similarity/stable.json", stable),
+                ("Current", "similarity/current.json", right_changed),
+                ("Added", "scenarios/added.json", added),
+            ), right)
+            comparison = compare_experiment_bundles(left, right)
+            payload = json.loads(
+                experiment_bundle_comparison_json(comparison))
+            self.assertEqual(payload["added_files"], ["scenarios/added.json"])
+            self.assertEqual(
+                payload["removed_files"], ["scenarios/removed.json"])
+            self.assertEqual(
+                payload["changed_files"], ["similarity/current.json"])
+            self.assertEqual(
+                payload["unchanged_files"], ["similarity/stable.json"])
+            self.assertEqual(payload["added_training_seeds"], [124])
+            self.assertEqual(payload["removed_training_seeds"], [])
+            self.assertEqual(
+                payload["added_conditions"], ["financial_pressure"])
+            self.assertEqual(
+                payload["removed_conditions"], ["injury_recovery"])
+            self.assertEqual(payload["added_horizons"], [4])
+            self.assertEqual(payload["removed_horizons"], [])
+            output = StringIO()
+            with redirect_stdout(output):
+                cli_main((
+                    "--compare-experiment-bundles", str(left), str(right),
+                ))
+            self.assertEqual(json.loads(output.getvalue()), payload)
+            errors = StringIO()
+            with redirect_stderr(errors), self.assertRaises(SystemExit):
+                cli_main((
+                    "--compare-experiment-bundles", str(left), str(right),
+                    "--days", "1",
+                ))
+            self.assertIn("cannot use simulation options", errors.getvalue())
+            changed_path = right / "similarity" / "current.json"
+            tampered = json.loads(changed_path.read_text(encoding="utf-8"))
+            tampered["summary"]["supported_decisions"] += 1
+            changed_path.write_text(json.dumps(tampered), encoding="utf-8")
+            errors = StringIO()
+            with redirect_stderr(errors), self.assertRaises(SystemExit):
+                cli_main((
+                    "--compare-experiment-bundles", str(left), str(right),
+                ))
             self.assertIn("integrity verification failed", errors.getvalue())
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
