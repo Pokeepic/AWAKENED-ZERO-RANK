@@ -1359,6 +1359,17 @@ class SimulationTests(unittest.TestCase):
         action, _ = simulation.agent.choose(p, simulation.state.clock.slot)
         self.assertEqual(action.name, "Seek treatment")
 
+    def test_critical_entry_controller_labels_utility_sequence(self) -> None:
+        episode = diagnose_episode(
+            1013, 20, "utility", condition="gate_crisis")
+        self.assertEqual(len(episode.critical_energy_entries), 1)
+        entry = episode.critical_energy_entries[0]
+        self.assertEqual(entry.controller, "utility")
+        self.assertEqual(entry.action, "Gate mission")
+        self.assertEqual(entry.prior_actions[-1], "Prepare portal")
+        self.assertGreater(entry.energy_before, 25)
+        self.assertLessEqual(entry.energy_after, 25)
+
     def test_multi_policy_batch_is_reproducible_and_ranked(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
         first = diagnose_batch(trained, (201, 202), horizon=6, worst_count=1)
