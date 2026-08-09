@@ -2078,6 +2078,158 @@ def audit_ensemble_similarity_coverage(
     )
 
 
+SIMILARITY_REPORT_VERSION = 1
+SimilarityAuditSummary = SimilarityCoverageSummary | EnsembleSimilarityCoverageSummary
+
+
+def _validate_similarity_summary(summary: SimilarityAuditSummary) -> None:
+    if (summary.condition not in EVALUATION_CONDITIONS or
+            type(summary.horizon) is not int or summary.horizon < 1 or
+            not summary.evaluation_seeds or
+            any(type(seed) is not int for seed in summary.evaluation_seeds) or
+            len(set(summary.evaluation_seeds)) != len(summary.evaluation_seeds)):
+        raise ValueError("Invalid similarity audit context")
+    if isinstance(summary, SimilarityCoverageSummary):
+        counts = (
+            summary.total_decisions, summary.exact_visited_decisions,
+            summary.unseen_decisions, summary.supported_decisions,
+            summary.conflicting_decisions, summary.invalid_consensus_decisions,
+            summary.unsupported_decisions,
+        )
+        distance_counts = dict(summary.supported_distance_counts)
+        feature_distances = dict(summary.supported_feature_distance_totals)
+        conflict_features = dict(summary.conflicting_feature_counts)
+        expected_average = (
+            round(sum(distance * count for distance, count in distance_counts.items()) /
+                  summary.supported_decisions, 3)
+            if summary.supported_decisions else None)
+        if (type(summary.training_seed) is not int or
+                any(type(count) is not int or count < 0 for count in counts) or
+                summary.total_decisions !=
+                summary.exact_visited_decisions + summary.unseen_decisions or
+                summary.unseen_decisions !=
+                summary.supported_decisions + summary.conflicting_decisions +
+                summary.invalid_consensus_decisions + summary.unsupported_decisions or
+                summary.coverage_share != round(
+                    summary.supported_decisions / max(1, summary.unseen_decisions), 3) or
+                summary.average_supported_distance != expected_average or
+                sum(distance_counts.values()) != summary.supported_decisions or
+                sum(distance * count for distance, count in distance_counts.items()) !=
+                sum(feature_distances.values()) or
+                any(type(distance) is not int or distance < 0 or
+                    type(count) is not int or count < 0
+                    for distance, count in summary.supported_distance_counts)):
+            raise ValueError("Single-policy similarity counts do not reconcile")
+        if (len(summary.feature_weights) != len(ABSTRACT_STATE_FEATURES) or
+                any(type(weight) is not int or weight < 1
+                    for weight in summary.feature_weights) or
+                tuple(feature_distances) != ABSTRACT_STATE_FEATURES or
+                tuple(conflict_features) != ABSTRACT_STATE_FEATURES or
+                any(type(count) is not int or count < 0
+                    for count in (*feature_distances.values(),
+                                  *conflict_features.values()))):
+            raise ValueError("Single-policy similarity features are invalid")
+    else:
+        counts = (
+            summary.total_decisions, summary.exact_multi_policy_decisions,
+            summary.eligible_decisions, summary.supported_decisions,
+            summary.within_policy_conflict_decisions,
+            summary.cross_policy_conflict_decisions,
+            summary.invalid_consensus_decisions,
+            summary.insufficient_support_decisions,
+        )
+        if (len(summary.training_seeds) < 2 or
+                any(type(seed) is not int for seed in summary.training_seeds) or
+                len(set(summary.training_seeds)) != len(summary.training_seeds) or
+                type(summary.minimum_policy_support) is not int or
+                not 2 <= summary.minimum_policy_support <= len(summary.training_seeds) or
+                any(type(count) is not int or count < 0 for count in counts) or
+                summary.total_decisions !=
+                summary.exact_multi_policy_decisions + summary.eligible_decisions or
+                summary.eligible_decisions !=
+                summary.supported_decisions +
+                summary.within_policy_conflict_decisions +
+                summary.cross_policy_conflict_decisions +
+                summary.invalid_consensus_decisions +
+                summary.insufficient_support_decisions or
+                summary.coverage_share != round(
+                    summary.supported_decisions / max(1, summary.eligible_decisions), 3) or
+                sum(count for _, count in summary.supported_action_counts) !=
+                summary.supported_decisions or
+                len({action for action, _ in summary.supported_action_counts}) !=
+                len(summary.supported_action_counts) or
+                any(action not in ACTION_NAMES or type(count) is not int or count < 0
+                    for action, count in summary.supported_action_counts)):
+            raise ValueError("Ensemble similarity counts do not reconcile")
+
+
+def _similarity_audit_data(summary: SimilarityAuditSummary) -> dict:
+    _validate_similarity_summary(summary)
+    return {
+        "report_version": SIMILARITY_REPORT_VERSION,
+        "audit_type": ("single" if isinstance(summary, SimilarityCoverageSummary)
+                       else "ensemble"),
+        "summary": asdict(summary),
+    }
+
+
+def similarity_audit_digest(summary: SimilarityAuditSummary) -> str:
+    """Return the stable identity of a similarity audit payload."""
+    payload = json.dumps(_similarity_audit_data(summary), sort_keys=True,
+                         separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def similarity_audit_report(summary: SimilarityAuditSummary) -> str:
+    """Render a deterministic integrity-identified similarity audit report."""
+    data = _similarity_audit_data(summary)
+    data["sha256"] = similarity_audit_digest(summary)
+    return json.dumps(data, indent=2, sort_keys=True)
+
+
+def save_similarity_audit_report(
+        summary: SimilarityAuditSummary, path: str | Path) -> Path:
+    """Save a canonical similarity report for audits and observer tooling."""
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(similarity_audit_report(summary), encoding="utf-8")
+    return destination
+
+
+def load_similarity_audit_report(path: str | Path) -> SimilarityAuditSummary:
+    """Load a similarity report only when schema, counts, and digest are intact."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    digest = data.pop("sha256", None)
+    if data.get("report_version") != SIMILARITY_REPORT_VERSION:
+        raise ValueError("Unsupported similarity report version")
+    payload = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if digest != hashlib.sha256(payload).hexdigest():
+        raise ValueError("Similarity report integrity verification failed")
+    try:
+        values = dict(data["summary"])
+        if data.get("audit_type") == "single":
+            values["evaluation_seeds"] = tuple(values["evaluation_seeds"])
+            values["feature_weights"] = tuple(values["feature_weights"])
+            for name in (
+                    "supported_distance_counts",
+                    "supported_feature_distance_totals",
+                    "conflicting_feature_counts"):
+                values[name] = tuple(tuple(item) for item in values[name])
+            summary: SimilarityAuditSummary = SimilarityCoverageSummary(**values)
+        elif data.get("audit_type") == "ensemble":
+            values["training_seeds"] = tuple(values["training_seeds"])
+            values["evaluation_seeds"] = tuple(values["evaluation_seeds"])
+            values["supported_action_counts"] = tuple(
+                tuple(item) for item in values["supported_action_counts"])
+            summary = EnsembleSimilarityCoverageSummary(**values)
+        else:
+            raise ValueError("Unknown similarity audit type")
+    except (KeyError, TypeError) as error:
+        raise ValueError("Invalid similarity report schema") from error
+    _validate_similarity_summary(summary)
+    return summary
+
+
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                            horizon: int | None = None) -> BatchComparison:
     """Evaluate frozen RL and utility policies on identical held-out world seeds."""

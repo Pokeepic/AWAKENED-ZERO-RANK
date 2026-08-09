@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.122.0** · **126 automated tests**
+Current release: **0.123.0** · **127 automated tests**
 
 ## Design principles
 
@@ -50,7 +50,7 @@ Current release: **0.122.0** · **126 automated tests**
 - Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 - Deterministic evaluation starts for standard life, financial pressure, injury recovery, Gate crises, and a compound medical/debt/Gate crisis.
-- Versioned scenario-suite JSON reports with stable policy binding, SHA-256 identity, exact reload, tamper rejection, and backward-compatible schema loading.
+- Versioned scenario-suite and similarity-audit JSON reports with SHA-256 identity, exact reload, semantic reconciliation, tamper rejection, and schema validation.
 - Explainable offline adoption decisions with checkpoint verification and explicit confidence, safety, progression, rent-recovery, action-dominance, and exploit blockers.
 
 The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or progression regressions; every failed gate now returns explicit blocker reasons.
@@ -299,6 +299,8 @@ Update 0.121 — Similarity Feature Attribution records reconciled supported-dis
 
 Update 0.122 — Cross-Policy Similarity Consensus adds a read-only held-out audit that excludes states with sufficient exact multi-policy evidence, requires matching valid nearest-action recommendations across independent policies, and separately reconciles within-policy conflicts, cross-policy conflicts, invalid consensuses, and insufficient support. On fresh policies 2501–2503 across all 5×2 cells, two-policy support covered only 206/2,827 eligible decisions (7.3%) with uniform distance and 202/2,827 (7.1%) with confirmed weights. Unanimous support fell to 41/3,089 (1.3%) and 36/3,089 (1.2%). The weighted metric reduced within-policy conflicts 163→86 but did not improve usable consensus; cross-policy disagreement remained 254–335 decisions. The similarity-ensemble branch is rejected before confirmation or reward evaluation. Live behavior and checkpoint schema 26 remain unchanged; single-policy RL remains **baseline remains better** and the corrected return-evidence ensemble remains **inconclusive**.
 
+Update 0.123 — Authenticated Similarity Audit Reports add canonical schema-1 JSON persistence for both single-policy and cross-policy similarity summaries. Reports carry an explicit audit type, stable SHA-256 identity, deterministic bytes, exact tuple reconstruction, unsupported-version rejection, and semantic validation of seeds, contexts, nonnegative counts, category reconciliation, coverage, distance totals, features, policy support, and action names. Tampered files and structurally invalid reports are rejected even when the latter are re-hashed. This creates a safe data boundary for future developer dashboards without coupling presentation code to training execution. No experiment or policy change was needed; live behavior and checkpoint schema 26 remain unchanged, single-policy RL remains **baseline remains better**, and the corrected return-evidence ensemble remains **inconclusive**.
+
 Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
@@ -447,6 +449,7 @@ Completed updates are grouped for readability:
 | 0.120 | Conflict-safe held-out similarity coverage audit and controller rejection |
 | 0.121 | Reconciled similarity feature attribution and fresh weighted-distance confirmation |
 | 0.122 | Cross-policy similarity consensus audit and early branch rejection |
+| 0.123 | Canonical authenticated similarity reports for offline tooling |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
 

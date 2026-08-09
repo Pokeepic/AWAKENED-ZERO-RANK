@@ -27,10 +27,12 @@ from awakened_zero_rank.learning import (
     is_low_need_recovery, utility_action,
     evaluate_preparation_counterfactual,
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
-    load_checkpoint, load_scenario_suite_report, save_checkpoint,
-    save_scenario_suite_report,
+    load_checkpoint, load_scenario_suite_report, load_similarity_audit_report,
+    save_checkpoint,
+    save_scenario_suite_report, save_similarity_audit_report,
     nearest_action_neighbors,
-    scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
+    scenario_suite_digest, scenario_suite_report, similarity_audit_digest,
+    similarity_audit_report, summarize_action_safety_groups,
     summarize_pooled_training_recurrence, summarize_pooled_training_slice,
     summarize_ensemble_evaluations,
     summarize_state_projection,
@@ -1862,6 +1864,56 @@ class SimulationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             audit_ensemble_similarity_coverage(
                 agreeing, (208,), horizon=1, minimum_policy_support=4)
+
+    def test_similarity_audit_report_is_canonical_and_tamper_evident(self) -> None:
+        trained = train_q_learning(111, QLearningConfig(episodes=1, horizon=2))
+        single = audit_similarity_coverage(
+            trained, (211,), horizon=2, min_state_visits=1)
+        policies = (trained, replace(trained, training_seed=112),
+                    replace(trained, training_seed=113))
+        ensemble = audit_ensemble_similarity_coverage(
+            policies, (212,), horizon=2, min_state_visits=1)
+        first = similarity_audit_report(single)
+        self.assertEqual(first, similarity_audit_report(single))
+        payload = json.loads(first)
+        self.assertEqual(payload["report_version"], 1)
+        self.assertEqual(payload["audit_type"], "single")
+        self.assertEqual(payload["sha256"], similarity_audit_digest(single))
+        with TemporaryDirectory() as directory:
+            single_path = Path(directory) / "single.json"
+            ensemble_path = Path(directory) / "ensemble.json"
+            duplicate_path = Path(directory) / "duplicate.json"
+            save_similarity_audit_report(single, single_path)
+            save_similarity_audit_report(single, duplicate_path)
+            save_similarity_audit_report(ensemble, ensemble_path)
+            self.assertEqual(single_path.read_bytes(), duplicate_path.read_bytes())
+            self.assertEqual(load_similarity_audit_report(single_path), single)
+            self.assertEqual(load_similarity_audit_report(ensemble_path), ensemble)
+            tampered = json.loads(single_path.read_text(encoding="utf-8"))
+            tampered["summary"]["supported_decisions"] += 1
+            single_path.write_text(json.dumps(tampered), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_similarity_audit_report(single_path)
+            unsupported = json.loads(first)
+            unsupported.pop("sha256")
+            unsupported["report_version"] = 2
+            canonical = json.dumps(
+                unsupported, sort_keys=True, separators=(",", ":"))
+            unsupported["sha256"] = hashlib.sha256(
+                canonical.encode("utf-8")).hexdigest()
+            single_path.write_text(json.dumps(unsupported), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_similarity_audit_report(single_path)
+            invalid = json.loads(first)
+            invalid.pop("sha256")
+            invalid["summary"]["unsupported_decisions"] = -1
+            canonical = json.dumps(
+                invalid, sort_keys=True, separators=(",", ":"))
+            invalid["sha256"] = hashlib.sha256(
+                canonical.encode("utf-8")).hexdigest()
+            single_path.write_text(json.dumps(invalid), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_similarity_audit_report(single_path)
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
         components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}
