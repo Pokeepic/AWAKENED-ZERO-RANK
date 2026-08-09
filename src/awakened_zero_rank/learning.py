@@ -252,6 +252,7 @@ class QLearningConfig:
     preventive_rest_threshold: int = 0
     preventive_rest_max_injury_severity: int = 0
     energy_preemption_floor: int = 0
+    seen_recovery_utility_override: bool = False
     curriculum: bool = True
     training_rent_reserve: bool = False
     training_conditions: tuple[str, ...] = ("standard",)
@@ -303,6 +304,8 @@ class QLearningConfig:
                 "energy_preemption_floor must be an integer from 0 to 100")
         if type(self.training_rent_reserve) is not bool:
             raise ValueError("training_rent_reserve must be a boolean")
+        if type(self.seen_recovery_utility_override) is not bool:
+            raise ValueError("seen_recovery_utility_override must be a boolean")
         if self.unseen_state_fallback not in {"first_valid", "heuristic", "utility"}:
             raise ValueError("unknown unseen-state fallback")
 
@@ -924,7 +927,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(preparation_return_samples),
                           tuple(preparation_plan_returns),
                           tuple(preparation_plan_contexts))
-CHECKPOINT_VERSION = 24
+CHECKPOINT_VERSION = 25
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -1004,7 +1007,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -1037,6 +1040,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data.setdefault("training_rent_reserve", False)
     config_data.setdefault("preventive_rest_threshold", 0)
     config_data.setdefault("energy_preemption_floor", 0)
+    config_data.setdefault("seen_recovery_utility_override", False)
     config_data.setdefault(
         "preventive_rest_max_injury_severity",
         1 if data["checkpoint_version"] == 9 else 0,
@@ -1699,6 +1703,10 @@ def _frozen_policy_action(
         values = result.q_table.get(state, [0.0] * len(ACTION_NAMES))
         action = _greedy_action(values, mask)
     p = environment.simulation.state.protagonist
+    if (not unseen and result.config.seen_recovery_utility_override and
+            ((ACTION_NAMES[action] == "Eat" and p.hunger < 65) or
+             (ACTION_NAMES[action] == "Rest" and p.energy > 28 and p.health >= 45))):
+        action = utility_action(environment, mask)
     rest_index = ACTION_NAMES.index("Rest")
     projected_energy = p.energy - ACTION_ENERGY_COSTS.get(
         ACTION_NAMES[action], 0)

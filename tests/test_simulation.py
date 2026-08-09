@@ -576,6 +576,8 @@ class SimulationTests(unittest.TestCase):
             QLearningConfig(training_conditions=("unknown",))
         with self.assertRaises(ValueError):
             QLearningConfig(unseen_state_fallback="unknown")
+        with self.assertRaises(ValueError):
+            QLearningConfig(seen_recovery_utility_override=1)
 
     def test_training_condition_summary_is_auditable(self) -> None:
         trained = train_q_learning(113, QLearningConfig(
@@ -812,6 +814,22 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(seen_override.replaced_action_q_value, 2.0)
         self.assertEqual(seen_override.rest_q_value, 0.5)
         self.assertEqual(seen_override.replaced_action_q_advantage, 1.5)
+        selective = replace(
+            seen, config=replace(
+                seen.config, preventive_rest_threshold=0,
+                seen_recovery_utility_override=True))
+        selective_first = diagnose_episode(201, 1, "rl", selective)
+        selective_second = diagnose_episode(201, 1, "rl", selective)
+        self.assertEqual(selective_first, selective_second)
+        self.assertNotEqual(selective_first.trace[0].action, "Eat")
+        urgent_environment = LearningEnvironment(201)
+        urgent_environment.simulation.state.protagonist.hunger = 70
+        urgent_state = abstract_state(urgent_environment.observe())
+        urgent = replace(selective, q_table={urgent_state: seen_values})
+        urgent_action = _frozen_policy_action(
+            urgent, urgent_environment, urgent_environment.observe(),
+            urgent_environment.action_mask())
+        self.assertEqual(ACTION_NAMES[urgent_action[0]], "Eat")
         self.assertEqual(injured_episode.trace[0].action, "Seek treatment")
         self.assertEqual(injured_episode.preventive_rest_override_count, 0)
         self.assertEqual(first, second)
@@ -1535,6 +1553,13 @@ class SimulationTests(unittest.TestCase):
             save_checkpoint(restored, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
+            legacy.pop("sha256")
+            legacy["checkpoint_version"] = 24
+            legacy["config"].pop("seen_recovery_utility_override")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_checkpoint(first), trained)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 23
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
