@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.70.0** · **103 automated tests**
+Current release: **0.71.0** · **103 automated tests**
 
 ## Design principles
 
@@ -196,6 +196,8 @@ Update 0.69 — Joint Scenario Exposure closes a coverage false positive by coun
 
 Update 0.70 — Balanced Training Grid makes multi-condition, multi-horizon training traverse the deterministic Cartesian product instead of advancing both cycles in lockstep. Every configured pair is therefore reached once per grid cycle; single-condition and single-horizon schedules retain their historical ordering. Checkpoint schema 16 identifies the new scheduling semantics while schema-15 and older policies remain exactly loadable. Focused tests cover all four pairs in a 2 × 2 grid and retain a synthetic sparse-pair audit proving the Update 0.69 gate still catches missing combinations. No RL pilot was run, and the honest **baseline remains better** verdict is unchanged.
 
+Update 0.71 — Balanced Multi-Horizon Pilot compares equal-budget policies trained for 800 total steps with the same seed, five conditions, 10% progression sampler, heuristic fallback, and safe preventive-Rest settings. The 40-step control had zero exact exposure to the held-out 20/60-step pairs, a pooled deficit of 25.797, and five missions. The balanced 20/60 grid achieved 2/2 exposure for all ten pairs and six missions, but slightly worsened the deficit to 25.979; both retained 100% survival and no exploit flags, while the grid still trailed utility by 27 missions and retained one compound-crisis rent regression. The rerun reproduced exact checkpoint digests and metrics. Coverage is fixed, policy quality is not, so the honest verdict is **baseline remains better** and no schedule is adopted by default.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -203,7 +205,7 @@ Update 0.70 — Balanced Training Grid makes multi-condition, multi-horizon trai
 | Gate pacing — resolved for utility in Update 0.26 | Maximum-alert utility runs attempted missions without preparation | Added plan-aware scoring only at alert 3/3; normal and lower-alert routines retain prior scores | Preparation rose from 0 to 5, completed missions rose from 7 to 8, and survival stayed 4/4 |
 | Recovery access — resolved in Update 0.35 | Compound injury and debt made repayment outrank urgent treatment, while cash-limited clinic assistance was implicit | Repayment defers under severe injury or low health, and treatment outcomes now disclose the emergency subsidy when Ren cannot pay the full price | Utility and heuristic treated first in 4/4 runs; ¥0 treatment retains the full treatment effect and reports assistance explicitly |
 | Social frequency — monitored in Update 0.36 | Utility chose 0–3 Aiko conversations per 60-step episode across standard and crisis audits, with no exploit flags and below-31% dominant-action share | Defer cooldowns unless repeated audits show social-action dominance; preserve crisis support and autonomous relationship growth | Social-action share remains bounded and relationship behavior stays varied |
-| Policy consistency — reserve pilot rejected in Update 0.66 | A training-only rent reserve created only two clear preparation steps, selected neither, and did not improve the broad-sampler policy; combining clear sampling reduced missions and reward | Keep reserve and samplers default-off; improve condition/horizon coverage rather than injecting cash or weakening legitimate economic priorities | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
+| Policy consistency — balanced grid rejected in Update 0.71 | Exact condition–horizon coverage reached 2/2 for all ten pairs and gained one mission, but reward slightly worsened and RL still trailed utility by 27 missions | Keep experimental samplers and schedules default-off; diagnose horizon-specific mission opportunity and completion gaps before increasing training scale | A frozen policy is promising in every scenario, matches safety and mission metrics, and passes the existing adoption gate |
 
 Random-policy mission counts must never be used as a tuning target by themselves: prior evaluation showed that a controller can attempt missions while surviving only 12.5% of episodes. Safety and coherent preparation remain first-class balance constraints.
 
@@ -290,8 +292,9 @@ Completed updates are grouped for readability:
 | 0.68 | Deterministic multi-horizon training schedules and checkpoint schema 15 |
 | 0.69 | Authenticated joint condition–horizon exposure and scenario-report schema 8 |
 | 0.70 | Balanced Cartesian condition–horizon training grid and checkpoint schema 16 |
+| 0.71 | Equal-budget balanced multi-horizon pilot and baseline-better verdict |
 
-Near-term work should use the expanded scenario suite to measure and improve tabular consistency across different horizons and stress conditions. Neural RL remains deferred while the readiness gate is closed.
+Near-term work should diagnose horizon-specific mission opportunity and completion gaps on the frozen balanced-grid policy before increasing training scale. Neural RL remains deferred while the readiness gate is closed.
 
 ### Future international expansion
 
