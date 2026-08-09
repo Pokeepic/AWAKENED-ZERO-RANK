@@ -1196,6 +1196,17 @@ class MissionOutcome:
 
 
 @dataclass(frozen=True)
+class SeenStateDecisionOutcome:
+    step: int
+    learned_action: str
+    utility_action: str
+    disagreed: bool
+    reward: float
+    reward_components: tuple[tuple[str, float], ...]
+    mission_completed: bool
+
+
+@dataclass(frozen=True)
 class EpisodeDiagnostics:
     seed: int
     policy: str
@@ -1244,6 +1255,7 @@ class EpisodeDiagnostics:
     seen_state_decision_count: int
     seen_utility_disagreement_count: int
     seen_utility_disagreement_share: float
+    seen_state_decision_outcomes: tuple[SeenStateDecisionOutcome, ...]
     preventive_rest_override_count: int
     preventive_rest_override_share: float
     preventive_rest_overrides: tuple[PreventiveRestOverride, ...]
@@ -1337,6 +1349,7 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      unseen_state_count: int,
                      seen_state_decision_count: int,
                      seen_utility_disagreement_count: int,
+                     seen_state_decision_outcomes: list[SeenStateDecisionOutcome],
                      preventive_rest_overrides: list[PreventiveRestOverride],
                      visit_evidence_steps: int, zero_visit_action_count: int,
                      selected_action_visit_total: int,
@@ -1452,6 +1465,7 @@ def _episode_summary(seed: int, policy: str, condition: str,
         seen_utility_disagreement_count=seen_utility_disagreement_count,
         seen_utility_disagreement_share=round(
             seen_utility_disagreement_count / max(1, seen_state_decision_count), 3),
+        seen_state_decision_outcomes=tuple(seen_state_decision_outcomes),
         preventive_rest_override_count=len(preventive_rest_overrides),
         preventive_rest_override_share=round(
             len(preventive_rest_overrides) / max(1, steps), 3),
@@ -1797,6 +1811,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     mission_outcomes = []
     low_need_recovery_count = unseen_state_count = 0
     seen_state_decision_count = seen_utility_disagreement_count = 0
+    seen_state_decision_outcomes = []
     preventive_rest_overrides = []
     critical_energy_steps = high_hunger_steps = high_stress_steps = 0
     critical_energy_actions = Counter()
@@ -1968,6 +1983,16 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                 seen_state_decision_count += 1
                 seen_utility_disagreement_count += int(
                     action != utility_counterfactual)
+                seen_state_decision_outcomes.append(SeenStateDecisionOutcome(
+                    step=step, learned_action=ACTION_NAMES[action],
+                    utility_action=ACTION_NAMES[utility_counterfactual],
+                    disagreed=action != utility_counterfactual,
+                    reward=transition.reward,
+                    reward_components=transition.reward_components,
+                    mission_completed=(
+                        environment.simulation.state.protagonist.missions_completed >
+                        before_missions_completed),
+                ))
         transitions.append(transition)
         chosen_action = transition.resolved_action or transition.action
         after_p = environment.simulation.state.protagonist
@@ -2000,7 +2025,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
         mission_outcomes, low_need_recovery_count, critical_energy_steps, critical_energy_actions,
         strained_energy_actions, high_hunger_steps, high_stress_steps,
         unseen_state_count, seen_state_decision_count,
-        seen_utility_disagreement_count, preventive_rest_overrides, visit_evidence_steps,
+        seen_utility_disagreement_count, seen_state_decision_outcomes,
+        preventive_rest_overrides, visit_evidence_steps,
         zero_visit_action_count, selected_action_visit_total,
         gate_ready_steps, gate_readiness_blockers,
         gate_seen_opportunities, gate_greedy_steps, gate_q_gap_total,
@@ -2464,9 +2490,11 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         preparation_ready_displacements = Counter()
         preparation_ready_displacement_reasons = Counter()
         mission_outcomes = []
+        seen_state_outcomes = []
         for episode in episodes:
             actions.update(dict(episode.action_counts))
             mission_outcomes.extend(episode.mission_outcomes)
+            seen_state_outcomes.extend(episode.seen_state_decision_outcomes)
             masked.update(dict(episode.masked_counts))
             components.update(dict(episode.reward_components))
             flags.update(episode.exploit_flags)
@@ -2583,6 +2611,17 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "seen_utility_disagreement_share": round(
                 sum(e.seen_utility_disagreement_count for e in episodes) /
                 max(1, sum(e.seen_state_decision_count for e in episodes)), 3),
+            "seen_state_action_pair_counts": dict(Counter(
+                f"{item.learned_action} -> {item.utility_action}"
+                for item in seen_state_outcomes)),
+            "seen_state_agreement_average_reward": (
+                round(sum(item.reward for item in seen_state_outcomes if not item.disagreed) /
+                      sum(not item.disagreed for item in seen_state_outcomes), 3)
+                if any(not item.disagreed for item in seen_state_outcomes) else None),
+            "seen_state_disagreement_average_reward": (
+                round(sum(item.reward for item in seen_state_outcomes if item.disagreed) /
+                      sum(item.disagreed for item in seen_state_outcomes), 3)
+                if any(item.disagreed for item in seen_state_outcomes) else None),
             "average_preventive_rest_override_count": round(
                 sum(e.preventive_rest_override_count for e in episodes) / count, 3),
             "average_preventive_rest_override_share": round(

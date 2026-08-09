@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.99.0** · **111 automated tests**
+Current release: **0.100.0** · **111 automated tests**
 
 ## Design principles
 
@@ -254,6 +254,8 @@ Update 0.98 — Utility-Fallback Control adds a validated, checkpoint-authentica
 
 Update 0.99 — Seen-State Utility Disagreement Audit adds non-mutating diagnostic counters for resolved seen-state decisions. Each counterfactual utility query snapshots and restores the simulator RNG, so measurement cannot alter the live episode; scheduled world events are excluded from the decision denominator. Across the three frozen policies and fresh seeds 901–920, learned actions disagreed with the utility scorer on 532/586 seen decisions (90.8%), with training-seed rates from 89.2% to 91.7% and high disagreement in every condition–horizon cell. However, the utility-guided policy's pooled reward gap remains only +0.427 and **inconclusive** from Update 0.98. The learned slice is behaviorally distinct but not proven beneficial. No policy behavior changed, checkpoint schema remains 24, and the overall verdict remains **baseline remains better**.
 
+Update 0.100 — Seen-State Action and Outcome Attribution records each resolved seen-state learned action, its non-mutating utility alternative, realized reward components, and mission completion, then aggregates action pairs in diagnostic reports. On the same three-policy fresh-seed audit, 448/532 disagreements (84.2%) were learned Eat or Rest choices; utility alternatives most often favored Part-time work (182), Guild patrol (140), or Seek treatment (92). Disagreement steps averaged +1.954 realized reward versus +3.418 on agreement steps, with the largest observed difference in stability, while learned Gate choices produced 38 mission completions among disagreement steps. These are context-selected realized outcomes, not causal counterfactual rewards, so the evidence is mixed and no action priority changes. Checkpoint schema remains 24 and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -377,8 +379,9 @@ Completed updates are grouped for readability:
 | 0.97 | Fresh-seed heuristic fallback attribution |
 | 0.98 | Default-off utility-fallback diagnostic control and schema 24 |
 | 0.99 | Non-mutating seen-state utility-disagreement audit |
+| 0.100 | Seen-state action-pair and realized-outcome attribution |
 
-Near-term work should attribute the seen-state disagreements by action and realized outcome before judging whether the learned slice helps. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should use paired, RNG-aligned counterfactual transitions for the dominant Eat/Rest disagreements before considering any policy change. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 
