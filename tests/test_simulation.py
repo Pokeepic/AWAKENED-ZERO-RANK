@@ -2128,6 +2128,21 @@ class SimulationTests(unittest.TestCase):
                 payload["changed_files"], ["similarity/current.json"])
             self.assertEqual(
                 payload["unchanged_files"], ["similarity/stable.json"])
+            self.assertEqual(len(payload["added_reports"]), 1)
+            added_record = payload["added_reports"][0]
+            self.assertEqual(added_record["filename"], "scenarios/added.json")
+            self.assertEqual(added_record["report"]["label"], "Added")
+            self.assertEqual(
+                added_record["report"]["report_type"], "scenario_suite")
+            self.assertEqual(
+                added_record["report"]["conditions"], ["financial_pressure"])
+            self.assertEqual(len(payload["removed_reports"]), 1)
+            removed_record = payload["removed_reports"][0]
+            self.assertEqual(
+                removed_record["filename"], "scenarios/removed.json")
+            self.assertEqual(removed_record["report"]["label"], "Removed")
+            self.assertEqual(
+                removed_record["report"]["conditions"], ["injury_recovery"])
             self.assertEqual(len(payload["changed_reports"]), 1)
             report_change = payload["changed_reports"][0]
             self.assertEqual(
@@ -2163,6 +2178,8 @@ class SimulationTests(unittest.TestCase):
             self.assertTrue(identical_payload["identical"])
             self.assertEqual(identical_payload["difference_count"], 0)
             self.assertEqual(identical_payload["changed_reports"], [])
+            self.assertEqual(identical_payload["added_reports"], [])
+            self.assertEqual(identical_payload["removed_reports"], [])
             different_output = StringIO()
             with (redirect_stdout(different_output),
                   self.assertRaises(SystemExit) as exit_context):

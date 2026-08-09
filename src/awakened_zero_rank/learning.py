@@ -2516,6 +2516,11 @@ class ExperimentReportSnapshot:
 
 
 @dataclass(frozen=True)
+class ExperimentReportRecord:
+    filename: str
+    report: ExperimentReportSnapshot
+
+@dataclass(frozen=True)
 class ExperimentReportChange:
     filename: str
     changed_fields: tuple[str, ...]
@@ -2543,6 +2548,8 @@ class ExperimentBundleComparison:
     removed_files: tuple[str, ...]
     changed_files: tuple[str, ...]
     unchanged_files: tuple[str, ...]
+    added_reports: tuple[ExperimentReportRecord, ...]
+    removed_reports: tuple[ExperimentReportRecord, ...]
     changed_reports: tuple[ExperimentReportChange, ...]
     status_changes: tuple[tuple[str, str, str], ...]
     report_type_changes: tuple[tuple[str, str, str], ...]
@@ -2596,6 +2603,20 @@ def compare_experiment_bundles(
         added_files=tuple(sorted(right_files - left_files)),
         removed_files=tuple(sorted(left_files - right_files)),
         changed_files=changed, unchanged_files=unchanged,
+        added_reports=tuple(
+            ExperimentReportRecord(
+                filename=filename,
+                report=_experiment_report_snapshot(right_entries[filename]),
+            )
+            for filename in sorted(right_files - left_files)
+        ),
+        removed_reports=tuple(
+            ExperimentReportRecord(
+                filename=filename,
+                report=_experiment_report_snapshot(left_entries[filename]),
+            )
+            for filename in sorted(left_files - right_files)
+        ),
         changed_reports=tuple(
             ExperimentReportChange(
                 filename=filename,
