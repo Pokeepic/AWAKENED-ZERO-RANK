@@ -25,6 +25,7 @@ from awakened_zero_rank.learning import (
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
     load_checkpoint, load_scenario_suite_report, save_checkpoint,
     save_scenario_suite_report,
+    nearest_action_neighbors,
     scenario_suite_digest, scenario_suite_report, summarize_training_actions,
     summarize_training_conditions, summarize_training_preparation_blockers,
     summarize_training_progression,
@@ -1233,6 +1234,43 @@ class SimulationTests(unittest.TestCase):
         observation[10] = 0.99  # Relationship tension is intentionally diagnostic-only.
         self.assertEqual(abstract_state(observation), state)
         self.assertTrue(all(0 <= value <= 3 for value in state))
+
+    def test_action_neighbors_preserve_safety_and_require_visit_evidence(self) -> None:
+        result = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
+        action = "Prepare portal"
+        action_index = ACTION_NAMES.index(action)
+        target = next(iter(result.q_table))
+        same_safety = list(target)
+        same_safety[4] = (same_safety[4] + 1) % 4
+        same_safety = tuple(same_safety)
+        unsafe = list(same_safety)
+        unsafe[1] = (unsafe[1] + 1) % 4
+        unsafe = tuple(unsafe)
+        q_table = dict(result.q_table)
+        visit_table = dict(result.visit_table)
+        for candidate, visits, value in ((same_safety, 3, 1.25),
+                                         (unsafe, 9, 9.0)):
+            q_table[candidate] = [0.0] * len(ACTION_NAMES)
+            q_table[candidate][action_index] = value
+            visit_table[candidate] = [0] * len(ACTION_NAMES)
+            visit_table[candidate][action_index] = visits
+        result = replace(result, q_table=q_table, visit_table=visit_table)
+        evidence = nearest_action_neighbors(result, target, action)
+        self.assertEqual(len(evidence), 1)
+        self.assertEqual(evidence[0].state, same_safety)
+        self.assertEqual((evidence[0].distance, evidence[0].action_visits,
+                          evidence[0].q_value), (1, 3, 1.25))
+
+    def test_action_neighbors_validate_inputs_and_can_report_no_match(self) -> None:
+        result = train_q_learning(102, QLearningConfig(episodes=1, horizon=2))
+        state = next(iter(result.q_table))
+        self.assertEqual(nearest_action_neighbors(result, state, "Prepare portal"), ())
+        with self.assertRaises(ValueError):
+            nearest_action_neighbors(result, state[:-1], "Prepare portal")
+        with self.assertRaises(ValueError):
+            nearest_action_neighbors(result, state, "Unknown")
+        with self.assertRaises(ValueError):
+            nearest_action_neighbors(result, state, "Prepare portal", (0, 0))
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
         components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}

@@ -438,6 +438,14 @@ class TrainingActionExposure:
     selection_share: float
 
 
+@dataclass(frozen=True)
+class ActionNeighborEvidence:
+    state: tuple[int, ...]
+    distance: int
+    action_visits: int
+    q_value: float
+
+
 def summarize_training_actions(
         result: TrainingResult) -> tuple[TrainingActionExposure, ...]:
     """Summarize exact action exposure retained in a trained policy visit table."""
@@ -460,6 +468,49 @@ def summarize_training_actions(
         )
         for index, name in enumerate(ACTION_NAMES)
     )
+
+
+def nearest_action_neighbors(
+        result: TrainingResult, state: tuple[int, ...], action: str,
+        safety_indices: tuple[int, ...] = (0, 1, 2, 7, 11, 12),
+        ) -> tuple[ActionNeighborEvidence, ...]:
+    """Return nearest action-visited states while preserving safety context.
+
+    This is diagnostic evidence only: policy selection continues to use exact
+    tabular states and its configured unseen-state fallback.
+    """
+    if action not in ACTION_NAMES:
+        raise ValueError(f"Unknown action {action!r}")
+    if (len(state) != 16 or any(
+            not isinstance(value, int) or isinstance(value, bool) or
+            not 0 <= value <= 3 for value in state)):
+        raise ValueError("Strategic state must contain 16 integers from 0 to 3")
+    if (len(set(safety_indices)) != len(safety_indices) or
+            any(not isinstance(index, int) or isinstance(index, bool) or
+                not 0 <= index < len(state) for index in safety_indices)):
+        raise ValueError("Safety indices must be unique strategic-state indices")
+    action_index = ACTION_NAMES.index(action)
+    candidates = []
+    for candidate, counts in result.visit_table.items():
+        if (len(candidate) != len(state) or len(counts) != len(ACTION_NAMES) or
+                counts[action_index] <= 0 or
+                any(candidate[index] != state[index] for index in safety_indices)):
+            continue
+        distance = sum(abs(left - right) for index, (left, right) in enumerate(
+            zip(state, candidate)) if index not in safety_indices)
+        candidates.append(ActionNeighborEvidence(
+            state=candidate, distance=distance,
+            action_visits=counts[action_index],
+            q_value=result.q_table[candidate][action_index],
+        ))
+    if not candidates:
+        return ()
+    minimum = min(candidate.distance for candidate in candidates)
+    return tuple(sorted(
+        (candidate for candidate in candidates if candidate.distance == minimum),
+        key=lambda candidate: (-candidate.action_visits, -candidate.q_value,
+                               candidate.state),
+    ))
 
 
 def abstract_state(observation) -> tuple[int, ...]:
