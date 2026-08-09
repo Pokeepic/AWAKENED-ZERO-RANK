@@ -627,6 +627,49 @@ def summarize_training_recurrence(
 
 
 @dataclass(frozen=True)
+class TrainingDepthSummary:
+    training_seeds: tuple[int, ...]
+    episodes_per_policy: int
+    total_selections: int
+    visited_state_evidence: int
+    repeated_state_evidence: int
+    state_recurrence_share: float
+    visited_state_action_evidence: int
+    repeated_state_action_evidence: int
+    state_action_recurrence_share: float
+
+
+def summarize_training_depth(
+        results: tuple[TrainingResult, ...],
+        ) -> TrainingDepthSummary:
+    """Aggregate within-policy recurrence for one replicated training depth."""
+    results = tuple(results)
+    if len(results) < 2:
+        raise ValueError("Training depth requires at least two policies")
+    seeds = tuple(result.training_seed for result in results)
+    if len(set(seeds)) != len(seeds):
+        raise ValueError("Training depth requires unique training seeds")
+    if any(result.config != results[0].config for result in results[1:]):
+        raise ValueError("Training depth requires identical training configs")
+    summaries = tuple(summarize_training_recurrence(result) for result in results)
+    visited_states = sum(item.visited_state_count for item in summaries)
+    repeated_states = sum(item.repeated_state_count for item in summaries)
+    visited_pairs = sum(item.visited_state_action_pairs for item in summaries)
+    repeated_pairs = sum(item.repeated_state_action_pairs for item in summaries)
+    return TrainingDepthSummary(
+        training_seeds=seeds,
+        episodes_per_policy=results[0].config.episodes,
+        total_selections=sum(item.total_state_visits for item in summaries),
+        visited_state_evidence=visited_states,
+        repeated_state_evidence=repeated_states,
+        state_recurrence_share=round(repeated_states / visited_states, 3),
+        visited_state_action_evidence=visited_pairs,
+        repeated_state_action_evidence=repeated_pairs,
+        state_action_recurrence_share=round(repeated_pairs / visited_pairs, 3),
+    )
+
+
+@dataclass(frozen=True)
 class PooledTrainingRecurrenceSummary:
     training_seeds: tuple[int, ...]
     visited_state_count: int

@@ -33,6 +33,7 @@ from awakened_zero_rank.learning import (
     summarize_ensemble_evaluations,
     summarize_state_projection,
     summarize_training_actions, summarize_training_recurrence,
+    summarize_training_depth,
     summarize_training_feature_slice, summarize_training_state_features,
     summarize_preparation_plan_contexts,
     summarize_training_conditions, summarize_training_preparation_blockers,
@@ -649,6 +650,24 @@ class SimulationTests(unittest.TestCase):
         invalid[state] = [-1] + [0] * (len(ACTION_NAMES) - 1)
         with self.assertRaises(ValueError):
             summarize_training_recurrence(replace(trained, visit_table=invalid))
+
+    def test_training_depth_summary_requires_replicated_matching_policies(self) -> None:
+        trained = train_q_learning(149, QLearningConfig(episodes=3, horizon=8))
+        replica = replace(trained, training_seed=150)
+        summary = summarize_training_depth((trained, replica))
+        recurrence = summarize_training_recurrence(trained)
+        self.assertEqual(summary.training_seeds, (149, 150))
+        self.assertEqual(summary.episodes_per_policy, 3)
+        self.assertEqual(summary.total_selections, recurrence.total_state_visits * 2)
+        self.assertEqual(summary.visited_state_evidence,
+                         recurrence.visited_state_count * 2)
+        with self.assertRaises(ValueError):
+            summarize_training_depth((trained,))
+        with self.assertRaises(ValueError):
+            summarize_training_depth((trained, trained))
+        mismatched = train_q_learning(151, QLearningConfig(episodes=2, horizon=8))
+        with self.assertRaises(ValueError):
+            summarize_training_depth((trained, mismatched))
 
     def test_pooled_training_recurrence_preserves_exact_states(self) -> None:
         trained = train_q_learning(134, QLearningConfig(episodes=3, horizon=8))

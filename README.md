@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.117.0** · **122 automated tests**
+Current release: **0.118.0** · **123 automated tests**
 
 ## Design principles
 
@@ -288,6 +288,8 @@ Update 0.116 — Initial Return-Evidence Ensemble introduced exact-state multi-p
 
 Update 0.117 — RNG-Aligned Ensemble Correction makes utility inspection non-mutating, consumes exactly one utility-choice RNG draw on overrides, executes every fallback through `baseline_step()`, and verifies zero-override identity across all five conditions. It also adds a default-off observable crisis-signal gate using arrears, injury, Gate alert, health, energy, hunger, and stress. A fresh corrected eight-setting development grid used 100 paired episodes per setting. The best regression-free candidate required one crisis signal, unanimous policy support, four candidate visits, two utility visits, and a return margin of three; it scored +0.989 ±1.284 (95% lower bound −0.295), preserved survival at 100/100, improved missions 164→171, and made 15 overrides without a condition–horizon mission regression. The honest corrected verdict is **inconclusive**, so the ensemble remains default-off and unadopted; existing single-policy RL remains **baseline remains better**, behavior and checkpoint schema 25 are unchanged.
 
+Update 0.118 — Replicated Training-Depth Audit compares within-policy state and state-action recurrence only across unique seeds with identical configs. For policies 1601–1603 at 80 episodes, 9,303 selections produced 1,313/6,431 repeated states (20.4%) and 702/8,004 repeated state-action pairs (8.8%). Doubling to 160 episodes on policies 1701–1703 yielded 18,872 selections but only 2,531/12,174 repeated states (20.8%) and 1,442/15,265 repeated pairs (9.4%): added training mostly expanded sparse evidence rather than reinforcing decisions. In a fresh corrected eight-setting, 100-episode-per-setting development grid, the best 160-episode ensemble scored +1.213 ±1.438 but remained **inconclusive** and regressed financial-pressure/60 missions 15/17; no setting passed the positive-bound and zero-regression gates, so no final confirmation ran. The ensemble remains default-off and unadopted, single-policy RL remains **baseline remains better**, behavior and checkpoint schema 25 are unchanged.
+
 Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
@@ -431,8 +433,9 @@ Completed updates are grouped for readability:
 | 0.115 | Authenticated condition–horizon cross-seed conflict localization |
 | 0.116 | Initial return-evidence ensemble (empirical result retracted in 0.117) |
 | 0.117 | RNG-aligned ensemble correction and corrected inconclusive verdict |
+| 0.118 | Replicated 80/160-episode depth audit and evidence-plateau decision |
 
-Near-term work should improve exact-state return evidence or recurrence before any further ensemble threshold tuning. The corrected ensemble remains default-off; encoder changes, similarity fallback, and neural RL remain deferred while the single-policy readiness gate is closed.
+Near-term work should improve recurrence structurally rather than increasing episode count or retuning ensemble thresholds. The corrected ensemble remains default-off; encoder changes require conflict-safe evidence, while similarity fallback and neural RL remain deferred.
 
 ### Future international expansion
 
