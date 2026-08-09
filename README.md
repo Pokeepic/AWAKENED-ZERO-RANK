@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.83.0** · **108 automated tests**
+Current release: **0.84.0** · **108 automated tests**
 
 ## Design principles
 
@@ -222,6 +222,8 @@ Update 0.82 — Action Neighbor Qualification adds validated diagnostic threshol
 
 Update 0.83 — Safety-Group Recurrence Audit aggregates preparation evidence only across states with identical health, energy, hunger, Gate alert, active-plan, and injury-severity categories. The 49 one-shot preparation states formed 26 safety groups, but only six groups contained repeated visits. Those groups covered 67/696 held-out opportunities across all conditions; none of the 67 had unanimously positive member-state Q-values, with 29 mapping to mixed-sign groups and 38 to non-positive groups. Safety grouping creates some recurrence but does not create coherent action value, so no grouped fallback or forced training exposure was adopted and the verdict remains **baseline remains better**.
 
+Update 0.84 — Authenticated Realized Reward Evidence records cumulative unshaped environment reward for every training state/action pair and advances Q-table checkpoints to schema 18; schema-17 and older checkpoints load with reward evidence explicitly unavailable. Reward totals reconcile exactly with episode returns and the new table is covered by SHA-256 tamper rejection. In the balanced-grid replay, 49 preparation selections accumulated −52.620 immediate reward (−1.074 average); all six repeated safety groups were negative, ranging from −0.960 to −0.520 across 29 visits. This does not contradict the paired evidence that preparation improves later missions—it confirms that immediate cost and delayed benefit must be attributed separately. No reward or policy change was made, and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -329,8 +331,9 @@ Completed updates are grouped for readability:
 | 0.81 | Diagnostic safety-preserving action-neighbor evidence |
 | 0.82 | Conservative action-neighbor qualification thresholds rejected |
 | 0.83 | Repeated safety-group evidence and value-agreement audit |
+| 0.84 | Schema-18 authenticated realized state-action reward evidence |
 
-Near-term work should attribute preparation returns inside repeated safety groups before changing training exposure, because grouped Q-values currently disagree. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should measure deterministic delayed returns from preparation to plan consumption before changing rewards or training exposure. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 

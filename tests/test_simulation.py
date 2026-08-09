@@ -681,6 +681,10 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(all(len(counts) == len(ACTION_NAMES)
                             for counts in first.visit_table.values()))
         self.assertEqual(sum(sum(counts) for counts in first.visit_table.values()), 24)
+        self.assertEqual(set(first.reward_table), set(first.q_table))
+        self.assertEqual(
+            round(sum(sum(rewards) for rewards in first.reward_table.values()), 3),
+            round(sum(first.episode_rewards), 3))
 
     def test_unseen_state_fallback_is_explicit_and_reproducible(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=1, horizon=2))
@@ -1404,6 +1408,14 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 17
+            legacy.pop("reward_table")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            legacy_reward = replace(trained, reward_table={})
+            self.assertEqual(load_checkpoint(first), legacy_reward)
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 16
             legacy.pop("episode_portal_preparations")
             legacy.pop("episode_prepared_missions_attempted")
@@ -1412,7 +1424,7 @@ class SimulationTests(unittest.TestCase):
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
             legacy_plan = replace(
-                trained, episode_portal_preparations=(),
+                legacy_reward, episode_portal_preparations=(),
                 episode_prepared_missions_attempted=(),
                 episode_prepared_missions_completed=())
             self.assertEqual(load_checkpoint(first), legacy_plan)
@@ -1534,6 +1546,12 @@ class SimulationTests(unittest.TestCase):
             save_checkpoint(trained, path)
             data = json.loads(path.read_text(encoding="utf-8"))
             data["q_table"][0]["values"][0] += 1
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_checkpoint(path)
+            save_checkpoint(trained, path)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["reward_table"][0]["rewards"][0] += 1
             path.write_text(json.dumps(data), encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_checkpoint(path)
