@@ -1794,6 +1794,115 @@ def summarize_ensemble_evaluations(
         adoption_ready=not blockers, blockers=tuple(blockers),
     )
 
+
+@dataclass(frozen=True)
+class SimilarityCoverageSummary:
+    training_seed: int
+    evaluation_seeds: tuple[int, ...]
+    condition: str
+    horizon: int
+    total_decisions: int
+    exact_visited_decisions: int
+    unseen_decisions: int
+    supported_decisions: int
+    conflicting_decisions: int
+    invalid_consensus_decisions: int
+    unsupported_decisions: int
+    coverage_share: float
+    average_supported_distance: float | None
+    supported_distance_counts: tuple[tuple[int, int], ...]
+
+
+def audit_similarity_coverage(
+        result: TrainingResult, evaluation_seeds: tuple[int, ...], *,
+        horizon: int, condition: str = "standard", max_distance: int = 2,
+        min_state_visits: int = 2,
+        safety_indices: tuple[int, ...] = ACTION_NEIGHBOR_SAFETY_INDICES,
+        ) -> SimilarityCoverageSummary:
+    """Audit conservative nearest-state coverage without changing policy behavior."""
+    evaluation_seeds = tuple(evaluation_seeds)
+    if not evaluation_seeds:
+        raise ValueError("At least one evaluation seed is required")
+    if (any(type(seed) is not int for seed in evaluation_seeds) or
+            len(set(evaluation_seeds)) != len(evaluation_seeds)):
+        raise ValueError("Evaluation seeds must be unique integers")
+    if {result.training_seed, *result.episode_seeds}.intersection(evaluation_seeds):
+        raise ValueError("Evaluation seeds must be held out from all training seeds")
+    if type(horizon) is not int or horizon < 1:
+        raise ValueError("Horizon must be a positive integer")
+    if type(max_distance) is not int or max_distance < 0:
+        raise ValueError("Maximum distance must be a non-negative integer")
+    if type(min_state_visits) is not int or min_state_visits < 1:
+        raise ValueError("Minimum state visits must be a positive integer")
+    if (len(set(safety_indices)) != len(safety_indices) or
+            any(type(index) is not int or not 0 <= index < 16
+                for index in safety_indices)):
+        raise ValueError("Safety indices must be unique strategic-state indices")
+    if condition not in EVALUATION_CONDITIONS:
+        raise ValueError(f"Unknown evaluation condition {condition!r}")
+    summarize_training_recurrence(result)
+    candidates = []
+    for state, counts in result.visit_table.items():
+        total = sum(counts)
+        winners = [index for index, count in enumerate(counts)
+                   if count == max(counts) and count > 0]
+        if total >= min_state_visits and len(winners) == 1:
+            candidates.append((state, winners[0]))
+    exact = supported = conflicting = invalid = unsupported = total_decisions = 0
+    distances = Counter()
+    for seed in evaluation_seeds:
+        environment = LearningEnvironment(seed)
+        _configure_evaluation_condition(environment, condition)
+        for _ in range(horizon):
+            state = abstract_state(environment.observe())
+            mask = environment.action_mask()
+            total_decisions += 1
+            counts = result.visit_table.get(state)
+            if counts is not None and sum(counts) > 0:
+                exact += 1
+            else:
+                neighbors = []
+                for candidate, action in candidates:
+                    if any(candidate[index] != state[index]
+                           for index in safety_indices):
+                        continue
+                    distance = sum(
+                        abs(left - right)
+                        for index, (left, right) in enumerate(zip(state, candidate))
+                        if index not in safety_indices)
+                    if distance <= max_distance:
+                        neighbors.append((distance, action))
+                if not neighbors:
+                    unsupported += 1
+                else:
+                    minimum = min(distance for distance, _ in neighbors)
+                    actions = {action for distance, action in neighbors
+                               if distance == minimum}
+                    if len(actions) != 1:
+                        conflicting += 1
+                    elif not mask[next(iter(actions))]:
+                        invalid += 1
+                    else:
+                        supported += 1
+                        distances[minimum] += 1
+            environment.baseline_step()
+    unseen = total_decisions - exact
+    return SimilarityCoverageSummary(
+        training_seed=result.training_seed,
+        evaluation_seeds=evaluation_seeds, condition=condition, horizon=horizon,
+        total_decisions=total_decisions, exact_visited_decisions=exact,
+        unseen_decisions=unseen, supported_decisions=supported,
+        conflicting_decisions=conflicting,
+        invalid_consensus_decisions=invalid,
+        unsupported_decisions=unsupported,
+        coverage_share=round(supported / max(1, unseen), 3),
+        average_supported_distance=(
+            round(sum(distance * count for distance, count in distances.items()) /
+                  supported, 3) if supported else None),
+        supported_distance_counts=tuple(sorted(distances.items())),
+    )
+
+
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                            horizon: int | None = None) -> BatchComparison:
     """Evaluate frozen RL and utility policies on identical held-out world seeds."""

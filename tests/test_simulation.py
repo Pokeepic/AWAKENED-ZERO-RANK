@@ -18,7 +18,8 @@ from awakened_zero_rank.learning import (
     QLearningConfig, TrainingEnvironment,
     _apply_training_rent_reserve, _frozen_policy_action,
     EvaluationScenario,
-    abstract_state, assess_policy_adoption, checkpoint_digest,
+    abstract_state, assess_policy_adoption, audit_similarity_coverage,
+    checkpoint_digest,
     compare_utility_and_ensemble, compare_utility_and_rl, curriculum_reward,
     diagnose_batch,
     diagnose_episode, diagnostics_report, ensemble_policy_action, heuristic_action,
@@ -1750,6 +1751,38 @@ class SimulationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 nearest_action_neighbors(
                     result, state, "Prepare portal", **options)
+
+    def test_similarity_coverage_is_held_out_and_conflict_safe(self) -> None:
+        result = train_q_learning(107, QLearningConfig(episodes=1, horizon=2))
+        environment = LearningEnvironment(207)
+        target = abstract_state(environment.observe())
+        visit_table = dict(result.visit_table)
+        q_table = dict(result.q_table)
+        visit_table.pop(target, None)
+        q_table.pop(target, None)
+        for offset, action in ((4, "Eat"), (6, "Rest")):
+            candidate = list(target)
+            candidate[offset] = (candidate[offset] + 1) % 4
+            candidate = tuple(candidate)
+            counts = [0] * len(ACTION_NAMES)
+            counts[ACTION_NAMES.index(action)] = 2
+            visit_table[candidate] = counts
+            q_table[candidate] = [0.0] * len(ACTION_NAMES)
+        result = replace(result, visit_table=visit_table, q_table=q_table)
+        first = audit_similarity_coverage(
+            result, (207,), horizon=1, max_distance=1)
+        second = audit_similarity_coverage(
+            result, (207,), horizon=1, max_distance=1)
+        self.assertEqual(first, second)
+        self.assertEqual((first.total_decisions, first.unseen_decisions,
+                          first.conflicting_decisions,
+                          first.supported_decisions), (1, 1, 1, 0))
+        with self.assertRaises(ValueError):
+            audit_similarity_coverage(result, (107,), horizon=1)
+        with self.assertRaises(ValueError):
+            audit_similarity_coverage(result, (207, 207), horizon=1)
+        with self.assertRaises(ValueError):
+            audit_similarity_coverage(result, (207,), horizon=0)
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
         components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}

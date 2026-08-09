@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.119.0** · **124 automated tests**
+Current release: **0.120.0** · **125 automated tests**
 
 ## Design principles
 
@@ -44,6 +44,7 @@ Current release: **0.119.0** · **124 automated tests**
 - A 22-value observation interface and compact 16-feature strategic state abstraction.
 - Utility, heuristic, masked-random, and tabular Q-learning policies, with opt-in unseen-state safety fallback, preventive Rest safeguard, legacy additive exploration, seeded broad progression sampling, and priority-clear progression sampling during training.
 - Count-based exploration, exact state-action visit evidence and per-action exposure summaries, phased curriculum rewards, deterministic multi-condition training schedules, default-off aligned episode-seed replay, per-condition state-coverage summaries, and held-out seed enforcement.
+- Read-only held-out similarity coverage audits with exact safety-context matching, nearest-distance consensus, visit thresholds, conflict rejection, and invalid-mask attribution.
 - Reward decomposition with explicit RL-versus-utility component gaps, terminal wellbeing, resource-burden differences, and critical- and strained-energy action distributions, exact safeguard override contexts, action/mask frequencies, held-out state-miss and selected-action visit-confidence rates, mission and preparation opportunity-use rates, seen-state greedy progression preferences and Q-value gaps, low-need recovery and social-action rates, safety metrics, preparation coverage and success, exploit indicators, and worst-seed traces.
 - Deterministic Q-table checkpoints with action/condition/fallback/exploration/recovery/visit schema validation, SHA-256 tamper detection, and authenticated version migration.
 - Repeated independent trials with pooled confidence and an adoption gate that requires at least two recorded training episodes for every evaluation condition.
@@ -292,6 +293,8 @@ Update 0.118 — Replicated Training-Depth Audit compares within-policy state an
 
 Update 0.119 — Aligned Episode-Seed Replay adds a validated, reproducible, default-off training control that reuses a fixed world-seed pool without moving seeds between condition–horizon cells. A bounded three-replication, 80-episode pilot compared pool sizes 0, 10, 20, and 40. Exact-state recurrence moved only from 33.2% without replay to 33.5%–34.2%; state-action recurrence moved from 15.9% to 15.7%–16.2%. The roughly one-point gain was small and inconsistent, so no held-out reward batch or larger experiment ran. Replay is retained for controlled research but not adopted as a training default; single-policy RL remains **baseline remains better**, the corrected ensemble remains **inconclusive**, and checkpoints advance to schema 26 with exact schema-25 migration.
 
+Update 0.120 — Conflict-Safe Similarity Coverage adds a read-only held-out audit that preserves six safety-critical state dimensions, requires repeated state evidence, considers only minimum-distance neighbors, rejects tied dominant actions, and reports consensus actions invalid under the target mask. Across three 80-episode policies and every 5×2 condition–horizon cell, distance 1 with four visits supported only 11.0% of 4,167 unseen decisions, with cell coverage ranging from 3.2% to 54.2%. Distance 2 raised support to 21.0% but introduced 146 conflicts and two invalid-mask consensuses; the looser two-visit setting reached 28.2% with 226 conflicts. Coverage is too sparse and uneven for a controller, so no similarity policy or reward evaluation was run. Behavior and checkpoint schema 26 remain unchanged; single-policy RL remains **baseline remains better** and the corrected ensemble remains **inconclusive**.
+
 Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
@@ -437,8 +440,9 @@ Completed updates are grouped for readability:
 | 0.117 | RNG-aligned ensemble correction and corrected inconclusive verdict |
 | 0.118 | Replicated 80/160-episode depth audit and evidence-plateau decision |
 | 0.119 | Default-off aligned episode-seed replay and bounded recurrence rejection |
+| 0.120 | Conflict-safe held-out similarity coverage audit and controller rejection |
 
-Near-term work should improve recurrence structurally rather than increasing episode count or retuning ensemble thresholds. The corrected ensemble remains default-off; encoder changes require conflict-safe evidence, while similarity fallback and neural RL remain deferred.
+Near-term work should avoid more episode-count scaling, seed replay, or similarity fallback tuning. The corrected ensemble remains default-off; any learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
 
 ### Future international expansion
 
