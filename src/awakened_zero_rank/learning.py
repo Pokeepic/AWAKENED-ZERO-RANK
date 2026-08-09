@@ -1203,7 +1203,11 @@ class SeenStateDecisionOutcome:
     disagreed: bool
     reward: float
     reward_components: tuple[tuple[str, float], ...]
+    utility_reward: float
+    utility_reward_components: tuple[tuple[str, float], ...]
+    reward_difference: float
     mission_completed: bool
+    utility_mission_completed: bool
 
 
 @dataclass(frozen=True)
@@ -1885,10 +1889,12 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             observation = environment.observe()
             state = discretize(observation)
             utility_counterfactual = None
+            counterfactual_environment = None
             if state in result.q_table:
                 rng_state = environment.simulation.rng.getstate()
                 utility_counterfactual = utility_action(environment, mask)
                 environment.simulation.rng.setstate(rng_state)
+                counterfactual_environment = deepcopy(environment)
             action, unseen, preventive_rest, replaced_action = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
@@ -1983,15 +1989,27 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                 seen_state_decision_count += 1
                 seen_utility_disagreement_count += int(
                     action != utility_counterfactual)
+                utility_transition = counterfactual_environment.step(
+                    ACTION_NAMES[utility_counterfactual])
+                if ((utility_transition.resolved_action or utility_transition.action) !=
+                        ACTION_NAMES[utility_counterfactual]):
+                    raise ValueError("Paired utility action did not resolve as selected")
                 seen_state_decision_outcomes.append(SeenStateDecisionOutcome(
                     step=step, learned_action=ACTION_NAMES[action],
                     utility_action=ACTION_NAMES[utility_counterfactual],
                     disagreed=action != utility_counterfactual,
                     reward=transition.reward,
                     reward_components=transition.reward_components,
+                    utility_reward=utility_transition.reward,
+                    utility_reward_components=utility_transition.reward_components,
+                    reward_difference=round(
+                        transition.reward - utility_transition.reward, 3),
                     mission_completed=(
                         environment.simulation.state.protagonist.missions_completed >
                         before_missions_completed),
+                    utility_mission_completed=(
+                        counterfactual_environment.simulation.state.protagonist.
+                        missions_completed > before_missions_completed),
                 ))
         transitions.append(transition)
         chosen_action = transition.resolved_action or transition.action
@@ -2622,6 +2640,22 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
                 round(sum(item.reward for item in seen_state_outcomes if item.disagreed) /
                       sum(item.disagreed for item in seen_state_outcomes), 3)
                 if any(item.disagreed for item in seen_state_outcomes) else None),
+            "seen_state_disagreement_average_paired_reward_difference": (
+                round(sum(item.reward_difference for item in seen_state_outcomes
+                          if item.disagreed) /
+                      sum(item.disagreed for item in seen_state_outcomes), 3)
+                if any(item.disagreed for item in seen_state_outcomes) else None),
+            "seen_state_disagreement_paired_component_differences": {
+                name: round(sum(
+                    dict(item.reward_components)[name] -
+                    dict(item.utility_reward_components)[name]
+                    for item in seen_state_outcomes if item.disagreed) /
+                    max(1, sum(item.disagreed for item in seen_state_outcomes)), 3)
+                for name in REWARD_COMPONENTS
+            },
+            "seen_state_disagreement_mission_difference": sum(
+                item.mission_completed - item.utility_mission_completed
+                for item in seen_state_outcomes if item.disagreed),
             "average_preventive_rest_override_count": round(
                 sum(e.preventive_rest_override_count for e in episodes) / count, 3),
             "average_preventive_rest_override_share": round(

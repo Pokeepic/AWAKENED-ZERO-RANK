@@ -795,6 +795,12 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(seen_outcome.disagreed,
                          seen_outcome.learned_action != seen_outcome.utility_action)
         self.assertEqual(seen_outcome.reward, seen_episode.trace[0].reward)
+        self.assertEqual(seen_outcome.reward_difference,
+                         round(seen_outcome.reward - seen_outcome.utility_reward, 3))
+        self.assertEqual(
+            round(sum(dict(seen_outcome.reward_components).values()) -
+                  sum(dict(seen_outcome.utility_reward_components).values()), 3),
+            seen_outcome.reward_difference)
         self.assertEqual(seen_override.replaced_action_q_value, 2.0)
         self.assertEqual(seen_override.rest_q_value, 0.5)
         self.assertEqual(seen_override.replaced_action_q_advantage, 1.5)
@@ -1116,6 +1122,11 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("seen_utility_disagreement_share", report["rl"])
         self.assertIn("seen_state_action_pair_counts", report["rl"])
         self.assertIn("seen_state_disagreement_average_reward", report["rl"])
+        self.assertIn(
+            "seen_state_disagreement_average_paired_reward_difference",
+            report["rl"])
+        self.assertIn("seen_state_disagreement_paired_component_differences",
+                      report["rl"])
         self.assertIn("average_unseen_state_share", report["rl"])
         self.assertEqual(report["utility"]["average_unseen_state_count"], 0)
         self.assertIn("average_preventive_rest_override_count", report["rl"])
