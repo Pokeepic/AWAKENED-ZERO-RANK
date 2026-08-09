@@ -446,6 +446,18 @@ class ActionNeighborEvidence:
     q_value: float
 
 
+@dataclass(frozen=True)
+class ActionSafetyGroupEvidence:
+    safety_state: tuple[int, ...]
+    state_count: int
+    action_visits: int
+    positive_q_states: int
+    average_state_q_value: float
+
+
+ACTION_NEIGHBOR_SAFETY_INDICES = (0, 1, 2, 7, 11, 12)
+
+
 def summarize_training_actions(
         result: TrainingResult) -> tuple[TrainingActionExposure, ...]:
     """Summarize exact action exposure retained in a trained policy visit table."""
@@ -470,9 +482,49 @@ def summarize_training_actions(
     )
 
 
+def summarize_action_safety_groups(
+        result: TrainingResult, action: str,
+        safety_indices: tuple[int, ...] = ACTION_NEIGHBOR_SAFETY_INDICES,
+        ) -> tuple[ActionSafetyGroupEvidence, ...]:
+    """Aggregate action evidence by exact safety context for diagnostics."""
+    if action not in ACTION_NAMES:
+        raise ValueError(f"Unknown action {action!r}")
+    if (len(set(safety_indices)) != len(safety_indices) or
+            any(not isinstance(index, int) or isinstance(index, bool) or
+                not 0 <= index < 16 for index in safety_indices)):
+        raise ValueError("Safety indices must be unique strategic-state indices")
+    action_index = ACTION_NAMES.index(action)
+    grouped: dict[tuple[int, ...], list[tuple[int, float]]] = {}
+    for state, counts in result.visit_table.items():
+        if (len(state) != 16 or len(counts) != len(ACTION_NAMES) or
+                not isinstance(counts[action_index], int) or
+                counts[action_index] < 0):
+            raise ValueError("Training action visit evidence is invalid")
+        if counts[action_index] == 0:
+            continue
+        values = result.q_table.get(state)
+        if (values is None or len(values) != len(ACTION_NAMES) or
+                not math.isfinite(values[action_index])):
+            raise ValueError("Training action Q-value evidence is invalid")
+        safety_state = tuple(state[index] for index in safety_indices)
+        grouped.setdefault(safety_state, []).append(
+            (counts[action_index], values[action_index]))
+    return tuple(
+        ActionSafetyGroupEvidence(
+            safety_state=safety_state,
+            state_count=len(evidence),
+            action_visits=sum(visits for visits, _ in evidence),
+            positive_q_states=sum(value > 0 for _, value in evidence),
+            average_state_q_value=round(
+                sum(value for _, value in evidence) / len(evidence), 6),
+        )
+        for safety_state, evidence in sorted(grouped.items())
+    )
+
+
 def nearest_action_neighbors(
         result: TrainingResult, state: tuple[int, ...], action: str,
-        safety_indices: tuple[int, ...] = (0, 1, 2, 7, 11, 12), *,
+        safety_indices: tuple[int, ...] = ACTION_NEIGHBOR_SAFETY_INDICES, *,
         max_distance: int | None = None, min_action_visits: int = 1,
         min_q_value: float | None = None,
         ) -> tuple[ActionNeighborEvidence, ...]:

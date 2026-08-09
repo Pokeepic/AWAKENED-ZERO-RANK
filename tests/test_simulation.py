@@ -26,7 +26,8 @@ from awakened_zero_rank.learning import (
     load_checkpoint, load_scenario_suite_report, save_checkpoint,
     save_scenario_suite_report,
     nearest_action_neighbors,
-    scenario_suite_digest, scenario_suite_report, summarize_training_actions,
+    scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
+    summarize_training_actions,
     summarize_training_conditions, summarize_training_preparation_blockers,
     summarize_training_progression,
     train_q_learning,
@@ -1266,6 +1267,35 @@ class SimulationTests(unittest.TestCase):
             result, target, action, min_action_visits=4), ())
         self.assertEqual(nearest_action_neighbors(
             result, target, action, min_q_value=1.5), ())
+
+    def test_action_safety_groups_aggregate_repeated_comparable_evidence(self) -> None:
+        result = train_q_learning(103, QLearningConfig(episodes=1, horizon=2))
+        action_index = ACTION_NAMES.index("Prepare portal")
+        first = next(iter(result.q_table))
+        second = list(first)
+        second[4] = (second[4] + 1) % 4
+        second = tuple(second)
+        q_table = dict(result.q_table)
+        visit_table = dict(result.visit_table)
+        for state, visits, value in ((first, 2, 1.0), (second, 3, -0.5)):
+            q_table[state] = [0.0] * len(ACTION_NAMES)
+            q_table[state][action_index] = value
+            visit_table[state] = [0] * len(ACTION_NAMES)
+            visit_table[state][action_index] = visits
+        result = replace(result, q_table=q_table, visit_table=visit_table)
+        groups = summarize_action_safety_groups(result, "Prepare portal")
+        self.assertEqual(len(groups), 1)
+        self.assertEqual((groups[0].state_count, groups[0].action_visits,
+                          groups[0].positive_q_states,
+                          groups[0].average_state_q_value), (2, 5, 1, 0.25))
+
+    def test_action_safety_groups_validate_evidence(self) -> None:
+        result = train_q_learning(104, QLearningConfig(episodes=1, horizon=2))
+        with self.assertRaises(ValueError):
+            summarize_action_safety_groups(result, "Unknown")
+        with self.assertRaises(ValueError):
+            summarize_action_safety_groups(
+                result, "Prepare portal", (0, 0))
 
     def test_action_neighbors_validate_inputs_and_can_report_no_match(self) -> None:
         result = train_q_learning(102, QLearningConfig(episodes=1, horizon=2))
