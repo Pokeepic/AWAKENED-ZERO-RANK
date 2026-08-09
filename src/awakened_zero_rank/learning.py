@@ -37,6 +37,7 @@ EVALUATION_CONDITIONS = ("standard", "financial_pressure", "injury_recovery",
                          "gate_crisis", "compound_crisis")
 MAX_DOMINANCE_REGRESSION = 0.15
 MIN_TRAINING_CONDITION_EPISODES = 2
+SEEN_STATE_COUNTERFACTUAL_HORIZON = 4
 ACTION_ENERGY_COSTS = {
     "Part-time work": 22, "Study": 13, "Train": 20,
     "Talk with Aiko": 8, "Guild patrol": 27,
@@ -1206,8 +1207,16 @@ class SeenStateDecisionOutcome:
     utility_reward: float
     utility_reward_components: tuple[tuple[str, float], ...]
     reward_difference: float
+    counterfactual_horizon: int
+    return_reward: float
+    return_reward_components: tuple[tuple[str, float], ...]
+    utility_return_reward: float
+    utility_return_reward_components: tuple[tuple[str, float], ...]
+    return_reward_difference: float
     mission_completed: bool
     utility_mission_completed: bool
+    window_missions_completed: int
+    utility_window_missions_completed: int
 
 
 @dataclass(frozen=True)
@@ -1994,6 +2003,21 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                 if ((utility_transition.resolved_action or utility_transition.action) !=
                         ACTION_NAMES[utility_counterfactual]):
                     raise ValueError("Paired utility action did not resolve as selected")
+                utility_mission_completed = (
+                    counterfactual_environment.simulation.state.protagonist.
+                    missions_completed > before_missions_completed)
+                learned_rollout = deepcopy(environment)
+                learned_return = transition.reward
+                utility_return = utility_transition.reward
+                learned_components = Counter(dict(transition.reward_components))
+                utility_components = Counter(dict(utility_transition.reward_components))
+                for _ in range(SEEN_STATE_COUNTERFACTUAL_HORIZON - 1):
+                    learned_followup = learned_rollout.baseline_step()
+                    utility_followup = counterfactual_environment.baseline_step()
+                    learned_return += learned_followup.reward
+                    utility_return += utility_followup.reward
+                    learned_components.update(dict(learned_followup.reward_components))
+                    utility_components.update(dict(utility_followup.reward_components))
                 seen_state_decision_outcomes.append(SeenStateDecisionOutcome(
                     step=step, learned_action=ACTION_NAMES[action],
                     utility_action=ACTION_NAMES[utility_counterfactual],
@@ -2004,12 +2028,27 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
                     utility_reward_components=utility_transition.reward_components,
                     reward_difference=round(
                         transition.reward - utility_transition.reward, 3),
+                    counterfactual_horizon=SEEN_STATE_COUNTERFACTUAL_HORIZON,
+                    return_reward=round(learned_return, 3),
+                    return_reward_components=tuple(
+                        (name, round(learned_components[name], 3))
+                        for name in REWARD_COMPONENTS),
+                    utility_return_reward=round(utility_return, 3),
+                    utility_return_reward_components=tuple(
+                        (name, round(utility_components[name], 3))
+                        for name in REWARD_COMPONENTS),
+                    return_reward_difference=round(
+                        learned_return - utility_return, 3),
                     mission_completed=(
                         environment.simulation.state.protagonist.missions_completed >
                         before_missions_completed),
-                    utility_mission_completed=(
+                    utility_mission_completed=utility_mission_completed,
+                    window_missions_completed=(
+                        learned_rollout.simulation.state.protagonist.missions_completed -
+                        before_missions_completed),
+                    utility_window_missions_completed=(
                         counterfactual_environment.simulation.state.protagonist.
-                        missions_completed > before_missions_completed),
+                        missions_completed - before_missions_completed),
                 ))
         transitions.append(transition)
         chosen_action = transition.resolved_action or transition.action
@@ -2655,6 +2694,24 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             },
             "seen_state_disagreement_mission_difference": sum(
                 item.mission_completed - item.utility_mission_completed
+                for item in seen_state_outcomes if item.disagreed),
+            "seen_state_counterfactual_horizon": SEEN_STATE_COUNTERFACTUAL_HORIZON,
+            "seen_state_disagreement_average_paired_return_difference": (
+                round(sum(item.return_reward_difference for item in seen_state_outcomes
+                          if item.disagreed) /
+                      sum(item.disagreed for item in seen_state_outcomes), 3)
+                if any(item.disagreed for item in seen_state_outcomes) else None),
+            "seen_state_disagreement_paired_return_component_differences": {
+                name: round(sum(
+                    dict(item.return_reward_components)[name] -
+                    dict(item.utility_return_reward_components)[name]
+                    for item in seen_state_outcomes if item.disagreed) /
+                    max(1, sum(item.disagreed for item in seen_state_outcomes)), 3)
+                for name in REWARD_COMPONENTS
+            },
+            "seen_state_disagreement_window_mission_difference": sum(
+                item.window_missions_completed -
+                item.utility_window_missions_completed
                 for item in seen_state_outcomes if item.disagreed),
             "average_preventive_rest_override_count": round(
                 sum(e.preventive_rest_override_count for e in episodes) / count, 3),

@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.101.0** · **111 automated tests**
+Current release: **0.102.0** · **111 automated tests**
 
 ## Design principles
 
@@ -258,6 +258,8 @@ Update 0.100 — Seen-State Action and Outcome Attribution records each resolved
 
 Update 0.101 — Paired Seen-State Counterfactuals clone the exact pre-action environment and RNG for every resolved seen-state decision, execute the learned action live and the utility alternative on the clone, and reconcile reward components and mission outcomes. Across 532 fresh-seed disagreements, learned actions averaged −1.672 immediate reward relative to utility. The 448 learned Eat/Rest choices averaged −3.207, trading +1.574 survival for −4.612 stability; 306 were worse and 142 better. In contrast, 42 learned Gate missions averaged +14.146 and produced 38 additional completions, while losing −5.589 survival. The evidence identifies a safety–stability/progression tradeoff rather than a safe blanket override. No behavior changed, checkpoint schema remains 24, and the overall verdict remains **baseline remains better** pending multi-step confirmation.
 
+Update 0.102 — Four-Step Seen-State Counterfactuals extend every paired decision through three natural seeded utility-continuation steps while leaving the live episode untouched. Across 532 fresh-seed disagreements, the learned branch averaged −1.704 four-step return. The 448 learned Eat/Rest choices averaged −3.266: 358 were worse, 77 better, and 13 tied; their immediate survival advantage reversed to −0.597 over the window, alongside −2.416 stability and 11 fewer missions. Learned Gate missions remained strong at +13.981 with 35 additional completions and +1.014 survival. The evidence supports testing a narrow default-off seen-state recovery control while preserving learned Gate behavior, but no policy changed yet. Checkpoint schema remains 24 and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -383,8 +385,9 @@ Completed updates are grouped for readability:
 | 0.99 | Non-mutating seen-state utility-disagreement audit |
 | 0.100 | Seen-state action-pair and realized-outcome attribution |
 | 0.101 | RNG-aligned paired seen-state counterfactual transitions |
+| 0.102 | Fixed four-step paired seen-state continuation returns |
 
-Near-term work should extend the paired Eat/Rest evidence over a short fixed horizon to test whether immediate stability gains survive recovery and downstream world effects. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should test a default-off control that delegates only seen-state learned Eat/Rest choices to utility while preserving learned Gate decisions, using fresh held-out seeds and the same safety gates. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 
