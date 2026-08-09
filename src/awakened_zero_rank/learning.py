@@ -266,6 +266,7 @@ class QLearningConfig:
     training_rent_reserve: bool = False
     training_conditions: tuple[str, ...] = ("standard",)
     unseen_state_fallback: str = "first_valid"
+    episode_seed_pool_size: int = 0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "training_conditions", tuple(self.training_conditions))
@@ -315,6 +316,15 @@ class QLearningConfig:
             raise ValueError("training_rent_reserve must be a boolean")
         if type(self.seen_recovery_utility_override) is not bool:
             raise ValueError("seen_recovery_utility_override must be a boolean")
+        schedule_size = len(self.training_conditions) * len(self.training_horizons)
+        if (type(self.episode_seed_pool_size) is not int or
+                not 0 <= self.episode_seed_pool_size <= self.episodes):
+            raise ValueError(
+                "episode_seed_pool_size must be an integer from 0 through episodes")
+        if (self.episode_seed_pool_size and
+                self.episode_seed_pool_size % schedule_size):
+            raise ValueError(
+                "episode_seed_pool_size must align with the training schedule")
         if self.unseen_state_fallback not in {"first_valid", "heuristic", "utility"}:
             raise ValueError("unknown unseen-state fallback")
 
@@ -1093,8 +1103,15 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         for condition in config.training_conditions
         for horizon in config.training_horizons
     )
+    episode_seed_pool = []
     for episode in range(config.episodes):
-        episode_seed = rng.randrange(2**31)
+        if config.episode_seed_pool_size:
+            pool_index = episode % config.episode_seed_pool_size
+            if pool_index == len(episode_seed_pool):
+                episode_seed_pool.append(rng.randrange(2**31))
+            episode_seed = episode_seed_pool[pool_index]
+        else:
+            episode_seed = rng.randrange(2**31)
         condition, episode_horizon = training_schedule[episode % len(training_schedule)]
         episode_seeds.append(episode_seed)
         episode_conditions.append(condition)
@@ -1292,7 +1309,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(preparation_return_samples),
                           tuple(preparation_plan_returns),
                           tuple(preparation_plan_contexts))
-CHECKPOINT_VERSION = 25
+CHECKPOINT_VERSION = 26
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -1372,7 +1389,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -1406,6 +1423,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data.setdefault("preventive_rest_threshold", 0)
     config_data.setdefault("energy_preemption_floor", 0)
     config_data.setdefault("seen_recovery_utility_override", False)
+    config_data.setdefault("episode_seed_pool_size", 0)
     config_data.setdefault(
         "preventive_rest_max_injury_severity",
         1 if data["checkpoint_version"] == 9 else 0,

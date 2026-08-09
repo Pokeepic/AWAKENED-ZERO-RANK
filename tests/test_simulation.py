@@ -586,6 +586,28 @@ class SimulationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             QLearningConfig(seen_recovery_utility_override=1)
 
+    def test_training_replays_an_aligned_episode_seed_pool(self) -> None:
+        config = QLearningConfig(
+            episodes=8, horizon=4, training_horizons=(3, 4),
+            training_conditions=("standard", "compound_crisis"),
+            episode_seed_pool_size=4,
+        )
+        first = train_q_learning(127, config)
+        second = train_q_learning(127, config)
+        self.assertEqual(first, second)
+        self.assertEqual(first.episode_seeds[:4], first.episode_seeds[4:])
+        self.assertEqual(first.episode_conditions[:4], first.episode_conditions[4:])
+        self.assertEqual(first.episode_horizons[:4], first.episode_horizons[4:])
+        with self.assertRaises(ValueError):
+            QLearningConfig(episode_seed_pool_size=True)
+        with self.assertRaises(ValueError):
+            QLearningConfig(episodes=4, episode_seed_pool_size=5)
+        with self.assertRaises(ValueError):
+            QLearningConfig(
+                episodes=4, training_horizons=(3, 4),
+                episode_seed_pool_size=3,
+            )
+
     def test_training_condition_summary_is_auditable(self) -> None:
         trained = train_q_learning(113, QLearningConfig(
             episodes=4, horizon=4,
@@ -1861,6 +1883,13 @@ class SimulationTests(unittest.TestCase):
             save_checkpoint(restored, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
+            legacy.pop("sha256")
+            legacy["checkpoint_version"] = 25
+            legacy["config"].pop("episode_seed_pool_size")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_checkpoint(first), trained)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 24
             legacy["config"].pop("seen_recovery_utility_override")
