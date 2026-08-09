@@ -15,7 +15,7 @@ from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
 from awakened_zero_rank.learning import (
     ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
-    _apply_training_rent_reserve,
+    _apply_training_rent_reserve, _frozen_policy_action,
     EvaluationScenario,
     abstract_state, assess_policy_adoption, checkpoint_digest,
     compare_utility_and_rl, curriculum_reward,
@@ -1408,6 +1408,10 @@ class SimulationTests(unittest.TestCase):
             QLearningConfig(preventive_rest_max_injury_severity=True)
         with self.assertRaises(ValueError):
             QLearningConfig(training_rent_reserve=1)
+        with self.assertRaises(ValueError):
+            QLearningConfig(energy_preemption_floor=-1)
+        with self.assertRaises(ValueError):
+            QLearningConfig(energy_preemption_floor=True)
         config = QLearningConfig(episodes=2, horizon=5,
                                  progression_sampling_rate=0.1)
         self.assertEqual(train_q_learning(131, config), train_q_learning(131, config))
@@ -1420,6 +1424,30 @@ class SimulationTests(unittest.TestCase):
             episodes=2, horizon=5, training_rent_reserve=True)
         self.assertEqual(train_q_learning(135, reserve_config),
                          train_q_learning(135, reserve_config))
+
+    def test_action_cost_energy_preemption_is_default_off_and_reproducible(self) -> None:
+        trained = train_q_learning(141, QLearningConfig(episodes=1, horizon=2))
+        environment = LearningEnvironment(241)
+        p = environment.simulation.state.protagonist
+        p.energy, p.hunger, p.injury_severity = 38, 20, 0
+        observation, mask = environment.observe(), environment.action_mask()
+        base = replace(
+            trained, q_table={},
+            config=replace(trained.config, unseen_state_fallback="heuristic"))
+        action, _, overridden, replaced_action = _frozen_policy_action(
+            base, environment, observation, mask)
+        self.assertEqual(ACTION_NAMES[action], "Part-time work")
+        self.assertFalse(overridden)
+        guarded = replace(
+            base, config=replace(base.config, energy_preemption_floor=25))
+        first = _frozen_policy_action(
+            guarded, environment, observation, mask)
+        second = _frozen_policy_action(
+            guarded, environment, observation, mask)
+        self.assertEqual(first, second)
+        self.assertEqual(ACTION_NAMES[first[0]], "Rest")
+        self.assertTrue(first[2])
+        self.assertEqual(ACTION_NAMES[first[3]], "Part-time work")
 
     def test_training_rent_reserve_preserves_arrears_conditions(self) -> None:
         standard = TrainingEnvironment(seed=7, horizon=3)
@@ -1462,13 +1490,23 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 22
+            legacy["config"].pop("energy_preemption_floor")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            legacy_energy = replace(
+                trained, config=replace(
+                    trained.config, energy_preemption_floor=0))
+            self.assertEqual(load_checkpoint(first), legacy_energy)
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 21
             legacy.pop("preparation_plan_contexts")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
             legacy_plan_context = replace(
-                trained, preparation_plan_contexts=())
+                legacy_energy, preparation_plan_contexts=())
             self.assertEqual(load_checkpoint(first), legacy_plan_context)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 20

@@ -37,6 +37,11 @@ EVALUATION_CONDITIONS = ("standard", "financial_pressure", "injury_recovery",
                          "gate_crisis", "compound_crisis")
 MAX_DOMINANCE_REGRESSION = 0.15
 MIN_TRAINING_CONDITION_EPISODES = 2
+ACTION_ENERGY_COSTS = {
+    "Part-time work": 22, "Study": 13, "Train": 20,
+    "Talk with Aiko": 8, "Guild patrol": 27,
+    "Prepare portal": 10, "Gate mission": 28,
+}
 
 
 @dataclass(frozen=True)
@@ -245,6 +250,7 @@ class QLearningConfig:
     priority_clear_progression_sampling_rate: float = 0.0
     preventive_rest_threshold: int = 0
     preventive_rest_max_injury_severity: int = 0
+    energy_preemption_floor: int = 0
     curriculum: bool = True
     training_rent_reserve: bool = False
     training_conditions: tuple[str, ...] = ("standard",)
@@ -290,6 +296,10 @@ class QLearningConfig:
                 not 0 <= self.preventive_rest_max_injury_severity <= 4):
             raise ValueError(
                 "preventive_rest_max_injury_severity must be an integer from 0 to 4")
+        if (type(self.energy_preemption_floor) is not int or
+                not 0 <= self.energy_preemption_floor <= 100):
+            raise ValueError(
+                "energy_preemption_floor must be an integer from 0 to 100")
         if type(self.training_rent_reserve) is not bool:
             raise ValueError("training_rent_reserve must be a boolean")
         if self.unseen_state_fallback not in {"first_valid", "heuristic"}:
@@ -913,7 +923,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(preparation_return_samples),
                           tuple(preparation_plan_returns),
                           tuple(preparation_plan_contexts))
-CHECKPOINT_VERSION = 22
+CHECKPOINT_VERSION = 23
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -993,7 +1003,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -1025,6 +1035,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     config_data.setdefault("priority_clear_progression_sampling_rate", 0.0)
     config_data.setdefault("training_rent_reserve", False)
     config_data.setdefault("preventive_rest_threshold", 0)
+    config_data.setdefault("energy_preemption_floor", 0)
     config_data.setdefault(
         "preventive_rest_max_injury_severity",
         1 if data["checkpoint_version"] == 9 else 0,
@@ -1637,8 +1648,17 @@ def _frozen_policy_action(
         action = _greedy_action(values, mask)
     p = environment.simulation.state.protagonist
     rest_index = ACTION_NAMES.index("Rest")
-    if (result.config.preventive_rest_threshold and action != rest_index and
-            p.energy <= result.config.preventive_rest_threshold and
+    projected_energy = p.energy - ACTION_ENERGY_COSTS.get(
+        ACTION_NAMES[action], 0)
+    action_cost_preemption = (
+        result.config.energy_preemption_floor and
+        ACTION_NAMES[action] in ACTION_ENERGY_COSTS and
+        projected_energy <= result.config.energy_preemption_floor)
+    threshold_preemption = (
+        result.config.preventive_rest_threshold and
+        p.energy <= result.config.preventive_rest_threshold)
+    if (action != rest_index and
+            (action_cost_preemption or threshold_preemption) and
             p.injury_severity <=
             result.config.preventive_rest_max_injury_severity and
             p.hunger < 65 and mask[rest_index]):
