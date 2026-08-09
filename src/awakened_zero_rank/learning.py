@@ -1440,6 +1440,7 @@ class EnsembleConfig:
     minimum_utility_visits: int = 2
     minimum_return_advantage: float = 1.0
     allowed_override_actions: tuple[str, ...] = ACTION_NAMES
+    minimum_crisis_signals: int = 0
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -1448,6 +1449,9 @@ class EnsembleConfig:
                 len(self.allowed_override_actions) or
                 set(self.allowed_override_actions) - set(ACTION_NAMES)):
             raise ValueError("allowed_override_actions must contain unique known actions")
+        if (type(self.minimum_crisis_signals) is not int or
+                not 0 <= self.minimum_crisis_signals <= 7):
+            raise ValueError("minimum_crisis_signals must be an integer from 0 to 7")
         if (type(self.minimum_policy_support) is not int or
                 self.minimum_policy_support < 2):
             raise ValueError("minimum_policy_support must be at least 2")
@@ -1504,11 +1508,29 @@ def _validate_ensemble_results(
             raise ValueError("Ensemble discounted-return evidence is invalid")
 
 
+def _ensemble_crisis_signals(environment: LearningEnvironment) -> int:
+    state = environment.simulation.state
+    p = state.protagonist
+    return sum((
+        p.rent_arrears > 0,
+        p.injury_severity > 0,
+        state.gate_alert_level >= 2,
+        p.health < 60,
+        p.energy <= 25,
+        p.hunger >= 65,
+        p.stress >= 75,
+    ))
+
+
 def _ensemble_policy_action_validated(
         results: tuple[TrainingResult, ...], environment: LearningEnvironment,
         observation, mask: tuple[int, ...], config: EnsembleConfig,
         ) -> tuple[int, bool, float | None]:
+    rng_state = environment.simulation.rng.getstate()
     utility = utility_action(environment, mask)
+    environment.simulation.rng.setstate(rng_state)
+    if _ensemble_crisis_signals(environment) < config.minimum_crisis_signals:
+        return utility, False, None
     state = discretize(observation)
     visits = [0] * len(ACTION_NAMES)
     returns = [0.0] * len(ACTION_NAMES)
@@ -1588,7 +1610,12 @@ def compare_utility_and_ensemble(
             action, overridden, _ = _ensemble_policy_action_validated(
                 results, ensemble_environment, observation,
                 ensemble_environment.action_mask(), config)
-            ensemble_total += ensemble_environment.step(ACTION_NAMES[action]).reward
+            if overridden:
+                utility_action(ensemble_environment, ensemble_environment.action_mask())
+                transition = ensemble_environment.step(ACTION_NAMES[action])
+            else:
+                transition = ensemble_environment.baseline_step()
+            ensemble_total += transition.reward
             override_actions[ACTION_NAMES[action]] += int(overridden)
             utility_total += utility_environment.baseline_step().reward
         ensemble_p = ensemble_environment.simulation.state.protagonist

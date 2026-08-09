@@ -14,7 +14,8 @@ from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
 from awakened_zero_rank.learning import (
-    ACTION_NAMES, EnsembleConfig, LearningEnvironment, QLearningConfig, TrainingEnvironment,
+    ACTION_NAMES, EVALUATION_CONDITIONS, EnsembleConfig, LearningEnvironment,
+    QLearningConfig, TrainingEnvironment,
     _apply_training_rent_reserve, _frozen_policy_action,
     EvaluationScenario,
     abstract_state, assess_policy_adoption, checkpoint_digest,
@@ -1013,16 +1014,64 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(advantage, 0.0)
         with self.assertRaises(ValueError):
             EnsembleConfig(allowed_override_actions=("Unknown",))
+        guarded = EnsembleConfig(minimum_crisis_signals=1)
+        action, overridden, _ = ensemble_policy_action(
+            policies, environment, environment.observe(), mask, guarded)
+        self.assertEqual(action, utility)
+        self.assertFalse(overridden)
+        environment.simulation.state.protagonist.rent_arrears = 1
+        mask = environment.action_mask()
+        crisis_utility = utility_action(environment, mask)
+        self.assertNotEqual(crisis_utility, candidate)
+        visits[state][crisis_utility] = 2
+        returns[state][crisis_utility] = 0.0
+        action, overridden, _ = ensemble_policy_action(
+            policies, environment, environment.observe(), mask, guarded)
+        self.assertEqual(action, candidate)
+        self.assertTrue(overridden)
+        with self.assertRaises(ValueError):
+            EnsembleConfig(minimum_crisis_signals=8)
         first = compare_utility_and_ensemble(
             policies, (301, 302), horizon=4)
         second = compare_utility_and_ensemble(
             policies, (301, 302), horizon=4)
         self.assertEqual(first, second)
         self.assertGreaterEqual(first.override_count, 2)
+        utility_only = compare_utility_and_ensemble(
+            policies, (303, 304), horizon=8,
+            config=EnsembleConfig(allowed_override_actions=()))
+        self.assertEqual(utility_only.override_count, 0)
+        self.assertEqual(utility_only.ensemble_rewards, utility_only.utility_rewards)
+        self.assertEqual(
+            utility_only.ensemble_survival_count,
+            utility_only.utility_survival_count)
+        self.assertEqual(
+            utility_only.ensemble_mission_count,
+            utility_only.utility_mission_count)
         with self.assertRaises(ValueError):
             EnsembleConfig(minimum_policy_support=1)
         with self.assertRaises(ValueError):
             compare_utility_and_ensemble(policies, (140,), horizon=4)
+
+    def test_zero_override_ensemble_matches_utility_across_conditions(self) -> None:
+        trained = train_q_learning(146, QLearningConfig(episodes=2, horizon=8))
+        policies = (trained, replace(trained, training_seed=147),
+                    replace(trained, training_seed=148))
+        config = EnsembleConfig(allowed_override_actions=())
+        for index, condition in enumerate(EVALUATION_CONDITIONS):
+            comparison = compare_utility_and_ensemble(
+                policies, (420 + index,), horizon=8,
+                condition=condition, config=config)
+            self.assertEqual(comparison.override_count, 0)
+            self.assertEqual(
+                comparison.ensemble_rewards, comparison.utility_rewards)
+            self.assertEqual(
+                comparison.ensemble_survival_count,
+                comparison.utility_survival_count)
+            self.assertEqual(
+                comparison.ensemble_mission_count,
+                comparison.utility_mission_count)
+
     def test_ensemble_evaluation_summary_is_conservative_and_auditable(self) -> None:
         trained = train_q_learning(143, QLearningConfig(episodes=2, horizon=8))
         policies = (trained, replace(trained, training_seed=144),

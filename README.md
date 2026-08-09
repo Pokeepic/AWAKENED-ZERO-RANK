@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.116.0** · **121 automated tests**
+Current release: **0.117.0** · **122 automated tests**
 
 ## Design principles
 
@@ -284,7 +284,9 @@ Update 0.114 — Exact-State Cross-Seed Pooling aggregates authenticated visits 
 
 Update 0.115 — Authenticated Condition–Horizon Pooling localizes exact-state cross-seed conflicts only after every result proves a single matching condition and horizon. In the bounded three-replication 5×2 matrix, every cell conflicted: standard/60 was lowest at 9/42 comparable states (21.4%), followed by injury-recovery/60 at 3/12 (25.0%), while financial-pressure/20 reached 7/10 (70.0%) and financial-pressure/60 reached 4/7 (57.1%) on small samples. Longer horizons generally supplied more cross-run states and lower conflict shares, but no cell justified condition-specific pooling. The diagnostic remains read-only, behavior and checkpoint schema 25 are unchanged, and the honest verdict remains **baseline remains better**.
 
-Update 0.116 — Conservative Return-Evidence Ensemble keeps utility as the default and overrides it only when three independent 80-episode policies agree through exact-state evidence, the candidate has at least four visits, the utility action has at least two, and the candidate has a nonnegative empirical discounted-return advantage. Threshold and action-family development used separate seeds before two frozen 200-episode confirmation blocks. The first was **inconclusive** at +2.319 ±2.355; the independent replication was **promising** at +3.403 ±2.385. Pooled across 400 untouched paired episodes, the ensemble scored +2.861 ±1.675 (95% CI +1.186 to +4.536), preserved survival at 400/400, improved missions 590→675, and won/lost/tied 217/173/10 with 546 overrides. The honest ensemble verdict is **promising**, but it remains default-off and not adoption-ready because standard/20 missions were 41/43, standard/60 107/108, and injury-recovery/60 118/119. Existing single-policy RL remains **baseline remains better**; behavior and checkpoint schema 25 are unchanged.
+Update 0.116 — Initial Return-Evidence Ensemble introduced exact-state multi-policy return controls, but its reported **promising** empirical result is **retracted by Update 0.117**. The evaluator executed non-override decisions through the explicit-action adapter instead of the autonomous utility path, and utility inspection advanced RNG before fallback execution. Those differences contaminated the paired comparison; the 0.116 reward, mission, and confidence figures must not be used as evidence.
+
+Update 0.117 — RNG-Aligned Ensemble Correction makes utility inspection non-mutating, consumes exactly one utility-choice RNG draw on overrides, executes every fallback through `baseline_step()`, and verifies zero-override identity across all five conditions. It also adds a default-off observable crisis-signal gate using arrears, injury, Gate alert, health, energy, hunger, and stress. A fresh corrected eight-setting development grid used 100 paired episodes per setting. The best regression-free candidate required one crisis signal, unanimous policy support, four candidate visits, two utility visits, and a return margin of three; it scored +0.989 ±1.284 (95% lower bound −0.295), preserved survival at 100/100, improved missions 164→171, and made 15 overrides without a condition–horizon mission regression. The honest corrected verdict is **inconclusive**, so the ensemble remains default-off and unadopted; existing single-policy RL remains **baseline remains better**, behavior and checkpoint schema 25 are unchanged.
 
 Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
 
@@ -427,9 +429,10 @@ Completed updates are grouped for readability:
 | 0.113 | Authenticated condition–horizon feature-coverage slices |
 | 0.114 | Exact-state cross-seed recurrence and action-conflict audit |
 | 0.115 | Authenticated condition–horizon cross-seed conflict localization |
-| 0.116 | Conservative return-evidence ensemble and 400-episode confirmation |
+| 0.116 | Initial return-evidence ensemble (empirical result retracted in 0.117) |
+| 0.117 | RNG-aligned ensemble correction and corrected inconclusive verdict |
 
-Near-term work should independently replicate the three small condition–horizon mission regressions before considering default ensemble adoption. Encoder changes, similarity fallback, and neural RL remain deferred while the single-policy readiness gate is closed.
+Near-term work should improve exact-state return evidence or recurrence before any further ensemble threshold tuning. The corrected ensemble remains default-off; encoder changes, similarity fallback, and neural RL remain deferred while the single-policy readiness gate is closed.
 
 ### Future international expansion
 
