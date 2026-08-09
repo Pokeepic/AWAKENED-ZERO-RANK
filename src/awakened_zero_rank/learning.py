@@ -302,7 +302,7 @@ class QLearningConfig:
                 "energy_preemption_floor must be an integer from 0 to 100")
         if type(self.training_rent_reserve) is not bool:
             raise ValueError("training_rent_reserve must be a boolean")
-        if self.unseen_state_fallback not in {"first_valid", "heuristic"}:
+        if self.unseen_state_fallback not in {"first_valid", "heuristic", "utility"}:
             raise ValueError("unknown unseen-state fallback")
 
 
@@ -923,7 +923,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(preparation_return_samples),
                           tuple(preparation_plan_returns),
                           tuple(preparation_plan_contexts))
-CHECKPOINT_VERSION = 23
+CHECKPOINT_VERSION = 24
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -1003,7 +1003,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -1636,6 +1636,20 @@ def heuristic_action(environment: LearningEnvironment, mask: tuple[int, ...]) ->
     return ACTION_NAMES.index(choice)
 
 
+def utility_action(environment: LearningEnvironment, mask: tuple[int, ...]) -> int:
+    """Delegate one decision-point choice to the simulator's utility scorer."""
+    simulation = environment.simulation
+    state, p = simulation.state, simulation.state.protagonist
+    choice, _ = simulation.agent.choose(
+        p, state.clock.slot, state.gate_alert_level, state.weather,
+        state.active_portal_plan is not None,
+    )
+    action = ACTION_NAMES.index(choice.name)
+    if not mask[action]:
+        raise ValueError("Utility scorer selected an action outside the valid-action mask")
+    return action
+
+
 def _frozen_policy_action(
         result: TrainingResult, environment: LearningEnvironment,
         observation, mask: tuple[int, ...]) -> tuple[int, bool, bool, int | None]:
@@ -1643,6 +1657,8 @@ def _frozen_policy_action(
     unseen = state not in result.q_table
     if unseen and result.config.unseen_state_fallback == "heuristic":
         action = heuristic_action(environment, mask)
+    elif unseen and result.config.unseen_state_fallback == "utility":
+        action = utility_action(environment, mask)
     else:
         values = result.q_table.get(state, [0.0] * len(ACTION_NAMES))
         action = _greedy_action(values, mask)

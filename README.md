@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.97.0** · **111 automated tests**
+Current release: **0.98.0** · **111 automated tests**
 
 ## Design principles
 
@@ -250,6 +250,8 @@ Update 0.96 — Fresh-Seed Energy Confirmation evaluates floor 20 against floor 
 
 Update 0.97 — Heuristic Fallback Attribution compares the pure heuristic with utility on fresh seeds 901–920 across every condition–horizon cell. Heuristic trailed by −21.965 pooled and was positive only in 20-step standard (+3.137); component gaps were −12.592 survival, −8.845 progress, −0.306 social, and −0.222 stability. It spent 171 steps at critical energy versus utility's four, completed seven missions versus 24, and selected Study 149 times versus seven, although prepared completions favored heuristic 7–2. Because unseen heuristic fallback controls 97% of RL decisions, the fallback itself explains most of the replicated deficit. No behavior changed, checkpoint schema remains 23, and the verdict is **baseline remains better**.
 
+Update 0.98 — Utility-Fallback Control adds a validated, checkpoint-authenticated, default-off utility option for unseen states. It delegates at the frozen policy's decision point to the simulator's seeded utility scorer; it is a diagnostic control, not an exact baseline trajectory replay or learned RL behavior. Across the same three trained policies and fresh seeds 901–920, the pooled RL-minus-utility gap moved from −17.408 with heuristic fallback to +0.427 with utility guidance, critical-energy steps fell from 375 to eight, and missions rose from 36 to 110. Seed-level gaps were +4.173, −0.457, and −2.434; the pooled verdict is **inconclusive**. Moreover, 1,744/2,147 decisions were unseen-state utility delegations, so the result confirms fallback attribution rather than RL improvement. Historical defaults remain unchanged, checkpoints advance to schema 24 with exact schema-23 migration, and the overall learned-policy verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -371,8 +373,9 @@ Completed updates are grouped for readability:
 | 0.95 | Bounded action-cost energy-floor sweep |
 | 0.96 | Fresh-seed action-cost energy confirmation |
 | 0.97 | Fresh-seed heuristic fallback attribution |
+| 0.98 | Default-off utility-fallback diagnostic control and schema 24 |
 
-Near-term work should prototype a default-off utility fallback as a control, explicitly measuring the residual learned-state deficit rather than presenting baseline delegation as RL improvement. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should isolate the small seen-state residual under the utility-guided control without treating delegated decisions as RL performance. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 

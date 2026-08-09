@@ -750,6 +750,12 @@ class SimulationTests(unittest.TestCase):
         )
         first = diagnose_episode(201, 1, "rl", safe)
         second = diagnose_episode(201, 1, "rl", safe)
+        utility = replace(
+            empty,
+            config=replace(empty.config, unseen_state_fallback="utility"),
+        )
+        utility_first = diagnose_episode(201, 1, "rl", utility)
+        utility_second = diagnose_episode(201, 1, "rl", utility)
         preventive = replace(
             empty, config=replace(empty.config, preventive_rest_threshold=100))
         preventive_episode = diagnose_episode(201, 1, "rl", preventive)
@@ -759,6 +765,8 @@ class SimulationTests(unittest.TestCase):
             201, 1, "rl", injured, condition="injury_recovery")
         self.assertEqual(historical.trace[0].action, "Eat")
         self.assertEqual(first.trace[0].action, "Part-time work")
+        self.assertEqual(utility_first, utility_second)
+        self.assertIn(utility_first.trace[0].action, LearningEnvironment(201).valid_actions)
         self.assertEqual(preventive_episode.trace[0].action, "Rest")
         self.assertEqual(preventive_episode.preventive_rest_override_count, 1)
         self.assertEqual(preventive_episode.preventive_rest_overrides[0].replaced_action,
@@ -1489,6 +1497,12 @@ class SimulationTests(unittest.TestCase):
             save_checkpoint(restored, second)
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
+            legacy.pop("sha256")
+            legacy["checkpoint_version"] = 23
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            self.assertEqual(load_checkpoint(first), trained)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 22
             legacy["config"].pop("energy_preemption_floor")
