@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.106.0** · **112 automated tests**
+Current release: **0.107.0** · **112 automated tests**
 
 ## Design principles
 
@@ -268,6 +268,8 @@ Update 0.105 — Selective-Control Energy-Floor Interaction tests the existing f
 
 Update 0.106 — Selective-Delegation Energy Attribution records pre/post energy for every seen-state delegation and reports direct critical-boundary crossings separately from episode-level burden. On seeds 1001–1020, none of 268 delegations directly entered critical energy, so all 18 previously observed entries were downstream or controlled elsewhere. On seeds 1101–1120, 275 delegations produced 240 changed actions and 58 patrol/Gate choices, but only one directly entered critical energy: Guild patrol from 58 energy. Most hunter-work delegations began well above danger, including 27 at 100 energy. This corrects the causal interpretation and rejects a narrower override-specific energy rule. Behavior and checkpoint schema 25 remain unchanged, the selective control stays default-off and **promising but inconclusive**, and the overall verdict remains **baseline remains better**.
 
+Update 0.107 — Downstream Critical-Entry Controller Traces record every actual >25→≤25 energy transition with controller, action, pre/post energy, and up to three preceding actions. Across selective-control confirmation groups 1001–1020 and 1101–1120, 27/31 entries were controlled by unseen utility fallback, three by the Q-table, and only one directly by selective recovery. Guild patrol caused 24 entries and Gate mission seven; 21 followed Seek treatment → Guild patrol, while four followed Prepare portal → Gate mission. Pre-entry energy clustered at 38. The safety burden is therefore primarily a downstream utility-fallback trajectory effect, not a direct selective override or learned recovery choice. No new safeguard is justified, behavior and checkpoint schema 25 remain unchanged, the selective control stays default-off, and the overall verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -398,8 +400,9 @@ Completed updates are grouped for readability:
 | 0.104 | Fresh-seed selective-control confirmation and exact override attribution |
 | 0.105 | Selective-control energy-floor interaction and fresh confirmation |
 | 0.106 | Exact selective-delegation pre/post energy attribution |
+| 0.107 | Controller and preceding-sequence critical-entry traces |
 
-Near-term work should attribute the remaining downstream critical-energy entries by controller and preceding action sequence; further selective-override energy rules and blind floor tuning are rejected. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should compare post-treatment utility patrol entries against baseline utility trajectories before considering any controller-specific constraint; further selective-override rules and blind floor tuning are rejected. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 

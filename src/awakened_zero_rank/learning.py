@@ -1161,6 +1161,16 @@ class DiagnosticStep:
 
 
 @dataclass(frozen=True)
+class CriticalEnergyEntry:
+    step: int
+    action: str
+    controller: str
+    energy_before: int
+    energy_after: int
+    prior_actions: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class PreventiveRestOverride:
     step: int
     replaced_action: str
@@ -1245,6 +1255,7 @@ class EpisodeDiagnostics:
     end_stress: int
     critical_energy_steps: int
     critical_energy_share: float
+    critical_energy_entries: tuple[CriticalEnergyEntry, ...]
     critical_energy_decision_steps: int
     critical_energy_action_counts: tuple[tuple[str, int], ...]
     critical_energy_rest_count: int
@@ -1366,6 +1377,7 @@ def _episode_summary(seed: int, policy: str, condition: str,
                      masks: list[tuple[int, ...]], trace: list[DiagnosticStep],
                      mission_outcomes: list[MissionOutcome],
                      low_need_recovery_count: int, critical_energy_steps: int,
+                     critical_energy_entries: list[CriticalEnergyEntry],
                      critical_energy_actions: Counter,
                      strained_energy_actions: Counter,
                      high_hunger_steps: int, high_stress_steps: int,
@@ -1456,6 +1468,7 @@ def _episode_summary(seed: int, policy: str, condition: str,
         end_hunger=p.hunger, end_stress=p.stress,
         critical_energy_steps=critical_energy_steps,
         critical_energy_share=round(critical_energy_steps / max(1, steps), 3),
+        critical_energy_entries=tuple(critical_energy_entries),
         critical_energy_decision_steps=sum(critical_energy_actions.values()),
         critical_energy_action_counts=tuple(sorted(critical_energy_actions.items())),
         critical_energy_rest_count=critical_energy_actions["Rest"],
@@ -1853,6 +1866,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     seen_state_decision_outcomes = []
     preventive_rest_overrides = []
     critical_energy_steps = high_hunger_steps = high_stress_steps = 0
+    critical_energy_entries = []
     critical_energy_actions = Counter()
     strained_energy_actions = Counter()
     visit_evidence_steps = zero_visit_action_count = selected_action_visit_total = 0
@@ -1880,6 +1894,7 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
     preparation_priority_clear_steps = preparation_priority_clear_selections = 0
     gate_q_gap_total = preparation_q_gap_total = 0.0
     for step in range(1, horizon + 1):
+        decision_controller = policy
         mask = environment.action_mask()
         masks.append(mask)
         gate_index = ACTION_NAMES.index("Gate mission")
@@ -1937,6 +1952,15 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             action, unseen, preventive_rest, replaced_action = _frozen_policy_action(
                 result, environment, observation, mask)
             unseen_state_count += int(unseen)
+            selective_controlled = (
+                not unseen and result.config.seen_recovery_utility_override and
+                _seen_recovery_override_eligible(
+                    ACTION_NAMES[learned_action], before_p))
+            decision_controller = (
+                f"{result.config.unseen_state_fallback}_fallback" if unseen else
+                "selective_recovery" if selective_controlled else "q_table")
+            if preventive_rest:
+                decision_controller = "preventive_recovery"
             fallback_action = replaced_action if preventive_rest else action
             if unseen:
                 if mask[gate_index]:
@@ -2106,6 +2130,14 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             (chosen_action == "Eat" and low_need_eat) or
             (chosen_action == "Rest" and low_need_rest))
         p = after_p
+        if before_energy > 25 and p.energy <= 25:
+            critical_energy_entries.append(CriticalEnergyEntry(
+                step=step, action=chosen_action,
+                controller=(decision_controller if chosen_action in ACTION_NAMES
+                            else "world_event"),
+                energy_before=before_energy, energy_after=p.energy,
+                prior_actions=tuple(item.action for item in trace[-3:]),
+            ))
         critical_energy_steps += int(p.energy <= 25)
         high_hunger_steps += int(p.hunger >= 75)
         high_stress_steps += int(p.stress >= 75)
@@ -2117,7 +2149,8 @@ def diagnose_episode(seed: int, horizon: int, policy: str,
             break
     return _episode_summary(
         seed, policy, condition, environment, transitions, masks, trace,
-        mission_outcomes, low_need_recovery_count, critical_energy_steps, critical_energy_actions,
+        mission_outcomes, low_need_recovery_count, critical_energy_steps,
+        critical_energy_entries, critical_energy_actions,
         strained_energy_actions, high_hunger_steps, high_stress_steps,
         unseen_state_count, seen_state_decision_count,
         seen_utility_disagreement_count, seen_state_decision_outcomes,
@@ -2585,10 +2618,12 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
         preparation_ready_displacements = Counter()
         preparation_ready_displacement_reasons = Counter()
         mission_outcomes = []
+        critical_entries = []
         seen_state_outcomes = []
         for episode in episodes:
             actions.update(dict(episode.action_counts))
             mission_outcomes.extend(episode.mission_outcomes)
+            critical_entries.extend(episode.critical_energy_entries)
             seen_state_outcomes.extend(episode.seen_state_decision_outcomes)
             masked.update(dict(episode.masked_counts))
             components.update(dict(episode.reward_components))
@@ -2651,6 +2686,14 @@ def diagnostics_report(batch: DiagnosticBatch) -> str:
             "average_critical_energy_share": round(
                 sum(e.critical_energy_share for e in episodes) / count, 3),
             "critical_energy_action_counts": dict(critical_energy_actions),
+            "critical_energy_entry_count": len(critical_entries),
+            "critical_energy_entry_controller_counts": dict(Counter(
+                item.controller for item in critical_entries)),
+            "critical_energy_entry_action_counts": dict(Counter(
+                item.action for item in critical_entries)),
+            "critical_energy_entry_prior_sequence_counts": dict(Counter(
+                " -> ".join((*item.prior_actions, item.action))
+                for item in critical_entries)),
             "critical_energy_action_frequencies": {
                 name: round(value / max(1, critical_decisions), 3)
                 for name, value in critical_energy_actions.items()

@@ -905,6 +905,9 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(all(0 <= value <= episode.steps for value in (
             episode.critical_energy_steps, episode.high_hunger_steps,
             episode.high_stress_steps)))
+        self.assertTrue(all(
+            entry.energy_before > 25 and entry.energy_after <= 25
+            for entry in episode.critical_energy_entries))
         self.assertTrue(all(0 <= value <= 1 for value in (
             episode.critical_energy_share, episode.high_hunger_share,
             episode.high_stress_share)))
@@ -1133,6 +1136,8 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("resource_burden_differences", report)
         self.assertIn("average_critical_energy_share", report["rl"])
         self.assertIn("critical_energy_action_counts", report["rl"])
+        self.assertIn("critical_energy_entry_controller_counts", report["rl"])
+        self.assertIn("critical_energy_entry_prior_sequence_counts", report["rl"])
         self.assertIn("critical_energy_action_frequencies", report["utility"])
         self.assertIn("critical_energy_rest_share", report["rl"])
         self.assertIn("strained_energy_action_counts", report["rl"])
