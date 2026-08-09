@@ -703,6 +703,12 @@ class SimulationTests(unittest.TestCase):
                             for sample in first.preparation_return_samples))
         self.assertEqual(first.preparation_plan_returns,
                          second.preparation_plan_returns)
+        self.assertEqual(first.preparation_plan_contexts,
+                         second.preparation_plan_contexts)
+        self.assertEqual(len(first.preparation_plan_contexts),
+                         len(first.preparation_plan_returns))
+        self.assertTrue(all(context == ("gate_crisis", 20)
+                            for context in first.preparation_plan_contexts))
         self.assertEqual(
             sum(sample.preparation_steps
                 for sample in first.preparation_plan_returns),
@@ -1439,13 +1445,22 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(first.read_bytes(), second.read_bytes())
             legacy = json.loads(first.read_text(encoding="utf-8"))
             legacy.pop("sha256")
+            legacy["checkpoint_version"] = 21
+            legacy.pop("preparation_plan_contexts")
+            canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
+            legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+            first.write_text(json.dumps(legacy), encoding="utf-8")
+            legacy_plan_context = replace(
+                trained, preparation_plan_contexts=())
+            self.assertEqual(load_checkpoint(first), legacy_plan_context)
+            legacy.pop("sha256")
             legacy["checkpoint_version"] = 20
             legacy.pop("preparation_plan_returns")
             canonical = json.dumps(legacy, sort_keys=True, separators=(",", ":"))
             legacy["sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
             first.write_text(json.dumps(legacy), encoding="utf-8")
             legacy_plan_return = replace(
-                trained, preparation_plan_returns=())
+                legacy_plan_context, preparation_plan_returns=())
             self.assertEqual(load_checkpoint(first), legacy_plan_return)
             legacy.pop("sha256")
             legacy["checkpoint_version"] = 19
@@ -1633,6 +1648,12 @@ class SimulationTests(unittest.TestCase):
                 "initial_state": [0] * 16, "preparation_steps": 1,
                 "discounted_return": 1.0, "steps": 1,
                 "plan_consumed": True})
+            path.write_text(json.dumps(data), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_checkpoint(path)
+            save_checkpoint(trained, path)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["preparation_plan_contexts"].append(["standard", 999])
             path.write_text(json.dumps(data), encoding="utf-8")
             with self.assertRaises(ValueError):
                 load_checkpoint(path)

@@ -344,6 +344,7 @@ class TrainingResult:
         tuple[int, ...], list[float]] = field(default_factory=dict)
     preparation_return_samples: tuple[PreparationReturnSample, ...] = ()
     preparation_plan_returns: tuple[PreparationPlanReturn, ...] = ()
+    preparation_plan_contexts: tuple[tuple[str, int], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -663,6 +664,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     prepared_completions_by_episode = []
     preparation_return_samples = []
     preparation_plan_returns = []
+    preparation_plan_contexts = []
     training_schedule = tuple(
         (condition, horizon)
         for condition in config.training_conditions
@@ -766,6 +768,8 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                         discounted_return=round(plan_return, 6),
                         steps=len(episode_transitions) - first_preparation,
                         plan_consumed=True))
+                preparation_plan_contexts.append(
+                    (condition, episode_horizon))
                 for start in pending_preparations:
                     window_return = 0.0
                     for _, _, window_reward in reversed(
@@ -799,6 +803,8 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                     discounted_return=round(plan_return, 6),
                     steps=len(episode_transitions) - first_preparation,
                     plan_consumed=False))
+            preparation_plan_contexts.append(
+                (condition, episode_horizon))
         for start in pending_preparations:
             window_return = 0.0
             for _, _, window_reward in reversed(episode_transitions[start:]):
@@ -861,8 +867,9 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           reward_table,
                           discounted_return_table,
                           tuple(preparation_return_samples),
-                          tuple(preparation_plan_returns))
-CHECKPOINT_VERSION = 21
+                          tuple(preparation_plan_returns),
+                          tuple(preparation_plan_contexts))
+CHECKPOINT_VERSION = 22
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -901,6 +908,7 @@ def _checkpoint_data(result: TrainingResult) -> dict:
         "preparation_plan_returns": [
             asdict(sample) for sample in result.preparation_plan_returns
         ],
+        "preparation_plan_contexts": result.preparation_plan_contexts,
         "episode_gate_priority_clear_steps": (
             result.episode_gate_priority_clear_steps),
         "episode_gate_priority_clear_selections": (
@@ -941,7 +949,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -1027,6 +1035,10 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
                 plan_consumed=bool(item["plan_consumed"]),
             )
             for item in data.get("preparation_plan_returns", ())),
+        preparation_plan_contexts=tuple(
+            (str(condition), int(horizon))
+            for condition, horizon in data.get(
+                "preparation_plan_contexts", ())),
     )
 
 @dataclass(frozen=True)
