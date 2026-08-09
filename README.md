@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.81.0** · **106 automated tests**
+Current release: **0.82.0** · **106 automated tests**
 
 ## Design principles
 
@@ -218,6 +218,8 @@ Update 0.80 — Preparation Abstraction Dimension Audit replays the exact held-o
 
 Update 0.81 — Safety-Preserving Action Neighbor Audit adds a diagnostic-only nearest-neighbor query over states where the requested action was actually visited. It requires exact health, energy, hunger, Gate alert, active-plan, and injury-severity categories, then reports explicit Manhattan distance, action visits, and Q-value without changing policy selection. On the exact balanced-grid policy and held-out replay, only 105/696 preparation opportunities (15.1%) had any safety-matched neighbor; just 14 were distance 0–1, 86/105 depended on a single action visit, and only 13 matched events had positive preparation value. Coverage reached every condition but remained too sparse and weak for adoption, so no similarity fallback was enabled and the verdict remains **baseline remains better**.
 
+Update 0.82 — Action Neighbor Qualification adds validated diagnostic thresholds for maximum distance, minimum action visits, and minimum Q-value while leaving policy decisions unchanged. On the same frozen balanced-grid replay, distance limits of 0, 1, 2, and 3 covered 7, 14, 39, and 62 of 696 preparation opportunities. Requiring two visits eliminated all coverage at every tested distance because no individual preparation state-action pair was repeated; requiring positive value with distance at most 3 retained only 18/696. No threshold provides both coverage and repeated evidence, so similarity fallback remains rejected and the verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -323,8 +325,9 @@ Completed updates are grouped for readability:
 | 0.79 | Training-to-held-out plan acquisition state-transfer audit |
 | 0.80 | Leave-one-dimension-out preparation abstraction audit |
 | 0.81 | Diagnostic safety-preserving action-neighbor evidence |
+| 0.82 | Conservative action-neighbor qualification thresholds rejected |
 
-Near-term work should test whether conservative distance and repeated-visit thresholds can provide enough action-neighbor coverage before any default-off similarity policy is implemented. Neural RL remains deferred while the readiness gate is closed.
+Near-term work should determine how to create repeated preparation evidence in strategically comparable states without forcing unsafe or blocked actions. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 

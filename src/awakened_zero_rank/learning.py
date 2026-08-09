@@ -472,7 +472,9 @@ def summarize_training_actions(
 
 def nearest_action_neighbors(
         result: TrainingResult, state: tuple[int, ...], action: str,
-        safety_indices: tuple[int, ...] = (0, 1, 2, 7, 11, 12),
+        safety_indices: tuple[int, ...] = (0, 1, 2, 7, 11, 12), *,
+        max_distance: int | None = None, min_action_visits: int = 1,
+        min_q_value: float | None = None,
         ) -> tuple[ActionNeighborEvidence, ...]:
     """Return nearest action-visited states while preserving safety context.
 
@@ -489,19 +491,33 @@ def nearest_action_neighbors(
             any(not isinstance(index, int) or isinstance(index, bool) or
                 not 0 <= index < len(state) for index in safety_indices)):
         raise ValueError("Safety indices must be unique strategic-state indices")
+    if (max_distance is not None and (
+            not isinstance(max_distance, int) or isinstance(max_distance, bool) or
+            max_distance < 0)):
+        raise ValueError("Maximum distance must be a non-negative integer or None")
+    if (not isinstance(min_action_visits, int) or
+            isinstance(min_action_visits, bool) or min_action_visits < 1):
+        raise ValueError("Minimum action visits must be a positive integer")
+    if (min_q_value is not None and (
+            not isinstance(min_q_value, (int, float)) or
+            isinstance(min_q_value, bool) or not math.isfinite(min_q_value))):
+        raise ValueError("Minimum Q-value must be finite or None")
     action_index = ACTION_NAMES.index(action)
     candidates = []
     for candidate, counts in result.visit_table.items():
         if (len(candidate) != len(state) or len(counts) != len(ACTION_NAMES) or
-                counts[action_index] <= 0 or
+                counts[action_index] < min_action_visits or
                 any(candidate[index] != state[index] for index in safety_indices)):
             continue
         distance = sum(abs(left - right) for index, (left, right) in enumerate(
             zip(state, candidate)) if index not in safety_indices)
+        q_value = result.q_table[candidate][action_index]
+        if ((max_distance is not None and distance > max_distance) or
+                (min_q_value is not None and q_value < min_q_value)):
+            continue
         candidates.append(ActionNeighborEvidence(
             state=candidate, distance=distance,
-            action_visits=counts[action_index],
-            q_value=result.q_table[candidate][action_index],
+            action_visits=counts[action_index], q_value=q_value,
         ))
     if not candidates:
         return ()

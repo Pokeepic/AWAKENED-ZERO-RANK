@@ -1260,6 +1260,12 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(evidence[0].state, same_safety)
         self.assertEqual((evidence[0].distance, evidence[0].action_visits,
                           evidence[0].q_value), (1, 3, 1.25))
+        self.assertEqual(nearest_action_neighbors(
+            result, target, action, max_distance=0), ())
+        self.assertEqual(nearest_action_neighbors(
+            result, target, action, min_action_visits=4), ())
+        self.assertEqual(nearest_action_neighbors(
+            result, target, action, min_q_value=1.5), ())
 
     def test_action_neighbors_validate_inputs_and_can_report_no_match(self) -> None:
         result = train_q_learning(102, QLearningConfig(episodes=1, horizon=2))
@@ -1271,6 +1277,13 @@ class SimulationTests(unittest.TestCase):
             nearest_action_neighbors(result, state, "Unknown")
         with self.assertRaises(ValueError):
             nearest_action_neighbors(result, state, "Prepare portal", (0, 0))
+        for options in ({"max_distance": -1}, {"max_distance": True},
+                        {"min_action_visits": 0}, {"min_action_visits": True},
+                        {"min_q_value": float("inf")},
+                        {"min_q_value": True}):
+            with self.assertRaises(ValueError):
+                nearest_action_neighbors(
+                    result, state, "Prepare portal", **options)
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
         components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}
