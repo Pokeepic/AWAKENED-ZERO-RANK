@@ -323,6 +323,8 @@ class TrainingResult:
     episode_prepared_missions_attempted: tuple[int, ...] = ()
     episode_prepared_missions_completed: tuple[int, ...] = ()
     reward_table: dict[tuple[int, ...], list[float]] = field(default_factory=dict)
+    discounted_return_table: dict[
+        tuple[int, ...], list[float]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -630,7 +632,8 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
     rng, table = random.Random(training_seed), {}
     totals, shaped_totals, episode_seeds, episode_conditions = [], [], [], []
     episode_horizons, episode_state_counts = [], []
-    visits, action_visits, reward_sums = Counter(), Counter(), Counter()
+    visits, action_visits = Counter(), Counter()
+    reward_sums, discounted_return_sums = Counter(), Counter()
     gate_clear_steps_by_episode, gate_clear_selections_by_episode = [], []
     preparation_clear_steps_by_episode = []
     preparation_clear_selections_by_episode = []
@@ -662,6 +665,7 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
         preparation_ready_steps = portal_preparations = 0
         preparation_blockers = Counter()
         episode_states = set()
+        episode_transitions = []
         epsilon = (config.epsilon_start if config.episodes == 1 else config.epsilon_start +
                    (config.epsilon_end - config.epsilon_start) * episode / (config.episodes - 1))
         while True:
@@ -717,11 +721,19 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
             visits[(state, action)] += 1
             action_visits[action] += 1
             reward_sums[(state, action)] += reward
+            episode_transitions.append((state, action, reward))
             values[action] += config.learning_rate * (
                 shaped + config.discount_factor * future - values[action])
             observation, total, shaped_total = next_observation, total + reward, shaped_total + shaped
             if terminated or truncated:
                 break
+        discounted_return = 0.0
+        for previous_state, previous_action, previous_reward in reversed(
+                episode_transitions):
+            discounted_return = (
+                previous_reward + config.discount_factor * discounted_return)
+            discounted_return_sums[
+                (previous_state, previous_action)] += discounted_return
         totals.append(round(total, 3))
         shaped_totals.append(round(shaped_total, 3))
         episode_state_counts.append(len(episode_states))
@@ -746,6 +758,11 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                 for index in range(len(ACTION_NAMES))]
         for state in table
     }
+    discounted_return_table = {
+        state: [round(discounted_return_sums[(state, index)], 6)
+                for index in range(len(ACTION_NAMES))]
+        for state in table
+    }
     return TrainingResult(training_seed, config, table, tuple(totals), tuple(episode_seeds),
                           tuple(shaped_totals), len(table), tuple(episode_conditions),
                           tuple(episode_horizons), tuple(episode_state_counts), visit_table,
@@ -758,8 +775,9 @@ def train_q_learning(training_seed: int, config: QLearningConfig | None = None) 
                           tuple(portal_preparations_by_episode),
                           tuple(prepared_attempts_by_episode),
                           tuple(prepared_completions_by_episode),
-                          reward_table)
-CHECKPOINT_VERSION = 18
+                          reward_table,
+                          discounted_return_table)
+CHECKPOINT_VERSION = 19
 
 
 def _checkpoint_data(result: TrainingResult) -> dict:
@@ -787,6 +805,10 @@ def _checkpoint_data(result: TrainingResult) -> dict:
         "reward_table": [
             {"state": state, "rewards": rewards}
             for state, rewards in sorted(result.reward_table.items())
+        ],
+        "discounted_return_table": [
+            {"state": state, "returns": returns}
+            for state, returns in sorted(result.discounted_return_table.items())
         ],
         "episode_gate_priority_clear_steps": (
             result.episode_gate_priority_clear_steps),
@@ -828,7 +850,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     """Load a checkpoint only when its schema, actions, and digest are intact."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     digest = data.pop("sha256", None)
-    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+    if data.get("checkpoint_version") not in (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
                                                    CHECKPOINT_VERSION):
         raise ValueError("Unsupported checkpoint version")
     if tuple(data.get("action_names", ())) != ACTION_NAMES or data.get("encoder") != "strategic-v2":
@@ -844,6 +866,10 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
     reward_table = {
         tuple(item["state"]): list(item["rewards"])
         for item in data.get("reward_table", ())
+    }
+    discounted_return_table = {
+        tuple(item["state"]): list(item["returns"])
+        for item in data.get("discounted_return_table", ())
     }
     config_data = dict(data["config"])
     config_data["training_conditions"] = tuple(
@@ -892,6 +918,7 @@ def load_checkpoint(path: str | Path) -> TrainingResult:
         episode_prepared_missions_completed=tuple(data.get(
             "episode_prepared_missions_completed", ())),
         reward_table=reward_table,
+        discounted_return_table=discounted_return_table,
     )
 
 @dataclass(frozen=True)
