@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.113.0** · **117 automated tests**
+Current release: **0.114.0** · **118 automated tests**
 
 ## Design principles
 
@@ -280,6 +280,8 @@ Update 0.112 — Authenticated State-Feature Coverage reports categorical state 
 
 Update 0.113 — Authenticated Condition–Horizon Feature Slices require a single condition and horizon whose episode labels exactly match the training config, then report sparse categorical coverage from its visit table. A bounded three-replication 5×2 slice matrix found that 20-step runs kept money in category 0 for four of five conditions and rank points in category 0 for four, while every 60-step condition reached a second category for both features. Condition-specific constants aligned with intentional crisis initialization, and no money slice reached categories 2–3. The evidence supports retaining both the encoder and balanced 20/60 schedule; behavior and checkpoint schema 25 remain unchanged, and the honest verdict remains **baseline remains better**.
 
+Update 0.114 — Exact-State Cross-Seed Pooling aggregates authenticated visits from unique training seeds only when their configs match, preserving all encoder dimensions and the balanced condition–horizon schedule. Across policies 701–703, pooling raised recurrent states to 338/1,598 (21.2%) and recurrent state-action pairs to 252/1,944 (13.0%), with 213 states appearing in multiple runs. However, 73/156 states with comparable uniquely dominant per-policy actions conflicted (46.8%). Naïve pooled control or Q-value merging is therefore rejected; the diagnostic remains read-only, behavior and checkpoint schema 25 are unchanged, and the honest verdict remains **baseline remains better**.
+
 Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
@@ -419,8 +421,9 @@ Completed updates are grouped for readability:
 | 0.111 | Safety-preserving projection recurrence and action-conflict audit |
 | 0.112 | Authenticated categorical feature-coverage and money-retention audit |
 | 0.113 | Authenticated condition–horizon feature-coverage slices |
+| 0.114 | Exact-state cross-seed recurrence and action-conflict audit |
 
-Near-term work should test evidence-preserving recurrence strategies that retain condition and horizon coverage before changing the encoder. Selective recovery, controller-specific constraints, blind floor sweeps, similarity fallback, and neural RL remain deferred while the readiness gate is closed.
+Near-term work should localize cross-seed action conflicts by condition and horizon before considering any evidence pooling or encoder change. Selective recovery, controller-specific constraints, blind floor sweeps, similarity fallback, and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 

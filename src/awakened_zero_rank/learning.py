@@ -627,6 +627,74 @@ def summarize_training_recurrence(
 
 
 @dataclass(frozen=True)
+class PooledTrainingRecurrenceSummary:
+    training_seeds: tuple[int, ...]
+    visited_state_count: int
+    repeated_state_count: int
+    state_recurrence_share: float
+    cross_run_state_count: int
+    visited_state_action_pairs: int
+    repeated_state_action_pairs: int
+    state_action_recurrence_share: float
+    comparable_action_states: int
+    conflicting_action_states: int
+    action_conflict_share: float
+
+
+def summarize_pooled_training_recurrence(
+        results: tuple[TrainingResult, ...],
+        ) -> PooledTrainingRecurrenceSummary:
+    """Pool exact-state visit evidence without projecting encoder features."""
+    results = tuple(results)
+    if len(results) < 2:
+        raise ValueError("Pooled recurrence requires at least two training results")
+    seeds = tuple(result.training_seed for result in results)
+    if len(set(seeds)) != len(seeds):
+        raise ValueError("Pooled recurrence requires unique training seeds")
+    if any(result.config != results[0].config for result in results[1:]):
+        raise ValueError("Pooled recurrence requires identical training configs")
+    for result in results:
+        summarize_training_recurrence(result)
+    aggregate: dict[tuple[int, ...], list[int]] = {}
+    run_counts = Counter()
+    dominant_actions: dict[tuple[int, ...], list[int]] = {}
+    for result in results:
+        for state, counts in result.visit_table.items():
+            if sum(counts) == 0:
+                continue
+            run_counts[state] += 1
+            totals = aggregate.setdefault(state, [0] * len(ACTION_NAMES))
+            for index, count in enumerate(counts):
+                totals[index] += count
+            maximum = max(counts)
+            winners = [index for index, count in enumerate(counts)
+                       if count == maximum and count > 0]
+            if len(winners) == 1:
+                dominant_actions.setdefault(state, []).append(winners[0])
+    state_visits = [sum(counts) for counts in aggregate.values()]
+    pair_visits = [count for counts in aggregate.values() for count in counts
+                   if count > 0]
+    comparable = [actions for actions in dominant_actions.values()
+                  if len(actions) >= 2]
+    conflicts = sum(len(set(actions)) > 1 for actions in comparable)
+    return PooledTrainingRecurrenceSummary(
+        training_seeds=seeds,
+        visited_state_count=len(state_visits),
+        repeated_state_count=sum(visits >= 2 for visits in state_visits),
+        state_recurrence_share=round(
+            sum(visits >= 2 for visits in state_visits) / len(state_visits), 3),
+        cross_run_state_count=sum(count >= 2 for count in run_counts.values()),
+        visited_state_action_pairs=len(pair_visits),
+        repeated_state_action_pairs=sum(visits >= 2 for visits in pair_visits),
+        state_action_recurrence_share=round(
+            sum(visits >= 2 for visits in pair_visits) / max(1, len(pair_visits)), 3),
+        comparable_action_states=len(comparable),
+        conflicting_action_states=conflicts,
+        action_conflict_share=round(conflicts / max(1, len(comparable)), 3),
+    )
+
+
+@dataclass(frozen=True)
 class StateFeatureCoverage:
     feature: str
     state_index: int

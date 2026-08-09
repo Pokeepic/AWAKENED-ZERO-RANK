@@ -27,6 +27,7 @@ from awakened_zero_rank.learning import (
     save_scenario_suite_report,
     nearest_action_neighbors,
     scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
+    summarize_pooled_training_recurrence,
     summarize_state_projection,
     summarize_training_actions, summarize_training_recurrence,
     summarize_training_feature_slice, summarize_training_state_features,
@@ -645,6 +646,40 @@ class SimulationTests(unittest.TestCase):
         invalid[state] = [-1] + [0] * (len(ACTION_NAMES) - 1)
         with self.assertRaises(ValueError):
             summarize_training_recurrence(replace(trained, visit_table=invalid))
+
+    def test_pooled_training_recurrence_preserves_exact_states(self) -> None:
+        trained = train_q_learning(134, QLearningConfig(episodes=3, horizon=8))
+        replica = replace(trained, training_seed=135)
+        summary = summarize_pooled_training_recurrence((trained, replica))
+        recurrence = summarize_training_recurrence(trained)
+        self.assertEqual(summary.training_seeds, (134, 135))
+        self.assertEqual(summary.visited_state_count, recurrence.visited_state_count)
+        self.assertEqual(summary.cross_run_state_count, summary.visited_state_count)
+        self.assertEqual(summary.repeated_state_count, summary.visited_state_count)
+        self.assertEqual(summary.conflicting_action_states, 0)
+        state = next(state for state, counts in trained.visit_table.items()
+                     if counts.count(max(counts)) == 1 and max(counts) > 0)
+        conflicting_visits = {
+            candidate: list(counts)
+            for candidate, counts in trained.visit_table.items()
+        }
+        original = conflicting_visits[state]
+        winner = original.index(max(original))
+        replacement = (winner + 1) % len(ACTION_NAMES)
+        conflicting_visits[state] = [0] * len(ACTION_NAMES)
+        conflicting_visits[state][replacement] = sum(original)
+        conflicting = replace(
+            trained, training_seed=136, visit_table=conflicting_visits)
+        conflict_summary = summarize_pooled_training_recurrence(
+            (trained, conflicting))
+        self.assertGreaterEqual(conflict_summary.conflicting_action_states, 1)
+        with self.assertRaises(ValueError):
+            summarize_pooled_training_recurrence((trained,))
+        with self.assertRaises(ValueError):
+            summarize_pooled_training_recurrence((trained, trained))
+        mismatched = train_q_learning(137, QLearningConfig(episodes=2, horizon=8))
+        with self.assertRaises(ValueError):
+            summarize_pooled_training_recurrence((trained, mismatched))
 
     def test_training_state_feature_coverage_is_exact_and_auditable(self) -> None:
         trained = train_q_learning(131, QLearningConfig(episodes=3, horizon=8))
