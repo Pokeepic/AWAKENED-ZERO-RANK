@@ -2464,6 +2464,46 @@ def save_experiment_bundle(
     return target
 
 
+@dataclass(frozen=True)
+class ExperimentBundleSummary:
+    catalog_sha256: str
+    report_count: int
+    report_type_counts: tuple[tuple[str, int], ...]
+    training_seeds: tuple[int, ...]
+    conditions: tuple[str, ...]
+    horizons: tuple[int, ...]
+    status_counts: tuple[tuple[str, int], ...]
+
+
+def inspect_experiment_bundle(report_root: str | Path) -> ExperimentBundleSummary:
+    """Verify a published bundle and return compact dashboard-safe metadata."""
+    root = Path(report_root)
+    catalog = load_experiment_catalog(root / "catalog.json")
+    verify_experiment_catalog(catalog, root)
+    return ExperimentBundleSummary(
+        catalog_sha256=experiment_catalog_digest(catalog),
+        report_count=len(catalog.entries),
+        report_type_counts=tuple(sorted(Counter(
+            entry.report_type for entry in catalog.entries).items())),
+        training_seeds=tuple(sorted({
+            seed for entry in catalog.entries for seed in entry.training_seeds
+        })),
+        conditions=tuple(sorted({
+            condition for entry in catalog.entries for condition in entry.conditions
+        })),
+        horizons=tuple(sorted({
+            horizon for entry in catalog.entries for horizon in entry.horizons
+        })),
+        status_counts=tuple(sorted(Counter(
+            entry.status for entry in catalog.entries).items())),
+    )
+
+
+def experiment_bundle_summary_json(summary: ExperimentBundleSummary) -> str:
+    """Render compact deterministic JSON for scripts and dashboard ingestion."""
+    return json.dumps(asdict(summary), indent=2, sort_keys=True)
+
+
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                            horizon: int | None = None) -> BatchComparison:
     """Evaluate frozen RL and utility policies on identical held-out world seeds."""

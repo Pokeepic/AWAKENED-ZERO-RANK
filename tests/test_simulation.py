@@ -1,9 +1,11 @@
-import hashlib
-import json
-import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import replace
-from tempfile import TemporaryDirectory
+import hashlib
+from io import StringIO
+import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
+import unittest
 
 from awakened_zero_rank.actions import available_actions
 from awakened_zero_rank.journal import journal_entry
@@ -13,6 +15,7 @@ from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
+from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.learning import (
     ACTION_NAMES, EVALUATION_CONDITIONS, EnsembleConfig, LearningEnvironment,
     QLearningConfig, TrainingEnvironment,
@@ -22,7 +25,8 @@ from awakened_zero_rank.learning import (
     audit_similarity_coverage, build_experiment_catalog,
     checkpoint_digest,
     compare_utility_and_ensemble, compare_utility_and_rl, curriculum_reward,
-    experiment_catalog_digest, experiment_catalog_report,
+    experiment_bundle_summary_json, experiment_catalog_digest,
+    experiment_catalog_report, inspect_experiment_bundle,
     diagnose_batch,
     diagnose_episode, diagnostics_report, ensemble_policy_action, heuristic_action,
     is_low_need_recovery, utility_action,
@@ -2033,6 +2037,49 @@ class SimulationTests(unittest.TestCase):
                     ("Reserved", "catalog.json", similarity),
                 ), reserved)
             self.assertFalse(reserved.exists())
+
+    def test_bundle_inspection_api_and_cli_emit_verified_json(self) -> None:
+        trained = train_q_learning(120, QLearningConfig(episodes=2, horizon=3))
+        suite = evaluate_scenario_suite(trained, (
+            EvaluationScenario("standard", 3, (220, 221)),
+        ))
+        similarity = audit_similarity_coverage(
+            trained, (222,), horizon=3, min_state_visits=1)
+        items = (
+            ("Similarity", "similarity/standard.json", similarity),
+            ("Scenarios", "scenarios/baseline.json", suite),
+        )
+        with TemporaryDirectory() as directory:
+            bundle = Path(directory) / "bundle"
+            save_experiment_bundle(items, bundle)
+            summary = inspect_experiment_bundle(bundle)
+            payload = json.loads(experiment_bundle_summary_json(summary))
+            self.assertEqual(payload["report_count"], 2)
+            self.assertEqual(payload["training_seeds"], [120])
+            self.assertEqual(payload["conditions"], ["standard"])
+            self.assertEqual(payload["horizons"], [3])
+            self.assertEqual(dict(payload["report_type_counts"]), {
+                "scenario_suite": 1, "similarity_single": 1,
+            })
+            output = StringIO()
+            with redirect_stdout(output):
+                cli_main(("--inspect-experiment-bundle", str(bundle)))
+            self.assertEqual(json.loads(output.getvalue()), payload)
+            errors = StringIO()
+            with redirect_stderr(errors), self.assertRaises(SystemExit):
+                cli_main((
+                    "--inspect-experiment-bundle", str(bundle),
+                    "--save", "timeline.json",
+                ))
+            self.assertIn("cannot use simulation options", errors.getvalue())
+            similarity_path = bundle / "similarity" / "standard.json"
+            tampered = json.loads(similarity_path.read_text(encoding="utf-8"))
+            tampered["summary"]["supported_decisions"] += 1
+            similarity_path.write_text(json.dumps(tampered), encoding="utf-8")
+            errors = StringIO()
+            with redirect_stderr(errors), self.assertRaises(SystemExit):
+                cli_main(("--inspect-experiment-bundle", str(bundle)))
+            self.assertIn("integrity verification failed", errors.getvalue())
 
     def test_curriculum_reward_changes_focus_by_training_phase(self) -> None:
         components = {"survival": 4.0, "stability": 2.0, "progress": 6.0, "social": 1.0}

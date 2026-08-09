@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 
 from .journal import journal_entry
 from .persistence import load_simulation, save_simulation
@@ -14,11 +15,35 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--load", metavar="FILE", help="continue an existing save")
     parser.add_argument("--save", metavar="FILE", help="save after this run")
     parser.add_argument("--technical-log", action="store_true", help="show decision reasons")
+    parser.add_argument(
+        "--inspect-experiment-bundle", metavar="DIR",
+        help="verify a published experiment bundle and print JSON metadata",
+    )
     return parser
 
 
-def main() -> None:
-    args = build_parser().parse_args()
+def main(argv: tuple[str, ...] | None = None) -> None:
+    parser = build_parser()
+    arguments = tuple(sys.argv[1:] if argv is None else argv)
+    args = parser.parse_args(arguments)
+    if args.inspect_experiment_bundle:
+        simulation_options = (
+            "--days", "--seed", "--load", "--save", "--technical-log",
+        )
+        if any(
+                argument == option or argument.startswith(f"{option}=")
+                for argument in arguments for option in simulation_options):
+            parser.error(
+                "--inspect-experiment-bundle cannot use simulation options")
+        from .learning import (
+            experiment_bundle_summary_json, inspect_experiment_bundle,
+        )
+        try:
+            summary = inspect_experiment_bundle(args.inspect_experiment_bundle)
+        except (OSError, ValueError) as error:
+            parser.error(str(error))
+        print(experiment_bundle_summary_json(summary))
+        return
     if args.days < 1:
         raise SystemExit("--days must be at least 1")
 
