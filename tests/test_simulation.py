@@ -27,6 +27,7 @@ from awakened_zero_rank.learning import (
     save_scenario_suite_report,
     nearest_action_neighbors,
     scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
+    summarize_state_projection,
     summarize_training_actions, summarize_training_recurrence,
     summarize_preparation_plan_contexts,
     summarize_training_conditions, summarize_training_preparation_blockers,
@@ -643,6 +644,25 @@ class SimulationTests(unittest.TestCase):
         invalid[state] = [-1] + [0] * (len(ACTION_NAMES) - 1)
         with self.assertRaises(ValueError):
             summarize_training_recurrence(replace(trained, visit_table=invalid))
+
+    def test_state_projection_balances_recurrence_and_action_conflicts(self) -> None:
+        trained = train_q_learning(130, QLearningConfig(episodes=3, horizon=8))
+        exact = summarize_state_projection(trained, tuple(range(16)))
+        projected = summarize_state_projection(
+            trained, tuple(index for index in range(16) if index != 4))
+        self.assertEqual(exact.original_visited_states, exact.projected_state_count)
+        self.assertLessEqual(projected.projected_state_count, exact.projected_state_count)
+        self.assertGreaterEqual(
+            projected.projected_state_recurrence_share,
+            exact.projected_state_recurrence_share)
+        self.assertLessEqual(
+            projected.conflicting_action_groups, projected.comparable_action_groups)
+        with self.assertRaises(ValueError):
+            summarize_state_projection(trained, (0, 1, 2))
+        with self.assertRaises(ValueError):
+            summarize_state_projection(trained, tuple(range(15)) + (14,))
+        with self.assertRaises(ValueError):
+            summarize_state_projection(replace(trained, visit_table={}), tuple(range(16)))
 
     def test_training_progression_coverage_is_exact_and_auditable(self) -> None:
         trained = train_q_learning(129, QLearningConfig(episodes=3, horizon=8))

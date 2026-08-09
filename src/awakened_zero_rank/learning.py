@@ -617,6 +617,92 @@ def summarize_training_recurrence(
     )
 
 
+@dataclass(frozen=True)
+class StateProjectionSummary:
+    retained_indices: tuple[int, ...]
+    original_visited_states: int
+    projected_state_count: int
+    merged_state_count: int
+    repeated_projected_states: int
+    projected_state_recurrence_share: float
+    visited_projected_state_action_pairs: int
+    repeated_projected_state_action_pairs: int
+    projected_state_action_recurrence_share: float
+    comparable_action_groups: int
+    conflicting_action_groups: int
+    action_conflict_share: float
+
+
+def summarize_state_projection(
+        result: TrainingResult, retained_indices: tuple[int, ...],
+        safety_indices: tuple[int, ...] = ACTION_NEIGHBOR_SAFETY_INDICES,
+        ) -> StateProjectionSummary:
+    """Audit recurrence and empirical action conflicts after a safe projection."""
+    retained_indices = tuple(retained_indices)
+    if (len(set(retained_indices)) != len(retained_indices) or
+            any(not isinstance(index, int) or isinstance(index, bool) or
+                not 0 <= index < 16 for index in retained_indices)):
+        raise ValueError("Retained indices must be unique strategic-state indices")
+    if (len(set(safety_indices)) != len(safety_indices) or
+            any(not isinstance(index, int) or isinstance(index, bool) or
+                not 0 <= index < 16 for index in safety_indices)):
+        raise ValueError("Safety indices must be unique strategic-state indices")
+    if not set(safety_indices).issubset(retained_indices):
+        raise ValueError("State projection must retain every safety index")
+    if not result.visit_table:
+        raise ValueError("Training projection evidence is unavailable")
+    grouped: dict[tuple[int, ...], list[tuple[int, ...]]] = {}
+    original_visited_states = 0
+    for state, counts in result.visit_table.items():
+        if (len(state) != 16 or len(counts) != len(ACTION_NAMES) or
+                any(not isinstance(count, int) or isinstance(count, bool) or
+                    count < 0 for count in counts)):
+            raise ValueError("Training projection evidence is invalid")
+        if sum(counts) == 0:
+            continue
+        original_visited_states += 1
+        key = tuple(state[index] for index in retained_indices)
+        grouped.setdefault(key, []).append(tuple(counts))
+    if not grouped:
+        raise ValueError("Training projection evidence is unavailable")
+    aggregate_counts = [
+        [sum(counts[action] for counts in evidence)
+         for action in range(len(ACTION_NAMES))]
+        for evidence in grouped.values()
+    ]
+    comparable = conflicts = 0
+    for evidence in grouped.values():
+        dominant_actions = []
+        for counts in evidence:
+            maximum = max(counts)
+            winners = [index for index, count in enumerate(counts)
+                       if count == maximum and count > 0]
+            if len(winners) == 1:
+                dominant_actions.append(winners[0])
+        if len(dominant_actions) >= 2:
+            comparable += 1
+            conflicts += int(len(set(dominant_actions)) > 1)
+    projected_visits = [sum(counts) for counts in aggregate_counts]
+    pair_visits = [count for counts in aggregate_counts for count in counts
+                   if count > 0]
+    return StateProjectionSummary(
+        retained_indices=retained_indices,
+        original_visited_states=original_visited_states,
+        projected_state_count=len(grouped),
+        merged_state_count=sum(len(evidence) > 1 for evidence in grouped.values()),
+        repeated_projected_states=sum(visits >= 2 for visits in projected_visits),
+        projected_state_recurrence_share=round(
+            sum(visits >= 2 for visits in projected_visits) / len(grouped), 3),
+        visited_projected_state_action_pairs=len(pair_visits),
+        repeated_projected_state_action_pairs=sum(visits >= 2 for visits in pair_visits),
+        projected_state_action_recurrence_share=round(
+            sum(visits >= 2 for visits in pair_visits) / max(1, len(pair_visits)), 3),
+        comparable_action_groups=comparable,
+        conflicting_action_groups=conflicts,
+        action_conflict_share=round(conflicts / max(1, comparable), 3),
+    )
+
+
 def summarize_action_safety_groups(
         result: TrainingResult, action: str,
         safety_indices: tuple[int, ...] = ACTION_NEIGHBOR_SAFETY_INDICES,
