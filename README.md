@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.86.0** · **110 automated tests**
+Current release: **0.87.0** · **110 automated tests**
 
 ## Design principles
 
@@ -228,6 +228,8 @@ Update 0.85 — Authenticated Discounted Return Evidence records cumulative unsh
 
 Update 0.86 — Plan-Bounded Preparation Returns retain one authenticated sample for every resolved training preparation, discounted only until its plan is consumed by a Gate mission or the fixed episode ends. Samples record the strategic state, duration, return, and consumed-versus-censored status; checkpoints advance to schema 20 and older schemas load with samples explicitly unavailable. The balanced-grid replay produced 45 samples: 30 reached plan consumption, with 27 positive and +10.934 average return over 7.3 steps; 15 were censored, with five positive and −2.296 average over 9.7 steps. Consumed-plan value is **promising but inconclusive** because multi-stage preparation creates 30 step-level samples for 19 prepared mission attempts. No reward or policy change was made, and the overall verdict remains **baseline remains better**.
 
+Update 0.87 — Independent Plan Lifecycle Returns add one authenticated record per prepared plan, containing its first strategic state, preparation-stage count, duration, discounted return, and consumed-versus-censored status. Checkpoints advance to schema 21, while schema-20 and older policies load with lifecycle evidence explicitly unavailable. The balanced-grid replay collapsed 45 preparation steps into 29 independent plans: 19 consumed plans exactly reconciled with 19 prepared mission attempts, 16 were positive, and their average return was +9.624; ten censored plans had three positive and averaged −3.531. Preparation value remains **promising but inconclusive** because this is one bounded training seed mixing conditions and horizons. No reward or policy change was made, and the overall verdict remains **baseline remains better**.
+
 | Area | Evidence or risk | Candidate patch | Acceptance check |
 |---|---|---|---|
 | Passive repetition — monitored in Update 0.34 | Recovery occupied a visible share of utility decisions, but the new conservative low-need metric measured only 2.6%–16.1% across the bounded audit | Defer utility penalties unless repeated audits show low-need recovery dominance; never discourage food, sleep, or treatment under genuine need | Low-need recovery stays bounded without worse survival or injury recovery |
@@ -338,8 +340,9 @@ Completed updates are grouped for readability:
 | 0.84 | Schema-18 authenticated realized state-action reward evidence |
 | 0.85 | Schema-19 authenticated discounted state-action return evidence |
 | 0.86 | Schema-20 plan-bounded preparation return samples |
+| 0.87 | Schema-21 independent preparation-plan lifecycle returns |
 
-Near-term work should aggregate multi-stage preparation samples by plan lifecycle so each consumed or censored plan contributes one independent outcome before changing rewards or training exposure. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
+Near-term work should stratify independent preparation-plan returns by training condition and fixed horizon before changing rewards or training exposure. Similarity fallback and neural RL remain deferred while the readiness gate is closed.
 
 ### Future international expansion
 
