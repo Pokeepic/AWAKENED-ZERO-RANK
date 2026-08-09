@@ -1433,6 +1433,279 @@ class BatchComparison:
     verdict: str
 
 
+@dataclass(frozen=True)
+class EnsembleConfig:
+    minimum_policy_support: int = 2
+    minimum_action_visits: int = 2
+    minimum_utility_visits: int = 2
+    minimum_return_advantage: float = 1.0
+    allowed_override_actions: tuple[str, ...] = ACTION_NAMES
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self, "allowed_override_actions", tuple(self.allowed_override_actions))
+        if (len(set(self.allowed_override_actions)) !=
+                len(self.allowed_override_actions) or
+                set(self.allowed_override_actions) - set(ACTION_NAMES)):
+            raise ValueError("allowed_override_actions must contain unique known actions")
+        if (type(self.minimum_policy_support) is not int or
+                self.minimum_policy_support < 2):
+            raise ValueError("minimum_policy_support must be at least 2")
+        if (type(self.minimum_action_visits) is not int or
+                self.minimum_action_visits < 1):
+            raise ValueError("minimum_action_visits must be positive")
+        if (type(self.minimum_utility_visits) is not int or
+                self.minimum_utility_visits < 1):
+            raise ValueError("minimum_utility_visits must be positive")
+        if (not isinstance(self.minimum_return_advantage, (int, float)) or
+                isinstance(self.minimum_return_advantage, bool) or
+                not math.isfinite(self.minimum_return_advantage) or
+                self.minimum_return_advantage < 0):
+            raise ValueError("minimum_return_advantage must be finite and nonnegative")
+
+
+@dataclass(frozen=True)
+class EnsembleBatchComparison:
+    training_seeds: tuple[int, ...]
+    config: EnsembleConfig
+    evaluation_seeds: tuple[int, ...]
+    condition: str
+    horizon: int
+    ensemble_rewards: tuple[float, ...]
+    utility_rewards: tuple[float, ...]
+    mean_difference: float
+    verdict: str
+    override_count: int
+    override_action_counts: tuple[tuple[str, int], ...]
+    ensemble_survival_rate: float
+    utility_survival_rate: float
+    ensemble_average_missions: float
+    utility_average_missions: float
+    ensemble_survival_count: int
+    utility_survival_count: int
+    ensemble_mission_count: int
+    utility_mission_count: int
+
+
+def _validate_ensemble_results(
+        results: tuple[TrainingResult, ...], config: EnsembleConfig) -> None:
+    if len(results) < config.minimum_policy_support:
+        raise ValueError("Ensemble has fewer policies than its support threshold")
+    seeds = [result.training_seed for result in results]
+    if len(set(seeds)) != len(seeds):
+        raise ValueError("Ensemble training seeds must be unique")
+    if any(result.config != results[0].config for result in results[1:]):
+        raise ValueError("Ensemble policies must use identical training configs")
+    for result in results:
+        summarize_training_recurrence(result)
+        if (set(result.discounted_return_table) != set(result.visit_table) or
+                any(len(values) != len(ACTION_NAMES)
+                    for values in result.discounted_return_table.values())):
+            raise ValueError("Ensemble discounted-return evidence is invalid")
+
+
+def _ensemble_policy_action_validated(
+        results: tuple[TrainingResult, ...], environment: LearningEnvironment,
+        observation, mask: tuple[int, ...], config: EnsembleConfig,
+        ) -> tuple[int, bool, float | None]:
+    utility = utility_action(environment, mask)
+    state = discretize(observation)
+    visits = [0] * len(ACTION_NAMES)
+    returns = [0.0] * len(ACTION_NAMES)
+    support = [0] * len(ACTION_NAMES)
+    for result in results:
+        counts = result.visit_table.get(state)
+        totals = result.discounted_return_table.get(state)
+        if counts is None or totals is None:
+            continue
+        for index, count in enumerate(counts):
+            visits[index] += count
+            returns[index] += totals[index]
+            support[index] += int(count > 0)
+    eligible = [
+        index for index, valid in enumerate(mask)
+        if (valid and ACTION_NAMES[index] in config.allowed_override_actions and
+            support[index] >= config.minimum_policy_support and
+            visits[index] >= config.minimum_action_visits)
+    ]
+    if not eligible or visits[utility] < config.minimum_utility_visits:
+        return utility, False, None
+    candidate = max(eligible, key=lambda index: (
+        returns[index] / visits[index], -index))
+    if candidate == utility:
+        return utility, False, 0.0
+    advantage = (
+        returns[candidate] / visits[candidate] - returns[utility] / visits[utility])
+    if advantage < config.minimum_return_advantage:
+        return utility, False, round(advantage, 6)
+    return candidate, True, round(advantage, 6)
+
+
+def ensemble_policy_action(
+        results: tuple[TrainingResult, ...], environment: LearningEnvironment,
+        observation, mask: tuple[int, ...], config: EnsembleConfig | None = None,
+        ) -> tuple[int, bool, float | None]:
+    """Choose utility unless exact-state return evidence supports an override."""
+    results = tuple(results)
+    config = config or EnsembleConfig()
+    _validate_ensemble_results(results, config)
+    return _ensemble_policy_action_validated(
+        results, environment, observation, mask, config)
+
+
+def compare_utility_and_ensemble(
+        results: tuple[TrainingResult, ...], evaluation_seeds: tuple[int, ...],
+        horizon: int, condition: str = "standard",
+        config: EnsembleConfig | None = None,
+        ) -> EnsembleBatchComparison:
+    """Evaluate a frozen return-evidence ensemble on paired held-out worlds."""
+    results = tuple(results)
+    config = config or EnsembleConfig()
+    _validate_ensemble_results(results, config)
+    if not evaluation_seeds or len(set(evaluation_seeds)) != len(evaluation_seeds):
+        raise ValueError("Evaluation seeds must be nonempty and unique")
+    if horizon < 1:
+        raise ValueError("horizon must be at least 1")
+    training_seeds = {
+        seed for result in results
+        for seed in (result.training_seed, *result.episode_seeds)
+    }
+    if training_seeds.intersection(evaluation_seeds):
+        raise ValueError("Evaluation seeds must be held out from all training seeds")
+    ensemble_rewards = []
+    utility_rewards = []
+    override_actions = Counter()
+    ensemble_survivals = utility_survivals = 0
+    ensemble_missions = utility_missions = 0
+    for seed in evaluation_seeds:
+        ensemble_environment = LearningEnvironment(seed)
+        utility_environment = LearningEnvironment(seed)
+        _configure_evaluation_condition(ensemble_environment, condition)
+        _configure_evaluation_condition(utility_environment, condition)
+        ensemble_total = utility_total = 0.0
+        for _ in range(horizon):
+            observation = ensemble_environment.observe()
+            action, overridden, _ = _ensemble_policy_action_validated(
+                results, ensemble_environment, observation,
+                ensemble_environment.action_mask(), config)
+            ensemble_total += ensemble_environment.step(ACTION_NAMES[action]).reward
+            override_actions[ACTION_NAMES[action]] += int(overridden)
+            utility_total += utility_environment.baseline_step().reward
+        ensemble_p = ensemble_environment.simulation.state.protagonist
+        utility_p = utility_environment.simulation.state.protagonist
+        ensemble_rewards.append(round(ensemble_total, 3))
+        utility_rewards.append(round(utility_total, 3))
+        ensemble_survivals += int(ensemble_p.health > 0)
+        utility_survivals += int(utility_p.health > 0)
+        ensemble_missions += ensemble_p.missions_completed
+        utility_missions += utility_p.missions_completed
+    differences = [ensemble - utility for ensemble, utility in zip(
+        ensemble_rewards, utility_rewards)]
+    count = len(evaluation_seeds)
+    return EnsembleBatchComparison(
+        training_seeds=tuple(result.training_seed for result in results),
+        config=config,
+        evaluation_seeds=tuple(evaluation_seeds), condition=condition,
+        horizon=horizon, ensemble_rewards=tuple(ensemble_rewards),
+        utility_rewards=tuple(utility_rewards),
+        mean_difference=round(sum(differences) / count, 3),
+        verdict=_honest_verdict(differences),
+        override_count=sum(override_actions.values()),
+        override_action_counts=tuple(sorted(override_actions.items())),
+        ensemble_survival_rate=round(ensemble_survivals / count, 3),
+        utility_survival_rate=round(utility_survivals / count, 3),
+        ensemble_average_missions=round(ensemble_missions / count, 3),
+        utility_average_missions=round(utility_missions / count, 3),
+        ensemble_survival_count=ensemble_survivals,
+        utility_survival_count=utility_survivals,
+        ensemble_mission_count=ensemble_missions,
+        utility_mission_count=utility_missions,
+    )
+
+@dataclass(frozen=True)
+class EnsembleEvaluationSummary:
+    training_seeds: tuple[int, ...]
+    config: EnsembleConfig
+    total_episodes: int
+    mean_difference: float
+    confidence_margin: float
+    verdict: str
+    ensemble_survival_count: int
+    utility_survival_count: int
+    ensemble_mission_count: int
+    utility_mission_count: int
+    override_count: int
+    override_action_counts: tuple[tuple[str, int], ...]
+    adoption_ready: bool
+    blockers: tuple[str, ...]
+
+
+def summarize_ensemble_evaluations(
+        batches: tuple[EnsembleBatchComparison, ...],
+        ) -> EnsembleEvaluationSummary:
+    """Pool frozen ensemble batches and retain conservative adoption blockers."""
+    batches = tuple(batches)
+    if not batches:
+        raise ValueError("At least one ensemble batch is required")
+    identity = (batches[0].training_seeds, batches[0].config)
+    if any((batch.training_seeds, batch.config) != identity for batch in batches[1:]):
+        raise ValueError("Ensemble batches must use one frozen policy and config")
+    evaluation_seeds = [seed for batch in batches for seed in batch.evaluation_seeds]
+    if len(set(evaluation_seeds)) != len(evaluation_seeds):
+        raise ValueError("Ensemble evaluation seeds must be unique across batches")
+    differences = [
+        ensemble - utility
+        for batch in batches
+        for ensemble, utility in zip(batch.ensemble_rewards, batch.utility_rewards)
+    ]
+    mean = sum(differences) / len(differences)
+    if len(differences) < 2:
+        margin = math.inf
+    else:
+        standard_error = math.sqrt(
+            sum((value - mean) ** 2 for value in differences) /
+            (len(differences) - 1)) / math.sqrt(len(differences))
+        margin = 1.96 * standard_error
+    ensemble_survival = sum(batch.ensemble_survival_count for batch in batches)
+    utility_survival = sum(batch.utility_survival_count for batch in batches)
+    ensemble_missions = sum(batch.ensemble_mission_count for batch in batches)
+    utility_missions = sum(batch.utility_mission_count for batch in batches)
+    grouped = {}
+    for batch in batches:
+        totals = grouped.setdefault((batch.condition, batch.horizon), [0, 0, 0, 0])
+        totals[0] += batch.ensemble_survival_count
+        totals[1] += batch.utility_survival_count
+        totals[2] += batch.ensemble_mission_count
+        totals[3] += batch.utility_mission_count
+    verdict = _honest_verdict(differences)
+    blockers = []
+    if verdict != "promising":
+        blockers.append(f"pooled verdict is {verdict}")
+    if ensemble_survival < utility_survival:
+        blockers.append("pooled survival regression")
+    if ensemble_missions < utility_missions:
+        blockers.append("pooled mission regression")
+    for (condition, horizon), totals in sorted(grouped.items()):
+        if totals[0] < totals[1]:
+            blockers.append(f"{condition}/{horizon}: survival regression")
+        if totals[2] < totals[3]:
+            blockers.append(f"{condition}/{horizon}: mission regression")
+    override_actions = Counter()
+    for batch in batches:
+        override_actions.update(dict(batch.override_action_counts))
+    return EnsembleEvaluationSummary(
+        training_seeds=identity[0], config=identity[1],
+        total_episodes=len(differences), mean_difference=round(mean, 3),
+        confidence_margin=(round(margin, 3) if math.isfinite(margin) else margin),
+        verdict=verdict, ensemble_survival_count=ensemble_survival,
+        utility_survival_count=utility_survival,
+        ensemble_mission_count=ensemble_missions,
+        utility_mission_count=utility_missions,
+        override_count=sum(override_actions.values()),
+        override_action_counts=tuple(sorted(override_actions.items())),
+        adoption_ready=not blockers, blockers=tuple(blockers),
+    )
+
 def compare_utility_and_rl(result: TrainingResult, evaluation_seeds: tuple[int, ...],
                            horizon: int | None = None) -> BatchComparison:
     """Evaluate frozen RL and utility policies on identical held-out world seeds."""

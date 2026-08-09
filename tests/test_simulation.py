@@ -14,13 +14,14 @@ from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
 from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
 from awakened_zero_rank.learning import (
-    ACTION_NAMES, LearningEnvironment, QLearningConfig, TrainingEnvironment,
+    ACTION_NAMES, EnsembleConfig, LearningEnvironment, QLearningConfig, TrainingEnvironment,
     _apply_training_rent_reserve, _frozen_policy_action,
     EvaluationScenario,
     abstract_state, assess_policy_adoption, checkpoint_digest,
-    compare_utility_and_rl, curriculum_reward,
+    compare_utility_and_ensemble, compare_utility_and_rl, curriculum_reward,
     diagnose_batch,
-    diagnose_episode, diagnostics_report, heuristic_action, is_low_need_recovery,
+    diagnose_episode, diagnostics_report, ensemble_policy_action, heuristic_action,
+    is_low_need_recovery, utility_action,
     evaluate_preparation_counterfactual,
     evaluate_repeated_trials, evaluate_scenario, evaluate_scenario_suite,
     load_checkpoint, load_scenario_suite_report, save_checkpoint,
@@ -28,6 +29,7 @@ from awakened_zero_rank.learning import (
     nearest_action_neighbors,
     scenario_suite_digest, scenario_suite_report, summarize_action_safety_groups,
     summarize_pooled_training_recurrence, summarize_pooled_training_slice,
+    summarize_ensemble_evaluations,
     summarize_state_projection,
     summarize_training_actions, summarize_training_recurrence,
     summarize_training_feature_slice, summarize_training_state_features,
@@ -970,6 +972,72 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(first.unseen_state_count, 1)
 
+    def test_return_evidence_ensemble_is_conservative_and_reproducible(self) -> None:
+        trained = train_q_learning(140, QLearningConfig(episodes=2, horizon=8))
+        environment = LearningEnvironment(300)
+        state = abstract_state(environment.observe())
+        mask = environment.action_mask()
+        utility = utility_action(environment, mask)
+        candidate = next(index for index, valid in enumerate(mask)
+                         if valid and index != utility)
+        visits = {key: list(values) for key, values in trained.visit_table.items()}
+        returns = {
+            key: list(values)
+            for key, values in trained.discounted_return_table.items()
+        }
+        visits[state] = [0] * len(ACTION_NAMES)
+        returns[state] = [0.0] * len(ACTION_NAMES)
+        visits[state][utility] = visits[state][candidate] = 2
+        returns[state][candidate] = 10.0
+        evidenced = replace(
+            trained, visit_table=visits, discounted_return_table=returns)
+        policies = (evidenced, replace(evidenced, training_seed=141),
+                    replace(evidenced, training_seed=142))
+        action, overridden, advantage = ensemble_policy_action(
+            policies, environment, environment.observe(), mask)
+        self.assertEqual(action, candidate)
+        self.assertTrue(overridden)
+        self.assertEqual(advantage, 5.0)
+        conservative = EnsembleConfig(minimum_return_advantage=6.0)
+        action, overridden, advantage = ensemble_policy_action(
+            policies, environment, environment.observe(), mask, conservative)
+        self.assertEqual(action, utility)
+        self.assertFalse(overridden)
+        self.assertEqual(advantage, 5.0)
+        blocked = EnsembleConfig(
+            allowed_override_actions=(ACTION_NAMES[utility],))
+        action, overridden, advantage = ensemble_policy_action(
+            policies, environment, environment.observe(), mask, blocked)
+        self.assertEqual(action, utility)
+        self.assertFalse(overridden)
+        self.assertEqual(advantage, 0.0)
+        with self.assertRaises(ValueError):
+            EnsembleConfig(allowed_override_actions=("Unknown",))
+        first = compare_utility_and_ensemble(
+            policies, (301, 302), horizon=4)
+        second = compare_utility_and_ensemble(
+            policies, (301, 302), horizon=4)
+        self.assertEqual(first, second)
+        self.assertGreaterEqual(first.override_count, 2)
+        with self.assertRaises(ValueError):
+            EnsembleConfig(minimum_policy_support=1)
+        with self.assertRaises(ValueError):
+            compare_utility_and_ensemble(policies, (140,), horizon=4)
+    def test_ensemble_evaluation_summary_is_conservative_and_auditable(self) -> None:
+        trained = train_q_learning(143, QLearningConfig(episodes=2, horizon=8))
+        policies = (trained, replace(trained, training_seed=144),
+                    replace(trained, training_seed=145))
+        first = compare_utility_and_ensemble(policies, (401, 402), horizon=4)
+        second = compare_utility_and_ensemble(policies, (403, 404), horizon=4)
+        summary = summarize_ensemble_evaluations((first, second))
+        self.assertEqual(summary.total_episodes, 4)
+        self.assertEqual(summary.training_seeds, (143, 144, 145))
+        self.assertEqual(summary.override_count, first.override_count + second.override_count)
+        self.assertEqual(summary.adoption_ready, not summary.blockers)
+        with self.assertRaises(ValueError):
+            summarize_ensemble_evaluations(())
+        with self.assertRaises(ValueError):
+            summarize_ensemble_evaluations((first, first))
     def test_batch_comparison_uses_held_out_seeds_and_honest_verdict(self) -> None:
         trained = train_q_learning(101, QLearningConfig(episodes=2, horizon=6))
         comparison = compare_utility_and_rl(trained, (201, 202, 203), horizon=6)
