@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.141.0 — Atomic timeline saves
+
+- Save files are now staged beside their destination, flushed to disk, and atomically replaced only after serialization succeeds.
+- Failed final replacement preserves the existing timeline and removes the abandoned temporary file.
+- Added focused failure-injection coverage and raised the deterministic regression suite to 134 tests.
+- Simulation balance, learned policies, checkpoint schemas, and RL verdicts are unchanged.
+
 ## 0.140.0 — Cross-process reproducibility gate
 
 - Added a subprocess test proving that a seeded technical timeline is byte-identical across different Python hash-randomization seeds.
@@ -408,5 +415,6 @@ Completed updates are grouped for readability:
 | 0.138 | Bounded CI matrix and contributor repository standards |
 | 0.139 | Wheel/source archive build and clean-installed-package validation |
 | 0.140 | Cross-process and hash-randomization reproducibility gate |
+| 0.141 | Atomic failure-safe timeline persistence |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

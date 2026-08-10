@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.140.0` |
+| Release | `0.141.0` |
 | Python | 3.11+ |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 133 |
+| Automated tests | 134 |
 
 ## Why this project exists
 
@@ -23,7 +23,7 @@ The project follows six rules:
 
 - Life comes before power progression.
 - Ren remains autonomous and every decision is explainable.
-- State and consequences survive save and resume.
+- State and consequences survive save and resume through atomic timeline replacement.
 - Progression must be earned through preparation and experience.
 - Identical seeds and state must produce identical futures.
 - Learned policies stay offline until held-out evidence supports adoption.

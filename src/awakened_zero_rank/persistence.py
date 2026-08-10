@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -28,7 +30,20 @@ def save_simulation(simulation: "Simulation", path: str | Path) -> Path:
         "state": asdict(simulation.state),
     }
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+                "w", encoding="utf-8", newline="\n",
+                dir=destination.parent, prefix=f".{destination.name}.",
+                suffix=".tmp", delete=False) as temporary:
+            temporary_path = Path(temporary.name)
+            json.dump(data, temporary, ensure_ascii=False, indent=2)
+            temporary.flush()
+            os.fsync(temporary.fileno())
+        os.replace(temporary_path, destination)
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
     return destination
 
 
