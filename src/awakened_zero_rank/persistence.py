@@ -11,6 +11,7 @@ from typing import Any, TYPE_CHECKING
 
 from .models import (Clock, DelayedConsequence, DialogueExchange, Event, Memory,
                      PortalInvestigation, Protagonist, Relationship, TimeSlot, WorldState)
+from .world import ITEMS, LOCATIONS
 
 
 if TYPE_CHECKING:
@@ -156,6 +157,21 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     state = simulation.state
     protagonist = state.protagonist
     _require_integer_range("clock.day", state.clock.day, 1)
+    if protagonist.location not in LOCATIONS:
+        raise ValueError(
+            f"Invalid save field protagonist.location: "
+            f"unknown location {protagonist.location!r}")
+    for field, expected_kind in (
+            ("equipped_weapon", "weapon"),
+            ("equipped_armor", "armor")):
+        item_name = getattr(protagonist, field)
+        if item_name is None:
+            continue
+        item = ITEMS.get(item_name)
+        if item is None or item.kind != expected_kind:
+            raise ValueError(
+                f"Invalid save field protagonist.{field}: "
+                f"expected catalogued {expected_kind}")
     for name in (
             "health", "energy", "hunger", "stress", "ability_mastery",
             "social_confidence"):

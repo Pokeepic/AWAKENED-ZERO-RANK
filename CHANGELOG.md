@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.151.0 — Runtime reference validation
+
+- Save validation now requires the protagonist location to exist in the travel catalog.
+- Equipped weapons and armor must resolve to catalogued items of the correct kind, preventing deferred combat-readiness and mission crashes.
+- Unequipped inventory names remain extensible; only references dereferenced by current runtime logic are constrained.
+- Added focused load and overwrite-protection tests, raising the deterministic regression suite to 150 tests; valid saves and simulation behavior are unchanged.
+
 ## 0.150.0 — Pre-write timeline validation
 
 - The semantic invariant gate now runs before serialization, directory creation, or temporary-file staging.
@@ -489,5 +496,6 @@ Completed updates are grouped for readability:
 | 0.148 | Explicit schema-specific save-integrity evidence |
 | 0.149 | Critical semantic invariant validation for saves |
 | 0.150 | Pre-write semantic validation and overwrite protection |
+| 0.151 | Runtime-critical location and equipment validation |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

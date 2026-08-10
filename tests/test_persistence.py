@@ -51,6 +51,19 @@ class PersistenceSafetyTests(unittest.TestCase):
             self.assertEqual(
                 list(destination.parent.glob(f".{destination.name}.*.tmp")), [])
 
+    def test_unknown_location_cannot_replace_existing_save(self) -> None:
+        simulation = Simulation(seed=53)
+        simulation.state.protagonist.location = "Unknown District"
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            destination.write_text("existing timeline", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "protagonist.location"):
+                save_simulation(simulation, destination)
+
+            self.assertEqual(
+                destination.read_text(encoding="utf-8"), "existing timeline")
+
     def test_tampered_integrity_checked_save_is_rejected(self) -> None:
         simulation = Simulation(seed=17)
         simulation.run(8)
@@ -139,6 +152,22 @@ class PersistenceSafetyTests(unittest.TestCase):
 
             with self.assertRaisesRegex(
                     ValueError, "protagonist.health"):
+                load_simulation(destination)
+
+    def test_redigested_unknown_equipment_is_rejected(self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            save_simulation(Simulation(seed=59), destination)
+            data = json.loads(destination.read_text(encoding="utf-8"))
+            data.pop("save_digest")
+            data["state"]["protagonist"]["equipped_weapon"] = "Ghost Blade"
+            payload = json.dumps(
+                data, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")
+            data["save_digest"] = hashlib.sha256(payload).hexdigest()
+            destination.write_text(json.dumps(data), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "equipped_weapon"):
                 load_simulation(destination)
 
     def test_redigested_impossible_state_fails_cli_validation(self) -> None:
