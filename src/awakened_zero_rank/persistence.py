@@ -9,7 +9,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
-from .content import PORTALS
+from .content import NPCS, PORTALS
 from .models import (Clock, DelayedConsequence, DialogueExchange, Event, Memory,
                      PortalInvestigation, Protagonist, Relationship, TimeSlot, WorldState)
 from .world import ITEMS, LOCATIONS
@@ -208,6 +208,40 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     _require_integer_range("gate_alert_level", state.gate_alert_level, 0, 3)
     for item, quantity in protagonist.inventory.items():
         _require_integer_range(f"inventory[{item!r}]", quantity, 1)
+    npc_names = set(NPCS)
+    for name, relationship in protagonist.relationships.items():
+        if name not in npc_names or relationship.name != name:
+            raise ValueError(
+                f"Invalid save field protagonist.relationships[{name!r}]: "
+                "key and relationship name must match a catalogued NPC")
+        for field, minimum, maximum in (
+                ("trust", -100, 100), ("familiarity", 0, 100),
+                ("meetings", 0, None), ("affection", -100, 100),
+                ("tension", 0, 100), ("loyalty", 0, 100)):
+            _require_integer_range(
+                f"protagonist.relationships[{name!r}].{field}",
+                getattr(relationship, field), minimum, maximum)
+    for speaker, connections in state.relationship_network.items():
+        if speaker not in npc_names:
+            raise ValueError(
+                "Invalid save field relationship_network: "
+                f"unknown NPC {speaker!r}")
+        for target, standing in connections.items():
+            if target not in npc_names:
+                raise ValueError(
+                    "Invalid save field relationship_network: "
+                    f"unknown NPC {target!r}")
+            _require_integer_range(
+                f"relationship_network[{speaker!r}][{target!r}]",
+                standing, -100, 100)
+    if any(name not in npc_names for name in state.npc_locations):
+        raise ValueError(
+            "Invalid save field npc_locations: expected catalogued NPC names")
+    if any(exchange.npc_name not in npc_names
+           for exchange in protagonist.dialogue_history):
+        raise ValueError(
+            "Invalid save field protagonist.dialogue_history: "
+            "expected catalogued NPC speakers")
     portal_names = {portal.name for portal in PORTALS}
     if (len(state.discovered_portals) != len(set(state.discovered_portals)) or
             any(name not in portal_names for name in state.discovered_portals)):
@@ -234,6 +268,15 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         _require_integer_range(
             f"portal_investigations[{name!r}].joint_missions",
             investigation.joint_missions, 0)
+        if (investigation.cooperating_npc is not None and
+                investigation.cooperating_npc not in npc_names):
+            raise ValueError(
+                f"Invalid save field portal_investigations[{name!r}]"
+                ".cooperating_npc: expected a catalogued NPC")
+        if any(person not in npc_names for person in investigation.reported_to):
+            raise ValueError(
+                f"Invalid save field portal_investigations[{name!r}]"
+                ".reported_to: expected catalogued NPC names")
     if (state.active_portal_plan is not None and
             state.active_portal_plan not in state.portal_investigations):
         raise ValueError(

@@ -201,6 +201,41 @@ class PersistenceSafetyTests(unittest.TestCase):
 
             self.assertFalse(destination.exists())
 
+    def test_unknown_relationship_cannot_replace_existing_save(self) -> None:
+        simulation = Simulation(seed=71)
+        simulation.run(20)
+        relationship = simulation.state.protagonist.relationships.pop("Aiko Sato")
+        simulation.state.protagonist.relationships["Unknown Clerk"] = relationship
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            destination.write_text("existing timeline", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "relationships"):
+                save_simulation(simulation, destination)
+
+            self.assertEqual(
+                destination.read_text(encoding="utf-8"), "existing timeline")
+
+    def test_redigested_unknown_portal_collaborator_is_rejected(self) -> None:
+        simulation = Simulation(seed=73)
+        simulation.run(24)
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, destination)
+            data = json.loads(destination.read_text(encoding="utf-8"))
+            data.pop("save_digest")
+            investigation = next(iter(
+                data["state"]["portal_investigations"].values()))
+            investigation["cooperating_npc"] = "Unknown Researcher"
+            payload = json.dumps(
+                data, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")
+            data["save_digest"] = hashlib.sha256(payload).hexdigest()
+            destination.write_text(json.dumps(data), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "cooperating_npc"):
+                load_simulation(destination)
+
     def test_redigested_impossible_state_fails_cli_validation(self) -> None:
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"

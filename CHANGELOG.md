@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.153.0 — Social timeline validation
+
+- Saved relationships now require matching catalogued NPC identities and bounded trust, familiarity, meeting, affection, tension, and loyalty values.
+- Relationship-network participants, scheduled NPC keys, dialogue speakers, portal collaborators, and report recipients must resolve to the current character catalog.
+- Free-form roles, reactions, dialogue text, and locations remain extensible for future authored content.
+- Added two focused overwrite/load regressions, raising the deterministic suite to 154 tests; gameplay and learning behavior are unchanged and no RL experiment was run.
+
 ## 0.152.0 — Portal timeline validation
 
 - Portal discoveries must be unique names from the current content catalog.
@@ -505,5 +512,6 @@ Completed updates are grouped for readability:
 | 0.150 | Pre-write semantic validation and overwrite protection |
 | 0.151 | Runtime-critical location and equipment validation |
 | 0.152 | Portal discovery, investigation, and active-plan validation |
+| 0.153 | NPC identity, relationship, dialogue, and collaborator validation |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
