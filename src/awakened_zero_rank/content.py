@@ -20,7 +20,18 @@ class StoryAnchor:
     day: int
     title: str
     premise: str
+    focus_npcs: tuple[str, ...]
+    isolated_outcome: str
+    resilient_outcome: str
+    prepared_outcome: str
     ending: bool = False
+
+    def outcome(self, tier: str) -> str:
+        return {
+            "isolated": self.isolated_outcome,
+            "resilient": self.resilient_outcome,
+            "prepared": self.prepared_outcome,
+        }[tier]
 
 
 @dataclass(frozen=True)
@@ -50,22 +61,46 @@ PORTALS = (
 STORY_ANCHORS = (
     StoryAnchor(
         "arc_adachi_warning", 183, "The Adachi Warning",
-        "A synchronized Gate pulse forces Tokyo to reassess its weakest districts."),
+        "A synchronized Gate pulse forces Tokyo to reassess its weakest districts.",
+        ("Aiko Sato", "Daichi Mori"),
+        "The warning reached Adachi before Ren had anyone ready to believe him.",
+        "Ren helped hold one evacuation route while the district absorbed the shock.",
+        "Ren's evidence let the guild clear Adachi before the synchronized breach."),
     StoryAnchor(
         "arc_tokyo_fracture", 365, "The Tokyo Fracture",
-        "Conflicting guild orders divide the people responsible for civilian safety."),
+        "Conflicting guild orders divide the people responsible for civilian safety.",
+        ("Daichi Mori", "Mei Kuroda"),
+        "The fracture left Ren outside both camps as patrol routes collapsed.",
+        "Ren carried evidence between rivals, preserving an uneasy working truce.",
+        "Ren's trusted coalition exposed the false order before Tokyo divided."),
     StoryAnchor(
         "arc_foreign_signal", 548, "The Foreign Signal",
-        "A repeating portal signature links Japan to a disaster unfolding overseas."),
+        "A repeating portal signature links Japan to a disaster unfolding overseas.",
+        ("Mei Kuroda", "Haruto Ishikawa"),
+        "The signal faded overseas with no one willing to stake resources on Ren's warning.",
+        "Ren preserved enough of the signal to guide a limited international response.",
+        "Ren matched the signal to his portal record and opened a verified aid corridor."),
     StoryAnchor(
         "arc_guild_reckoning", 730, "The Guild Reckoning",
-        "Tokyo must decide whether rank or lived evidence defines a hunter's worth."),
+        "Tokyo must decide whether rank or lived evidence defines a hunter's worth.",
+        ("Aiko Sato", "Daichi Mori"),
+        "The hearing reduced Ren's life to a rank the guild could dismiss.",
+        "Ren's record protected low-rank patrols, even as the old hierarchy survived.",
+        "Ren's allies forced the guild to recognize survival evidence beside rank."),
     StoryAnchor(
         "arc_zero_rank_choice", 913, "The Zero-Rank Choice",
-        "Ren's accumulated loyalties and discoveries converge around one final threat."),
+        "Ren's accumulated loyalties and discoveries converge around one final threat.",
+        ("Aiko Sato", "Daichi Mori", "Mei Kuroda", "Haruto Ishikawa"),
+        "Ren confronted the final threat without a network strong enough to share its cost.",
+        "Ren's incomplete circle held long enough to keep the threat from consuming Tokyo.",
+        "Every bond and discovery converged into a coordinated answer to the final threat."),
     StoryAnchor(
         "arc_awakened_horizon", 1095, "The Awakened Horizon",
-        "The three-year chronicle reaches an ending shaped by the life Ren built.", True),
+        "The three-year chronicle reaches an ending shaped by the life Ren built.",
+        ("Aiko Sato", "Daichi Mori", "Mei Kuroda", "Haruto Ishikawa"),
+        "Ren survived three years, carrying an unfinished warning into an uncertain future.",
+        "Ren left Tokyo steadier than he found it, though some fractures remained.",
+        "Ren reached the horizon with a trusted circle and a record that changed Tokyo.", True),
 )
 
 

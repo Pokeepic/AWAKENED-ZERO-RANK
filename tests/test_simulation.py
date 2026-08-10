@@ -64,7 +64,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.156.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.157.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -283,6 +283,18 @@ class SimulationTests(unittest.TestCase):
             later.day - earlier.day in {182, 183}
             for earlier, later in zip(STORY_ANCHORS, STORY_ANCHORS[1:])))
 
+    def test_story_anchors_have_distinct_authored_outcomes_and_valid_focus(self) -> None:
+        outcomes = [
+            anchor.outcome(tier)
+            for anchor in STORY_ANCHORS
+            for tier in ("isolated", "resilient", "prepared")]
+        self.assertEqual(len(outcomes), 18)
+        self.assertEqual(len(set(outcomes)), 18)
+        self.assertTrue(all(outcomes))
+        self.assertTrue(all(
+            anchor.focus_npcs and set(anchor.focus_npcs).issubset(NPCS)
+            for anchor in STORY_ANCHORS))
+
     def test_story_anchor_resolution_reflects_accumulated_readiness(self) -> None:
         isolated = Simulation(seed=89)
         isolated.state.clock.day = 183
@@ -299,8 +311,10 @@ class SimulationTests(unittest.TestCase):
         prepared_event = prepared.step()
 
         self.assertEqual(isolated_event.action, "The Adachi Warning")
-        self.assertIn("underprepared and isolated", isolated_event.outcome)
-        self.assertIn("entered it prepared", prepared_event.outcome)
+        self.assertIn("before Ren had anyone ready to believe him", isolated_event.outcome)
+        self.assertIn("clear Adachi before the synchronized breach", prepared_event.outcome)
+        self.assertIn("Trusted support: Aiko Sato, Daichi Mori", prepared_event.outcome)
+        self.assertIn("Latest portal evidence: Ashen Shopping Arcade", prepared_event.outcome)
         self.assertIn("arc_adachi_warning", prepared.state.calendar_events_seen)
 
     def test_story_outcome_ledger_survives_save_load(self) -> None:

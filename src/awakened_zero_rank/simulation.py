@@ -201,19 +201,19 @@ class Simulation:
         readiness = rank_score + trusted_allies + len(state.discovered_portals)
         if readiness >= 8:
             outcome_tier = "prepared"
-            resolution = (
-                "Ren entered it prepared, backed by trusted allies and "
-                "hard-won portal evidence.")
         elif readiness >= 4:
             outcome_tier = "resilient"
-            resolution = (
-                "Ren faced it with partial answers, relying on the few bonds "
-                "and clues he had secured.")
         else:
             outcome_tier = "isolated"
-            resolution = (
-                "Ren reached it underprepared and isolated, but the life he "
-                "had lived still shaped what survived.")
+        resolution = anchor.outcome(outcome_tier)
+        focused_allies = [
+            name for name in anchor.focus_npcs
+            if name in protagonist.relationships and
+            protagonist.relationships[name].trust >= 15]
+        if focused_allies:
+            resolution += f" Trusted support: {', '.join(focused_allies)}."
+        if state.discovered_portals:
+            resolution += f" Latest portal evidence: {state.discovered_portals[-1]}."
         if anchor.ending:
             resolution += " This became the ending of his three-year chronicle."
         state.calendar_events_seen.append(anchor.key)

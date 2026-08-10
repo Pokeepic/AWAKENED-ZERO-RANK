@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.157.0 — Authored anchor outcomes
+
+- Replaced the shared story-resolution template with 18 distinct authored outcomes: one isolated, resilient, and prepared result for each of the six anchors.
+- Every anchor declares its relevant recurring characters, and resolved prose names the trusted focus characters who actually exist in Ren's timeline.
+- Story prose also cites the latest discovered portal as evidence when available, while remaining deterministic and omitting unsupported details.
+- Added catalog-wide uniqueness/reference checks and focused low/high-readiness evidence assertions, raising the deterministic suite to 162 tests; readiness thresholds, saved tiers, gameplay balance, and RL behavior are unchanged.
+
 ## 0.156.0 — Persistent story outcome ledger
 
 - Every resolved story anchor now records one deterministic readiness tier: `isolated`, `resilient`, or `prepared`.
@@ -537,5 +544,6 @@ Completed updates are grouped for readability:
 | 0.154 | Event chronology, memory, dialogue-date, and consequence validation |
 | 0.155 | Fixed six-month story anchors and a state-shaped three-year ending |
 | 0.156 | Persistent story outcome tiers and observer arc progress |
+| 0.157 | Authored per-anchor outcomes with character and portal evidence |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
