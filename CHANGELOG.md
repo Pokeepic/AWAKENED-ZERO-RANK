@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.139.0 — Distribution build validation
+
+- Added a bounded CI job that builds both wheel and source distributions.
+- Installs the wheel into a clean environment, verifies the CLI version, and runs all 132 deterministic tests against the installed package.
+- Added an explicit source-distribution manifest covering project documentation, package sources, and tests.
+- Kept publishing credentials and automatic package publication out of scope.
+
 ## 0.138.0 — Continuous integration and repository standards
 
 - Added a bounded GitHub Actions matrix for dependency-free Python 3.11 and Python 3.12 with Gymnasium.
@@ -393,5 +400,6 @@ Completed updates are grouped for readability:
 | 0.136 | Production-style README and preserved dedicated changelog |
 | 0.137 | CLI version reporting and publishable package metadata |
 | 0.138 | Bounded CI matrix and contributor repository standards |
+| 0.139 | Wheel/source archive build and clean-installed-package validation |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

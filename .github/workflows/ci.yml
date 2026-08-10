@@ -47,3 +47,35 @@ jobs:
 
       - name: Run deterministic test suite
         run: python -m unittest discover -s tests -v
+  package:
+    name: Build and install distributions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build frontend
+        run: python -m pip install "build>=1,<2"
+
+      - name: Build wheel and source archive
+        run: python -m build
+
+      - name: Create clean package environment
+        run: python -m venv .package-venv
+
+      - name: Install wheel without dependencies
+        run: .package-venv/bin/python -m pip install --no-deps dist/*.whl
+
+      - name: Verify installed CLI version
+        run: .package-venv/bin/awakened-zero-rank --version
+
+      - name: Test installed wheel
+        run: .package-venv/bin/python -m unittest discover -s tests -v
