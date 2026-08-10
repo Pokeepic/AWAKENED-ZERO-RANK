@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.149.0 — Semantic save validation
+
+- Timeline loading now rejects reconstructed worlds that violate stable clock, survival-stat, attribute, mastery, injury, economy, progression, mission, Gate-alert, or inventory invariants.
+- Semantic validation applies equally to legacy schema-1 saves and digest-valid schema-2 saves.
+- CLI verification reports the exact invalid field without a traceback and never emits a false valid result.
+- Added two focused impossible-state tests, raising the deterministic regression suite to 146 tests; valid saves and simulation behavior are unchanged.
+
 ## 0.148.0 — Honest save-integrity evidence
 
 - Read-only save verification now distinguishes digest-verified schema-2 saves from compatible schema-1 saves whose integrity evidence is unavailable.
@@ -473,5 +480,6 @@ Completed updates are grouped for readability:
 | 0.146 | Critical-error and undefined-name static analysis |
 | 0.147 | Read-only timeline save verification |
 | 0.148 | Explicit schema-specific save-integrity evidence |
+| 0.149 | Critical semantic invariant validation for saves |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

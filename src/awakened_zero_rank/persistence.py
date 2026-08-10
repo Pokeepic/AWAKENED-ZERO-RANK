@@ -133,7 +133,63 @@ def _simulation_from_data(data: dict[str, Any]) -> "Simulation":
     )
     simulation = Simulation(seed=data["seed"], state=state)
     simulation.rng.setstate(_tuplify(data["rng_state"]))
+    _validate_simulation_state(simulation)
     return simulation
+
+
+def _require_integer_range(
+        name: str, value: Any, minimum: int,
+        maximum: int | None = None) -> None:
+    if (isinstance(value, bool) or not isinstance(value, int) or
+            value < minimum or
+            (maximum is not None and value > maximum)):
+        expected = (
+            f"{minimum} or greater" if maximum is None
+            else f"range {minimum}..{maximum}")
+        raise ValueError(
+            f"Invalid save field {name}: expected integer in {expected}")
+
+
+def _validate_simulation_state(simulation: "Simulation") -> None:
+    """Reject reconstructed worlds that violate stable simulation invariants."""
+    state = simulation.state
+    protagonist = state.protagonist
+    _require_integer_range("clock.day", state.clock.day, 1)
+    for name in (
+            "health", "energy", "hunger", "stress", "ability_mastery",
+            "social_confidence"):
+        _require_integer_range(
+            f"protagonist.{name}", getattr(protagonist, name), 0, 100)
+    for name in (
+            "strength", "agility", "endurance", "perception", "mana",
+            "luck"):
+        _require_integer_range(
+            f"protagonist.{name}", getattr(protagonist, name), 1, 100)
+    _require_integer_range(
+        "protagonist.injury_severity", protagonist.injury_severity, 0, 5)
+    for name in (
+            "money", "knowledge", "fitness", "echo_fragments",
+            "training_sessions", "reputation", "rank_points",
+            "combat_experience", "missions_attempted",
+            "missions_completed", "prepared_missions_attempted",
+            "prepared_missions_completed", "injuries",
+            "treatments_received", "rent_arrears", "gates_witnessed"):
+        _require_integer_range(
+            f"protagonist.{name}", getattr(protagonist, name), 0)
+    _require_integer_range(
+        "protagonist.rent_due_day", protagonist.rent_due_day, 1)
+    _require_integer_range("protagonist.rent_cost", protagonist.rent_cost, 0)
+    if protagonist.missions_completed > protagonist.missions_attempted:
+        raise ValueError(
+            "Invalid save mission counters: completions exceed attempts")
+    if (protagonist.prepared_missions_completed >
+            protagonist.prepared_missions_attempted or
+            protagonist.prepared_missions_attempted >
+            protagonist.missions_attempted):
+        raise ValueError("Invalid save prepared-mission counters")
+    _require_integer_range("gate_alert_level", state.gate_alert_level, 0, 3)
+    for item, quantity in protagonist.inventory.items():
+        _require_integer_range(f"inventory[{item!r}]", quantity, 1)
 
 
 def load_simulation(path: str | Path) -> "Simulation":
