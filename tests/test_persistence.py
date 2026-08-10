@@ -36,6 +36,21 @@ class PersistenceSafetyTests(unittest.TestCase):
             self.assertEqual(
                 list(destination.parent.glob(f".{destination.name}.*.tmp")), [])
 
+    def test_invalid_state_cannot_replace_existing_save(self) -> None:
+        simulation = Simulation(seed=47)
+        simulation.state.protagonist.health = 101
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            destination.write_text("existing timeline", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "protagonist.health"):
+                save_simulation(simulation, destination)
+
+            self.assertEqual(
+                destination.read_text(encoding="utf-8"), "existing timeline")
+            self.assertEqual(
+                list(destination.parent.glob(f".{destination.name}.*.tmp")), [])
+
     def test_tampered_integrity_checked_save_is_rejected(self) -> None:
         simulation = Simulation(seed=17)
         simulation.run(8)
@@ -94,6 +109,21 @@ class PersistenceSafetyTests(unittest.TestCase):
         self.assertEqual(context.exception.code, 2)
         self.assertIn("AWAKENED ZERO RANK", output.getvalue())
         self.assertIn("Cannot save timeline: injected save failure", errors.getvalue())
+        self.assertNotIn("Timeline saved to", output.getvalue())
+        self.assertNotIn("Traceback", errors.getvalue())
+
+    def test_cli_reports_semantic_save_failure_without_traceback(self) -> None:
+        output, errors = StringIO(), StringIO()
+        with patch(
+                "awakened_zero_rank.cli.save_simulation",
+                side_effect=ValueError("invalid current timeline")):
+            with redirect_stdout(output), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main(("--days", "1", "--save", "timeline.json"))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn(
+            "Cannot save timeline: invalid current timeline", errors.getvalue())
         self.assertNotIn("Timeline saved to", output.getvalue())
         self.assertNotIn("Traceback", errors.getvalue())
 

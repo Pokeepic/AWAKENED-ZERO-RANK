@@ -27,6 +27,7 @@ def _tuplify(value: Any) -> Any:
 
 def save_simulation(simulation: "Simulation", path: str | Path) -> Path:
     """Save all deterministic state needed to continue the same timeline."""
+    _validate_simulation_state(simulation)
     destination = Path(path)
     data = {
         "save_version": SAVE_VERSION,

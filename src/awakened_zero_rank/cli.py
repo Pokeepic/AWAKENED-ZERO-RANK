@@ -168,6 +168,6 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     if args.save:
         try:
             save_simulation(simulation, args.save)
-        except OSError as error:
+        except (OSError, ValueError) as error:
             parser.error(f"Cannot save timeline: {error}")
         print(f"\nTimeline saved to {args.save}")
