@@ -6,7 +6,9 @@ import sys
 
 from . import __version__
 from .journal import journal_entry
-from .persistence import load_simulation, save_simulation
+from .persistence import (
+    load_simulation, save_simulation, verify_simulation_save,
+)
 from .simulation import Simulation
 
 
@@ -85,16 +87,10 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             )
         try:
             if args.verify_save:
-                simulation = load_simulation(args.verify_save)
-                output = json.dumps({
-                    "day": simulation.state.clock.day,
-                    "events": len(simulation.state.events),
-                    "path": args.verify_save,
-                    "protagonist": simulation.state.protagonist.name,
-                    "seed": simulation.seed,
-                    "status": "valid",
-                    "time_slot": simulation.state.clock.slot.value,
-                }, indent=2, sort_keys=True)
+                summary = verify_simulation_save(args.verify_save)
+                output = json.dumps(
+                    {"path": args.verify_save, **summary},
+                    indent=2, sort_keys=True)
             elif args.inspect_experiment_bundle:
                 result = inspect_experiment_bundle(
                     args.inspect_experiment_bundle)

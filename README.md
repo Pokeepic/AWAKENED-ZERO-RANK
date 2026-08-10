@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.147.0` |
+| Release | `0.148.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 143 |
+| Automated tests | 144 |
 
 ## Why this project exists
 
@@ -89,6 +89,8 @@ Verify a save without advancing its timeline:
 ```bash
 awakened-zero-rank --verify-save saves/ren.json
 ```
+
+The JSON result reports `integrity: verified` for schema-2 saves. Compatible schema-1 saves report `integrity: legacy-unavailable` instead of claiming evidence they do not contain.
 
 Add `--technical-log` to display decision reasons and utility scores.
 

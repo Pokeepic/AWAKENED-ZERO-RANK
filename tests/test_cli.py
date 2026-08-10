@@ -52,9 +52,29 @@ class CliValidationTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), original)
         summary = json.loads(output.getvalue())
         self.assertEqual(summary["status"], "valid")
+        self.assertEqual(summary["save_version"], 2)
+        self.assertEqual(summary["integrity"], "verified")
         self.assertEqual(summary["seed"], 73)
         self.assertEqual(summary["day"], simulation.state.clock.day)
         self.assertEqual(summary["events"], len(simulation.state.events))
+
+    def test_verify_legacy_save_reports_unavailable_integrity(self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "legacy.json"
+            save_simulation(Simulation(seed=19), path)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["save_version"] = 1
+            data.pop("save_digest")
+            path.write_text(json.dumps(data), encoding="utf-8")
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main(("--verify-save", str(path)))
+
+        summary = json.loads(output.getvalue())
+        self.assertEqual(summary["status"], "valid")
+        self.assertEqual(summary["save_version"], 1)
+        self.assertEqual(summary["integrity"], "legacy-unavailable")
 
     def test_verify_save_rejects_integrity_failure_cleanly(self) -> None:
         with TemporaryDirectory() as temporary_directory:

@@ -7,11 +7,14 @@ import os
 import tempfile
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from .models import (Clock, DelayedConsequence, DialogueExchange, Event, Memory,
                      PortalInvestigation, Protagonist, Relationship, TimeSlot, WorldState)
 
+
+if TYPE_CHECKING:
+    from .simulation import Simulation
 
 SAVE_VERSION = 2
 
@@ -53,17 +56,13 @@ def save_simulation(simulation: "Simulation", path: str | Path) -> Path:
     return destination
 
 
-def load_simulation(path: str | Path) -> "Simulation":
-    """Load a compatible save after verifying its integrity.
-
-    Schema-1 saves predate integrity digests and remain supported.
-    """
-    from .simulation import Simulation
-
+def _read_save_data(path: str | Path) -> tuple[dict[str, Any], int, str]:
+    """Read and verify a supported save format exactly once."""
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     version = data.get("save_version")
     if version not in (1, SAVE_VERSION):
         raise ValueError(f"Unsupported save version: {version}")
+    integrity = "legacy-unavailable"
     if version == SAVE_VERSION:
         claimed_digest = data.pop("save_digest", None)
         payload = json.dumps(
@@ -73,6 +72,14 @@ def load_simulation(path: str | Path) -> "Simulation":
         if not isinstance(claimed_digest, str) or not hmac.compare_digest(
                 claimed_digest, actual_digest):
             raise ValueError("Save integrity check failed")
+        integrity = "verified"
+
+    return data, version, integrity
+
+
+def _simulation_from_data(data: dict[str, Any]) -> "Simulation":
+    """Reconstruct a deterministic simulation from verified save data."""
+    from .simulation import Simulation
 
     raw = data["state"]
     protagonist_data = raw["protagonist"]
@@ -129,7 +136,23 @@ def load_simulation(path: str | Path) -> "Simulation":
     return simulation
 
 
-from typing import TYPE_CHECKING
+def load_simulation(path: str | Path) -> "Simulation":
+    """Load a compatible timeline save."""
+    data, _, _ = _read_save_data(path)
+    return _simulation_from_data(data)
 
-if TYPE_CHECKING:
-    from .simulation import Simulation
+
+def verify_simulation_save(path: str | Path) -> dict[str, Any]:
+    """Return honest, read-only verification metadata for a save."""
+    data, version, integrity = _read_save_data(path)
+    simulation = _simulation_from_data(data)
+    return {
+        "day": simulation.state.clock.day,
+        "events": len(simulation.state.events),
+        "integrity": integrity,
+        "protagonist": simulation.state.protagonist.name,
+        "save_version": version,
+        "seed": simulation.seed,
+        "status": "valid",
+        "time_slot": simulation.state.clock.slot.value,
+    }
