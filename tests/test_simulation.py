@@ -57,6 +57,13 @@ from awakened_zero_rank.learning import (
 
 
 class SimulationTests(unittest.TestCase):
+    def test_cli_reports_package_version(self) -> None:
+        output = StringIO()
+        with redirect_stdout(output), self.assertRaises(SystemExit) as context:
+            cli_main(("--version",))
+        self.assertEqual(context.exception.code, 0)
+        self.assertTrue(output.getvalue().strip().endswith(" 0.137.0"))
+
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
         simulation.run(4)

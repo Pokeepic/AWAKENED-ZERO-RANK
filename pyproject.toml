@@ -4,9 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "awakened-zero-rank"
-version = "0.136.0"
+version = "0.137.0"
 description = "Observer-only autonomous life simulation set in awakened Japan"
+readme = "README.md"
 requires-python = ">=3.11"
+keywords = ["simulation", "autonomous-agent", "reinforcement-learning"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Repository = "https://github.com/Pokeepic/AWAKENED-ZERO-RANK"
+Changelog = "https://github.com/Pokeepic/AWAKENED-ZERO-RANK/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 training = ["gymnasium>=1.0,<2"]

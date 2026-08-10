@@ -4,6 +4,7 @@ import argparse
 import json
 import sys
 
+from . import __version__
 from .journal import journal_entry
 from .persistence import load_simulation, save_simulation
 from .simulation import Simulation
@@ -11,6 +12,9 @@ from .simulation import Simulation
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Observe an autonomous zero-rank life.")
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}",
+    )
     parser.add_argument("--days", type=int, default=7, help="days to simulate (default: 7)")
     parser.add_argument("--seed", type=int, default=42, help="reproducible seed")
     parser.add_argument("--load", metavar="FILE", help="continue an existing save")
