@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.158.0 — Structured story progress API
+
+- Added mutation-free `story_progress(state)` output with a versioned, JSON-ready schema for completed anchor entries, authored outcomes, tiers, focus characters, counts, and ending status.
+- The API reports the next unresolved anchor and a nonnegative days-remaining value, keeping overdue beats visible instead of silently skipping them.
+- Completed entries always follow canonical story order even if saved mapping insertion order differs; the CLI now consumes this shared projection instead of rebuilding progress itself.
+- Added dedicated immutability, empty-state, next-anchor, canonical-order, ending, CLI, persistence, and continuation coverage, raising the deterministic suite to 164 tests; simulation and RL behavior are unchanged.
+
 ## 0.157.0 — Authored anchor outcomes
 
 - Replaced the shared story-resolution template with 18 distinct authored outcomes: one isolated, resilient, and prepared result for each of the six anchors.
@@ -545,5 +552,6 @@ Completed updates are grouped for readability:
 | 0.155 | Fixed six-month story anchors and a state-shaped three-year ending |
 | 0.156 | Persistent story outcome tiers and observer arc progress |
 | 0.157 | Authored per-anchor outcomes with character and portal evidence |
+| 0.158 | Read-only JSON-ready story progress and ending projection |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

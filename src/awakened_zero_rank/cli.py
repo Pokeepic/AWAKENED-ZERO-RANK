@@ -5,12 +5,12 @@ import json
 import sys
 
 from . import __version__
-from .content import STORY_ANCHORS
 from .journal import journal_entry
 from .persistence import (
     load_simulation, save_simulation, verify_simulation_save,
 )
 from .simulation import Simulation
+from .story import story_progress
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -162,15 +162,12 @@ def main(argv: tuple[str, ...] | None = None) -> None:
         ))
     if simulation.state.discovered_portals:
         print("Portals discovered: " + ", ".join(simulation.state.discovered_portals))
-    if simulation.state.story_outcomes:
-        anchors = {anchor.key: anchor for anchor in STORY_ANCHORS}
-        latest_key = max(
-            simulation.state.story_outcomes,
-            key=lambda key: anchors[key].day)
+    progress = story_progress(simulation.state)
+    if progress["completed"]:
+        latest = progress["completed"][-1]
         print(
-            f"Story arc: {len(simulation.state.story_outcomes)}/{len(STORY_ANCHORS)} anchors | "
-            f"Latest: {anchors[latest_key].title} "
-            f"({simulation.state.story_outcomes[latest_key]})")
+            f"Story arc: {progress['completed_count']}/{progress['total_anchors']} anchors | "
+            f"Latest: {latest['title']} ({latest['tier']})")
     if p.memories:
         print("Key memories:")
         for memory in p.memories[:5]:

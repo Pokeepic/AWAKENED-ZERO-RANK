@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.157.0` |
+| Release | `0.158.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 162 |
+| Automated tests | 164 |
 
 ## Why this project exists
 
@@ -179,7 +179,7 @@ The tests cover deterministic simulation, persistence, action masks, fixed horiz
 
 ### Three-year story arc
 
-Six fixed story anchors arrive at roughly six-month intervals from day 183 through day 1,095. They cannot be avoided or moved, but each resolution reflects Ren's accumulated hunter rank, trusted relationships, and discovered portals. The final anchor closes the three-year chronicle with an ending shaped by that history. Every anchor has distinct authored outcomes for `isolated`, `resilient`, and `prepared` resolutions. Event prose names relevant trusted characters and the latest discovered portal when that evidence exists. The resolved tier is saved in world state, and the observer summary reports current arc progress plus the latest result.
+Six fixed story anchors arrive at roughly six-month intervals from day 183 through day 1,095. They cannot be avoided or moved, but each resolution reflects Ren's accumulated hunter rank, trusted relationships, and discovered portals. The final anchor closes the three-year chronicle with an ending shaped by that history. Every anchor has distinct authored outcomes for `isolated`, `resilient`, and `prepared` resolutions. Event prose names relevant trusted characters and the latest discovered portal when that evidence exists. The resolved tier is saved in world state, and the observer summary reports current arc progress plus the latest result. `story_progress(state)` exposes the same chronology as mutation-free, JSON-ready data with completed entries, next-anchor timing, and ending status for dashboards and tools.
 
 ### Story and content growth
 
