@@ -9,6 +9,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
+from .content import PORTALS
 from .models import (Clock, DelayedConsequence, DialogueExchange, Event, Memory,
                      PortalInvestigation, Protagonist, Relationship, TimeSlot, WorldState)
 from .world import ITEMS, LOCATIONS
@@ -207,6 +208,37 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     _require_integer_range("gate_alert_level", state.gate_alert_level, 0, 3)
     for item, quantity in protagonist.inventory.items():
         _require_integer_range(f"inventory[{item!r}]", quantity, 1)
+    portal_names = {portal.name for portal in PORTALS}
+    if (len(state.discovered_portals) != len(set(state.discovered_portals)) or
+            any(name not in portal_names for name in state.discovered_portals)):
+        raise ValueError(
+            "Invalid save field discovered_portals: "
+            "expected unique catalogued portal names")
+    for name, investigation in state.portal_investigations.items():
+        if name not in portal_names or investigation.portal_name != name:
+            raise ValueError(
+                f"Invalid save field portal_investigations[{name!r}]: "
+                "key and portal name must match a catalogued portal")
+        _require_integer_range(
+            f"portal_investigations[{name!r}].progress",
+            investigation.progress, 0, 100)
+        _require_integer_range(
+            f"portal_investigations[{name!r}].risk",
+            investigation.risk, 0, 100)
+        _require_integer_range(
+            f"portal_investigations[{name!r}].last_investigated_day",
+            investigation.last_investigated_day, 0, state.clock.day)
+        _require_integer_range(
+            f"portal_investigations[{name!r}].preparation_bonus",
+            investigation.preparation_bonus, 0)
+        _require_integer_range(
+            f"portal_investigations[{name!r}].joint_missions",
+            investigation.joint_missions, 0)
+    if (state.active_portal_plan is not None and
+            state.active_portal_plan not in state.portal_investigations):
+        raise ValueError(
+            "Invalid save field active_portal_plan: "
+            "expected a catalogued investigated portal")
 
 
 def load_simulation(path: str | Path) -> "Simulation":

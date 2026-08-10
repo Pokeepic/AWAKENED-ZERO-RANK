@@ -170,6 +170,37 @@ class PersistenceSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "equipped_weapon"):
                 load_simulation(destination)
 
+    def test_redigested_mismatched_portal_investigation_is_rejected(self) -> None:
+        simulation = Simulation(seed=61)
+        simulation.run(24)
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, destination)
+            data = json.loads(destination.read_text(encoding="utf-8"))
+            data.pop("save_digest")
+            investigations = data["state"]["portal_investigations"]
+            name = next(iter(investigations))
+            investigations[name]["portal_name"] = "Unknown Portal"
+            payload = json.dumps(
+                data, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")
+            data["save_digest"] = hashlib.sha256(payload).hexdigest()
+            destination.write_text(json.dumps(data), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "portal_investigations"):
+                load_simulation(destination)
+
+    def test_active_portal_plan_requires_investigation(self) -> None:
+        simulation = Simulation(seed=67)
+        simulation.state.active_portal_plan = "Flooded Service Tunnel"
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+
+            with self.assertRaisesRegex(ValueError, "active_portal_plan"):
+                save_simulation(simulation, destination)
+
+            self.assertFalse(destination.exists())
+
     def test_redigested_impossible_state_fails_cli_validation(self) -> None:
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"

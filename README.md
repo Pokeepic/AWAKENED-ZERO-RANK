@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.151.0` |
+| Release | `0.152.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 150 |
+| Automated tests | 152 |
 
 ## Why this project exists
 
@@ -90,7 +90,7 @@ Verify a save without advancing its timeline:
 awakened-zero-rank --verify-save saves/ren.json
 ```
 
-The JSON result reports `integrity: verified` for schema-2 saves. Compatible schema-1 saves report `integrity: legacy-unavailable` instead of claiming evidence they do not contain. Both formats must also satisfy critical clock, resource, progression, mission, injury, economy, and inventory invariants before the verifier reports `status: valid`. The same validation runs before every write, so an impossible current state cannot replace an existing save. Runtime-critical protagonist locations and equipped items must also resolve to the current world catalog; extensible unequipped inventory names remain allowed.
+The JSON result reports `integrity: verified` for schema-2 saves. Compatible schema-1 saves report `integrity: legacy-unavailable` instead of claiming evidence they do not contain. Both formats must also satisfy critical clock, resource, progression, mission, injury, economy, inventory, and portal invariants before the verifier reports `status: valid`. The same validation runs before every write, so an impossible current state cannot replace an existing save. Runtime-critical protagonist locations, equipped items, portal investigations, and active plans must also resolve coherently against the current world catalog; extensible unequipped inventory names remain allowed.
 
 Add `--technical-log` to display decision reasons and utility scores.
 
@@ -176,6 +176,16 @@ python -m unittest discover -s tests -v
 The tests cover deterministic simulation, persistence, action masks, fixed horizons, held-out evaluation, honest verdicts, authenticated checkpoints and reports, bundle publication, comparison artifacts, and CLI behavior.
 
 ## Roadmap
+
+### Story and content growth
+
+Expand the catalog through authored dialogue, recurring characters, portals, encounters, equipment, locations, and consequences. New content should deepen character identity and world continuity rather than only multiplying random combinations.
+
+Build a finite long-form story with flexible six-month anchor events: major events occur on schedule, but their participants, consequences, and Ren's available responses emerge from the accumulated world state. The arc should support a meaningful ending without turning the observer-only simulation into a scripted choice game.
+
+### Advanced learning research
+
+More expressive RL can be explored after the world and story state are represented safely. Candidate approaches must remain reproducible, train only on separated seeds, pass small pilots before larger runs, and beat the utility controller on held-out reward, survival, progression, and exploit checks before adoption.
 
 ### International expansion
 

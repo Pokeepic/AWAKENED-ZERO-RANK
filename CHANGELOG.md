@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.152.0 — Portal timeline validation
+
+- Portal discoveries must be unique names from the current content catalog.
+- Investigation keys and embedded portal names must agree; progress and risk are bounded, while investigation counters cannot be negative or extend beyond the saved day.
+- Active portal plans must reference an existing investigation, preventing deferred preparation and mission crashes as the portal catalog grows.
+- Added two focused regression tests, raising the deterministic suite to 152 tests; simulation and learning behavior are unchanged and no RL experiment was run.
+
 ## 0.151.0 — Runtime reference validation
 
 - Save validation now requires the protagonist location to exist in the travel catalog.
@@ -497,5 +504,6 @@ Completed updates are grouped for readability:
 | 0.149 | Critical semantic invariant validation for saves |
 | 0.150 | Pre-write semantic validation and overwrite protection |
 | 0.151 | Runtime-critical location and equipment validation |
+| 0.152 | Portal discovery, investigation, and active-plan validation |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
