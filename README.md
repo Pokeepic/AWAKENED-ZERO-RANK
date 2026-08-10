@@ -4,7 +4,7 @@ An observer-only life simulation set in Japan after portals and Awakened hunters
 
 Ren Takahashi begins poor, unranked, and unknown. He chooses how to work, recover, train, build relationships, investigate Gates, and survive. The player watches; Ren remains autonomous.
 
-Current release: **0.133.0** · **131 automated tests**
+Current release: **0.134.0** · **131 automated tests**
 
 ## Design principles
 
@@ -51,7 +51,7 @@ Current release: **0.133.0** · **131 automated tests**
 - Named, multi-horizon scenario suites with isolated held-out seeds and per-scenario safety metrics.
 - Deterministic evaluation starts for standard life, financial pressure, injury recovery, Gate crises, and a compound medical/debt/Gate crisis.
 - Versioned scenario-suite and similarity-audit JSON reports with SHA-256 identity, exact reload, semantic reconciliation, tamper rejection, and schema validation.
-- Portable authenticated experiment catalogs and staged non-overwriting bundles that index, publish, strictly verify, inspect, and compare compact deterministic metadata through dedicated CLI modes, including full added/removed records, field-level before/after metadata, a stable comparison digest, staged comparison artifacts, and an opt-in CI equality gate.
+- Portable authenticated experiment catalogs and staged non-overwriting bundles that index, publish, strictly verify, inspect, and compare compact deterministic metadata through dedicated CLI modes, including full added/removed records, field-level before/after metadata, a stable comparison digest, staged comparison artifacts with semantic validation, and an opt-in CI equality gate.
 - Explainable offline adoption decisions with checkpoint verification and explicit confidence, safety, progression, rent-recovery, action-dominance, and exploit blockers.
 
 The production controller remains the transparent utility policy. Learned policies stay offline until they demonstrate a clear, repeatable held-out advantage without safety or progression regressions; every failed gate now returns explicit blocker reasons.
@@ -337,6 +337,8 @@ Update 0.132 — Content-Addressed Bundle Comparisons add `comparison_sha256` to
 
 Update 0.133 — Staged Comparison Artifacts add `--comparison-output FILE` and matching APIs for publishing content-addressed comparison JSON. Output is written in a sibling staging directory, read back with exact field and digest verification, refused when the destination already exists or appears during staging, and only then renamed into place. Stdout remains unchanged, and the artifact can still be emitted before `--require-identical` returns status 1. Tampered artifacts fail reload. No RL experiment, policy behavior, checkpoint schema, or verdict changed; single-policy RL remains **baseline remains better** and the corrected return-evidence ensemble remains **inconclusive**.
 
+Update 0.134 — Semantic Comparison Artifact Validation rejects internally impossible bundle deltas even when an edited artifact has been re-hashed. Reload now reconciles catalog digest formats, report counts, disjoint sorted file partitions, total differences, equality state, added/removed record alignment, snapshot schemas and domains, exact changed-field derivation, status/type transition summaries, and aggregate seed/condition/horizon deltas. Malformed JSON types fail cleanly. Existing valid artifacts and CLI behavior remain compatible. No RL experiment, policy behavior, checkpoint schema, or verdict changed; single-policy RL remains **baseline remains better** and the corrected return-evidence ensemble remains **inconclusive**.
+
 Update 0.110 — Authenticated Training Recurrence Audit adds a reusable summary that separates policy states, directly visited states, zero-selection successor states, singleton evidence, repeated evidence, and maxima for both states and state-action pairs. Across training seeds 701–703, 1,580/1,878 visited states were singletons; only 298 (15.9%) recurred. Of 2,174 visited state-action pairs, 2,061 were singletons and only 113 (5.2%) recurred; no pair was visited more than four times. Forty-six policy states were successor states with no direct selection. The learned table is overwhelmingly one-shot evidence, explaining weak transfer and unstable action estimates. No behavior or checkpoint changed, schema remains 25, and the verdict remains **baseline remains better**.
 
 | Area | Evidence or risk | Candidate patch | Acceptance check |
@@ -496,6 +498,7 @@ Completed updates are grouped for readability:
 | 0.131 | Complete authenticated records for added and removed reports |
 | 0.132 | Stable SHA-256 identity for verified structured bundle deltas |
 | 0.133 | Staged non-overwriting comparison artifact publication |
+| 0.134 | Semantic validation for re-hashed comparison artifacts |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
 

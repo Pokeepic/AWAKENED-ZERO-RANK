@@ -2668,6 +2668,131 @@ def experiment_bundle_comparison_json(
     data["comparison_sha256"] = experiment_bundle_comparison_digest(comparison)
     return json.dumps(data, indent=2, sort_keys=True)
 
+def _validate_experiment_bundle_comparison_data(data: dict) -> None:
+    """Reject internally inconsistent comparison data, even when re-hashed."""
+    def fail() -> None:
+        raise ValueError("Bundle comparison artifact semantic validation failed")
+
+    def valid_digest(value) -> bool:
+        return (type(value) is str and len(value) == 64 and
+                all(character in "0123456789abcdef" for character in value))
+
+    def valid_filename(value) -> bool:
+        if type(value) is not str:
+            return False
+        path = PurePosixPath(value)
+        return (value.endswith(".json") and not path.is_absolute() and
+                ".." not in path.parts and "\\" not in value and
+                str(path) == value)
+
+    def valid_list(values, predicate) -> bool:
+        if type(values) is not list or not all(predicate(v) for v in values):
+            return False
+        return values == sorted(values) and len(values) == len(set(values))
+
+    snapshot_fields = {
+        "label", "report_type", "sha256", "training_seeds", "conditions",
+        "horizons", "status",
+    }
+
+    def valid_snapshot(snapshot) -> bool:
+        return (
+            type(snapshot) is dict and set(snapshot) == snapshot_fields and
+            type(snapshot["label"]) is str and snapshot["label"].strip() and
+            snapshot["label"] == snapshot["label"].strip() and
+            type(snapshot["report_type"]) is str and
+            snapshot["report_type"] in {
+                "scenario_suite", "similarity_single", "similarity_ensemble"} and
+            valid_digest(snapshot["sha256"]) and
+            valid_list(snapshot["training_seeds"], lambda v: type(v) is int) and
+            bool(snapshot["training_seeds"]) and
+            valid_list(snapshot["conditions"], lambda v: v in EVALUATION_CONDITIONS) and
+            bool(snapshot["conditions"]) and
+            valid_list(snapshot["horizons"], lambda v: type(v) is int and v >= 1) and
+            bool(snapshot["horizons"]) and
+            type(snapshot["status"]) is str and bool(snapshot["status"])
+        )
+
+    if (not valid_digest(data["left_catalog_sha256"]) or
+            not valid_digest(data["right_catalog_sha256"]) or
+            type(data["left_report_count"]) is not int or
+            type(data["right_report_count"]) is not int or
+            data["left_report_count"] < 1 or data["right_report_count"] < 1 or
+            type(data["difference_count"]) is not int or
+            type(data["identical"]) is not bool):
+        fail()
+    file_keys = ("added_files", "removed_files", "changed_files", "unchanged_files")
+    if any(not valid_list(data[key], valid_filename) for key in file_keys):
+        fail()
+    added, removed, changed, unchanged = (set(data[key]) for key in file_keys)
+    if (added & removed or added & changed or added & unchanged or
+            removed & changed or removed & unchanged or changed & unchanged):
+        fail()
+    expected_difference = len(added) + len(removed) + len(changed)
+    if (data["difference_count"] != expected_difference or
+            data["identical"] != (expected_difference == 0) or
+            data["identical"] != (
+                data["left_catalog_sha256"] == data["right_catalog_sha256"]) or
+            data["left_report_count"] != len(removed | changed | unchanged) or
+            data["right_report_count"] != len(added | changed | unchanged)):
+        fail()
+
+    def valid_records(records, filenames) -> bool:
+        return (type(records) is list and
+                [record.get("filename") for record in records
+                 if type(record) is dict] == sorted(filenames) and
+                len(records) == len(filenames) and
+                all(type(record) is dict and set(record) == {"filename", "report"} and
+                    valid_snapshot(record["report"]) for record in records))
+
+    if (not valid_records(data["added_reports"], added) or
+            not valid_records(data["removed_reports"], removed)):
+        fail()
+    fields = (
+        "label", "report_type", "sha256", "training_seeds", "conditions",
+        "horizons", "status",
+    )
+    changes = data["changed_reports"]
+    if (type(changes) is not list or len(changes) != len(changed) or
+            [item.get("filename") for item in changes if type(item) is dict] !=
+            sorted(changed)):
+        fail()
+    for item in changes:
+        if (type(item) is not dict or
+                set(item) != {"filename", "changed_fields", "left", "right"} or
+                not valid_snapshot(item["left"]) or
+                not valid_snapshot(item["right"])):
+            fail()
+        expected = [field for field in fields
+                    if item["left"][field] != item["right"][field]]
+        if not expected or item["changed_fields"] != expected:
+            fail()
+    expected_status = [
+        [item["filename"], item["left"]["status"], item["right"]["status"]]
+        for item in changes if item["left"]["status"] != item["right"]["status"]
+    ]
+    expected_types = [
+        [item["filename"], item["left"]["report_type"],
+         item["right"]["report_type"]]
+        for item in changes
+        if item["left"]["report_type"] != item["right"]["report_type"]
+    ]
+    if (data["status_changes"] != expected_status or
+            data["report_type_changes"] != expected_types):
+        fail()
+    delta_specs = (
+        ("added_training_seeds", "removed_training_seeds", lambda v: type(v) is int),
+        ("added_conditions", "removed_conditions", lambda v: v in EVALUATION_CONDITIONS),
+        ("added_horizons", "removed_horizons", lambda v: type(v) is int and v >= 1),
+    )
+    for added_key, removed_key, predicate in delta_specs:
+        if (not valid_list(data[added_key], predicate) or
+                not valid_list(data[removed_key], predicate) or
+                set(data[added_key]) & set(data[removed_key])):
+            fail()
+        if data["identical"] and (data[added_key] or data[removed_key]):
+            fail()
+
 def load_experiment_bundle_comparison_artifact(
         path: str | Path) -> dict:
     """Load comparison JSON only when its content identity is intact."""
@@ -2683,6 +2808,7 @@ def load_experiment_bundle_comparison_artifact(
     ).encode("utf-8")
     if digest != hashlib.sha256(payload).hexdigest():
         raise ValueError("Bundle comparison artifact integrity verification failed")
+    _validate_experiment_bundle_comparison_data(data)
     data["comparison_sha256"] = digest
     return data
 

@@ -2202,6 +2202,16 @@ class SimulationTests(unittest.TestCase):
             artifact.write_text(json.dumps(tampered_artifact), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "integrity verification"):
                 load_experiment_bundle_comparison_artifact(artifact)
+            forged_artifact = json.loads(json.dumps(payload))
+            forged_artifact["identical"] = True
+            forged_artifact.pop("comparison_sha256")
+            canonical = json.dumps(
+                forged_artifact, sort_keys=True, separators=(",", ":"))
+            forged_artifact["comparison_sha256"] = hashlib.sha256(
+                canonical.encode("utf-8")).hexdigest()
+            artifact.write_text(json.dumps(forged_artifact), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "semantic validation"):
+                load_experiment_bundle_comparison_artifact(artifact)
             identical_output = StringIO()
             with redirect_stdout(identical_output):
                 cli_main((
