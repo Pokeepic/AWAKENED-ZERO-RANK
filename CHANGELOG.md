@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.147.0 — Read-only save verification
+
+- Added a `--verify-save` CLI mode that fully loads and integrity-checks a timeline without advancing or rewriting it.
+- Emits deterministic JSON metadata for automation and rejects every simulation option.
+- Malformed, missing, unsupported, and integrity-failed saves use the existing traceback-free CLI error contract.
+- Added three focused tests, raising the deterministic regression suite to 143 tests; simulation and RL behavior are unchanged.
+
 ## 0.146.0 — Critical static-analysis gate
 
 - Added a reproducible development extra and checked-in Ruff configuration limited to fatal syntax-family errors and undefined names.
@@ -457,5 +464,6 @@ Completed updates are grouped for readability:
 | 0.144 | Unambiguous timeline-origin and horizon validation |
 | 0.145 | Python 3.11–3.14 compatibility matrix |
 | 0.146 | Critical-error and undefined-name static analysis |
+| 0.147 | Read-only timeline save verification |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

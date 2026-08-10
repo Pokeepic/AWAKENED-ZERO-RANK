@@ -4,9 +4,14 @@ from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 
 from awakened_zero_rank.cli import main as cli_main
+from awakened_zero_rank.persistence import save_simulation
+from awakened_zero_rank.simulation import Simulation
 
 
 class CliValidationTests(unittest.TestCase):
@@ -31,6 +36,54 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(output.getvalue(), "")
         self.assertIn("error: --days must be at least 1", errors.getvalue())
         self.assertNotIn("Traceback", errors.getvalue())
+
+    def test_verify_save_is_read_only_and_reports_json(self) -> None:
+        simulation = Simulation(seed=73)
+        simulation.run(5)
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, path)
+            original = path.read_bytes()
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main(("--verify-save", str(path)))
+
+            self.assertEqual(path.read_bytes(), original)
+        summary = json.loads(output.getvalue())
+        self.assertEqual(summary["status"], "valid")
+        self.assertEqual(summary["seed"], 73)
+        self.assertEqual(summary["day"], simulation.state.clock.day)
+        self.assertEqual(summary["events"], len(simulation.state.events))
+
+    def test_verify_save_rejects_integrity_failure_cleanly(self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "timeline.json"
+            save_simulation(Simulation(seed=31), path)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["seed"] += 1
+            path.write_text(json.dumps(data), encoding="utf-8")
+            output, errors = StringIO(), StringIO()
+
+            with redirect_stdout(output), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main(("--verify-save", str(path)))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn("Save integrity check failed", errors.getvalue())
+        self.assertNotIn("Traceback", errors.getvalue())
+
+    def test_verify_save_rejects_simulation_options(self) -> None:
+        output, errors = StringIO(), StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main(("--verify-save", "timeline.json", "--days", "1"))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn(
+            "--verify-save cannot use simulation options", errors.getvalue())
 
 
 if __name__ == "__main__":

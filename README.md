@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.146.0` |
+| Release | `0.147.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 140 |
+| Automated tests | 143 |
 
 ## Why this project exists
 
@@ -82,6 +82,12 @@ Save and resume an exact timeline:
 ```bash
 awakened-zero-rank --days 7 --seed 42 --save saves/ren.json
 awakened-zero-rank --days 7 --load saves/ren.json --save saves/ren.json
+```
+
+Verify a save without advancing its timeline:
+
+```bash
+awakened-zero-rank --verify-save saves/ren.json
 ```
 
 Add `--technical-log` to display decision reasons and utility scores.

@@ -23,16 +23,20 @@ def build_parser() -> argparse.ArgumentParser:
         "--load", metavar="FILE", help="continue an existing save")
     parser.add_argument("--save", metavar="FILE", help="save after this run")
     parser.add_argument("--technical-log", action="store_true", help="show decision reasons")
-    bundle_modes = parser.add_mutually_exclusive_group()
-    bundle_modes.add_argument(
+    inspection_modes = parser.add_mutually_exclusive_group()
+    inspection_modes.add_argument(
+        "--verify-save", metavar="FILE",
+        help="verify a timeline save without advancing it",
+    )
+    inspection_modes.add_argument(
         "--inspect-experiment-bundle", metavar="DIR",
         help="verify a published experiment bundle and print JSON metadata",
     )
-    bundle_modes.add_argument(
+    inspection_modes.add_argument(
         "--compare-experiment-bundles", nargs=2, metavar=("LEFT", "RIGHT"),
         help="verify and compare two published experiment bundles",
     )
-    bundle_modes.add_argument(
+    inspection_modes.add_argument(
         "--inspect-comparison-artifact", metavar="FILE",
         help="verify saved comparison JSON and print it canonically",
     )
@@ -56,10 +60,12 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     if args.comparison_output and not args.compare_experiment_bundles:
         parser.error(
             "--comparison-output requires --compare-experiment-bundles")
-    if (args.inspect_experiment_bundle or args.compare_experiment_bundles or
+    if (args.verify_save or args.inspect_experiment_bundle or
+            args.compare_experiment_bundles or
             args.inspect_comparison_artifact):
         mode_name = (
-            "--inspect-experiment-bundle" if args.inspect_experiment_bundle
+            "--verify-save" if args.verify_save
+            else "--inspect-experiment-bundle" if args.inspect_experiment_bundle
             else "--compare-experiment-bundles"
             if args.compare_experiment_bundles
             else "--inspect-comparison-artifact")
@@ -70,14 +76,26 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 argument == option or argument.startswith(f"{option}=")
                 for argument in arguments for option in simulation_options):
             parser.error(f"{mode_name} cannot use simulation options")
-        from .learning import (
-            compare_experiment_bundles, experiment_bundle_comparison_json,
-            experiment_bundle_summary_json, inspect_experiment_bundle,
-            load_experiment_bundle_comparison_artifact,
-            save_experiment_bundle_comparison,
-        )
+        if not args.verify_save:
+            from .learning import (
+                compare_experiment_bundles, experiment_bundle_comparison_json,
+                experiment_bundle_summary_json, inspect_experiment_bundle,
+                load_experiment_bundle_comparison_artifact,
+                save_experiment_bundle_comparison,
+            )
         try:
-            if args.inspect_experiment_bundle:
+            if args.verify_save:
+                simulation = load_simulation(args.verify_save)
+                output = json.dumps({
+                    "day": simulation.state.clock.day,
+                    "events": len(simulation.state.events),
+                    "path": args.verify_save,
+                    "protagonist": simulation.state.protagonist.name,
+                    "seed": simulation.seed,
+                    "status": "valid",
+                    "time_slot": simulation.state.clock.slot.value,
+                }, indent=2, sort_keys=True)
+            elif args.inspect_experiment_bundle:
                 result = inspect_experiment_bundle(
                     args.inspect_experiment_bundle)
                 output = experiment_bundle_summary_json(result)
@@ -92,7 +110,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 if args.comparison_output:
                     save_experiment_bundle_comparison(
                         result, args.comparison_output)
-        except (OSError, ValueError) as error:
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
             parser.error(str(error))
         print(output)
         if args.require_identical and not result.identical:
