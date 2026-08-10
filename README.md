@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.139.0` |
+| Release | `0.140.0` |
 | Python | 3.11+ |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 132 |
+| Automated tests | 133 |
 
 ## Why this project exists
 

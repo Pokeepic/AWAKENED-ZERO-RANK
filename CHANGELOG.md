@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.140.0 — Cross-process reproducibility gate
+
+- Added a subprocess test proving that a seeded technical timeline is byte-identical across different Python hash-randomization seeds.
+- Runs the new gate through the existing bounded local, core CI, Gymnasium CI, and clean-installed-wheel test suites.
+- Raised the deterministic regression suite to 133 tests without changing simulation balance or RL verdicts.
+
 ## 0.139.0 — Distribution build validation
 
 - Added a bounded CI job that builds both wheel and source distributions.
@@ -401,5 +407,6 @@ Completed updates are grouped for readability:
 | 0.137 | CLI version reporting and publishable package metadata |
 | 0.138 | Bounded CI matrix and contributor repository standards |
 | 0.139 | Wheel/source archive build and clean-installed-package validation |
+| 0.140 | Cross-process and hash-randomization reproducibility gate |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
