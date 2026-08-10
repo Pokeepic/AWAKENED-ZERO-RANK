@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.159.0 — Read-only story inspection CLI
+
+- Added `awakened-zero-rank --story-progress FILE`, which authenticates and semantically validates a timeline before printing the versioned story-progress projection as sorted JSON.
+- Inspection never advances or rewrites the save and rejects days, seed, load, save, and technical-log options before file access.
+- Missing, malformed, or integrity-failed saves use concise standard CLI errors without tracebacks; the output includes the inspected path for automation provenance.
+- Added focused read-only bytes, JSON shape, next-anchor, option-conflict, integrity-failure, API, and persistence coverage, raising the deterministic suite to 167 tests; simulation and RL behavior are unchanged.
+
 ## 0.158.0 — Structured story progress API
 
 - Added mutation-free `story_progress(state)` output with a versioned, JSON-ready schema for completed anchor entries, authored outcomes, tiers, focus characters, counts, and ending status.
@@ -553,5 +560,6 @@ Completed updates are grouped for readability:
 | 0.156 | Persistent story outcome tiers and observer arc progress |
 | 0.157 | Authored per-anchor outcomes with character and portal evidence |
 | 0.158 | Read-only JSON-ready story progress and ending projection |
+| 0.159 | Authenticated read-only story-progress CLI inspection |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

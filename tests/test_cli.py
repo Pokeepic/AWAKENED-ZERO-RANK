@@ -58,6 +58,57 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(summary["day"], simulation.state.clock.day)
         self.assertEqual(summary["events"], len(simulation.state.events))
 
+    def test_story_progress_is_read_only_and_reports_json(self) -> None:
+        simulation = Simulation(seed=113)
+        simulation.state.clock.day = 183
+        simulation.step()
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, path)
+            original = path.read_bytes()
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main(("--story-progress", str(path)))
+
+            self.assertEqual(path.read_bytes(), original)
+        summary = json.loads(output.getvalue())
+        self.assertEqual(summary["path"], str(path))
+        self.assertEqual(summary["schema_version"], 1)
+        self.assertEqual(summary["completed_count"], 1)
+        self.assertEqual(summary["completed"][0]["tier"], "isolated")
+        self.assertEqual(summary["next"]["key"], "arc_tokyo_fracture")
+        self.assertFalse(summary["ending_reached"])
+
+    def test_story_progress_rejects_simulation_options(self) -> None:
+        output, errors = StringIO(), StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main(("--story-progress", "timeline.json", "--days", "1"))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn(
+            "--story-progress cannot use simulation options", errors.getvalue())
+
+    def test_story_progress_reports_integrity_failure_cleanly(self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "timeline.json"
+            save_simulation(Simulation(seed=127), path)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["seed"] += 1
+            path.write_text(json.dumps(data), encoding="utf-8")
+            output, errors = StringIO(), StringIO()
+
+            with redirect_stdout(output), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main(("--story-progress", str(path)))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn("Save integrity check failed", errors.getvalue())
+        self.assertNotIn("Traceback", errors.getvalue())
+
     def test_verify_legacy_save_reports_unavailable_integrity(self) -> None:
         with TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "legacy.json"

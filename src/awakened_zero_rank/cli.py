@@ -32,6 +32,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="verify a timeline save without advancing it",
     )
     inspection_modes.add_argument(
+        "--story-progress", metavar="FILE",
+        help="print read-only structured story progress from a timeline save",
+    )
+    inspection_modes.add_argument(
         "--inspect-experiment-bundle", metavar="DIR",
         help="verify a published experiment bundle and print JSON metadata",
     )
@@ -63,11 +67,13 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     if args.comparison_output and not args.compare_experiment_bundles:
         parser.error(
             "--comparison-output requires --compare-experiment-bundles")
-    if (args.verify_save or args.inspect_experiment_bundle or
+    if (args.verify_save or args.story_progress or
+            args.inspect_experiment_bundle or
             args.compare_experiment_bundles or
             args.inspect_comparison_artifact):
         mode_name = (
             "--verify-save" if args.verify_save
+            else "--story-progress" if args.story_progress
             else "--inspect-experiment-bundle" if args.inspect_experiment_bundle
             else "--compare-experiment-bundles"
             if args.compare_experiment_bundles
@@ -79,7 +85,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 argument == option or argument.startswith(f"{option}=")
                 for argument in arguments for option in simulation_options):
             parser.error(f"{mode_name} cannot use simulation options")
-        if not args.verify_save:
+        if not (args.verify_save or args.story_progress):
             from .learning import (
                 compare_experiment_bundles, experiment_bundle_comparison_json,
                 experiment_bundle_summary_json, inspect_experiment_bundle,
@@ -91,6 +97,12 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 summary = verify_simulation_save(args.verify_save)
                 output = json.dumps(
                     {"path": args.verify_save, **summary},
+                    indent=2, sort_keys=True)
+            elif args.story_progress:
+                simulation = load_simulation(args.story_progress)
+                output = json.dumps(
+                    {"path": args.story_progress,
+                     **story_progress(simulation.state)},
                     indent=2, sort_keys=True)
             elif args.inspect_experiment_bundle:
                 result = inspect_experiment_bundle(
