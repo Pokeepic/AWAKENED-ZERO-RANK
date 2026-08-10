@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.138.0 — Continuous integration and repository standards
+
+- Added a bounded GitHub Actions matrix for dependency-free Python 3.11 and Python 3.12 with Gymnasium.
+- Added compile and deterministic unittest gates with read-only permissions, cancellation, and five-minute job limits.
+- Added contribution guidance plus EditorConfig and Git attributes for consistent UTF-8/LF text files.
+- Added the CI badge and contribution link to the production README.
 ## 0.137.0 — Package release metadata
 
 - Added `--version` to both installed and module CLI entry points.
@@ -385,5 +391,6 @@ Completed updates are grouped for readability:
 | 0.135 | Standalone verified comparison artifact inspection CLI |
 | 0.136 | Production-style README and preserved dedicated changelog |
 | 0.137 | CLI version reporting and publishable package metadata |
+| 0.138 | Bounded CI matrix and contributor repository standards |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

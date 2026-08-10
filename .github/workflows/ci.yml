@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Python 3.11 core
+            python: "3.11"
+            target: "."
+          - name: Python 3.12 + Gymnasium
+            python: "3.12"
+            target: ".[training]"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: Install project
+        run: python -m pip install -e "${{ matrix.target }}"
+
+      - name: Compile sources
+        run: python -m compileall -q src tests
+
+      - name: Run deterministic test suite
+        run: python -m unittest discover -s tests -v

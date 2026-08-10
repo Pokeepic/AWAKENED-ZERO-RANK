@@ -1,12 +1,14 @@
 # AWAKENED: ZERO RANK
 
+[![CI](https://github.com/Pokeepic/AWAKENED-ZERO-RANK/actions/workflows/ci.yml/badge.svg)](https://github.com/Pokeepic/AWAKENED-ZERO-RANK/actions/workflows/ci.yml)
+
 An observer-only autonomous life simulation set in Japan after portals and Awakened hunters become part of everyday society.
 
 Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recover, train, form relationships, investigate Gates, and survive. The player watches rather than choosing his actions.
 
 | Project status | Current value |
 |---|---|
-| Release | `0.137.0` |
+| Release | `0.138.0` |
 | Python | 3.11+ |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
@@ -176,6 +178,10 @@ International travel should remain grounded in passports or clearance, airfare, 
 A later release can add a read-only dashboard for time, weather, Ren's condition, current concerns, decisions, relationships, finances, inventory, investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity.
 
 The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for deterministic-development rules, test expectations, held-out evaluation requirements, and pull-request guidance.
 
 ## Project history
 
