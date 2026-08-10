@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 
 from .journal import journal_entry
@@ -24,6 +25,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--compare-experiment-bundles", nargs=2, metavar=("LEFT", "RIGHT"),
         help="verify and compare two published experiment bundles",
     )
+    bundle_modes.add_argument(
+        "--inspect-comparison-artifact", metavar="FILE",
+        help="verify saved comparison JSON and print it canonically",
+    )
     parser.add_argument(
         "--comparison-output", metavar="FILE",
         help="save verified comparison JSON without overwriting",
@@ -44,10 +49,13 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     if args.comparison_output and not args.compare_experiment_bundles:
         parser.error(
             "--comparison-output requires --compare-experiment-bundles")
-    if args.inspect_experiment_bundle or args.compare_experiment_bundles:
+    if (args.inspect_experiment_bundle or args.compare_experiment_bundles or
+            args.inspect_comparison_artifact):
         mode_name = (
             "--inspect-experiment-bundle" if args.inspect_experiment_bundle
-            else "--compare-experiment-bundles")
+            else "--compare-experiment-bundles"
+            if args.compare_experiment_bundles
+            else "--inspect-comparison-artifact")
         simulation_options = (
             "--days", "--seed", "--load", "--save", "--technical-log",
         )
@@ -58,6 +66,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
         from .learning import (
             compare_experiment_bundles, experiment_bundle_comparison_json,
             experiment_bundle_summary_json, inspect_experiment_bundle,
+            load_experiment_bundle_comparison_artifact,
             save_experiment_bundle_comparison,
         )
         try:
@@ -65,6 +74,10 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 result = inspect_experiment_bundle(
                     args.inspect_experiment_bundle)
                 output = experiment_bundle_summary_json(result)
+            elif args.inspect_comparison_artifact:
+                result = load_experiment_bundle_comparison_artifact(
+                    args.inspect_comparison_artifact)
+                output = json.dumps(result, indent=2, sort_keys=True)
             else:
                 result = compare_experiment_bundles(
                     *args.compare_experiment_bundles)

@@ -2190,6 +2190,17 @@ class SimulationTests(unittest.TestCase):
             self.assertEqual(json.loads(artifact_output.getvalue()), payload)
             self.assertEqual(
                 load_experiment_bundle_comparison_artifact(artifact), payload)
+            inspection_output = StringIO()
+            with redirect_stdout(inspection_output):
+                cli_main(("--inspect-comparison-artifact", str(artifact)))
+            self.assertEqual(json.loads(inspection_output.getvalue()), payload)
+            errors = StringIO()
+            with redirect_stderr(errors), self.assertRaises(SystemExit):
+                cli_main((
+                    "--inspect-comparison-artifact", str(artifact),
+                    "--seed", "1",
+                ))
+            self.assertIn("cannot use simulation options", errors.getvalue())
             errors = StringIO()
             with redirect_stderr(errors), self.assertRaises(SystemExit):
                 cli_main((
