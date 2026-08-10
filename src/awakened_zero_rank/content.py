@@ -15,6 +15,15 @@ class PortalProfile:
 
 
 @dataclass(frozen=True)
+class StoryAnchor:
+    key: str
+    day: int
+    title: str
+    premise: str
+    ending: bool = False
+
+
+@dataclass(frozen=True)
 class NPCProfile:
     name: str
     role: str
@@ -37,6 +46,28 @@ PORTALS = (
     PortalProfile("Sunken Courtyard", "swamp", "toxic spores", "guild equipment in the reeds"),
     PortalProfile("Glass Office Labyrinth", "urban tower", "shifting rooms", "Ren's reflection moves late"),
 )
+
+STORY_ANCHORS = (
+    StoryAnchor(
+        "arc_adachi_warning", 183, "The Adachi Warning",
+        "A synchronized Gate pulse forces Tokyo to reassess its weakest districts."),
+    StoryAnchor(
+        "arc_tokyo_fracture", 365, "The Tokyo Fracture",
+        "Conflicting guild orders divide the people responsible for civilian safety."),
+    StoryAnchor(
+        "arc_foreign_signal", 548, "The Foreign Signal",
+        "A repeating portal signature links Japan to a disaster unfolding overseas."),
+    StoryAnchor(
+        "arc_guild_reckoning", 730, "The Guild Reckoning",
+        "Tokyo must decide whether rank or lived evidence defines a hunter's worth."),
+    StoryAnchor(
+        "arc_zero_rank_choice", 913, "The Zero-Rank Choice",
+        "Ren's accumulated loyalties and discoveries converge around one final threat."),
+    StoryAnchor(
+        "arc_awakened_horizon", 1095, "The Awakened Horizon",
+        "The three-year chronicle reaches an ending shaped by the life Ren built.", True),
+)
+
 
 NPCS = {
     "Aiko Sato": NPCProfile("Aiko Sato", "F-rank guild clerk", "observant and kind",

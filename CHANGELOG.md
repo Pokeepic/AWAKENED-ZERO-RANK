@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.155.0 — Three-year story anchors
+
+- Added six immutable narrative anchors at roughly six-month intervals from day 183 through day 1,095, culminating in a defined three-year ending.
+- Anchor timing is fixed, while each resolution is derived deterministically from Ren's current rank, trusted relationships, and portal discoveries.
+- Story events use the existing calendar and event log, survive normal save/load continuation, and preserve the observer-only design without player choices.
+- Added focused schedule, ending, readiness-variation, calendar-coexistence, determinism, and continuation coverage, raising the deterministic suite to 158 tests; no RL experiment or balance adjustment was needed.
+
 ## 0.154.0 — Chronicle integrity validation
 
 - Saved event records must remain in chronological order.
@@ -521,5 +528,6 @@ Completed updates are grouped for readability:
 | 0.152 | Portal discovery, investigation, and active-plan validation |
 | 0.153 | NPC identity, relationship, dialogue, and collaborator validation |
 | 0.154 | Event chronology, memory, dialogue-date, and consequence validation |
+| 0.155 | Fixed six-month story anchors and a state-shaped three-year ending |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

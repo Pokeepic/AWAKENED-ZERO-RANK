@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.154.0` |
+| Release | `0.155.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 156 |
+| Automated tests | 158 |
 
 ## Why this project exists
 
@@ -177,11 +177,15 @@ The tests cover deterministic simulation, persistence, action masks, fixed horiz
 
 ## Roadmap
 
+### Three-year story arc
+
+Six fixed story anchors arrive at roughly six-month intervals from day 183 through day 1,095. They cannot be avoided or moved, but each resolution reflects Ren's accumulated hunter rank, trusted relationships, and discovered portals. The final anchor closes the three-year chronicle with an ending shaped by that history.
+
 ### Story and content growth
 
 Expand the catalog through authored dialogue, recurring characters, portals, encounters, equipment, locations, and consequences. New content should deepen character identity and world continuity rather than only multiplying random combinations.
 
-Build a finite long-form story with flexible six-month anchor events: major events occur on schedule, but their participants, consequences, and Ren's available responses emerge from the accumulated world state. The arc should support a meaningful ending without turning the observer-only simulation into a scripted choice game.
+Deepen each anchor with recurring-character scenes, portal-specific consequences, international links, and more varied endings without turning the observer-only simulation into a scripted choice game.
 
 ### Advanced learning research
 

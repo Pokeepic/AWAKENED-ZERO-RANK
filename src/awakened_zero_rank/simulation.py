@@ -4,10 +4,10 @@ import random
 
 from .agent import UtilityAgent
 from .dialogue import contextual_line, resolve_aiko_dialogue
-from .content import NPCS, PORTALS, scheduled_location
+from .content import NPCS, PORTALS, STORY_ANCHORS, StoryAnchor, scheduled_location
 from .environment import SUMMER_WEATHER, summer_weather
 from .models import (DelayedConsequence, Event, Memory, PortalInvestigation,
-                     Relationship, WorldState)
+                     Relationship, TimeSlot, WorldState)
 from .world import GATE_ENCOUNTERS, ITEMS, travel_cost
 
 
@@ -189,9 +189,47 @@ class Simulation:
             p.mood = "Uneasy"
         p.clamp()
 
+    def _story_anchor_event(self, anchor: StoryAnchor) -> Event:
+        """Resolve a fixed story beat through the world Ren has actually built."""
+        state = self.state
+        protagonist = state.protagonist
+        rank_score = {"Unranked": 0, "F": 1, "E": 2, "D": 3, "C": 4}.get(
+            protagonist.hunter_rank, 0)
+        trusted_allies = sum(
+            relationship.trust >= 15
+            for relationship in protagonist.relationships.values())
+        readiness = rank_score + trusted_allies + len(state.discovered_portals)
+        if readiness >= 8:
+            resolution = (
+                "Ren entered it prepared, backed by trusted allies and "
+                "hard-won portal evidence.")
+        elif readiness >= 4:
+            resolution = (
+                "Ren faced it with partial answers, relying on the few bonds "
+                "and clues he had secured.")
+        else:
+            resolution = (
+                "Ren reached it underprepared and isolated, but the life he "
+                "had lived still shaped what survived.")
+        if anchor.ending:
+            resolution += " This became the ending of his three-year chronicle."
+        state.calendar_events_seen.append(anchor.key)
+        return Event(
+            state.clock.day, state.clock.slot, anchor.title,
+            "a fixed six-month story anchor arrived (world event)",
+            f"{anchor.premise} {resolution}")
+
     def _special_event(self) -> Event | None:
         clock = self.state.clock
         p = self.state.protagonist
+
+        story_anchor = next(
+            (anchor for anchor in STORY_ANCHORS
+             if anchor.day == clock.day and
+             anchor.key not in self.state.calendar_events_seen),
+            None)
+        if story_anchor is not None and clock.slot is TimeSlot.MORNING:
+            return self._story_anchor_event(story_anchor)
 
         if clock.day == 7 and clock.slot.value == "Evening" and "Tanabata" not in self.state.calendar_events_seen:
             self.state.calendar_events_seen.append("Tanabata")

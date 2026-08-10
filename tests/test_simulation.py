@@ -14,7 +14,9 @@ from awakened_zero_rank.models import Relationship, TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
-from awakened_zero_rank.content import dialogue_context_count, npc_context_count, portal_situation_count
+from awakened_zero_rank.content import (
+    NPCS, PORTALS, STORY_ANCHORS, dialogue_context_count, npc_context_count,
+    portal_situation_count)
 from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.learning import (
     ACTION_NAMES, EVALUATION_CONDITIONS, EnsembleConfig, LearningEnvironment,
@@ -62,7 +64,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.154.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.155.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -271,6 +273,35 @@ class SimulationTests(unittest.TestCase):
         clear = simulation.agent._weather_adjustment("Train", "Clear")
         storm = simulation.agent._weather_adjustment("Train", "Thunderstorm")
         self.assertLess(storm, clear)
+
+    def test_story_anchors_span_three_years_and_end(self) -> None:
+        self.assertEqual(len(STORY_ANCHORS), 6)
+        self.assertEqual(STORY_ANCHORS[0].day, 183)
+        self.assertEqual(STORY_ANCHORS[-1].day, 1095)
+        self.assertTrue(STORY_ANCHORS[-1].ending)
+        self.assertTrue(all(
+            later.day - earlier.day in {182, 183}
+            for earlier, later in zip(STORY_ANCHORS, STORY_ANCHORS[1:])))
+
+    def test_story_anchor_resolution_reflects_accumulated_readiness(self) -> None:
+        isolated = Simulation(seed=89)
+        isolated.state.clock.day = 183
+        isolated_event = isolated.step()
+
+        prepared = Simulation(seed=89)
+        prepared.state.clock.day = 183
+        prepared.state.protagonist.hunter_rank = "D"
+        prepared.state.protagonist.relationships = {
+            name: Relationship(name, profile.role, trust=20)
+            for name, profile in list(NPCS.items())[:3]
+        }
+        prepared.state.discovered_portals = [portal.name for portal in PORTALS[:2]]
+        prepared_event = prepared.step()
+
+        self.assertEqual(isolated_event.action, "The Adachi Warning")
+        self.assertIn("underprepared and isolated", isolated_event.outcome)
+        self.assertIn("entered it prepared", prepared_event.outcome)
+        self.assertIn("arc_adachi_warning", prepared.state.calendar_events_seen)
 
     def test_tanabata_calendar_event_occurs_once(self) -> None:
         simulation = Simulation(seed=42)
