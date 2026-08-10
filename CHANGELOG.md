@@ -8,6 +8,7 @@ The project follows evidence-driven releases: learned-policy changes remain offl
 
 - Added a bounded GitHub Actions matrix for dependency-free Python 3.11 and Python 3.12 with Gymnasium.
 - Added compile and deterministic unittest gates with read-only permissions, cancellation, and five-minute job limits.
+- Uses the official Node 24-compatible v7 checkout and Python setup actions without deprecation annotations.
 - Added contribution guidance plus EditorConfig and Git attributes for consistent UTF-8/LF text files.
 - Added the CI badge and contribution link to the production README.
 ## 0.137.0 — Package release metadata
