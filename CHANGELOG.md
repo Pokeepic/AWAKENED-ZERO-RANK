@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.143.0 — Clean persistence errors
+
+- CLI load failures now stop before simulation output and report a concise actionable error without a Python traceback.
+- CLI save failures no longer claim success and use the same clean error contract.
+- Added missing-file, integrity-failure, and injected-save-failure coverage, raising the deterministic regression suite to 138 tests.
+- Save schemas, simulation behavior, and RL verdicts are unchanged.
+
 ## 0.142.0 — Integrity-checked timeline saves
 
 - New schema-2 timeline saves include a SHA-256 digest over the seed, RNG state, and complete world state.
@@ -425,5 +432,6 @@ Completed updates are grouped for readability:
 | 0.140 | Cross-process and hash-randomization reproducibility gate |
 | 0.141 | Atomic failure-safe timeline persistence |
 | 0.142 | Tamper-evident saves with schema-1 compatibility |
+| 0.143 | Traceback-free CLI persistence failures |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

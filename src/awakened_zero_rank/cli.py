@@ -98,7 +98,13 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     if args.days < 1:
         raise SystemExit("--days must be at least 1")
 
-    simulation = load_simulation(args.load) if args.load else Simulation(seed=args.seed)
+    if args.load:
+        try:
+            simulation = load_simulation(args.load)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
+            parser.error(f"Cannot load timeline: {error}")
+    else:
+        simulation = Simulation(seed=args.seed)
     protagonist = simulation.state.protagonist
     print("AWAKENED ZERO RANK — Ren's Chronicle")
     print(f"{protagonist.name} | {protagonist.location}\n")
@@ -143,5 +149,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
         for memory in p.memories[:5]:
             print(f"- Day {memory.day}: {memory.summary}")
     if args.save:
-        save_simulation(simulation, args.save)
+        try:
+            save_simulation(simulation, args.save)
+        except OSError as error:
+            parser.error(f"Cannot save timeline: {error}")
         print(f"\nTimeline saved to {args.save}")
