@@ -16,8 +16,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--version", action="version", version=f"%(prog)s {__version__}",
     )
     parser.add_argument("--days", type=int, default=7, help="days to simulate (default: 7)")
-    parser.add_argument("--seed", type=int, default=42, help="reproducible seed")
-    parser.add_argument("--load", metavar="FILE", help="continue an existing save")
+    timeline_origin = parser.add_mutually_exclusive_group()
+    timeline_origin.add_argument(
+        "--seed", type=int, default=42, help="reproducible seed")
+    timeline_origin.add_argument(
+        "--load", metavar="FILE", help="continue an existing save")
     parser.add_argument("--save", metavar="FILE", help="save after this run")
     parser.add_argument("--technical-log", action="store_true", help="show decision reasons")
     bundle_modes = parser.add_mutually_exclusive_group()
@@ -96,7 +99,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             raise SystemExit(1)
         return
     if args.days < 1:
-        raise SystemExit("--days must be at least 1")
+        parser.error("--days must be at least 1")
 
     if args.load:
         try:

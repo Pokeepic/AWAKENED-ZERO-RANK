@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.144.0 — Unambiguous CLI run inputs
+
+- Explicit seed selection and saved-timeline loading are now mutually exclusive, preventing a supplied seed from being silently ignored.
+- Nonpositive day horizons now use the same concise argparse error contract as other invalid CLI inputs.
+- Added focused exit-code, output, and traceback-absence coverage, raising the deterministic regression suite to 140 tests.
+- Valid commands, simulation behavior, persistence schemas, and RL verdicts are unchanged.
+
 ## 0.143.0 — Clean persistence errors
 
 - CLI load failures now stop before simulation output and report a concise actionable error without a Python traceback.
@@ -433,5 +440,6 @@ Completed updates are grouped for readability:
 | 0.141 | Atomic failure-safe timeline persistence |
 | 0.142 | Tamper-evident saves with schema-1 compatibility |
 | 0.143 | Traceback-free CLI persistence failures |
+| 0.144 | Unambiguous timeline-origin and horizon validation |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
