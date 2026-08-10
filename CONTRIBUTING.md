@@ -5,7 +5,8 @@ Contributions should preserve AWAKENED: ZERO RANK's deterministic, observer-only
 ## Development setup
 
 ```bash
-python -m pip install -e ".[training]"
+python -m pip install -e ".[training,dev]"
+python -m ruff check src tests
 python -m unittest discover -s tests -v
 ```
 

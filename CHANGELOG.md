@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.146.0 — Critical static-analysis gate
+
+- Added a reproducible development extra and checked-in Ruff configuration limited to fatal syntax-family errors and undefined names.
+- Runs the static gate inside the existing Python 3.14 core job, adding coverage without another CI machine.
+- Updated contributor and README verification commands to match CI.
+- The full 140-test count, simulation behavior, persistence schemas, and RL verdicts are unchanged.
+
 ## 0.145.0 — Current Python compatibility matrix
 
 - Expanded bounded core CI from Python 3.11–3.12 to every stable minor from 3.11 through 3.14.
@@ -449,5 +456,6 @@ Completed updates are grouped for readability:
 | 0.143 | Traceback-free CLI persistence failures |
 | 0.144 | Unambiguous timeline-origin and horizon validation |
 | 0.145 | Python 3.11–3.14 compatibility matrix |
+| 0.146 | Critical-error and undefined-name static analysis |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

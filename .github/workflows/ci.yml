@@ -33,7 +33,7 @@ jobs:
             target: "."
           - name: Python 3.14 core
             python: "3.14"
-            target: "."
+            target: ".[dev]"
 
     steps:
       - name: Check out repository
@@ -50,6 +50,10 @@ jobs:
 
       - name: Compile sources
         run: python -m compileall -q src tests
+
+      - name: Check critical static errors
+        if: matrix.python == '3.14'
+        run: python -m ruff check src tests
 
       - name: Run deterministic test suite
         run: python -m unittest discover -s tests -v

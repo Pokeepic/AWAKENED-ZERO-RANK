@@ -8,7 +8,7 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.145.0` |
+| Release | `0.146.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
@@ -157,9 +157,11 @@ Comparison artifacts include complete added and removed report records, field-le
 
 ## Tests
 
-Run the complete suite with conservative resource usage:
+Run critical static checks and the complete suite with conservative resource usage:
 
 ```bash
+python -m pip install -e ".[dev]"
+python -m ruff check src tests
 python -m unittest discover -s tests -v
 ```
 
