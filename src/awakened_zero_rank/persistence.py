@@ -208,6 +208,26 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     _require_integer_range("gate_alert_level", state.gate_alert_level, 0, 3)
     for item, quantity in protagonist.inventory.items():
         _require_integer_range(f"inventory[{item!r}]", quantity, 1)
+    slot_order = {slot: index for index, slot in enumerate(TimeSlot)}
+    previous_event_position: tuple[int, int] | None = None
+    for index, event in enumerate(state.events):
+        _require_integer_range(f"events[{index}].day", event.day, 1, state.clock.day)
+        position = (event.day, slot_order[event.slot])
+        if previous_event_position is not None and position < previous_event_position:
+            raise ValueError(
+                "Invalid save field events: expected chronological order")
+        previous_event_position = position
+    for index, memory in enumerate(protagonist.memories):
+        _require_integer_range(
+            f"protagonist.memories[{index}].day",
+            memory.day, 1, state.clock.day)
+        _require_integer_range(
+            f"protagonist.memories[{index}].importance",
+            memory.importance, 1, 10)
+    for index, exchange in enumerate(protagonist.dialogue_history):
+        _require_integer_range(
+            f"protagonist.dialogue_history[{index}].day",
+            exchange.day, 1)
     npc_names = set(NPCS)
     for name, relationship in protagonist.relationships.items():
         if name not in npc_names or relationship.name != name:
@@ -242,6 +262,19 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         raise ValueError(
             "Invalid save field protagonist.dialogue_history: "
             "expected catalogued NPC speakers")
+    for index, consequence in enumerate(state.delayed_consequences):
+        _require_integer_range(
+            f"delayed_consequences[{index}].due_day",
+            consequence.due_day, 1)
+        if (len(consequence.people) != len(set(consequence.people)) or
+                any(person not in npc_names for person in consequence.people)):
+            raise ValueError(
+                f"Invalid save field delayed_consequences[{index}].people: "
+                "expected unique catalogued NPC names")
+        if not isinstance(consequence.resolved, bool):
+            raise ValueError(
+                f"Invalid save field delayed_consequences[{index}].resolved: "
+                "expected boolean")
     portal_names = {portal.name for portal in PORTALS}
     if (len(state.discovered_portals) != len(set(state.discovered_portals)) or
             any(name not in portal_names for name in state.discovered_portals)):

@@ -236,6 +236,37 @@ class PersistenceSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "cooperating_npc"):
                 load_simulation(destination)
 
+    def test_redigested_future_event_is_rejected(self) -> None:
+        simulation = Simulation(seed=79)
+        simulation.run(20)
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, destination)
+            data = json.loads(destination.read_text(encoding="utf-8"))
+            data.pop("save_digest")
+            data["state"]["events"][0]["day"] = data["state"]["clock"]["day"] + 1
+            payload = json.dumps(
+                data, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")
+            data["save_digest"] = hashlib.sha256(payload).hexdigest()
+            destination.write_text(json.dumps(data), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, r"events\[0\]\.day"):
+                load_simulation(destination)
+
+    def test_unknown_consequence_participant_cannot_be_saved(self) -> None:
+        simulation = Simulation(seed=83)
+        simulation.run(80)
+        consequence = simulation.state.delayed_consequences[0]
+        object.__setattr__(consequence, "people", ("Unknown Witness",))
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+
+            with self.assertRaisesRegex(ValueError, "delayed_consequences"):
+                save_simulation(simulation, destination)
+
+            self.assertFalse(destination.exists())
+
     def test_redigested_impossible_state_fails_cli_validation(self) -> None:
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"

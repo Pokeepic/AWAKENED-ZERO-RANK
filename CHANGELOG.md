@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.154.0 — Chronicle integrity validation
+
+- Saved event records must remain in chronological order.
+- Events and memories cannot extend beyond the world clock; dialogue exchanges retain externally supplied positive day labels, while memory importance stays on the authored 1–10 scale.
+- Delayed consequences require positive due dates, unique catalogued participants, and a real boolean resolution state; future due dates and free-form story sources remain supported.
+- Added two focused tampered-load/pre-write regressions, raising the deterministic suite to 156 tests; gameplay and learning behavior are unchanged and no RL experiment was run.
+
 ## 0.153.0 — Social timeline validation
 
 - Saved relationships now require matching catalogued NPC identities and bounded trust, familiarity, meeting, affection, tension, and loyalty values.
@@ -513,5 +520,6 @@ Completed updates are grouped for readability:
 | 0.151 | Runtime-critical location and equipment validation |
 | 0.152 | Portal discovery, investigation, and active-plan validation |
 | 0.153 | NPC identity, relationship, dialogue, and collaborator validation |
+| 0.154 | Event chronology, memory, dialogue-date, and consequence validation |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
