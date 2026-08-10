@@ -62,7 +62,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.141.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.142.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -215,6 +215,8 @@ class SimulationTests(unittest.TestCase):
             protagonist = data["state"]["protagonist"]
             protagonist.pop("prepared_missions_attempted")
             protagonist.pop("prepared_missions_completed")
+            data["save_version"] = 1
+            data.pop("save_digest")
             path.write_text(json.dumps(data), encoding="utf-8")
             restored = load_simulation(path)
         self.assertEqual(restored.state.protagonist.prepared_missions_attempted, 0)

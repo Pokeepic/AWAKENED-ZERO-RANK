@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import tempfile
@@ -11,7 +13,7 @@ from .models import (Clock, DelayedConsequence, DialogueExchange, Event, Memory,
                      PortalInvestigation, Protagonist, Relationship, TimeSlot, WorldState)
 
 
-SAVE_VERSION = 1
+SAVE_VERSION = 2
 
 
 def _tuplify(value: Any) -> Any:
@@ -29,6 +31,10 @@ def save_simulation(simulation: "Simulation", path: str | Path) -> Path:
         "rng_state": simulation.rng.getstate(),
         "state": asdict(simulation.state),
     }
+    payload = json.dumps(
+        data, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":")).encode("utf-8")
+    data["save_digest"] = hashlib.sha256(payload).hexdigest()
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary_path: Path | None = None
     try:
@@ -48,12 +54,25 @@ def save_simulation(simulation: "Simulation", path: str | Path) -> Path:
 
 
 def load_simulation(path: str | Path) -> "Simulation":
-    """Load a trusted JSON save created by :func:`save_simulation`."""
+    """Load a compatible save after verifying its integrity.
+
+    Schema-1 saves predate integrity digests and remain supported.
+    """
     from .simulation import Simulation
 
     data = json.loads(Path(path).read_text(encoding="utf-8"))
-    if data.get("save_version") != SAVE_VERSION:
-        raise ValueError(f"Unsupported save version: {data.get('save_version')}")
+    version = data.get("save_version")
+    if version not in (1, SAVE_VERSION):
+        raise ValueError(f"Unsupported save version: {version}")
+    if version == SAVE_VERSION:
+        claimed_digest = data.pop("save_digest", None)
+        payload = json.dumps(
+            data, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":")).encode("utf-8")
+        actual_digest = hashlib.sha256(payload).hexdigest()
+        if not isinstance(claimed_digest, str) or not hmac.compare_digest(
+                claimed_digest, actual_digest):
+            raise ValueError("Save integrity check failed")
 
     raw = data["state"]
     protagonist_data = raw["protagonist"]

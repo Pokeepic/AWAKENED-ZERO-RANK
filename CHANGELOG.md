@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.142.0 — Integrity-checked timeline saves
+
+- New schema-2 timeline saves include a SHA-256 digest over the seed, RNG state, and complete world state.
+- Loading rejects missing or mismatched integrity data before reconstructing simulation objects.
+- Existing schema-1 saves remain compatible and are upgraded naturally on their next save.
+- Added focused tamper and migration coverage, raising the deterministic regression suite to 135 tests.
+- Simulation behavior and RL verdicts are unchanged.
+
 ## 0.141.0 — Atomic timeline saves
 
 - Save files are now staged beside their destination, flushed to disk, and atomically replaced only after serialization succeeds.
@@ -416,5 +424,6 @@ Completed updates are grouped for readability:
 | 0.139 | Wheel/source archive build and clean-installed-package validation |
 | 0.140 | Cross-process and hash-randomization reproducibility gate |
 | 0.141 | Atomic failure-safe timeline persistence |
+| 0.142 | Tamper-evident saves with schema-1 compatibility |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.
