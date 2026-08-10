@@ -5,6 +5,7 @@ import json
 import sys
 
 from . import __version__
+from .content import STORY_ANCHORS
 from .journal import journal_entry
 from .persistence import (
     load_simulation, save_simulation, verify_simulation_save,
@@ -161,6 +162,15 @@ def main(argv: tuple[str, ...] | None = None) -> None:
         ))
     if simulation.state.discovered_portals:
         print("Portals discovered: " + ", ".join(simulation.state.discovered_portals))
+    if simulation.state.story_outcomes:
+        anchors = {anchor.key: anchor for anchor in STORY_ANCHORS}
+        latest_key = max(
+            simulation.state.story_outcomes,
+            key=lambda key: anchors[key].day)
+        print(
+            f"Story arc: {len(simulation.state.story_outcomes)}/{len(STORY_ANCHORS)} anchors | "
+            f"Latest: {anchors[latest_key].title} "
+            f"({simulation.state.story_outcomes[latest_key]})")
     if p.memories:
         print("Key memories:")
         for memory in p.memories[:5]:

@@ -64,7 +64,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.155.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.156.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -302,6 +302,34 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("underprepared and isolated", isolated_event.outcome)
         self.assertIn("entered it prepared", prepared_event.outcome)
         self.assertIn("arc_adachi_warning", prepared.state.calendar_events_seen)
+
+    def test_story_outcome_ledger_survives_save_load(self) -> None:
+        simulation = Simulation(seed=97)
+        simulation.state.clock.day = 183
+        simulation.step()
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "story.json"
+            save_simulation(simulation, path)
+            restored = load_simulation(path)
+
+        self.assertEqual(
+            restored.state.story_outcomes,
+            {"arc_adachi_warning": "isolated"})
+
+    def test_cli_reports_story_arc_progress(self) -> None:
+        simulation = Simulation(seed=101)
+        simulation.state.clock.day = 183
+        simulation.step()
+        output = StringIO()
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "story.json"
+            save_simulation(simulation, path)
+            with redirect_stdout(output):
+                cli_main(("--load", str(path), "--days", "1"))
+
+        self.assertIn(
+            "Story arc: 1/6 anchors | Latest: The Adachi Warning (isolated)",
+            output.getvalue())
 
     def test_tanabata_calendar_event_occurs_once(self) -> None:
         simulation = Simulation(seed=42)

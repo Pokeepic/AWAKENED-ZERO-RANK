@@ -200,20 +200,24 @@ class Simulation:
             for relationship in protagonist.relationships.values())
         readiness = rank_score + trusted_allies + len(state.discovered_portals)
         if readiness >= 8:
+            outcome_tier = "prepared"
             resolution = (
                 "Ren entered it prepared, backed by trusted allies and "
                 "hard-won portal evidence.")
         elif readiness >= 4:
+            outcome_tier = "resilient"
             resolution = (
                 "Ren faced it with partial answers, relying on the few bonds "
                 "and clues he had secured.")
         else:
+            outcome_tier = "isolated"
             resolution = (
                 "Ren reached it underprepared and isolated, but the life he "
                 "had lived still shaped what survived.")
         if anchor.ending:
             resolution += " This became the ending of his three-year chronicle."
         state.calendar_events_seen.append(anchor.key)
+        state.story_outcomes[anchor.key] = outcome_tier
         return Event(
             state.clock.day, state.clock.slot, anchor.title,
             "a fixed six-month story anchor arrived (world event)",

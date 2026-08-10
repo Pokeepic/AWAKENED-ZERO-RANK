@@ -9,7 +9,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
-from .content import NPCS, PORTALS
+from .content import NPCS, PORTALS, STORY_ANCHORS
 from .models import (Clock, DelayedConsequence, DialogueExchange, Event, Memory,
                      PortalInvestigation, Protagonist, Relationship, TimeSlot, WorldState)
 from .world import ITEMS, LOCATIONS
@@ -108,6 +108,7 @@ def _simulation_from_data(data: dict[str, Any]) -> "Simulation":
         temperature_c=raw.get("temperature_c", 29),
         weather_day=raw.get("weather_day", 0),
         calendar_events_seen=raw.get("calendar_events_seen", []),
+        story_outcomes=raw.get("story_outcomes", {}),
         relationship_network=raw.get("relationship_network", {}),
         discovered_portals=raw.get("discovered_portals", []),
         portal_investigations={
@@ -228,6 +229,17 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         _require_integer_range(
             f"protagonist.dialogue_history[{index}].day",
             exchange.day, 1)
+    story_anchor_keys = {anchor.key for anchor in STORY_ANCHORS}
+    for key, outcome in state.story_outcomes.items():
+        if (key not in story_anchor_keys or
+                outcome not in {"isolated", "resilient", "prepared"}):
+            raise ValueError(
+                f"Invalid save field story_outcomes[{key!r}]: "
+                "expected a catalogued anchor and readiness tier")
+        if key not in state.calendar_events_seen:
+            raise ValueError(
+                f"Invalid save field story_outcomes[{key!r}]: "
+                "resolved anchor is missing from calendar history")
     npc_names = set(NPCS)
     for name, relationship in protagonist.relationships.items():
         if name not in npc_names or relationship.name != name:

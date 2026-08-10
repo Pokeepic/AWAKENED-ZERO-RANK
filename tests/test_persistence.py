@@ -267,6 +267,24 @@ class PersistenceSafetyTests(unittest.TestCase):
 
             self.assertFalse(destination.exists())
 
+    def test_redigested_invalid_story_outcome_is_rejected(self) -> None:
+        simulation = Simulation(seed=103)
+        simulation.state.clock.day = 183
+        simulation.step()
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, destination)
+            data = json.loads(destination.read_text(encoding="utf-8"))
+            data.pop("save_digest")
+            data["state"]["story_outcomes"]["arc_adachi_warning"] = "perfect"
+            payload = json.dumps(
+                data, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")
+            data["save_digest"] = hashlib.sha256(payload).hexdigest()
+            destination.write_text(json.dumps(data), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "story_outcomes"):
+                load_simulation(destination)
     def test_redigested_impossible_state_fails_cli_validation(self) -> None:
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"

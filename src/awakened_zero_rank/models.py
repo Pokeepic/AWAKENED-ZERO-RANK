@@ -205,6 +205,7 @@ class WorldState:
     temperature_c: int = 29
     weather_day: int = 0
     calendar_events_seen: list[str] = field(default_factory=list)
+    story_outcomes: dict[str, str] = field(default_factory=dict)
     relationship_network: dict[str, dict[str, int]] = field(default_factory=dict)
     discovered_portals: list[str] = field(default_factory=list)
     portal_investigations: dict[str, PortalInvestigation] = field(default_factory=dict)
