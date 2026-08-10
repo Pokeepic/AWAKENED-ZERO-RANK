@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "awakened-zero-rank"
-version = "0.144.0"
+version = "0.145.0"
 description = "Observer-only autonomous life simulation set in awakened Japan"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,6 +12,10 @@ keywords = ["simulation", "autonomous-agent", "reinforcement-learning"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
 ]
 

@@ -28,6 +28,12 @@ jobs:
           - name: Python 3.12 + Gymnasium
             python: "3.12"
             target: ".[training]"
+          - name: Python 3.13 core
+            python: "3.13"
+            target: "."
+          - name: Python 3.14 core
+            python: "3.14"
+            target: "."
 
     steps:
       - name: Check out repository
@@ -59,7 +65,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
 
       - name: Install build frontend
