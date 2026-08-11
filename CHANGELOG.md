@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.173.0 — Catalogue-backed observer social state
+
+- Semantic observer verification now binds relationship identities to the canonical NPC catalogue while retaining compatible nonempty historical role text.
+- Portal investigation collaborators must likewise name a catalogued NPC, while known collaborators remain valid without requiring a stored protagonist relationship.
+- Malformed and unhashable identity values are rejected cleanly instead of escaping verifier error handling.
+- Added focused re-digested empty-role, malformed-name, and unknown-collaborator coverage, raising the deterministic suite to 200 tests; social simulation, balance, and RL behavior are unchanged.
+
 ## 0.172.0 — Observer story-ledger validation
 
 - Semantic observer verification now validates the complete nested story schema instead of trusting only its schema-version marker.

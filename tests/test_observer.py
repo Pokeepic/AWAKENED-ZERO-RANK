@@ -325,6 +325,38 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ending status"):
             verify_observer_snapshot(status)
 
+    def test_verifier_rejects_redigested_unknown_social_catalogue_data(
+            self) -> None:
+        simulation = Simulation(seed=349)
+        simulation.run(40)
+        relationship = observer_snapshot(simulation)
+        self.assertTrue(relationship["relationships"])
+        relationship["relationships"][0]["role"] = ""
+        _redigest(relationship)
+        with self.assertRaisesRegex(ValueError, "relationship identity"):
+            verify_observer_snapshot(relationship)
+
+        historical_role = observer_snapshot(simulation)
+        historical_role["relationships"][0]["role"] = "former guild clerk"
+        _redigest(historical_role)
+        verify_observer_snapshot(historical_role)
+
+        malformed_name = observer_snapshot(simulation)
+        malformed_name["relationships"][0]["name"] = []
+        _redigest(malformed_name)
+        with self.assertRaisesRegex(ValueError, "relationship identity"):
+            verify_observer_snapshot(malformed_name)
+
+        portal_simulation = Simulation(seed=353)
+        portal_simulation.run(60)
+        collaborator = observer_snapshot(portal_simulation)
+        self.assertTrue(collaborator["portals"]["investigations"])
+        collaborator["portals"]["investigations"][0]["cooperating_npc"] = (
+            "Unknown Observer")
+        _redigest(collaborator)
+        with self.assertRaisesRegex(ValueError, "portal collaborator"):
+            verify_observer_snapshot(collaborator)
+
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))
         snapshot["path"] = "saves/ren.json"

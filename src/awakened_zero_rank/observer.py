@@ -9,7 +9,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
-from .content import PORTALS, STORY_ANCHORS
+from .content import NPCS, PORTALS, STORY_ANCHORS
 from .environment import SUMMER_WEATHER
 from .story import STORY_PROGRESS_SCHEMA_VERSION, story_progress
 from .world import ITEMS, LOCATIONS
@@ -61,6 +61,7 @@ _INVESTIGATION_KEYS = {
     "preparation_strategy", "progress", "risk",
 }
 _PORTAL_NAMES = {portal.name for portal in PORTALS}
+_NPC_NAMES = set(NPCS)
 _WEATHER_TEMPERATURES = {
     weather.name: weather.temperature_c for weather in SUMMER_WEATHER
 }
@@ -163,10 +164,13 @@ def _validate_portals(portals: Any) -> None:
         cooperating_npc = investigation["cooperating_npc"]
         if (
                 not isinstance(name, str) or name not in _PORTAL_NAMES or
-                not isinstance(strategy, str) or not strategy or
-                cooperating_npc is not None and (
-                    not isinstance(cooperating_npc, str) or not cooperating_npc)):
+                not isinstance(strategy, str) or not strategy):
             raise ValueError("Observer snapshot portal investigation text is invalid")
+        if (
+                cooperating_npc is not None and (
+                    not isinstance(cooperating_npc, str) or
+                    cooperating_npc not in _NPC_NAMES)):
+            raise ValueError("Observer snapshot portal collaborator is invalid")
         progress = _integer(investigation["progress"], "portal progress")
         risk = _integer(investigation["risk"], "portal risk")
         preparation_bonus = _integer(
@@ -385,7 +389,9 @@ def _validate_relationships(relationships: Any) -> None:
                 set(relationship) != _RELATIONSHIP_KEYS):
             raise ValueError("Observer snapshot relationship is malformed")
         name, role = relationship["name"], relationship["role"]
-        if not isinstance(name, str) or not name or not isinstance(role, str) or not role:
+        if (
+                not isinstance(name, str) or name not in _NPC_NAMES or
+                not isinstance(role, str) or not role):
             raise ValueError("Observer snapshot relationship identity is invalid")
         names.append(name)
         metrics = {
