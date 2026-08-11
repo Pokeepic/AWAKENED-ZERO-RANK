@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.161.0 — Deterministic named endings
+
+- Completed modern arcs now resolve to `The Unfinished Warning`, `Tokyo's Quiet Guardian`, or `The Zero-Rank Horizon` from the final tier and the number of prepared chapters.
+- Ending metadata includes a stable ID, title, summary, final tier, and isolated/resilient/prepared counts; unfinished arcs return no ending.
+- Legacy-unavailable histories receive `Legacy Ending Unavailable` rather than a fabricated classification, and story-progress output advances to schema 3.
+- The observer CLI prints the named ending after a completed arc, and the roadmap now places a separate game adaptation after the simulator and website mature.
+- Added focused empty, fully prepared, mixed, legacy, schema, CLI, persistence, and continuation coverage, raising the deterministic suite to 172 tests; live simulation balance and RL behavior are unchanged.
+
 ## 0.160.0 — Honest legacy story migration
 
 - Saves created after story anchors but before the outcome ledger now recover known completed anchors as `legacy-unavailable` instead of silently losing progress or inventing readiness evidence.
@@ -569,5 +577,6 @@ Completed updates are grouped for readability:
 | 0.158 | Read-only JSON-ready story progress and ending projection |
 | 0.159 | Authenticated read-only story-progress CLI inspection |
 | 0.160 | Honest pre-ledger story migration and chronological-prefix validation |
+| 0.161 | Deterministic named endings and future game-adaptation roadmap |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

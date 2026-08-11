@@ -74,7 +74,7 @@ class CliValidationTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), original)
         summary = json.loads(output.getvalue())
         self.assertEqual(summary["path"], str(path))
-        self.assertEqual(summary["schema_version"], 2)
+        self.assertEqual(summary["schema_version"], 3)
         self.assertEqual(summary["completed_count"], 1)
         self.assertEqual(summary["completed"][0]["tier"], "isolated")
         self.assertEqual(summary["next"]["key"], "arc_tokyo_fracture")
@@ -109,6 +109,22 @@ class CliValidationTests(unittest.TestCase):
         self.assertIn("Save integrity check failed", errors.getvalue())
         self.assertNotIn("Traceback", errors.getvalue())
 
+    def test_observer_summary_reports_named_story_ending(self) -> None:
+        simulation = Simulation(seed=151)
+        simulation.state.clock.day = 1095
+        from awakened_zero_rank.content import STORY_ANCHORS
+        simulation.state.calendar_events_seen.extend(
+            anchor.key for anchor in STORY_ANCHORS)
+        simulation.state.story_outcomes.update(
+            (anchor.key, "prepared") for anchor in STORY_ANCHORS)
+        output = StringIO()
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, path)
+            with redirect_stdout(output):
+                cli_main(("--load", str(path), "--days", "1"))
+
+        self.assertIn("Ending: The Zero-Rank Horizon", output.getvalue())
     def test_verify_legacy_save_reports_unavailable_integrity(self) -> None:
         with TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "legacy.json"

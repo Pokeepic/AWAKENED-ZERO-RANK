@@ -180,6 +180,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
         print(
             f"Story arc: {progress['completed_count']}/{progress['total_anchors']} anchors | "
             f"Latest: {latest['title']} ({latest['tier']})")
+    if progress["ending"]:
+        print(f"Ending: {progress['ending']['title']}")
     if p.memories:
         print("Key memories:")
         for memory in p.memories[:5]:

@@ -18,11 +18,12 @@ class StoryProgressTests(unittest.TestCase):
         progress = story_progress(state)
 
         self.assertEqual(state, before)
-        self.assertEqual(progress["schema_version"], 2)
+        self.assertEqual(progress["schema_version"], 3)
         self.assertEqual(progress["completed"], [])
         self.assertEqual(progress["completed_count"], 0)
         self.assertEqual(progress["total_anchors"], 6)
         self.assertFalse(progress["ending_reached"])
+        self.assertIsNone(progress["ending"])
         self.assertEqual(progress["next"], {
             "day": 183,
             "days_remaining": 182,
@@ -47,8 +48,41 @@ class StoryProgressTests(unittest.TestCase):
             for entry in progress["completed"]))
         self.assertEqual(progress["completed_count"], 6)
         self.assertTrue(progress["ending_reached"])
+        self.assertEqual(progress["ending"]["id"], "zero-rank-horizon")
+        self.assertEqual(progress["ending"]["prepared_count"], 6)
+        self.assertEqual(progress["ending"]["title"], "The Zero-Rank Horizon")
         self.assertIsNone(progress["next"])
 
+    def test_mixed_arc_receives_quiet_guardian_ending(self) -> None:
+        state = Simulation(seed=139).state
+        state.clock.day = 1095
+        tiers = (
+            "isolated", "resilient", "prepared",
+            "resilient", "prepared", "resilient")
+        state.calendar_events_seen.extend(anchor.key for anchor in STORY_ANCHORS)
+        state.story_outcomes.update(
+            (anchor.key, tier) for anchor, tier in zip(STORY_ANCHORS, tiers))
+
+        ending = story_progress(state)["ending"]
+
+        self.assertEqual(ending["id"], "quiet-guardian")
+        self.assertEqual(ending["title"], "Tokyo's Quiet Guardian")
+        self.assertEqual(ending["prepared_count"], 2)
+        self.assertEqual(ending["resilient_count"], 3)
+        self.assertEqual(ending["isolated_count"], 1)
+
+    def test_legacy_arc_does_not_invent_a_named_ending(self) -> None:
+        state = Simulation(seed=149).state
+        state.clock.day = 1095
+        state.calendar_events_seen.extend(anchor.key for anchor in STORY_ANCHORS)
+        state.story_outcomes.update(
+            (anchor.key, "legacy-unavailable") for anchor in STORY_ANCHORS)
+
+        ending = story_progress(state)["ending"]
+
+        self.assertEqual(ending["id"], "legacy-unavailable")
+        self.assertEqual(ending["title"], "Legacy Ending Unavailable")
+        self.assertEqual(ending["tier"], "legacy-unavailable")
 
 if __name__ == "__main__":
     unittest.main()

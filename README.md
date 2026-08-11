@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.160.0` |
+| Release | `0.161.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 169 |
+| Automated tests | 172 |
 
 ## Why this project exists
 
@@ -185,7 +185,7 @@ The tests cover deterministic simulation, persistence, action masks, fixed horiz
 
 ### Three-year story arc
 
-Six fixed story anchors arrive at roughly six-month intervals from day 183 through day 1,095. They cannot be avoided or moved, but each resolution reflects Ren's accumulated hunter rank, trusted relationships, and discovered portals. The final anchor closes the three-year chronicle with an ending shaped by that history. Every anchor has distinct authored outcomes for `isolated`, `resilient`, and `prepared` resolutions. Event prose names relevant trusted characters and the latest discovered portal when that evidence exists. The resolved tier is saved in world state, and the observer summary reports current arc progress plus the latest result. `story_progress(state)` exposes the same chronology through schema-2 mutation-free JSON with completed entries, next-anchor timing, and ending status for dashboards and tools. Saves from the brief pre-ledger story release migrate completed anchors as `legacy-unavailable` rather than inventing a readiness result, and resolved anchors must remain a chronological prefix.
+Six fixed story anchors arrive at roughly six-month intervals from day 183 through day 1,095. They cannot be avoided or moved, but each resolution reflects Ren's accumulated hunter rank, trusted relationships, and discovered portals. The final anchor closes the three-year chronicle with an ending shaped by that history. Every anchor has distinct authored outcomes for `isolated`, `resilient`, and `prepared` resolutions. Event prose names relevant trusted characters and the latest discovered portal when that evidence exists. The resolved tier is saved in world state, and the observer summary reports current arc progress plus the latest result. `story_progress(state)` exposes the same chronology through schema-3 mutation-free JSON with completed entries, next-anchor timing, and ending status for dashboards and tools. Saves from the brief pre-ledger story release migrate completed anchors as `legacy-unavailable` rather than inventing a readiness result, and resolved anchors must remain a chronological prefix. Completed arcs receive one deterministic named ending—`The Unfinished Warning`, `Tokyo's Quiet Guardian`, or `The Zero-Rank Horizon`—while legacy histories remain explicitly unavailable.
 
 ### Story and content growth
 
@@ -208,6 +208,12 @@ International travel should remain grounded in passports or clearance, airfare, 
 A later release can add a read-only dashboard for time, weather, Ren's condition, current concerns, decisions, relationships, finances, inventory, investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity.
 
 The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training.
+
+### Future game adaptation
+
+After the deterministic simulator, complete story content, balance evidence, and observer website are mature, a separate game adaptation can add presentation, exploration, and player interaction. The simulator should remain the canonical world model, while the game consumes stable story, save, and dashboard APIs instead of rewriting proven simulation rules.
+
+A playable version should define its own choice design, failure handling, accessibility, pacing, controls, art, audio, and save experience. Player-directed outcomes must be evaluated separately from autonomous-agent and RL evidence so the research verdicts remain honest.
 
 ## Contributing
 
