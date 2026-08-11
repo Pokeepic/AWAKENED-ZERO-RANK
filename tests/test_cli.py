@@ -9,6 +9,7 @@ from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from awakened_zero_rank import observer_snapshot
 from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.persistence import save_simulation
 from awakened_zero_rank.simulation import Simulation
@@ -167,6 +168,58 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(context.exception.code, 2)
         self.assertEqual(output.getvalue(), "")
         self.assertIn("Save integrity check failed", errors.getvalue())
+        self.assertNotIn("Traceback", errors.getvalue())
+
+    def test_verify_observer_snapshot_is_read_only_and_reports_summary(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=211))
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "snapshot.json"
+            path.write_text(json.dumps(snapshot), encoding="utf-8")
+            original = path.read_bytes()
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main(("--verify-observer-snapshot", str(path)))
+
+            self.assertEqual(path.read_bytes(), original)
+        summary = json.loads(output.getvalue())
+        self.assertEqual(summary["path"], str(path))
+        self.assertEqual(summary["status"], "valid")
+        self.assertEqual(summary["schema_version"], 3)
+        self.assertEqual(summary["seed"], 211)
+        self.assertEqual(summary["day"], 1)
+        self.assertEqual(summary["digest"], snapshot["identity"]["digest"])
+
+    def test_verify_observer_snapshot_rejects_simulation_options(self) -> None:
+        output, errors = StringIO(), StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main((
+                    "--verify-observer-snapshot", "snapshot.json", "--days", "1",
+                ))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn(
+            "--verify-observer-snapshot cannot use simulation options",
+            errors.getvalue(),
+        )
+
+    def test_verify_observer_snapshot_reports_tampering_cleanly(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=223))
+        snapshot["clock"]["day"] += 1
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "snapshot.json"
+            path.write_text(json.dumps(snapshot), encoding="utf-8")
+            output, errors = StringIO(), StringIO()
+
+            with redirect_stdout(output), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main(("--verify-observer-snapshot", str(path)))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn("Observer snapshot integrity check failed", errors.getvalue())
         self.assertNotIn("Traceback", errors.getvalue())
 
     def test_observer_summary_reports_named_story_ending(self) -> None:

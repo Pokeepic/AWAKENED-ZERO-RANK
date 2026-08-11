@@ -3,10 +3,11 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from . import __version__
 from .journal import journal_entry
-from .observer import observer_snapshot
+from .observer import observer_snapshot, verify_observer_snapshot
 from .persistence import (
     load_simulation,
     save_simulation,
@@ -43,6 +44,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="print a read-only structured observer snapshot from a timeline save",
     )
     inspection_modes.add_argument(
+        "--verify-observer-snapshot", metavar="FILE",
+        help="verify an exported observer snapshot without rewriting it",
+    )
+    inspection_modes.add_argument(
         "--inspect-experiment-bundle", metavar="DIR",
         help="verify a published experiment bundle and print JSON metadata",
     )
@@ -75,13 +80,15 @@ def main(argv: tuple[str, ...] | None = None) -> None:
         parser.error(
             "--comparison-output requires --compare-experiment-bundles")
     if (args.verify_save or args.story_progress or args.observer_snapshot or
-            args.inspect_experiment_bundle or
+            args.verify_observer_snapshot or args.inspect_experiment_bundle or
             args.compare_experiment_bundles or
             args.inspect_comparison_artifact):
         mode_name = (
             "--verify-save" if args.verify_save
             else "--story-progress" if args.story_progress
             else "--observer-snapshot" if args.observer_snapshot
+            else "--verify-observer-snapshot"
+            if args.verify_observer_snapshot
             else "--inspect-experiment-bundle" if args.inspect_experiment_bundle
             else "--compare-experiment-bundles"
             if args.compare_experiment_bundles
@@ -93,7 +100,9 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 argument == option or argument.startswith(f"{option}=")
                 for argument in arguments for option in simulation_options):
             parser.error(f"{mode_name} cannot use simulation options")
-        if not (args.verify_save or args.story_progress or args.observer_snapshot):
+        if not (
+                args.verify_save or args.story_progress or
+                args.observer_snapshot or args.verify_observer_snapshot):
             from .learning import (
                 compare_experiment_bundles,
                 experiment_bundle_comparison_json,
@@ -119,6 +128,13 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 output = json.dumps(
                     {"path": args.observer_snapshot,
                      **observer_snapshot(simulation)},
+                    indent=2, sort_keys=True)
+            elif args.verify_observer_snapshot:
+                snapshot = json.loads(Path(
+                    args.verify_observer_snapshot).read_text(encoding="utf-8"))
+                summary = verify_observer_snapshot(snapshot)
+                output = json.dumps(
+                    {"path": args.verify_observer_snapshot, **summary},
                     indent=2, sort_keys=True)
             elif args.inspect_experiment_bundle:
                 result = inspect_experiment_bundle(

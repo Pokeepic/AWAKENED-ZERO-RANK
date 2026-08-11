@@ -9,7 +9,7 @@ from copy import deepcopy
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from awakened_zero_rank import observer_snapshot
+from awakened_zero_rank import observer_snapshot, verify_observer_snapshot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 
@@ -81,6 +81,36 @@ class ObserverSnapshotTests(unittest.TestCase):
         after = observer_snapshot(simulation)
 
         self.assertNotEqual(after["identity"]["digest"], before["identity"]["digest"])
+
+    def test_verifier_accepts_snapshot_and_external_path_provenance(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=197))
+        snapshot["path"] = "copies/ren.json"
+
+        summary = verify_observer_snapshot(snapshot)
+
+        self.assertEqual(summary, {
+            "day": 1,
+            "digest": snapshot["identity"]["digest"],
+            "schema_version": 3,
+            "seed": 197,
+            "status": "valid",
+        })
+
+    def test_verifier_rejects_tampering_and_invalid_structure(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=199))
+        snapshot["protagonist"]["resources"]["money"] += 1
+        with self.assertRaisesRegex(ValueError, "integrity check failed"):
+            verify_observer_snapshot(snapshot)
+
+        malformed = observer_snapshot(Simulation(seed=199))
+        malformed["unexpected"] = True
+        with self.assertRaisesRegex(ValueError, "top-level fields"):
+            verify_observer_snapshot(malformed)
+
+        unsupported = observer_snapshot(Simulation(seed=199))
+        unsupported["schema_version"] = 2
+        with self.assertRaisesRegex(ValueError, "Unsupported observer snapshot schema"):
+            verify_observer_snapshot(unsupported)
 
     def test_populated_snapshot_is_stable_across_save_and_load(self) -> None:
         simulation = Simulation(seed=167)

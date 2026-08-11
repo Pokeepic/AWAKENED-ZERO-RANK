@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 from typing import TYPE_CHECKING, Any
 
@@ -15,6 +16,59 @@ if TYPE_CHECKING:
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 3
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
+_SNAPSHOT_KEYS = {
+    "activity", "clock", "environment", "identity", "portals",
+    "protagonist", "relationships", "schema_version", "seed", "story",
+}
+
+
+def _content_digest(snapshot: dict[str, Any]) -> str:
+    content = {
+        key: value for key, value in snapshot.items()
+        if key not in {"identity", "path"}
+    }
+    canonical = json.dumps(
+        content, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def verify_observer_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Verify schema and canonical content identity without claiming authorship."""
+    if not isinstance(snapshot, dict):
+        raise TypeError("Observer snapshot must be a JSON object")
+    keys = set(snapshot)
+    if keys not in (_SNAPSHOT_KEYS, _SNAPSHOT_KEYS | {"path"}):
+        raise ValueError("Observer snapshot has missing or unknown top-level fields")
+    if "path" in snapshot and not isinstance(snapshot["path"], str):
+        raise ValueError("Observer snapshot path provenance must be a string")
+    if snapshot["schema_version"] != OBSERVER_SNAPSHOT_SCHEMA_VERSION:
+        raise ValueError(
+            f"Unsupported observer snapshot schema: {snapshot['schema_version']}")
+    identity = snapshot["identity"]
+    if not isinstance(identity, dict) or set(identity) != {"algorithm", "digest"}:
+        raise ValueError("Observer snapshot identity is malformed")
+    if identity["algorithm"] != "sha256":
+        raise ValueError("Unsupported observer snapshot identity algorithm")
+    claimed = identity["digest"]
+    if not isinstance(claimed, str) or len(claimed) != 64:
+        raise ValueError("Observer snapshot digest is malformed")
+    actual = _content_digest(snapshot)
+    if not hmac.compare_digest(claimed, actual):
+        raise ValueError("Observer snapshot integrity check failed")
+    clock = snapshot["clock"]
+    if not isinstance(snapshot["seed"], int) or isinstance(snapshot["seed"], bool):
+        raise ValueError("Observer snapshot seed is invalid")
+    day = clock.get("day") if isinstance(clock, dict) else None
+    if not isinstance(day, int) or isinstance(day, bool) or day < 1:
+        raise ValueError("Observer snapshot clock is invalid")
+    return {
+        "day": day,
+        "digest": claimed,
+        "schema_version": OBSERVER_SNAPSHOT_SCHEMA_VERSION,
+        "seed": snapshot["seed"],
+        "status": "valid",
+    }
 
 
 def observer_snapshot(simulation: Simulation) -> dict[str, Any]:
@@ -115,11 +169,8 @@ def observer_snapshot(simulation: Simulation) -> dict[str, Any]:
         "seed": simulation.seed,
         "story": story_progress(state),
     }
-    canonical = json.dumps(
-        snapshot, ensure_ascii=False, sort_keys=True,
-        separators=(",", ":")).encode("utf-8")
     snapshot["identity"] = {
         "algorithm": "sha256",
-        "digest": hashlib.sha256(canonical).hexdigest(),
+        "digest": _content_digest(snapshot),
     }
     return snapshot
