@@ -18,6 +18,18 @@ from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 
 
+def _redigest(snapshot: dict) -> None:
+    content = {
+        key: value for key, value in snapshot.items()
+        if key not in {"identity", "path"}
+    }
+    payload = json.dumps(
+        content, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    snapshot["identity"]["digest"] = hashlib.sha256(payload).hexdigest()
+
+
 class ObserverSnapshotTests(unittest.TestCase):
     def test_empty_snapshot_is_json_ready_and_read_only(self) -> None:
         simulation = Simulation(seed=163)
@@ -115,6 +127,58 @@ class ObserverSnapshotTests(unittest.TestCase):
         unsupported["schema_version"] = 2
         with self.assertRaisesRegex(ValueError, "Unsupported observer snapshot schema"):
             verify_observer_snapshot(unsupported)
+
+    def test_verifier_rejects_redigested_invalid_resources(self) -> None:
+        negative_money = observer_snapshot(Simulation(seed=251))
+        negative_money["protagonist"]["resources"]["money"] = -1
+        _redigest(negative_money)
+        with self.assertRaisesRegex(ValueError, "resource bounds"):
+            verify_observer_snapshot(negative_money)
+
+        boolean_health = observer_snapshot(Simulation(seed=251))
+        boolean_health["protagonist"]["resources"]["health"] = True
+        _redigest(boolean_health)
+        with self.assertRaisesRegex(ValueError, "resource health"):
+            verify_observer_snapshot(boolean_health)
+
+    def test_verifier_rejects_redigested_invalid_activity(self) -> None:
+        oversized = observer_snapshot(Simulation(seed=257))
+        event = {
+            "action": "Rest",
+            "day": 1,
+            "outcome": "Recovered.",
+            "reason": "Needed recovery.",
+            "slot": "Morning",
+        }
+        oversized["activity"]["recent_events"] = [event] * 13
+        _redigest(oversized)
+        with self.assertRaisesRegex(ValueError, "recent events"):
+            verify_observer_snapshot(oversized)
+
+        out_of_order = observer_snapshot(Simulation(seed=257))
+        out_of_order["activity"]["recent_events"] = [
+            {**event, "slot": "Evening"},
+            {**event, "slot": "Morning"},
+        ]
+        _redigest(out_of_order)
+        with self.assertRaisesRegex(ValueError, "out of order"):
+            verify_observer_snapshot(out_of_order)
+
+    def test_verifier_rejects_redigested_invalid_relationships_and_story(
+            self) -> None:
+        simulation = Simulation(seed=263)
+        simulation.run(40)
+        relationships = observer_snapshot(simulation)
+        relationships["relationships"].reverse()
+        _redigest(relationships)
+        with self.assertRaisesRegex(ValueError, "not canonical"):
+            verify_observer_snapshot(relationships)
+
+        story = observer_snapshot(Simulation(seed=263))
+        story["story"]["schema_version"] = 2
+        _redigest(story)
+        with self.assertRaisesRegex(ValueError, "story projection"):
+            verify_observer_snapshot(story)
 
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))

@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.168.0 — Semantic observer snapshot verification
+
+- Snapshot verification now rejects re-digested impossible state instead of stopping at canonical SHA-256 agreement.
+- Semantic checks cover exact clock shape and slots, current-day chronology, bounded and ordered recent events and key memories, nonempty explanations, nonnegative money, 0–100 resources, canonical unique relationships with bounded metrics, and nested story schema 3.
+- The checks encode existing simulator invariants only; snapshot schema, production decisions, state generation, save files, balance, and RL behavior remain unchanged.
+- Added three focused adversarial tests for re-digested negative and boolean resources, oversized and out-of-order activity, noncanonical relationships, and invalid nested story projections, raising the deterministic suite to 191 tests.
+
 ## 0.167.0 — Atomic observer snapshot publication
 
 - Added public `save_observer_snapshot(snapshot, destination)` publication with pre-validation, canonical UTF-8 JSON, staged reload and verification, parent creation, and atomic rename.

@@ -22,6 +22,13 @@ _SNAPSHOT_KEYS = {
     "activity", "clock", "environment", "identity", "portals",
     "protagonist", "relationships", "schema_version", "seed", "story",
 }
+_SLOTS = ("Morning", "Afternoon", "Evening", "Late Night")
+_RESOURCE_KEYS = {"energy", "health", "hunger", "money", "morale", "stress"}
+_RELATIONSHIP_KEYS = {
+    "affection", "familiarity", "loyalty", "name", "role", "tension", "trust",
+}
+_EVENT_KEYS = {"action", "day", "outcome", "reason", "slot"}
+_MEMORY_KEYS = {"day", "importance", "summary"}
 
 
 def _content_digest(snapshot: dict[str, Any]) -> str:
@@ -33,6 +40,111 @@ def _content_digest(snapshot: dict[str, Any]) -> str:
         content, ensure_ascii=False, sort_keys=True,
         separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(canonical).hexdigest()
+
+def _integer(value: Any, label: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValueError(f"Observer snapshot {label} is invalid")
+    return value
+
+
+def _validate_activity(activity: Any, current_day: int) -> None:
+    if not isinstance(activity, dict) or set(activity) != {
+            "key_memories", "recent_events"}:
+        raise ValueError("Observer snapshot activity is malformed")
+    events = activity["recent_events"]
+    memories = activity["key_memories"]
+    if not isinstance(events, list) or len(events) > RECENT_EVENT_LIMIT:
+        raise ValueError("Observer snapshot recent events are invalid")
+    positions: list[tuple[int, int]] = []
+    for event in events:
+        if not isinstance(event, dict) or set(event) != _EVENT_KEYS:
+            raise ValueError("Observer snapshot recent event is malformed")
+        day = _integer(event["day"], "recent event day")
+        if not 1 <= day <= current_day or event["slot"] not in _SLOTS:
+            raise ValueError("Observer snapshot recent event chronology is invalid")
+        if any(
+                not isinstance(event[field], str) or not event[field]
+                for field in ("action", "outcome", "reason")):
+            raise ValueError("Observer snapshot recent event text is invalid")
+        positions.append((day, _SLOTS.index(event["slot"])))
+    if positions != sorted(positions):
+        raise ValueError("Observer snapshot recent events are out of order")
+    if not isinstance(memories, list) or len(memories) > KEY_MEMORY_LIMIT:
+        raise ValueError("Observer snapshot key memories are invalid")
+    memory_order: list[tuple[int, int]] = []
+    for memory in memories:
+        if not isinstance(memory, dict) or set(memory) != _MEMORY_KEYS:
+            raise ValueError("Observer snapshot key memory is malformed")
+        day = _integer(memory["day"], "key memory day")
+        importance = _integer(memory["importance"], "key memory importance")
+        if not 1 <= day <= current_day or not 1 <= importance <= 10:
+            raise ValueError("Observer snapshot key memory values are invalid")
+        if not isinstance(memory["summary"], str) or not memory["summary"]:
+            raise ValueError("Observer snapshot key memory summary is invalid")
+        memory_order.append((-importance, -day))
+    if memory_order != sorted(memory_order):
+        raise ValueError("Observer snapshot key memories are out of order")
+
+
+def _validate_resources(protagonist: Any) -> None:
+    if not isinstance(protagonist, dict):
+        raise ValueError("Observer snapshot protagonist is malformed")
+    resources = protagonist.get("resources")
+    if not isinstance(resources, dict) or set(resources) != _RESOURCE_KEYS:
+        raise ValueError("Observer snapshot resources are malformed")
+    values = {
+        name: _integer(value, f"resource {name}")
+        for name, value in resources.items()
+    }
+    if values["money"] < 0 or any(
+            not 0 <= values[name] <= 100
+            for name in _RESOURCE_KEYS - {"money"}):
+        raise ValueError("Observer snapshot resource bounds are invalid")
+
+
+def _validate_relationships(relationships: Any) -> None:
+    if not isinstance(relationships, list):
+        raise ValueError("Observer snapshot relationships are malformed")
+    names: list[str] = []
+    for relationship in relationships:
+        if (
+                not isinstance(relationship, dict) or
+                set(relationship) != _RELATIONSHIP_KEYS):
+            raise ValueError("Observer snapshot relationship is malformed")
+        name, role = relationship["name"], relationship["role"]
+        if not isinstance(name, str) or not name or not isinstance(role, str) or not role:
+            raise ValueError("Observer snapshot relationship identity is invalid")
+        names.append(name)
+        metrics = {
+            key: _integer(relationship[key], f"relationship {key}")
+            for key in _RELATIONSHIP_KEYS - {"name", "role"}
+        }
+        if any(
+                not -100 <= metrics[key] <= 100
+                for key in ("affection", "trust")):
+            raise ValueError("Observer snapshot relationship sentiment is invalid")
+        if any(
+                not 0 <= metrics[key] <= 100
+                for key in ("familiarity", "loyalty", "tension")):
+            raise ValueError("Observer snapshot relationship metric is invalid")
+    if names != sorted(set(names)):
+        raise ValueError("Observer snapshot relationships are not canonical")
+
+
+def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
+    clock = snapshot["clock"]
+    if not isinstance(clock, dict) or set(clock) != {"day", "slot"}:
+        raise ValueError("Observer snapshot clock is invalid")
+    day = _integer(clock["day"], "clock day")
+    if day < 1 or clock["slot"] not in _SLOTS:
+        raise ValueError("Observer snapshot clock is invalid")
+    _validate_activity(snapshot["activity"], day)
+    _validate_resources(snapshot["protagonist"])
+    _validate_relationships(snapshot["relationships"])
+    story = snapshot["story"]
+    if not isinstance(story, dict) or story.get("schema_version") != 3:
+        raise ValueError("Observer snapshot story projection is invalid")
+    return day
 
 
 def verify_observer_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
@@ -58,12 +170,8 @@ def verify_observer_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
     actual = _content_digest(snapshot)
     if not hmac.compare_digest(claimed, actual):
         raise ValueError("Observer snapshot integrity check failed")
-    clock = snapshot["clock"]
-    if not isinstance(snapshot["seed"], int) or isinstance(snapshot["seed"], bool):
-        raise ValueError("Observer snapshot seed is invalid")
-    day = clock.get("day") if isinstance(clock, dict) else None
-    if not isinstance(day, int) or isinstance(day, bool) or day < 1:
-        raise ValueError("Observer snapshot clock is invalid")
+    _integer(snapshot["seed"], "seed")
+    day = _validate_snapshot_semantics(snapshot)
     return {
         "day": day,
         "digest": claimed,

@@ -7,7 +7,7 @@ from .observer import (
 )
 from .simulation import Simulation
 
-__version__ = "0.167.0"
+__version__ = "0.168.0"
 
 __all__ = [
     "Simulation", "__version__", "observer_snapshot", "save_observer_snapshot",
