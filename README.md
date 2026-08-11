@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.164.0` |
+| Release | `0.165.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 178 |
+| Automated tests | 179 |
 
 ## Why this project exists
 
@@ -214,7 +214,7 @@ International travel should remain grounded in passports or clearance, airfare, 
 
 A later release can add a read-only dashboard for time, weather, Ren's condition, current concerns, decisions, relationships, finances, inventory, investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity.
 
-The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-2, mutation-free JSON boundary for current world, protagonist, relationship, portal, story, and bounded recent-activity state; it exposes no control hooks.
+The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-3, mutation-free, SHA-256-identified JSON boundary for current world, protagonist, relationship, portal, story, and bounded recent-activity state; it exposes no control hooks.
 
 ### Future game adaptation
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from typing import TYPE_CHECKING, Any
 
 from .story import story_progress
@@ -10,7 +12,7 @@ if TYPE_CHECKING:
     from .simulation import Simulation
 
 
-OBSERVER_SNAPSHOT_SCHEMA_VERSION = 2
+OBSERVER_SNAPSHOT_SCHEMA_VERSION = 3
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 
@@ -61,7 +63,7 @@ def observer_snapshot(simulation: Simulation) -> dict[str, Any]:
         }
         for memory in protagonist.memories[:KEY_MEMORY_LIMIT]
     ]
-    return {
+    snapshot = {
         "activity": {
             "key_memories": key_memories,
             "recent_events": recent_events,
@@ -113,3 +115,11 @@ def observer_snapshot(simulation: Simulation) -> dict[str, Any]:
         "seed": simulation.seed,
         "story": story_progress(state),
     }
+    canonical = json.dumps(
+        snapshot, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":")).encode("utf-8")
+    snapshot["identity"] = {
+        "algorithm": "sha256",
+        "digest": hashlib.sha256(canonical).hexdigest(),
+    }
+    return snapshot

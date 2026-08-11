@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import unittest
 from copy import deepcopy
@@ -21,7 +22,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         snapshot = observer_snapshot(simulation)
 
         self.assertEqual(simulation.state, before)
-        self.assertEqual(snapshot["schema_version"], 2)
+        self.assertEqual(snapshot["schema_version"], 3)
         self.assertEqual(snapshot["seed"], 163)
         self.assertEqual(snapshot["clock"], {"day": 1, "slot": "Morning"})
         self.assertEqual(snapshot["protagonist"]["name"], "Ren Takahashi")
@@ -57,6 +58,29 @@ class ObserverSnapshotTests(unittest.TestCase):
             event["reason"] and event["outcome"]
             for event in activity["recent_events"]
         ))
+
+    def test_identity_is_canonical_and_changes_after_a_transition(self) -> None:
+        simulation = Simulation(seed=191)
+        before = observer_snapshot(simulation)
+        unsigned = {
+            key: value for key, value in before.items()
+            if key != "identity"
+        }
+        canonical = json.dumps(
+            unsigned, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+
+        self.assertEqual(before["identity"], {
+            "algorithm": "sha256",
+            "digest": hashlib.sha256(canonical).hexdigest(),
+        })
+        self.assertEqual(len(before["identity"]["digest"]), 64)
+
+        simulation.step()
+        after = observer_snapshot(simulation)
+
+        self.assertNotEqual(after["identity"]["digest"], before["identity"]["digest"])
 
     def test_populated_snapshot_is_stable_across_save_and_load(self) -> None:
         simulation = Simulation(seed=167)

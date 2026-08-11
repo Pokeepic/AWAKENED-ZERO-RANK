@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.165.0 — Content-addressed observer snapshots
+
+- Observer snapshots advance to schema 3 with a SHA-256 identity over canonical UTF-8 JSON, excluding only the identity block itself.
+- Identical current state produces the same digest in memory and after authenticated save/load, while a real simulation transition changes it.
+- Save-file path provenance remains outside the digest, allowing dashboards to use the identity as a stable change detector across copies without confusing location with state.
+- Added focused canonicalization, algorithm, digest-shape, transition-change, CLI-schema, and persistence coverage, raising the deterministic suite to 179 tests; simulation balance and RL behavior are unchanged.
+
 ## 0.164.0 — Bounded observer activity feed
 
 - Observer snapshots advance to schema 2 with an `activity` section containing the latest 12 decisions and up to five existing key memories.
@@ -11,12 +18,14 @@ The project follows evidence-driven releases: learned-policy changes remain offl
 - Explicit limits keep dashboard polling payloads bounded, while copied JSON-ready data preserves simulation state, event history, memory ordering, and deterministic save/load output.
 - Added focused empty-state, ordering, truncation, reason/outcome, CLI-schema, and persistence coverage, raising the deterministic suite to 178 tests; simulation balance and RL behavior are unchanged.
 
+
 ## 0.163.0 — Read-only observer snapshot CLI
 
 - Added `awakened-zero-rank --observer-snapshot FILE` to authenticate and semantically validate a save before printing its complete schema-1 observer projection as sorted JSON.
 - Inspection preserves save bytes, never advances the timeline, rejects simulation controls, and reports malformed or integrity-failed saves through concise CLI errors without tracebacks.
 - The command composes the public observer API and nested schema-3 story projection rather than maintaining a second dashboard state model.
 - Added focused output-shape, ordering, immutability, option-conflict, and integrity-failure coverage, raising the deterministic suite to 177 tests; simulation balance and RL behavior are unchanged.
+
 
 
 ## 0.162.0 — Structured observer snapshots
@@ -28,6 +37,7 @@ The project follows evidence-driven releases: learned-policy changes remain offl
 
 
 
+
 ## 0.161.0 — Deterministic named endings
 
 - Completed modern arcs now resolve to `The Unfinished Warning`, `Tokyo's Quiet Guardian`, or `The Zero-Rank Horizon` from the final tier and the number of prepared chapters.
@@ -35,6 +45,7 @@ The project follows evidence-driven releases: learned-policy changes remain offl
 - Legacy-unavailable histories receive `Legacy Ending Unavailable` rather than a fabricated classification, and story-progress output advances to schema 3.
 - The observer CLI prints the named ending after a completed arc, and the roadmap now places a separate game adaptation after the simulator and website mature.
 - Added focused empty, fully prepared, mixed, legacy, schema, CLI, persistence, and continuation coverage, raising the deterministic suite to 172 tests; live simulation balance and RL behavior are unchanged.
+
 
 
 
