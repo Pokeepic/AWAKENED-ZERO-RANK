@@ -14,6 +14,7 @@ from unittest.mock import patch
 from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
+from awakened_zero_rank.story import story_progress
 
 
 class PersistenceSafetyTests(unittest.TestCase):
@@ -285,6 +286,51 @@ class PersistenceSafetyTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "story_outcomes"):
                 load_simulation(destination)
+
+    def test_missing_legacy_story_ledger_migrates_honestly(self) -> None:
+        simulation = Simulation(seed=131)
+        simulation.state.clock.day = 183
+        simulation.step()
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, destination)
+            data = json.loads(destination.read_text(encoding="utf-8"))
+            data.pop("save_digest")
+            data["state"].pop("story_outcomes")
+            payload = json.dumps(
+                data, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")
+            data["save_digest"] = hashlib.sha256(payload).hexdigest()
+            destination.write_text(json.dumps(data), encoding="utf-8")
+
+            restored = load_simulation(destination)
+
+        self.assertEqual(
+            restored.state.story_outcomes,
+            {"arc_adachi_warning": "legacy-unavailable"})
+        progress = story_progress(restored.state)
+        self.assertEqual(progress["schema_version"], 2)
+        self.assertEqual(progress["completed"][0]["tier"], "legacy-unavailable")
+        self.assertIn("unavailable", progress["completed"][0]["outcome"])
+
+    def test_redigested_story_ledger_cannot_skip_anchors(self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            save_simulation(Simulation(seed=137), destination)
+            data = json.loads(destination.read_text(encoding="utf-8"))
+            data.pop("save_digest")
+            data["state"]["calendar_events_seen"] = ["arc_tokyo_fracture"]
+            data["state"]["story_outcomes"] = {
+                "arc_tokyo_fracture": "resilient"}
+            payload = json.dumps(
+                data, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":")).encode("utf-8")
+            data["save_digest"] = hashlib.sha256(payload).hexdigest()
+            destination.write_text(json.dumps(data), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "chronological prefix"):
+                load_simulation(destination)
+
     def test_redigested_impossible_state_fails_cli_validation(self) -> None:
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"

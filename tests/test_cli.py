@@ -74,7 +74,7 @@ class CliValidationTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), original)
         summary = json.loads(output.getvalue())
         self.assertEqual(summary["path"], str(path))
-        self.assertEqual(summary["schema_version"], 1)
+        self.assertEqual(summary["schema_version"], 2)
         self.assertEqual(summary["completed_count"], 1)
         self.assertEqual(summary["completed"][0]["tier"], "isolated")
         self.assertEqual(summary["next"]["key"], "arc_tokyo_fracture")

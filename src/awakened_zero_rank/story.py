@@ -8,7 +8,7 @@ from .content import STORY_ANCHORS
 from .models import WorldState
 
 
-STORY_PROGRESS_SCHEMA_VERSION = 1
+STORY_PROGRESS_SCHEMA_VERSION = 2
 
 
 def story_progress(state: WorldState) -> dict[str, Any]:
@@ -18,7 +18,10 @@ def story_progress(state: WorldState) -> dict[str, Any]:
             "day": anchor.day,
             "focus_npcs": list(anchor.focus_npcs),
             "key": anchor.key,
-            "outcome": anchor.outcome(state.story_outcomes[anchor.key]),
+            "outcome": (
+                "Outcome tier unavailable in this legacy timeline."
+                if state.story_outcomes[anchor.key] == "legacy-unavailable"
+                else anchor.outcome(state.story_outcomes[anchor.key])),
             "tier": state.story_outcomes[anchor.key],
             "title": anchor.title,
         }

@@ -85,6 +85,15 @@ def _simulation_from_data(data: dict[str, Any]) -> "Simulation":
     from .simulation import Simulation
 
     raw = data["state"]
+    story_anchor_keys = {anchor.key for anchor in STORY_ANCHORS}
+    calendar_events_seen = raw.get("calendar_events_seen", [])
+    story_outcomes = raw.get("story_outcomes")
+    if story_outcomes is None:
+        story_outcomes = {
+            key: "legacy-unavailable"
+            for key in calendar_events_seen
+            if key in story_anchor_keys
+        }
     protagonist_data = raw["protagonist"]
     protagonist_data["memories"] = [Memory(**memory) for memory in protagonist_data["memories"]]
     protagonist_data["relationships"] = {
@@ -107,8 +116,8 @@ def _simulation_from_data(data: dict[str, Any]) -> "Simulation":
         weather=raw.get("weather", "Clear"),
         temperature_c=raw.get("temperature_c", 29),
         weather_day=raw.get("weather_day", 0),
-        calendar_events_seen=raw.get("calendar_events_seen", []),
-        story_outcomes=raw.get("story_outcomes", {}),
+        calendar_events_seen=calendar_events_seen,
+        story_outcomes=story_outcomes,
         relationship_network=raw.get("relationship_network", {}),
         discovered_portals=raw.get("discovered_portals", []),
         portal_investigations={
@@ -230,12 +239,26 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             f"protagonist.dialogue_history[{index}].day",
             exchange.day, 1)
     story_anchor_keys = {anchor.key for anchor in STORY_ANCHORS}
+    resolved_story_keys = set(state.story_outcomes)
+    calendar_story_keys = set(state.calendar_events_seen) & story_anchor_keys
+    if resolved_story_keys != calendar_story_keys:
+        raise ValueError(
+            "Invalid save field story_outcomes: "
+            "expected exact agreement with story calendar history")
+    expected_story_prefix = {
+        anchor.key for anchor in STORY_ANCHORS[:len(resolved_story_keys)]}
+    if resolved_story_keys != expected_story_prefix:
+        raise ValueError(
+            "Invalid save field story_outcomes: "
+            "resolved anchors must form a chronological prefix")
     for key, outcome in state.story_outcomes.items():
         if (key not in story_anchor_keys or
-                outcome not in {"isolated", "resilient", "prepared"}):
+                outcome not in {
+                    "isolated", "resilient", "prepared",
+                    "legacy-unavailable"}):
             raise ValueError(
                 f"Invalid save field story_outcomes[{key!r}]: "
-                "expected a catalogued anchor and readiness tier")
+                "expected a catalogued anchor and recognized outcome tier")
         if key not in state.calendar_events_seen:
             raise ValueError(
                 f"Invalid save field story_outcomes[{key!r}]: "

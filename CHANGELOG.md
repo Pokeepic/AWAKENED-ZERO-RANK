@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.160.0 — Honest legacy story migration
+
+- Saves created after story anchors but before the outcome ledger now recover known completed anchors as `legacy-unavailable` instead of silently losing progress or inventing readiness evidence.
+- Modern ledgers must agree exactly with story keys in calendar history and form a contiguous chronological prefix, preventing skipped chapters or an ending without its preceding arc.
+- Story-progress output advances to schema 2 and renders a clear unavailable-outcome explanation while preserving the next anchor, counts, ordering, and ending semantics.
+- Added focused missing-field migration, honest projection, re-digested skipped-anchor rejection, API-schema, CLI, and persistence coverage, raising the deterministic suite to 169 tests; current simulation and RL behavior are unchanged.
+
 ## 0.159.0 — Read-only story inspection CLI
 
 - Added `awakened-zero-rank --story-progress FILE`, which authenticates and semantically validates a timeline before printing the versioned story-progress projection as sorted JSON.
@@ -561,5 +568,6 @@ Completed updates are grouped for readability:
 | 0.157 | Authored per-anchor outcomes with character and portal evidence |
 | 0.158 | Read-only JSON-ready story progress and ending projection |
 | 0.159 | Authenticated read-only story-progress CLI inspection |
+| 0.160 | Honest pre-ledger story migration and chronological-prefix validation |
 
 Near-term work should avoid more episode-count scaling, seed replay, similarity fallback tuning, or similarity ensembling. The confirmed weighted distance remains diagnostic-only; any future learned representation must preserve explicit safety contexts and demonstrate balanced held-out coverage before policy evaluation, while neural RL remains deferred.

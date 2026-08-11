@@ -18,7 +18,7 @@ class StoryProgressTests(unittest.TestCase):
         progress = story_progress(state)
 
         self.assertEqual(state, before)
-        self.assertEqual(progress["schema_version"], 1)
+        self.assertEqual(progress["schema_version"], 2)
         self.assertEqual(progress["completed"], [])
         self.assertEqual(progress["completed_count"], 0)
         self.assertEqual(progress["total_anchors"], 6)
