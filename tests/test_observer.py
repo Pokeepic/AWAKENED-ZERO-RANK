@@ -14,6 +14,7 @@ from awakened_zero_rank import (
     save_observer_snapshot,
     verify_observer_snapshot,
 )
+from awakened_zero_rank.content import STORY_ANCHORS
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 
@@ -281,6 +282,49 @@ class ObserverSnapshotTests(unittest.TestCase):
         _redigest(order)
         with self.assertRaisesRegex(ValueError, "inventory is not canonical"):
             verify_observer_snapshot(order)
+
+    def test_verifier_rejects_redigested_invalid_story_chronology(self) -> None:
+        counts = observer_snapshot(Simulation(seed=331))
+        counts["story"]["completed_count"] = 1
+        _redigest(counts)
+        with self.assertRaisesRegex(ValueError, "story counts"):
+            verify_observer_snapshot(counts)
+
+        next_anchor = observer_snapshot(Simulation(seed=331))
+        next_anchor["story"]["next"]["days_remaining"] -= 1
+        _redigest(next_anchor)
+        with self.assertRaisesRegex(ValueError, "next story anchor"):
+            verify_observer_snapshot(next_anchor)
+
+        simulation = Simulation(seed=331)
+        simulation.state.clock.day = STORY_ANCHORS[0].day
+        simulation.state.calendar_events_seen.append(STORY_ANCHORS[0].key)
+        simulation.state.story_outcomes[STORY_ANCHORS[0].key] = "resilient"
+        authored = observer_snapshot(simulation)
+        authored["story"]["completed"][0]["outcome"] = "Forged outcome"
+        _redigest(authored)
+        with self.assertRaisesRegex(ValueError, "story chronology"):
+            verify_observer_snapshot(authored)
+
+    def test_verifier_rejects_redigested_invalid_story_ending(self) -> None:
+        simulation = Simulation(seed=337)
+        simulation.state.clock.day = STORY_ANCHORS[-1].day
+        simulation.state.calendar_events_seen.extend(
+            anchor.key for anchor in STORY_ANCHORS)
+        simulation.state.story_outcomes.update(
+            (anchor.key, "prepared") for anchor in STORY_ANCHORS)
+        ending = observer_snapshot(simulation)
+        ending["story"]["ending"]["prepared_count"] -= 1
+        _redigest(ending)
+        with self.assertRaisesRegex(ValueError, "story ending"):
+            verify_observer_snapshot(ending)
+
+        status = observer_snapshot(Simulation(seed=337))
+        status["story"]["ending_reached"] = 1
+        _redigest(status)
+        with self.assertRaisesRegex(ValueError, "ending status"):
+            verify_observer_snapshot(status)
+
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))
         snapshot["path"] = "saves/ren.json"

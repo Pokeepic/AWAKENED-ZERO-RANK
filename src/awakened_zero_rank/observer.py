@@ -9,9 +9,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
-from .content import PORTALS
+from .content import PORTALS, STORY_ANCHORS
 from .environment import SUMMER_WEATHER
-from .story import story_progress
+from .story import STORY_PROGRESS_SCHEMA_VERSION, story_progress
 from .world import ITEMS, LOCATIONS
 
 if TYPE_CHECKING:
@@ -37,6 +37,18 @@ _PROGRESSION_KEYS = {
     "missions_attempted", "missions_completed", "rank_points",
 }
 _HUNTER_RANKS = {"Unranked", "F", "E", "D", "C"}
+_STORY_KEYS = {
+    "completed", "completed_count", "ending", "ending_reached", "next",
+    "schema_version", "total_anchors",
+}
+_COMPLETED_STORY_KEYS = {
+    "day", "focus_npcs", "key", "outcome", "tier", "title",
+}
+_ENDING_KEYS = {
+    "id", "isolated_count", "prepared_count", "resilient_count", "summary",
+    "tier", "title",
+}
+_STORY_TIERS = {"isolated", "resilient", "prepared", "legacy-unavailable"}
 _RELATIONSHIP_KEYS = {
     "affection", "familiarity", "loyalty", "name", "role", "tension", "trust",
 }
@@ -192,6 +204,103 @@ def _validate_economy(economy: Any) -> None:
     if values["meal_cost"] not in {500, 600, 700, 800}:
         raise ValueError("Observer snapshot meal cost is invalid")
 
+def _expected_ending(tiers: list[str]) -> dict[str, Any]:
+    counts = {
+        tier: tiers.count(tier)
+        for tier in ("isolated", "resilient", "prepared")
+    }
+    final_tier = tiers[-1]
+    if "legacy-unavailable" in tiers:
+        ending_id = "legacy-unavailable"
+        title = "Legacy Ending Unavailable"
+        summary = "This timeline predates authenticated story outcome evidence."
+    elif final_tier == "isolated":
+        ending_id = "unfinished-warning"
+        title = "The Unfinished Warning"
+        summary = "Ren survived, but the warning he carried remained unresolved."
+    elif final_tier == "prepared" and counts["prepared"] >= 4:
+        ending_id = "zero-rank-horizon"
+        title = "The Zero-Rank Horizon"
+        summary = "Ren's evidence and trusted circle changed what Tokyo valued in a hunter."
+    else:
+        ending_id = "quiet-guardian"
+        title = "Tokyo's Quiet Guardian"
+        summary = "Ren left Tokyo steadier through persistence rather than recognition."
+    return {
+        "id": ending_id,
+        "isolated_count": counts["isolated"],
+        "prepared_count": counts["prepared"],
+        "resilient_count": counts["resilient"],
+        "summary": summary,
+        "tier": final_tier,
+        "title": title,
+    }
+
+
+def _validate_story(story: Any, current_day: int) -> None:
+    if not isinstance(story, dict) or set(story) != _STORY_KEYS:
+        raise ValueError("Observer snapshot story projection is malformed")
+    if story["schema_version"] != STORY_PROGRESS_SCHEMA_VERSION:
+        raise ValueError("Observer snapshot story projection is invalid")
+    completed_count = _integer(story["completed_count"], "story completed count")
+    total_anchors = _integer(story["total_anchors"], "story total anchors")
+    completed = story["completed"]
+    if (
+            total_anchors != len(STORY_ANCHORS) or
+            not isinstance(completed, list) or
+            completed_count != len(completed) or
+            not 0 <= completed_count <= total_anchors):
+        raise ValueError("Observer snapshot story counts are invalid")
+    tiers: list[str] = []
+    for entry, anchor in zip(completed, STORY_ANCHORS):
+        if not isinstance(entry, dict) or set(entry) != _COMPLETED_STORY_KEYS:
+            raise ValueError("Observer snapshot completed story entry is malformed")
+        tier = entry["tier"]
+        if not isinstance(tier, str) or tier not in _STORY_TIERS:
+            raise ValueError("Observer snapshot story tier is invalid")
+        outcome = (
+            "Outcome tier unavailable in this legacy timeline."
+            if tier == "legacy-unavailable" else anchor.outcome(tier)
+        )
+        expected = {
+            "day": anchor.day,
+            "focus_npcs": list(anchor.focus_npcs),
+            "key": anchor.key,
+            "outcome": outcome,
+            "tier": tier,
+            "title": anchor.title,
+        }
+        if entry != expected or anchor.day > current_day:
+            raise ValueError("Observer snapshot completed story chronology is invalid")
+        tiers.append(tier)
+
+    next_summary = story["next"]
+    if completed_count < total_anchors:
+        anchor = STORY_ANCHORS[completed_count]
+        expected_next = {
+            "day": anchor.day,
+            "days_remaining": max(0, anchor.day - current_day),
+            "key": anchor.key,
+            "title": anchor.title,
+        }
+        if next_summary != expected_next:
+            raise ValueError("Observer snapshot next story anchor is invalid")
+    elif next_summary is not None:
+        raise ValueError("Observer snapshot next story anchor is invalid")
+
+    ending_reached = story["ending_reached"]
+    expected_reached = completed_count == total_anchors
+    if not isinstance(ending_reached, bool) or ending_reached != expected_reached:
+        raise ValueError("Observer snapshot story ending status is invalid")
+    ending = story["ending"]
+    if not expected_reached:
+        if ending is not None:
+            raise ValueError("Observer snapshot story ending is invalid")
+    elif (
+            not isinstance(ending, dict) or set(ending) != _ENDING_KEYS or
+            ending != _expected_ending(tiers)):
+        raise ValueError("Observer snapshot story ending is invalid")
+
 def _validate_protagonist(protagonist: Any) -> None:
     if not isinstance(protagonist, dict) or set(protagonist) != _PROTAGONIST_KEYS:
         raise ValueError("Observer snapshot protagonist is malformed")
@@ -308,9 +417,8 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     _validate_portals(snapshot["portals"])
     _validate_protagonist(snapshot["protagonist"])
     _validate_relationships(snapshot["relationships"])
-    story = snapshot["story"]
-    if not isinstance(story, dict) or story.get("schema_version") != 3:
-        raise ValueError("Observer snapshot story projection is invalid")
+    _validate_story(snapshot["story"], day)
+
     return day
 
 

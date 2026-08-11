@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.172.0 — Observer story-ledger validation
+
+- Semantic observer verification now validates the complete nested story schema instead of trusting only its schema-version marker.
+- Completed entries must form the canonical anchor prefix with exact authored outcome text, recognized tiers, valid clock chronology, and reconciled counts.
+- Next-anchor timing, ending reachability, tier counts, ending identity, title, and summary are recomputed and checked against the canonical three-year ledger.
+- Added focused re-digested invalid-chronology and invalid-ending coverage, raising the deterministic suite to 199 tests; story generation, simulation balance, and RL behavior are unchanged.
+
 ## 0.171.0 — Observer protagonist validation
 
 - Semantic observer verification now validates the exact protagonist, progression, equipment, inventory, and resource shapes.
