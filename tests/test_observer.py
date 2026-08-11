@@ -244,6 +244,43 @@ class ObserverSnapshotTests(unittest.TestCase):
         _redigest(plan)
         with self.assertRaisesRegex(ValueError, "active portal plan"):
             verify_observer_snapshot(plan)
+    def test_verifier_rejects_redigested_invalid_protagonist(self) -> None:
+        identity = observer_snapshot(Simulation(seed=311))
+        identity["protagonist"]["name"] = ""
+        _redigest(identity)
+        with self.assertRaisesRegex(ValueError, "protagonist identity"):
+            verify_observer_snapshot(identity)
+
+        rank = observer_snapshot(Simulation(seed=311))
+        rank["protagonist"]["hunter_rank"] = "S"
+        _redigest(rank)
+        with self.assertRaisesRegex(ValueError, "protagonist status"):
+            verify_observer_snapshot(rank)
+
+        counters = observer_snapshot(Simulation(seed=311))
+        counters["protagonist"]["progression"]["missions_completed"] = 1
+        _redigest(counters)
+        with self.assertRaisesRegex(ValueError, "mission counters"):
+            verify_observer_snapshot(counters)
+
+    def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
+        weapon = observer_snapshot(Simulation(seed=313))
+        weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"
+        _redigest(weapon)
+        with self.assertRaisesRegex(ValueError, "equipped weapon"):
+            verify_observer_snapshot(weapon)
+
+        quantity = observer_snapshot(Simulation(seed=313))
+        quantity["protagonist"]["equipment"]["inventory"] = {"Field Knife": 0}
+        _redigest(quantity)
+        with self.assertRaisesRegex(ValueError, "inventory quantity"):
+            verify_observer_snapshot(quantity)
+
+        order = observer_snapshot(Simulation(seed=313))
+        order["protagonist"]["equipment"]["inventory"] = {"Zeta": 1, "Alpha": 1}
+        _redigest(order)
+        with self.assertRaisesRegex(ValueError, "inventory is not canonical"):
+            verify_observer_snapshot(order)
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))
         snapshot["path"] = "saves/ren.json"
@@ -284,6 +321,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         first = observer_snapshot(simulation)
         second = observer_snapshot(simulation)
         self.assertEqual(first, second)
+        verify_observer_snapshot(first)
         self.assertEqual(
             list(first["protagonist"]["equipment"]["inventory"]),
             sorted(simulation.state.protagonist.inventory),

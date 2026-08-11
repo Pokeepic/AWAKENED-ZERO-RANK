@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.171.0 — Observer protagonist validation
+
+- Semantic observer verification now validates the exact protagonist, progression, equipment, inventory, and resource shapes.
+- Identity text, catalogued location and hunter rank, bounded mastery/readiness, nonnegative progression, and completed-versus-attempted mission counters are checked without changing progression rules.
+- Equipped weapons and armor must match their catalogue kinds; inventory remains forward-compatible while requiring canonical names, ordering, and positive integer quantities.
+- Added focused re-digested invalid-protagonist and invalid-equipment coverage, raising the deterministic suite to 197 tests; simulation balance and RL behavior are unchanged.
 ## 0.170.0 — Observer world-state validation
 
 - Semantic observer verification now validates the exact environment and portal section shapes instead of treating authenticated but impossible dashboard state as acceptable.

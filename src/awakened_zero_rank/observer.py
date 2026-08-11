@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 from .content import PORTALS
 from .environment import SUMMER_WEATHER
 from .story import story_progress
+from .world import ITEMS, LOCATIONS
 
 if TYPE_CHECKING:
     from .simulation import Simulation
@@ -26,6 +27,16 @@ _SNAPSHOT_KEYS = {
 }
 _SLOTS = ("Morning", "Afternoon", "Evening", "Late Night")
 _RESOURCE_KEYS = {"energy", "health", "hunger", "money", "morale", "stress"}
+_PROTAGONIST_KEYS = {
+    "ability", "current_goal", "equipment", "hunter_rank", "location", "mood",
+    "name", "progression", "resources",
+}
+_EQUIPMENT_KEYS = {"armor", "inventory", "weapon"}
+_PROGRESSION_KEYS = {
+    "ability_mastery", "combat_readiness", "fitness", "knowledge",
+    "missions_attempted", "missions_completed", "rank_points",
+}
+_HUNTER_RANKS = {"Unranked", "F", "E", "D", "C"}
 _RELATIONSHIP_KEYS = {
     "affection", "familiarity", "loyalty", "name", "role", "tension", "trust",
 }
@@ -181,20 +192,78 @@ def _validate_economy(economy: Any) -> None:
     if values["meal_cost"] not in {500, 600, 700, 800}:
         raise ValueError("Observer snapshot meal cost is invalid")
 
-def _validate_resources(protagonist: Any) -> None:
-    if not isinstance(protagonist, dict):
+def _validate_protagonist(protagonist: Any) -> None:
+    if not isinstance(protagonist, dict) or set(protagonist) != _PROTAGONIST_KEYS:
         raise ValueError("Observer snapshot protagonist is malformed")
-    resources = protagonist.get("resources")
+    if any(
+            not isinstance(protagonist[name], str) or not protagonist[name]
+            for name in ("ability", "current_goal", "mood", "name")):
+        raise ValueError("Observer snapshot protagonist identity is invalid")
+    hunter_rank = protagonist["hunter_rank"]
+    location = protagonist["location"]
+    if (
+            not isinstance(hunter_rank, str) or hunter_rank not in _HUNTER_RANKS or
+            not isinstance(location, str) or location not in LOCATIONS):
+        raise ValueError("Observer snapshot protagonist status is invalid")
+
+    resources = protagonist["resources"]
     if not isinstance(resources, dict) or set(resources) != _RESOURCE_KEYS:
         raise ValueError("Observer snapshot resources are malformed")
-    values = {
+    resource_values = {
         name: _integer(value, f"resource {name}")
         for name, value in resources.items()
     }
-    if values["money"] < 0 or any(
-            not 0 <= values[name] <= 100
+    if resource_values["money"] < 0 or any(
+            not 0 <= resource_values[name] <= 100
             for name in _RESOURCE_KEYS - {"money"}):
         raise ValueError("Observer snapshot resource bounds are invalid")
+
+    progression = protagonist["progression"]
+    if not isinstance(progression, dict) or set(progression) != _PROGRESSION_KEYS:
+        raise ValueError("Observer snapshot progression is malformed")
+    progression_values = {
+        name: _integer(value, f"progression {name}")
+        for name, value in progression.items()
+    }
+    if (
+            any(
+                not 0 <= progression_values[name] <= 100
+                for name in ("ability_mastery", "combat_readiness")
+            ) or
+            any(
+                progression_values[name] < 0
+                for name in (
+                    "fitness", "knowledge", "missions_attempted",
+                    "missions_completed", "rank_points",
+                )
+            )):
+        raise ValueError("Observer snapshot progression bounds are invalid")
+    if (
+            progression_values["missions_completed"] >
+            progression_values["missions_attempted"]):
+        raise ValueError("Observer snapshot mission counters are invalid")
+
+    equipment = protagonist["equipment"]
+    if not isinstance(equipment, dict) or set(equipment) != _EQUIPMENT_KEYS:
+        raise ValueError("Observer snapshot equipment is malformed")
+    for field, expected_kind in (("weapon", "weapon"), ("armor", "armor")):
+        item_name = equipment[field]
+        if item_name is None:
+            continue
+        item = ITEMS.get(item_name) if isinstance(item_name, str) else None
+        if item is None or item.kind != expected_kind:
+            raise ValueError(
+                f"Observer snapshot equipped {expected_kind} is invalid")
+    inventory = equipment["inventory"]
+    if not isinstance(inventory, dict):
+        raise ValueError("Observer snapshot inventory is malformed")
+    if any(not isinstance(item_name, str) or not item_name for item_name in inventory):
+        raise ValueError("Observer snapshot inventory item is invalid")
+    if list(inventory) != sorted(inventory):
+        raise ValueError("Observer snapshot inventory is not canonical")
+    for item_name, quantity in inventory.items():
+        if _integer(quantity, f"inventory {item_name}") < 1:
+            raise ValueError("Observer snapshot inventory quantity is invalid")
 
 
 def _validate_relationships(relationships: Any) -> None:
@@ -237,7 +306,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     _validate_economy(snapshot["economy"])
     _validate_environment(snapshot["environment"])
     _validate_portals(snapshot["portals"])
-    _validate_resources(snapshot["protagonist"])
+    _validate_protagonist(snapshot["protagonist"])
     _validate_relationships(snapshot["relationships"])
     story = snapshot["story"]
     if not isinstance(story, dict) or story.get("schema_version") != 3:
