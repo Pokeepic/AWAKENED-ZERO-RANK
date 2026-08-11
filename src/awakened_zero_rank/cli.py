@@ -7,7 +7,11 @@ from pathlib import Path
 
 from . import __version__
 from .journal import journal_entry
-from .observer import observer_snapshot, verify_observer_snapshot
+from .observer import (
+    observer_snapshot,
+    save_observer_snapshot,
+    verify_observer_snapshot,
+)
 from .persistence import (
     load_simulation,
     save_simulation,
@@ -64,6 +68,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="save verified comparison JSON without overwriting",
     )
     parser.add_argument(
+        "--snapshot-output", metavar="FILE",
+        help="save observer snapshot JSON without overwriting",
+    )
+    parser.add_argument(
         "--require-identical", action="store_true",
         help="exit 1 when compared bundles differ",
     )
@@ -79,6 +87,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     if args.comparison_output and not args.compare_experiment_bundles:
         parser.error(
             "--comparison-output requires --compare-experiment-bundles")
+    if args.snapshot_output and not args.observer_snapshot:
+        parser.error("--snapshot-output requires --observer-snapshot")
     if (args.verify_save or args.story_progress or args.observer_snapshot or
             args.verify_observer_snapshot or args.inspect_experiment_bundle or
             args.compare_experiment_bundles or
@@ -125,10 +135,13 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                     indent=2, sort_keys=True)
             elif args.observer_snapshot:
                 simulation = load_simulation(args.observer_snapshot)
-                output = json.dumps(
-                    {"path": args.observer_snapshot,
-                     **observer_snapshot(simulation)},
-                    indent=2, sort_keys=True)
+                snapshot = {
+                    "path": args.observer_snapshot,
+                    **observer_snapshot(simulation),
+                }
+                output = json.dumps(snapshot, indent=2, sort_keys=True)
+                if args.snapshot_output:
+                    save_observer_snapshot(snapshot, args.snapshot_output)
             elif args.verify_observer_snapshot:
                 snapshot = json.loads(Path(
                     args.verify_observer_snapshot).read_text(encoding="utf-8"))

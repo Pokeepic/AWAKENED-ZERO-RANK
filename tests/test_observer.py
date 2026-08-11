@@ -9,7 +9,11 @@ from copy import deepcopy
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from awakened_zero_rank import observer_snapshot, verify_observer_snapshot
+from awakened_zero_rank import (
+    observer_snapshot,
+    save_observer_snapshot,
+    verify_observer_snapshot,
+)
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 
@@ -111,6 +115,38 @@ class ObserverSnapshotTests(unittest.TestCase):
         unsupported["schema_version"] = 2
         with self.assertRaisesRegex(ValueError, "Unsupported observer snapshot schema"):
             verify_observer_snapshot(unsupported)
+
+    def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=229))
+        snapshot["path"] = "saves/ren.json"
+        with TemporaryDirectory() as directory:
+            destination = Path(directory) / "published" / "snapshot.json"
+
+            result = save_observer_snapshot(snapshot, destination)
+
+            self.assertEqual(result, destination)
+            self.assertEqual(
+                json.loads(destination.read_text(encoding="utf-8")),
+                snapshot,
+            )
+            self.assertTrue(destination.read_bytes().endswith(b"\n"))
+            verify_observer_snapshot(
+                json.loads(destination.read_text(encoding="utf-8")))
+            original = destination.read_bytes()
+            with self.assertRaisesRegex(ValueError, "already exists"):
+                save_observer_snapshot(snapshot, destination)
+            self.assertEqual(destination.read_bytes(), original)
+
+    def test_snapshot_publication_rejects_invalid_input_without_output(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=233))
+        snapshot["clock"]["day"] += 1
+        with TemporaryDirectory() as directory:
+            destination = Path(directory) / "snapshot.json"
+
+            with self.assertRaisesRegex(ValueError, "integrity check failed"):
+                save_observer_snapshot(snapshot, destination)
+
+            self.assertFalse(destination.exists())
 
     def test_populated_snapshot_is_stable_across_save_and_load(self) -> None:
         simulation = Simulation(seed=167)

@@ -5,6 +5,8 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
 from .story import story_progress
@@ -69,6 +71,33 @@ def verify_observer_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
         "seed": snapshot["seed"],
         "status": "valid",
     }
+
+
+def save_observer_snapshot(
+        snapshot: dict[str, Any], destination: str | Path) -> Path:
+    """Validate, stage, and publish a non-overwriting snapshot artifact."""
+    verify_observer_snapshot(snapshot)
+    target = Path(destination)
+    if target.exists():
+        raise ValueError("Observer snapshot destination already exists")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(
+            prefix=f".{target.name}.staging-", dir=target.parent) as temporary:
+        staging = Path(temporary) / target.name
+        staging.write_text(
+            json.dumps(
+                snapshot, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        loaded = json.loads(staging.read_text(encoding="utf-8"))
+        verify_observer_snapshot(loaded)
+        if loaded != snapshot:
+            raise ValueError("Observer snapshot staging verification failed")
+        if target.exists():
+            raise ValueError(
+                "Observer snapshot destination appeared during staging")
+        staging.rename(target)
+    return target
 
 
 def observer_snapshot(simulation: Simulation) -> dict[str, Any]:

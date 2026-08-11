@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.166.0` |
+| Release | `0.167.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 184 |
+| Automated tests | 188 |
 
 ## Why this project exists
 
@@ -100,7 +100,10 @@ Export the complete observer snapshot from an authenticated save without advanci
 
 ```bash
 awakened-zero-rank --observer-snapshot saves/ren.json
+awakened-zero-rank --observer-snapshot saves/ren.json --snapshot-output snapshots/ren.json
 ```
+
+Direct publication validates and stages canonical UTF-8 JSON before an atomic rename, creates parent directories, and refuses to overwrite an existing artifact.
 
 Verify a previously exported observer snapshot without rewriting it:
 

@@ -170,6 +170,51 @@ class CliValidationTests(unittest.TestCase):
         self.assertIn("Save integrity check failed", errors.getvalue())
         self.assertNotIn("Traceback", errors.getvalue())
 
+    def test_snapshot_output_publishes_exact_printed_payload(self) -> None:
+        simulation = Simulation(seed=239)
+        with TemporaryDirectory() as temporary_directory:
+            save_path = Path(temporary_directory) / "timeline.json"
+            snapshot_path = Path(temporary_directory) / "snapshot.json"
+            save_simulation(simulation, save_path)
+            save_before = save_path.read_bytes()
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main((
+                    "--observer-snapshot", str(save_path),
+                    "--snapshot-output", str(snapshot_path),
+                ))
+
+            self.assertEqual(save_path.read_bytes(), save_before)
+            self.assertEqual(
+                json.loads(snapshot_path.read_text(encoding="utf-8")),
+                json.loads(output.getvalue()),
+            )
+            original = snapshot_path.read_bytes()
+            errors = StringIO()
+            with redirect_stdout(StringIO()), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main((
+                        "--observer-snapshot", str(save_path),
+                        "--snapshot-output", str(snapshot_path),
+                    ))
+            self.assertEqual(context.exception.code, 2)
+            self.assertIn("destination already exists", errors.getvalue())
+            self.assertEqual(snapshot_path.read_bytes(), original)
+
+    def test_snapshot_output_requires_observer_snapshot_mode(self) -> None:
+        output, errors = StringIO(), StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main(("--snapshot-output", "snapshot.json"))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn(
+            "--snapshot-output requires --observer-snapshot",
+            errors.getvalue(),
+        )
+
     def test_verify_observer_snapshot_is_read_only_and_reports_summary(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=211))
         with TemporaryDirectory() as temporary_directory:
