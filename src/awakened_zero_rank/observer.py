@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
 
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
+OBSERVER_COMPARISON_SCHEMA_VERSION = 1
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
@@ -463,6 +464,34 @@ def verify_observer_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
         "schema_version": OBSERVER_SNAPSHOT_SCHEMA_VERSION,
         "seed": snapshot["seed"],
         "status": "valid",
+    }
+
+
+def compare_observer_snapshots(
+        left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
+    """Verify and compare two observer snapshots without changing either input."""
+    verify_observer_snapshot(left)
+    verify_observer_snapshot(right)
+    comparable_sections = _SNAPSHOT_KEYS - {"identity"}
+    changed_sections = sorted(
+        section for section in comparable_sections
+        if left[section] != right[section]
+    )
+    return {
+        "changed_sections": changed_sections,
+        "comparison_schema_version": OBSERVER_COMPARISON_SCHEMA_VERSION,
+        "identical": not changed_sections,
+        "left": {
+            "clock": dict(left["clock"]),
+            "digest": left["identity"]["digest"],
+            "seed": left["seed"],
+        },
+        "observer_schema_version": OBSERVER_SNAPSHOT_SCHEMA_VERSION,
+        "right": {
+            "clock": dict(right["clock"]),
+            "digest": right["identity"]["digest"],
+            "seed": right["seed"],
+        },
     }
 
 

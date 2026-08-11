@@ -267,6 +267,51 @@ class CliValidationTests(unittest.TestCase):
         self.assertIn("Observer snapshot integrity check failed", errors.getvalue())
         self.assertNotIn("Traceback", errors.getvalue())
 
+    def test_compare_observer_snapshots_is_read_only_and_reports_json(
+            self) -> None:
+        simulation = Simulation(seed=389)
+        left = observer_snapshot(simulation)
+        simulation.step()
+        right = observer_snapshot(simulation)
+        with TemporaryDirectory() as temporary_directory:
+            left_path = Path(temporary_directory) / "left.json"
+            right_path = Path(temporary_directory) / "right.json"
+            left_path.write_text(json.dumps(left), encoding="utf-8")
+            right_path.write_text(json.dumps(right), encoding="utf-8")
+            left_before = left_path.read_bytes()
+            right_before = right_path.read_bytes()
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main((
+                    "--compare-observer-snapshots",
+                    str(left_path), str(right_path),
+                ))
+
+            self.assertEqual(left_path.read_bytes(), left_before)
+            self.assertEqual(right_path.read_bytes(), right_before)
+        comparison = json.loads(output.getvalue())
+        self.assertEqual(comparison["left_path"], str(left_path))
+        self.assertEqual(comparison["right_path"], str(right_path))
+        self.assertFalse(comparison["identical"])
+        self.assertIn("clock", comparison["changed_sections"])
+
+    def test_compare_observer_snapshots_rejects_simulation_options(self) -> None:
+        output, errors = StringIO(), StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main((
+                    "--compare-observer-snapshots", "left.json", "right.json",
+                    "--days", "1",
+                ))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn(
+            "--compare-observer-snapshots cannot use simulation options",
+            errors.getvalue(),
+        )
+
     def test_observer_summary_reports_named_story_ending(self) -> None:
         simulation = Simulation(seed=151)
         simulation.state.clock.day = 1095

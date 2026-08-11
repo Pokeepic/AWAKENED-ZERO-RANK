@@ -10,6 +10,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from awakened_zero_rank import (
+    compare_observer_snapshots,
     observer_snapshot,
     save_observer_snapshot,
     verify_observer_snapshot,
@@ -391,6 +392,47 @@ class ObserverSnapshotTests(unittest.TestCase):
         _redigest(collaborator)
         with self.assertRaisesRegex(ValueError, "portal collaborator"):
             verify_observer_snapshot(collaborator)
+
+    def test_snapshot_comparison_ignores_path_provenance(self) -> None:
+        left = observer_snapshot(Simulation(seed=379))
+        right = deepcopy(left)
+        left["path"] = "exports/left.json"
+        right["path"] = "archives/right.json"
+
+        left_before, right_before = deepcopy(left), deepcopy(right)
+        comparison = compare_observer_snapshots(left, right)
+
+        self.assertEqual(left, left_before)
+        self.assertEqual(right, right_before)
+        self.assertTrue(comparison["identical"])
+        self.assertEqual(comparison["changed_sections"], [])
+        self.assertEqual(comparison["comparison_schema_version"], 1)
+        self.assertEqual(comparison["observer_schema_version"], 4)
+        self.assertEqual(comparison["left"]["digest"], comparison["right"]["digest"])
+
+    def test_snapshot_comparison_reports_sorted_world_sections(self) -> None:
+        simulation = Simulation(seed=383)
+        left = observer_snapshot(simulation)
+        simulation.step()
+        right = observer_snapshot(simulation)
+
+        comparison = compare_observer_snapshots(left, right)
+
+        self.assertFalse(comparison["identical"])
+        self.assertEqual(
+            comparison["changed_sections"],
+            sorted(comparison["changed_sections"]),
+        )
+        self.assertIn("activity", comparison["changed_sections"])
+        self.assertIn("clock", comparison["changed_sections"])
+        self.assertNotIn("identity", comparison["changed_sections"])
+        self.assertEqual(comparison["left"]["clock"], left["clock"])
+        self.assertEqual(comparison["right"]["clock"], right["clock"])
+
+        tampered = deepcopy(right)
+        tampered["clock"]["day"] += 1
+        with self.assertRaisesRegex(ValueError, "integrity check failed"):
+            compare_observer_snapshots(left, tampered)
 
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))

@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.175.0 — Verified observer snapshot comparison
+
+- Added public `compare_observer_snapshots(left, right)` for deterministic, mutation-free comparison after full integrity and semantic verification of both inputs.
+- Comparison schema 1 reports left/right clock, digest, and seed summaries plus a sorted list of changed top-level world sections; identity and path provenance are excluded from section changes.
+- Added `--compare-observer-snapshots LEFT RIGHT` for read-only JSON comparison suitable for future dashboard refresh and animation triggers.
+- Added focused API identity/change and CLI read-only/option-conflict coverage, raising the deterministic suite to 205 tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.174.0 — Observer activity-clock consistency
 
 - Semantic observer verification now reconciles bounded recent activity with the snapshot clock rather than validating each section independently.

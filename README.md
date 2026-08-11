@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.174.0` |
+| Release | `0.175.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 201 |
+| Automated tests | 205 |
 
 ## Why this project exists
 
@@ -111,7 +111,13 @@ Verify a previously exported observer snapshot without rewriting it:
 awakened-zero-rank --verify-observer-snapshot snapshot.json
 ```
 
-Snapshot verification detects accidental corruption and unchanged-digest tampering. It also rejects re-digested impossible clock, activity, resource, relationship, and nested-story state. It does not prove authorship because anyone who changes valid content can calculate a new digest.
+Compare two verified observer snapshots without rewriting either file:
+
+```bash
+awakened-zero-rank --compare-observer-snapshots before.json after.json
+```
+
+Snapshot verification detects accidental corruption and unchanged-digest tampering. It also rejects re-digested impossible values throughout the schema-4 world projection and inconsistent activity, clock, portal, progression, social, and story relationships. It does not prove authorship because anyone who changes valid content can calculate a new digest.
 
 The JSON result reports `integrity: verified` for schema-2 saves. Compatible schema-1 saves report `integrity: legacy-unavailable` instead of claiming evidence they do not contain. Both formats must also satisfy critical clock, resource, progression, mission, injury, economy, inventory, chronology, social-reference, and portal invariants before the verifier reports `status: valid`. The same validation runs before every write, so an impossible current state cannot replace an existing save. Runtime-critical protagonist locations, equipped items, NPC relationships and collaborators, portal investigations, and active plans must also resolve coherently against the current world catalog; extensible unequipped inventory names remain allowed.
 
