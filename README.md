@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.161.0` |
+| Release | `0.162.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 172 |
+| Automated tests | 174 |
 
 ## Why this project exists
 
@@ -207,13 +207,15 @@ International travel should remain grounded in passports or clearance, airfare, 
 
 A later release can add a read-only dashboard for time, weather, Ren's condition, current concerns, decisions, relationships, finances, inventory, investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity.
 
-The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training.
+The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-1, mutation-free JSON boundary for current world, protagonist, relationship, portal, and story state; it exposes no control hooks.
 
 ### Future game adaptation
 
 After the deterministic simulator, complete story content, balance evidence, and observer website are mature, a separate game adaptation can add presentation, exploration, and player interaction. The simulator should remain the canonical world model, while the game consumes stable story, save, and dashboard APIs instead of rewriting proven simulation rules.
 
 A playable version should define its own choice design, failure handling, accessibility, pacing, controls, art, audio, and save experience. Player-directed outcomes must be evaluated separately from autonomous-agent and RL evidence so the research verdicts remain honest.
+
+An optional future "echo advisor" can turn a separately evaluated, frozen RL policy into a split-personality-style companion that offers contextual tips and commentary. It should never silently choose for the player, must be clearly optional and can be muted or disabled, and should communicate uncertainty. The current tabular policy is not ready for that role: the held-out verdict remains that the utility baseline performs better.
 
 ## Contributing
 
