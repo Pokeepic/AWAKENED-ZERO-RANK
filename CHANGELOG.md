@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.170.0 — Observer world-state validation
+
+- Semantic observer verification now validates the exact environment and portal section shapes instead of treating authenticated but impossible dashboard state as acceptable.
+- Environment checks enforce integer Gate-alert bounds and the canonical summer weather/temperature pair without changing weather generation.
+- Portal checks enforce unique catalogued discoveries, canonical catalogued investigations, bounded progress/risk and nonnegative plan counters, plus active-plan agreement with an investigation.
+- Added focused re-digested invalid-environment and invalid-portal coverage, raising the deterministic suite to 195 tests; simulation balance and RL behavior are unchanged.
 ## 0.169.0 — Structured observer economy
 
 - Observer snapshots advance to schema 4 with an economy section for rent due day, rent cost, arrears, completed rent payments, seeded wage modifier, current meal cost, and shop visits.

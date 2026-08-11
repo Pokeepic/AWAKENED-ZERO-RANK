@@ -210,6 +210,40 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "story projection"):
             verify_observer_snapshot(story)
 
+    def test_verifier_rejects_redigested_invalid_environment(self) -> None:
+        alert = observer_snapshot(Simulation(seed=283))
+        alert["environment"]["gate_alert_level"] = 4
+        _redigest(alert)
+        with self.assertRaisesRegex(ValueError, "gate alert level"):
+            verify_observer_snapshot(alert)
+
+        weather = observer_snapshot(Simulation(seed=283))
+        weather["environment"]["temperature_c"] += 1
+        _redigest(weather)
+        with self.assertRaisesRegex(ValueError, "environment conditions"):
+            verify_observer_snapshot(weather)
+
+    def test_verifier_rejects_redigested_invalid_portals(self) -> None:
+        unknown = observer_snapshot(Simulation(seed=293))
+        unknown["portals"]["discovered"] = ["Unknown Gate"]
+        _redigest(unknown)
+        with self.assertRaisesRegex(ValueError, "discovered portals"):
+            verify_observer_snapshot(unknown)
+
+        simulation = Simulation(seed=293)
+        simulation.run(60)
+        bounds = observer_snapshot(simulation)
+        self.assertTrue(bounds["portals"]["investigations"])
+        bounds["portals"]["investigations"][0]["progress"] = 101
+        _redigest(bounds)
+        with self.assertRaisesRegex(ValueError, "investigation bounds"):
+            verify_observer_snapshot(bounds)
+
+        plan = observer_snapshot(Simulation(seed=293))
+        plan["portals"]["active_plan"] = "Flooded Service Tunnel"
+        _redigest(plan)
+        with self.assertRaisesRegex(ValueError, "active portal plan"):
+            verify_observer_snapshot(plan)
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))
         snapshot["path"] = "saves/ren.json"

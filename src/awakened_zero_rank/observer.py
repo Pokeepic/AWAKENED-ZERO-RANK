@@ -9,6 +9,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
+from .content import PORTALS
+from .environment import SUMMER_WEATHER
 from .story import story_progress
 
 if TYPE_CHECKING:
@@ -29,6 +31,16 @@ _RELATIONSHIP_KEYS = {
 }
 _EVENT_KEYS = {"action", "day", "outcome", "reason", "slot"}
 _MEMORY_KEYS = {"day", "importance", "summary"}
+_ENVIRONMENT_KEYS = {"gate_alert_level", "season", "temperature_c", "weather"}
+_PORTAL_KEYS = {"active_plan", "discovered", "investigations"}
+_INVESTIGATION_KEYS = {
+    "cooperating_npc", "joint_missions", "portal_name", "preparation_bonus",
+    "preparation_strategy", "progress", "risk",
+}
+_PORTAL_NAMES = {portal.name for portal in PORTALS}
+_WEATHER_TEMPERATURES = {
+    weather.name: weather.temperature_c for weather in SUMMER_WEATHER
+}
 
 
 def _content_digest(snapshot: dict[str, Any]) -> str:
@@ -86,6 +98,68 @@ def _validate_activity(activity: Any, current_day: int) -> None:
     if memory_order != sorted(memory_order):
         raise ValueError("Observer snapshot key memories are out of order")
 
+
+def _validate_environment(environment: Any) -> None:
+    if not isinstance(environment, dict) or set(environment) != _ENVIRONMENT_KEYS:
+        raise ValueError("Observer snapshot environment is malformed")
+    alert = _integer(environment["gate_alert_level"], "gate alert level")
+    temperature = _integer(environment["temperature_c"], "temperature")
+    weather = environment["weather"]
+    if not 0 <= alert <= 3:
+        raise ValueError("Observer snapshot gate alert level is invalid")
+    if (
+            environment["season"] != "Summer" or
+            weather not in _WEATHER_TEMPERATURES or
+            temperature != _WEATHER_TEMPERATURES[weather]):
+        raise ValueError("Observer snapshot environment conditions are invalid")
+
+
+def _validate_portals(portals: Any) -> None:
+    if not isinstance(portals, dict) or set(portals) != _PORTAL_KEYS:
+        raise ValueError("Observer snapshot portals are malformed")
+    discovered = portals["discovered"]
+    if (
+            not isinstance(discovered, list) or
+            any(
+                not isinstance(name, str) or name not in _PORTAL_NAMES
+                for name in discovered
+            ) or
+            len(discovered) != len(set(discovered))):
+        raise ValueError("Observer snapshot discovered portals are invalid")
+    investigations = portals["investigations"]
+    if not isinstance(investigations, list):
+        raise ValueError("Observer snapshot portal investigations are malformed")
+    names: list[str] = []
+    for investigation in investigations:
+        if (
+                not isinstance(investigation, dict) or
+                set(investigation) != _INVESTIGATION_KEYS):
+            raise ValueError("Observer snapshot portal investigation is malformed")
+        name = investigation["portal_name"]
+        strategy = investigation["preparation_strategy"]
+        cooperating_npc = investigation["cooperating_npc"]
+        if (
+                not isinstance(name, str) or name not in _PORTAL_NAMES or
+                not isinstance(strategy, str) or not strategy or
+                cooperating_npc is not None and (
+                    not isinstance(cooperating_npc, str) or not cooperating_npc)):
+            raise ValueError("Observer snapshot portal investigation text is invalid")
+        progress = _integer(investigation["progress"], "portal progress")
+        risk = _integer(investigation["risk"], "portal risk")
+        preparation_bonus = _integer(
+            investigation["preparation_bonus"], "portal preparation bonus")
+        joint_missions = _integer(
+            investigation["joint_missions"], "portal joint missions")
+        if (
+                not 0 <= progress <= 100 or not 0 <= risk <= 100 or
+                preparation_bonus < 0 or joint_missions < 0):
+            raise ValueError("Observer snapshot portal investigation bounds are invalid")
+        names.append(name)
+    if names != sorted(set(names)):
+        raise ValueError("Observer snapshot portal investigations are not canonical")
+    active_plan = portals["active_plan"]
+    if active_plan is not None and active_plan not in names:
+        raise ValueError("Observer snapshot active portal plan is invalid")
 
 def _validate_economy(economy: Any) -> None:
     keys = {
@@ -161,6 +235,8 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
         raise ValueError("Observer snapshot clock is invalid")
     _validate_activity(snapshot["activity"], day)
     _validate_economy(snapshot["economy"])
+    _validate_environment(snapshot["environment"])
+    _validate_portals(snapshot["portals"])
     _validate_resources(snapshot["protagonist"])
     _validate_relationships(snapshot["relationships"])
     story = snapshot["story"]
