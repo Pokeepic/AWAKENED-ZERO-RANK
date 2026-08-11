@@ -21,13 +21,42 @@ class ObserverSnapshotTests(unittest.TestCase):
         snapshot = observer_snapshot(simulation)
 
         self.assertEqual(simulation.state, before)
-        self.assertEqual(snapshot["schema_version"], 1)
+        self.assertEqual(snapshot["schema_version"], 2)
         self.assertEqual(snapshot["seed"], 163)
         self.assertEqual(snapshot["clock"], {"day": 1, "slot": "Morning"})
         self.assertEqual(snapshot["protagonist"]["name"], "Ren Takahashi")
         self.assertEqual(snapshot["relationships"], [])
+        self.assertEqual(snapshot["activity"], {
+            "key_memories": [],
+            "recent_events": [],
+        })
         self.assertEqual(snapshot["story"]["schema_version"], 3)
         json.dumps(snapshot, sort_keys=True)
+
+    def test_activity_is_bounded_and_preserves_recent_order(self) -> None:
+        simulation = Simulation(seed=179)
+        simulation.run(24)
+
+        activity = observer_snapshot(simulation)["activity"]
+
+        self.assertEqual(len(activity["recent_events"]), 12)
+        self.assertEqual(
+            [event["action"] for event in activity["recent_events"]],
+            [event.action for event in simulation.state.events[-12:]],
+        )
+        self.assertEqual(
+            [event["day"] for event in activity["recent_events"]],
+            [event.day for event in simulation.state.events[-12:]],
+        )
+        self.assertLessEqual(len(activity["key_memories"]), 5)
+        self.assertEqual(
+            [memory["summary"] for memory in activity["key_memories"]],
+            [memory.summary for memory in simulation.state.protagonist.memories[:5]],
+        )
+        self.assertTrue(all(
+            event["reason"] and event["outcome"]
+            for event in activity["recent_events"]
+        ))
 
     def test_populated_snapshot_is_stable_across_save_and_load(self) -> None:
         simulation = Simulation(seed=167)

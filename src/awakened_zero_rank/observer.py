@@ -10,7 +10,9 @@ if TYPE_CHECKING:
     from .simulation import Simulation
 
 
-OBSERVER_SNAPSHOT_SCHEMA_VERSION = 1
+OBSERVER_SNAPSHOT_SCHEMA_VERSION = 2
+RECENT_EVENT_LIMIT = 12
+KEY_MEMORY_LIMIT = 5
 
 
 def observer_snapshot(simulation: Simulation) -> dict[str, Any]:
@@ -41,7 +43,29 @@ def observer_snapshot(simulation: Simulation) -> dict[str, Any]:
         }
         for _, investigation in sorted(state.portal_investigations.items())
     ]
+    recent_events = [
+        {
+            "action": event.action,
+            "day": event.day,
+            "outcome": event.outcome,
+            "reason": event.reason,
+            "slot": event.slot.value,
+        }
+        for event in state.events[-RECENT_EVENT_LIMIT:]
+    ]
+    key_memories = [
+        {
+            "day": memory.day,
+            "importance": memory.importance,
+            "summary": memory.summary,
+        }
+        for memory in protagonist.memories[:KEY_MEMORY_LIMIT]
+    ]
     return {
+        "activity": {
+            "key_memories": key_memories,
+            "recent_events": recent_events,
+        },
         "clock": {"day": state.clock.day, "slot": state.clock.slot.value},
         "environment": {
             "gate_alert_level": state.gate_alert_level,
