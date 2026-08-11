@@ -312,6 +312,50 @@ class CliValidationTests(unittest.TestCase):
             errors.getvalue(),
         )
 
+    def test_observer_comparison_equality_gate_accepts_identical(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=401))
+        with TemporaryDirectory() as temporary_directory:
+            left = Path(temporary_directory) / "left.json"
+            right = Path(temporary_directory) / "right.json"
+            left.write_text(json.dumps(snapshot), encoding="utf-8")
+            right.write_text(json.dumps(snapshot), encoding="utf-8")
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main((
+                    "--compare-observer-snapshots", str(left), str(right),
+                    "--require-identical",
+                ))
+
+        comparison = json.loads(output.getvalue())
+        self.assertTrue(comparison["identical"])
+        self.assertEqual(comparison["changed_sections"], [])
+
+    def test_observer_comparison_equality_gate_reports_drift(self) -> None:
+        simulation = Simulation(seed=409)
+        left_snapshot = observer_snapshot(simulation)
+        simulation.step()
+        right_snapshot = observer_snapshot(simulation)
+        with TemporaryDirectory() as temporary_directory:
+            left = Path(temporary_directory) / "left.json"
+            right = Path(temporary_directory) / "right.json"
+            left.write_text(json.dumps(left_snapshot), encoding="utf-8")
+            right.write_text(json.dumps(right_snapshot), encoding="utf-8")
+            output = StringIO()
+
+            with (
+                    redirect_stdout(output),
+                    self.assertRaises(SystemExit) as context):
+                cli_main((
+                    "--compare-observer-snapshots", str(left), str(right),
+                    "--require-identical",
+                ))
+
+        self.assertEqual(context.exception.code, 1)
+        comparison = json.loads(output.getvalue())
+        self.assertFalse(comparison["identical"])
+        self.assertIn("clock", comparison["changed_sections"])
+
     def test_observer_summary_reports_named_story_ending(self) -> None:
         simulation = Simulation(seed=151)
         simulation.state.clock.day = 1095

@@ -8,7 +8,7 @@ from .observer import (
 )
 from .simulation import Simulation
 
-__version__ = "0.175.0"
+__version__ = "0.176.0"
 
 __all__ = [
     "Simulation", "__version__", "compare_observer_snapshots",

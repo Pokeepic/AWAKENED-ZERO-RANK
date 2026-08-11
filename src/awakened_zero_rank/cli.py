@@ -78,7 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--require-identical", action="store_true",
-        help="exit 1 when compared bundles differ",
+        help="exit 1 when compared verified artifacts differ",
     )
     return parser
 
@@ -87,8 +87,13 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     parser = build_parser()
     arguments = tuple(sys.argv[1:] if argv is None else argv)
     args = parser.parse_args(arguments)
-    if args.require_identical and not args.compare_experiment_bundles:
-        parser.error("--require-identical requires --compare-experiment-bundles")
+    if (
+            args.require_identical and
+            not (
+                args.compare_observer_snapshots or
+                args.compare_experiment_bundles
+            )):
+        parser.error("--require-identical requires a comparison mode")
     if args.comparison_output and not args.compare_experiment_bundles:
         parser.error(
             "--comparison-output requires --compare-experiment-bundles")
@@ -163,6 +168,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 left = json.loads(Path(left_path).read_text(encoding="utf-8"))
                 right = json.loads(Path(right_path).read_text(encoding="utf-8"))
                 comparison = compare_observer_snapshots(left, right)
+                comparison_identical = comparison["identical"]
                 output = json.dumps(
                     {
                         "left_path": left_path,
@@ -183,13 +189,14 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 result = compare_experiment_bundles(
                     *args.compare_experiment_bundles)
                 output = experiment_bundle_comparison_json(result)
+                comparison_identical = result.identical
                 if args.comparison_output:
                     save_experiment_bundle_comparison(
                         result, args.comparison_output)
         except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
             parser.error(str(error))
         print(output)
-        if args.require_identical and not result.identical:
+        if args.require_identical and not comparison_identical:
             raise SystemExit(1)
         return
     if args.days < 1:

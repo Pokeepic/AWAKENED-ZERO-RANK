@@ -64,7 +64,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.175.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.176.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -2337,7 +2337,7 @@ class SimulationTests(unittest.TestCase):
             with redirect_stderr(errors), self.assertRaises(SystemExit):
                 cli_main(("--require-identical",))
             self.assertIn(
-                "requires --compare-experiment-bundles", errors.getvalue())
+                "requires a comparison mode", errors.getvalue())
             errors = StringIO()
             with redirect_stderr(errors), self.assertRaises(SystemExit):
                 cli_main(("--comparison-output", "comparison.json"))

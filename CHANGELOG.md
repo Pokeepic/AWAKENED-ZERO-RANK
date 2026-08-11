@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.176.0 — Observer comparison equality gate
+
+- `--require-identical` now supports verified observer snapshot comparisons as well as experiment-bundle comparisons.
+- Identical snapshots print verified comparison JSON and exit 0; authenticated world drift prints the same JSON before exiting 1; invalid or tampered inputs remain standard CLI errors with exit 2.
+- Bundle equality behavior and comparison-output publication remain unchanged, while the website roadmap now explicitly targets a publicly hosted, responsive, accessible site available through a normal URL.
+- Added focused observer equality and drift exit-code coverage, raising the deterministic suite to 207 tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.175.0 — Verified observer snapshot comparison
 
 - Added public `compare_observer_snapshots(left, right)` for deterministic, mutation-free comparison after full integrity and semantic verification of both inputs.

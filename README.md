@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.175.0` |
+| Release | `0.176.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 205 |
+| Automated tests | 207 |
 
 ## Why this project exists
 
@@ -115,6 +115,7 @@ Compare two verified observer snapshots without rewriting either file:
 
 ```bash
 awakened-zero-rank --compare-observer-snapshots before.json after.json
+awakened-zero-rank --compare-observer-snapshots before.json after.json --require-identical
 ```
 
 Snapshot verification detects accidental corruption and unchanged-digest tampering. It also rejects re-digested impossible values throughout the schema-4 world projection and inconsistent activity, clock, portal, progression, social, and story relationships. It does not prove authorship because anyone who changes valid content can calculate a new digest.
@@ -230,6 +231,8 @@ International travel should remain grounded in passports or clearance, airfare, 
 ### Observer website
 
 A later release can add a read-only dashboard for time, weather, Ren's condition, current concerns, decisions, relationships, finances, inventory, investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity.
+
+The intended product is a real publicly deployed website that anyone can visit through a normal URL, not a local-only developer demo. Its production plan should include responsive phone and desktop layouts, accessible controls and motion settings, secure read-only data delivery, caching, monitoring, deployment rollback, and a clear separation between the public chronicle and private developer diagnostics.
 
 The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-4, mutation-free, SHA-256-identified JSON boundary for current world, economy, protagonist, relationship, portal, story, and bounded recent-activity state; it exposes no control hooks.
 
