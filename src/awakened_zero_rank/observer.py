@@ -15,11 +15,11 @@ if TYPE_CHECKING:
     from .simulation import Simulation
 
 
-OBSERVER_SNAPSHOT_SCHEMA_VERSION = 3
+OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
-    "activity", "clock", "environment", "identity", "portals",
+    "activity", "clock", "economy", "environment", "identity", "portals",
     "protagonist", "relationships", "schema_version", "seed", "story",
 }
 _SLOTS = ("Morning", "Afternoon", "Evening", "Late Night")
@@ -40,6 +40,7 @@ def _content_digest(snapshot: dict[str, Any]) -> str:
         content, ensure_ascii=False, sort_keys=True,
         separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(canonical).hexdigest()
+
 
 def _integer(value: Any, label: str) -> int:
     if not isinstance(value, int) or isinstance(value, bool):
@@ -85,6 +86,26 @@ def _validate_activity(activity: Any, current_day: int) -> None:
     if memory_order != sorted(memory_order):
         raise ValueError("Observer snapshot key memories are out of order")
 
+
+def _validate_economy(economy: Any) -> None:
+    keys = {
+        "meal_cost", "rent_arrears", "rent_cost", "rent_due_day",
+        "rent_payments", "shop_visits", "wage_modifier",
+    }
+    if not isinstance(economy, dict) or set(economy) != keys:
+        raise ValueError("Observer snapshot economy is malformed")
+    values = {
+        name: _integer(value, f"economy {name}")
+        for name, value in economy.items()
+    }
+    if values["rent_due_day"] < 1 or any(
+            values[name] < 0 for name in (
+                "rent_arrears", "rent_cost", "rent_payments", "shop_visits")):
+        raise ValueError("Observer snapshot economy bounds are invalid")
+    if values["wage_modifier"] not in {85, 95, 100, 105, 115}:
+        raise ValueError("Observer snapshot wage modifier is invalid")
+    if values["meal_cost"] not in {500, 600, 700, 800}:
+        raise ValueError("Observer snapshot meal cost is invalid")
 
 def _validate_resources(protagonist: Any) -> None:
     if not isinstance(protagonist, dict):
@@ -139,6 +160,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     if day < 1 or clock["slot"] not in _SLOTS:
         raise ValueError("Observer snapshot clock is invalid")
     _validate_activity(snapshot["activity"], day)
+    _validate_economy(snapshot["economy"])
     _validate_resources(snapshot["protagonist"])
     _validate_relationships(snapshot["relationships"])
     story = snapshot["story"]
@@ -260,6 +282,15 @@ def observer_snapshot(simulation: Simulation) -> dict[str, Any]:
             "recent_events": recent_events,
         },
         "clock": {"day": state.clock.day, "slot": state.clock.slot.value},
+        "economy": {
+            "meal_cost": state.meal_cost,
+            "rent_arrears": protagonist.rent_arrears,
+            "rent_cost": protagonist.rent_cost,
+            "rent_due_day": protagonist.rent_due_day,
+            "rent_payments": state.rent_payments,
+            "shop_visits": state.shop_visits,
+            "wage_modifier": state.wage_modifier,
+        },
         "environment": {
             "gate_alert_level": state.gate_alert_level,
             "season": state.season,

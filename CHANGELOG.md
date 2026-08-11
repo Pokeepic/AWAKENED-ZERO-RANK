@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.169.0 — Structured observer economy
+
+- Observer snapshots advance to schema 4 with an economy section for rent due day, rent cost, arrears, completed rent payments, seeded wage modifier, current meal cost, and shop visits.
+- The projection copies existing simulator state without mutation and remains deterministic across repeated calls, publication, verification, and authenticated save/load.
+- Semantic verification requires the exact economy shape, integer values, positive due day, nonnegative costs/counters/debt, and the simulator's established seeded wage and meal-cost sets.
+- Added focused live-state, immutability, schema, save/load, and re-digested invalid-economy coverage, raising the deterministic suite to 193 tests; simulation balance and RL behavior are unchanged.
 ## 0.168.0 — Semantic observer snapshot verification
 
 - Snapshot verification now rejects re-digested impossible state instead of stopping at canonical SHA-256 agreement.

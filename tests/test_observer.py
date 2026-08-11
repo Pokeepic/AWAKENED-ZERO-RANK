@@ -38,7 +38,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         snapshot = observer_snapshot(simulation)
 
         self.assertEqual(simulation.state, before)
-        self.assertEqual(snapshot["schema_version"], 3)
+        self.assertEqual(snapshot["schema_version"], 4)
         self.assertEqual(snapshot["seed"], 163)
         self.assertEqual(snapshot["clock"], {"day": 1, "slot": "Morning"})
         self.assertEqual(snapshot["protagonist"]["name"], "Ren Takahashi")
@@ -107,7 +107,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(summary, {
             "day": 1,
             "digest": snapshot["identity"]["digest"],
-            "schema_version": 3,
+            "schema_version": 4,
             "seed": 197,
             "status": "valid",
         })
@@ -128,6 +128,36 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unsupported observer snapshot schema"):
             verify_observer_snapshot(unsupported)
 
+    def test_economy_snapshot_tracks_live_state_without_mutation(self) -> None:
+        simulation = Simulation(seed=271)
+        simulation.run(32)
+        before = deepcopy(simulation.state)
+
+        economy = observer_snapshot(simulation)["economy"]
+
+        self.assertEqual(simulation.state, before)
+        self.assertEqual(economy, {
+            "meal_cost": simulation.state.meal_cost,
+            "rent_arrears": simulation.state.protagonist.rent_arrears,
+            "rent_cost": simulation.state.protagonist.rent_cost,
+            "rent_due_day": simulation.state.protagonist.rent_due_day,
+            "rent_payments": simulation.state.rent_payments,
+            "shop_visits": simulation.state.shop_visits,
+            "wage_modifier": simulation.state.wage_modifier,
+        })
+
+    def test_verifier_rejects_redigested_invalid_economy(self) -> None:
+        arrears = observer_snapshot(Simulation(seed=277))
+        arrears["economy"]["rent_arrears"] = -1
+        _redigest(arrears)
+        with self.assertRaisesRegex(ValueError, "economy bounds"):
+            verify_observer_snapshot(arrears)
+
+        wages = observer_snapshot(Simulation(seed=277))
+        wages["economy"]["wage_modifier"] = 101
+        _redigest(wages)
+        with self.assertRaisesRegex(ValueError, "wage modifier"):
+            verify_observer_snapshot(wages)
     def test_verifier_rejects_redigested_invalid_resources(self) -> None:
         negative_money = observer_snapshot(Simulation(seed=251))
         negative_money["protagonist"]["resources"]["money"] = -1
