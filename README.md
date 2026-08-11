@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.162.0` |
+| Release | `0.163.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 174 |
+| Automated tests | 177 |
 
 ## Why this project exists
 
@@ -96,6 +96,12 @@ Inspect its structured story progress without advancing or rewriting it:
 awakened-zero-rank --story-progress saves/ren.json
 ```
 
+Export the complete observer snapshot from an authenticated save without advancing or rewriting it:
+
+```bash
+awakened-zero-rank --observer-snapshot saves/ren.json
+```
+
 The JSON result reports `integrity: verified` for schema-2 saves. Compatible schema-1 saves report `integrity: legacy-unavailable` instead of claiming evidence they do not contain. Both formats must also satisfy critical clock, resource, progression, mission, injury, economy, inventory, chronology, social-reference, and portal invariants before the verifier reports `status: valid`. The same validation runs before every write, so an impossible current state cannot replace an existing save. Runtime-critical protagonist locations, equipped items, NPC relationships and collaborators, portal investigations, and active plans must also resolve coherently against the current world catalog; extensible unequipped inventory names remain allowed.
 
 Add `--technical-log` to display decision reasons and utility scores.
@@ -166,6 +172,7 @@ Comparison artifacts include complete added and removed report records, field-le
 | `src/awakened_zero_rank/dialogue.py` | Contextual dialogue and intentions |
 | `src/awakened_zero_rank/learning.py` | Training, evaluation, diagnostics, and artifacts |
 | `src/awakened_zero_rank/persistence.py` | Exact save and load behavior |
+| `src/awakened_zero_rank/observer.py` | Stable read-only application snapshot |
 | `src/awakened_zero_rank/cli.py` | Simulation and artifact command line interface |
 | `tests/test_simulation.py` | Deterministic regression suite |
 

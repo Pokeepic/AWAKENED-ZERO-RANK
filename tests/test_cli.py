@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
-import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import unittest
 
 from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.persistence import save_simulation
@@ -103,6 +103,66 @@ class CliValidationTests(unittest.TestCase):
             with redirect_stdout(output), redirect_stderr(errors):
                 with self.assertRaises(SystemExit) as context:
                     cli_main(("--story-progress", str(path)))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn("Save integrity check failed", errors.getvalue())
+        self.assertNotIn("Traceback", errors.getvalue())
+
+    def test_observer_snapshot_is_read_only_and_reports_json(self) -> None:
+        simulation = Simulation(seed=157)
+        simulation.run(40)
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, path)
+            original = path.read_bytes()
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main(("--observer-snapshot", str(path)))
+
+            self.assertEqual(path.read_bytes(), original)
+        snapshot = json.loads(output.getvalue())
+        self.assertEqual(snapshot["path"], str(path))
+        self.assertEqual(snapshot["schema_version"], 1)
+        self.assertEqual(snapshot["seed"], 157)
+        self.assertEqual(snapshot["clock"], {
+            "day": simulation.state.clock.day,
+            "slot": simulation.state.clock.slot.value,
+        })
+        self.assertEqual(snapshot["story"]["schema_version"], 3)
+        self.assertEqual(
+            [item["name"] for item in snapshot["relationships"]],
+            sorted(simulation.state.protagonist.relationships),
+        )
+
+    def test_observer_snapshot_rejects_simulation_options(self) -> None:
+        output, errors = StringIO(), StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main((
+                    "--observer-snapshot", "timeline.json", "--technical-log",
+                ))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn(
+            "--observer-snapshot cannot use simulation options",
+            errors.getvalue(),
+        )
+
+    def test_observer_snapshot_reports_integrity_failure_cleanly(self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "timeline.json"
+            save_simulation(Simulation(seed=163), path)
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["seed"] += 1
+            path.write_text(json.dumps(data), encoding="utf-8")
+            output, errors = StringIO(), StringIO()
+
+            with redirect_stdout(output), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main(("--observer-snapshot", str(path)))
 
         self.assertEqual(context.exception.code, 2)
         self.assertEqual(output.getvalue(), "")

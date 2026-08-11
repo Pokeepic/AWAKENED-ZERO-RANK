@@ -6,8 +6,11 @@ import sys
 
 from . import __version__
 from .journal import journal_entry
+from .observer import observer_snapshot
 from .persistence import (
-    load_simulation, save_simulation, verify_simulation_save,
+    load_simulation,
+    save_simulation,
+    verify_simulation_save,
 )
 from .simulation import Simulation
 from .story import story_progress
@@ -34,6 +37,10 @@ def build_parser() -> argparse.ArgumentParser:
     inspection_modes.add_argument(
         "--story-progress", metavar="FILE",
         help="print read-only structured story progress from a timeline save",
+    )
+    inspection_modes.add_argument(
+        "--observer-snapshot", metavar="FILE",
+        help="print a read-only structured observer snapshot from a timeline save",
     )
     inspection_modes.add_argument(
         "--inspect-experiment-bundle", metavar="DIR",
@@ -67,13 +74,14 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     if args.comparison_output and not args.compare_experiment_bundles:
         parser.error(
             "--comparison-output requires --compare-experiment-bundles")
-    if (args.verify_save or args.story_progress or
+    if (args.verify_save or args.story_progress or args.observer_snapshot or
             args.inspect_experiment_bundle or
             args.compare_experiment_bundles or
             args.inspect_comparison_artifact):
         mode_name = (
             "--verify-save" if args.verify_save
             else "--story-progress" if args.story_progress
+            else "--observer-snapshot" if args.observer_snapshot
             else "--inspect-experiment-bundle" if args.inspect_experiment_bundle
             else "--compare-experiment-bundles"
             if args.compare_experiment_bundles
@@ -85,10 +93,12 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 argument == option or argument.startswith(f"{option}=")
                 for argument in arguments for option in simulation_options):
             parser.error(f"{mode_name} cannot use simulation options")
-        if not (args.verify_save or args.story_progress):
+        if not (args.verify_save or args.story_progress or args.observer_snapshot):
             from .learning import (
-                compare_experiment_bundles, experiment_bundle_comparison_json,
-                experiment_bundle_summary_json, inspect_experiment_bundle,
+                compare_experiment_bundles,
+                experiment_bundle_comparison_json,
+                experiment_bundle_summary_json,
+                inspect_experiment_bundle,
                 load_experiment_bundle_comparison_artifact,
                 save_experiment_bundle_comparison,
             )
@@ -103,6 +113,12 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 output = json.dumps(
                     {"path": args.story_progress,
                      **story_progress(simulation.state)},
+                    indent=2, sort_keys=True)
+            elif args.observer_snapshot:
+                simulation = load_simulation(args.observer_snapshot)
+                output = json.dumps(
+                    {"path": args.observer_snapshot,
+                     **observer_snapshot(simulation)},
                     indent=2, sort_keys=True)
             elif args.inspect_experiment_bundle:
                 result = inspect_experiment_bundle(

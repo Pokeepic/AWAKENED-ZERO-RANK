@@ -4,12 +4,20 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.163.0 — Read-only observer snapshot CLI
+
+- Added `awakened-zero-rank --observer-snapshot FILE` to authenticate and semantically validate a save before printing its complete schema-1 observer projection as sorted JSON.
+- Inspection preserves save bytes, never advances the timeline, rejects simulation controls, and reports malformed or integrity-failed saves through concise CLI errors without tracebacks.
+- The command composes the public observer API and nested schema-3 story projection rather than maintaining a second dashboard state model.
+- Added focused output-shape, ordering, immutability, option-conflict, and integrity-failure coverage, raising the deterministic suite to 177 tests; simulation balance and RL behavior are unchanged.
+
 ## 0.162.0 — Structured observer snapshots
 
 - Added `observer_snapshot(simulation)`, a schema-1, mutation-free JSON projection of clock, environment, protagonist resources and progression, equipment, relationships, portals, and story state.
 - Snapshot mappings use stable ordering and compose the existing schema-3 story projection, providing one deterministic boundary for future dashboards, sprites, and game presentation without exposing controls.
 - Recorded an optional future RL echo-advisor concept with explicit player agency, uncertainty, and evaluation guardrails; the current held-out verdict remains that the utility baseline performs better.
 - Added focused immutability, JSON, ordering, determinism, and save/load equivalence coverage, raising the deterministic suite to 174 tests; simulation balance and RL behavior are unchanged.
+
 
 ## 0.161.0 — Deterministic named endings
 
@@ -18,6 +26,7 @@ The project follows evidence-driven releases: learned-policy changes remain offl
 - Legacy-unavailable histories receive `Legacy Ending Unavailable` rather than a fabricated classification, and story-progress output advances to schema 3.
 - The observer CLI prints the named ending after a completed arc, and the roadmap now places a separate game adaptation after the simulator and website mature.
 - Added focused empty, fully prepared, mixed, legacy, schema, CLI, persistence, and continuation coverage, raising the deterministic suite to 172 tests; live simulation balance and RL behavior are unchanged.
+
 
 
 ## 0.160.0 — Honest legacy story migration

@@ -3,6 +3,6 @@
 from .observer import observer_snapshot
 from .simulation import Simulation
 
-__version__ = "0.162.0"
+__version__ = "0.163.0"
 
 __all__ = ["Simulation", "__version__", "observer_snapshot"]
