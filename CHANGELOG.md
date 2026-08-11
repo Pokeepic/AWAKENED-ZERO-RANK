@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.174.0 — Observer activity-clock consistency
+
+- Semantic observer verification now reconciles bounded recent activity with the snapshot clock rather than validating each section independently.
+- Every recent event must occupy a day/slot strictly before the current observer position, matching the simulator's append-then-advance transition order.
+- Recent event positions must increase strictly, so re-digested duplicate positions are rejected alongside reversed chronology.
+- Added focused current-slot, future-slot, and duplicate-position coverage, raising the deterministic suite to 201 tests; event generation, simulation balance, and RL behavior are unchanged.
+
 ## 0.173.0 — Catalogue-backed observer social state
 
 - Semantic observer verification now binds relationship identities to the canonical NPC catalogue while retaining compatible nonempty historical role text.

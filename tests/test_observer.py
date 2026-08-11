@@ -159,6 +159,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         _redigest(wages)
         with self.assertRaisesRegex(ValueError, "wage modifier"):
             verify_observer_snapshot(wages)
+
     def test_verifier_rejects_redigested_invalid_resources(self) -> None:
         negative_money = observer_snapshot(Simulation(seed=251))
         negative_money["protagonist"]["resources"]["money"] = -1
@@ -187,6 +188,7 @@ class ObserverSnapshotTests(unittest.TestCase):
             verify_observer_snapshot(oversized)
 
         out_of_order = observer_snapshot(Simulation(seed=257))
+        out_of_order["clock"] = {"day": 2, "slot": "Morning"}
         out_of_order["activity"]["recent_events"] = [
             {**event, "slot": "Evening"},
             {**event, "slot": "Morning"},
@@ -194,6 +196,39 @@ class ObserverSnapshotTests(unittest.TestCase):
         _redigest(out_of_order)
         with self.assertRaisesRegex(ValueError, "out of order"):
             verify_observer_snapshot(out_of_order)
+
+    def test_verifier_rejects_events_at_or_after_observer_clock(self) -> None:
+        event = {
+            "action": "Rest",
+            "day": 1,
+            "outcome": "Recovered.",
+            "reason": "Needed recovery.",
+            "slot": "Morning",
+        }
+        current = observer_snapshot(Simulation(seed=367))
+        current["activity"]["recent_events"] = [event]
+        _redigest(current)
+        with self.assertRaisesRegex(ValueError, "ahead of clock"):
+            verify_observer_snapshot(current)
+
+        future_simulation = Simulation(seed=367)
+        future_simulation.run(1)
+        future = observer_snapshot(future_simulation)
+        future["activity"]["recent_events"][0]["slot"] = "Evening"
+        _redigest(future)
+        with self.assertRaisesRegex(ValueError, "ahead of clock"):
+            verify_observer_snapshot(future)
+
+        simulation = Simulation(seed=367)
+        simulation.run(2)
+        duplicate = observer_snapshot(simulation)
+        duplicate["activity"]["recent_events"][1]["day"] = (
+            duplicate["activity"]["recent_events"][0]["day"])
+        duplicate["activity"]["recent_events"][1]["slot"] = (
+            duplicate["activity"]["recent_events"][0]["slot"])
+        _redigest(duplicate)
+        with self.assertRaisesRegex(ValueError, "out of order"):
+            verify_observer_snapshot(duplicate)
 
     def test_verifier_rejects_redigested_invalid_relationships_and_story(
             self) -> None:

@@ -84,7 +84,8 @@ def _integer(value: Any, label: str) -> int:
     return value
 
 
-def _validate_activity(activity: Any, current_day: int) -> None:
+def _validate_activity(
+        activity: Any, current_day: int, current_slot: str) -> None:
     if not isinstance(activity, dict) or set(activity) != {
             "key_memories", "recent_events"}:
         raise ValueError("Observer snapshot activity is malformed")
@@ -104,7 +105,10 @@ def _validate_activity(activity: Any, current_day: int) -> None:
                 for field in ("action", "outcome", "reason")):
             raise ValueError("Observer snapshot recent event text is invalid")
         positions.append((day, _SLOTS.index(event["slot"])))
-    if positions != sorted(positions):
+    current_position = (current_day, _SLOTS.index(current_slot))
+    if any(position >= current_position for position in positions):
+        raise ValueError("Observer snapshot recent event is ahead of clock")
+    if any(left >= right for left, right in zip(positions, positions[1:])):
         raise ValueError("Observer snapshot recent events are out of order")
     if not isinstance(memories, list) or len(memories) > KEY_MEMORY_LIMIT:
         raise ValueError("Observer snapshot key memories are invalid")
@@ -417,7 +421,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     day = _integer(clock["day"], "clock day")
     if day < 1 or clock["slot"] not in _SLOTS:
         raise ValueError("Observer snapshot clock is invalid")
-    _validate_activity(snapshot["activity"], day)
+    _validate_activity(snapshot["activity"], day, clock["slot"])
     _validate_economy(snapshot["economy"])
     _validate_environment(snapshot["environment"])
     _validate_portals(snapshot["portals"])
