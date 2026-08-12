@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.181.0 — Activity-backed observer animation
+
+- Observer comparison advances to schema 6 with `recent_activity_relation`: unchanged, append, or replace.
+- `animate` now requires both an exact one-slot, same-seed advance and a single append to the verified bounded recent-event window.
+- Clock movement without matching activity refreshes directly; rewinds, rewritten windows, and seed switches retain conservative replacement behavior.
+- Added focused missing-append and relation coverage across API and CLI comparisons, raising the deterministic suite to 211 tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.180.0 — Distance-aware observer animation
 
 - Observer comparison advances to schema 5 and limits `animate` advice to an exact one-slot, same-seed forward movement.

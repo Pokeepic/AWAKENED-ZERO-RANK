@@ -298,6 +298,7 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(comparison["clock_delta_slots"], 1)
         self.assertEqual(comparison["clock_relation"], "forward")
         self.assertEqual(comparison["update_mode"], "animate")
+        self.assertEqual(comparison["recent_activity_relation"], "append")
         self.assertIn("clock", comparison["changed_sections"])
 
     def test_compare_observer_snapshots_rejects_simulation_options(self) -> None:
@@ -334,6 +335,7 @@ class CliValidationTests(unittest.TestCase):
         comparison = json.loads(output.getvalue())
         self.assertTrue(comparison["identical"])
         self.assertEqual(comparison["clock_delta_slots"], 0)
+        self.assertEqual(comparison["recent_activity_relation"], "unchanged")
         self.assertEqual(comparison["changed_sections"], [])
 
     def test_observer_comparison_equality_gate_reports_drift(self) -> None:
@@ -363,6 +365,7 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(comparison["clock_delta_slots"], 1)
         self.assertEqual(comparison["clock_relation"], "forward")
         self.assertEqual(comparison["update_mode"], "animate")
+        self.assertEqual(comparison["recent_activity_relation"], "append")
         self.assertIn("clock", comparison["changed_sections"])
 
     def test_observer_summary_reports_named_story_ending(self) -> None:
