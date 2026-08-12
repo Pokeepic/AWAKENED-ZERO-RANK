@@ -410,8 +410,9 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(comparison["clock_relation"], "same")
         self.assertEqual(comparison["update_mode"], "unchanged")
         self.assertEqual(comparison["recent_activity_relation"], "unchanged")
+        self.assertIsNone(comparison["appended_event"])
         self.assertEqual(comparison["changed_sections"], [])
-        self.assertEqual(comparison["comparison_schema_version"], 6)
+        self.assertEqual(comparison["comparison_schema_version"], 7)
         self.assertEqual(comparison["observer_schema_version"], 4)
         self.assertEqual(comparison["left"]["digest"], comparison["right"]["digest"])
 
@@ -429,6 +430,10 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(comparison["clock_relation"], "forward")
         self.assertEqual(comparison["update_mode"], "animate")
         self.assertEqual(comparison["recent_activity_relation"], "append")
+        self.assertEqual(
+            comparison["appended_event"], right["activity"]["recent_events"][-1])
+        self.assertIsNot(
+            comparison["appended_event"], right["activity"]["recent_events"][-1])
         self.assertEqual(
             comparison["changed_sections"],
             sorted(comparison["changed_sections"]),
@@ -458,6 +463,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(backward["clock_delta_slots"], -1)
         self.assertEqual(backward["update_mode"], "replace")
         self.assertEqual(backward["recent_activity_relation"], "replace")
+        self.assertIsNone(backward["appended_event"])
         self.assertTrue(backward["same_seed"])
         self.assertEqual(different_seed["clock_relation"], "same")
         self.assertEqual(different_seed["clock_delta_slots"], 0)
@@ -490,6 +496,7 @@ class ObserverSnapshotTests(unittest.TestCase):
 
         self.assertEqual(comparison["clock_delta_slots"], 1)
         self.assertEqual(comparison["recent_activity_relation"], "unchanged")
+        self.assertIsNone(comparison["appended_event"])
         self.assertEqual(comparison["update_mode"], "refresh")
 
     def test_snapshot_comparison_reports_multi_day_clock_distance(self) -> None:
@@ -505,6 +512,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(forward["clock_delta_slots"], 9)
         self.assertEqual(forward["update_mode"], "refresh")
         self.assertEqual(forward["recent_activity_relation"], "replace")
+        self.assertIsNone(forward["appended_event"])
         self.assertEqual(backward["clock_relation"], "backward")
         self.assertEqual(backward["clock_delta_slots"], -9)
 

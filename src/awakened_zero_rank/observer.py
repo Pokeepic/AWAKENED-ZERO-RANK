@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
-OBSERVER_COMPARISON_SCHEMA_VERSION = 6
+OBSERVER_COMPARISON_SCHEMA_VERSION = 7
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
@@ -501,6 +501,9 @@ def compare_observer_snapshots(
         )
         else "replace"
     )
+    appended_event = (
+        dict(right_events[-1]) if recent_activity_relation == "append" else None
+    )
     update_mode = (
         "unchanged" if not changed_sections
         else "replace" if not same_seed or clock_relation == "backward"
@@ -510,6 +513,7 @@ def compare_observer_snapshots(
         else "refresh"
     )
     return {
+        "appended_event": appended_event,
         "changed_sections": changed_sections,
         "clock_delta_slots": clock_delta_slots,
         "clock_relation": clock_relation,

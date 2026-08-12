@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.182.0 — Verified observer event payload
+
+- Observer comparison advances to schema 7 with `appended_event`, a copied payload of the exact verified recent event when the bounded window relation is append.
+- Unchanged, replaced, rewound, and multi-step activity exposes `null`, so clients cannot mistake a guessed or stale event for animation evidence.
+- The public boundary now supplies both presentation advice and its event payload without exposing simulation controls or claiming shared lineage.
+- Added API and CLI payload, nullability, and copy-isolation assertions while retaining 211 deterministic tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.181.0 — Activity-backed observer animation
 
 - Observer comparison advances to schema 6 with `recent_activity_relation`: unchanged, append, or replace.
