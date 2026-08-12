@@ -8,7 +8,7 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.179.0` |
+| Release | `0.180.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
@@ -236,7 +236,7 @@ A later release can add a read-only dashboard for time, weather, Ren's condition
 
 The intended product is a real publicly deployed website that anyone can visit through a normal URL, not a local-only developer demo. Its production plan should include responsive phone and desktop layouts, accessible controls and motion settings, secure read-only data delivery, caching, monitoring, deployment rollback, and a clear separation between the public chronicle and private developer diagnostics.
 
-The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-4, mutation-free, SHA-256-identified JSON boundary for current world, economy, protagonist, relationship, portal, story, and bounded recent-activity state; it exposes no control hooks. Comparison schema 4 adds an exact signed `clock_delta_slots` value alongside the conservative update mode, allowing clients to distinguish a single transition from a large jump without treating timestamp distance or equal seeds as lineage proof.
+The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-4, mutation-free, SHA-256-identified JSON boundary for current world, economy, protagonist, relationship, portal, story, and bounded recent-activity state; it exposes no control hooks. Comparison schema 5 provides exact signed `clock_delta_slots` and distance-aware update advice: only a verified one-slot, same-seed advance may animate, while larger forward jumps refresh directly. This avoids inventing unseen intermediate activity and does not treat timestamp distance or equal seeds as lineage proof.
 
 ### Future game adaptation
 

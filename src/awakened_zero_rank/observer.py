@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
-OBSERVER_COMPARISON_SCHEMA_VERSION = 4
+OBSERVER_COMPARISON_SCHEMA_VERSION = 5
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
@@ -494,7 +494,7 @@ def compare_observer_snapshots(
     update_mode = (
         "unchanged" if not changed_sections
         else "replace" if not same_seed or clock_relation == "backward"
-        else "animate" if clock_relation == "forward"
+        else "animate" if clock_delta_slots == 1
         else "refresh"
     )
     return {

@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.180.0 — Distance-aware observer animation
+
+- Observer comparison advances to schema 5 and limits `animate` advice to an exact one-slot, same-seed forward movement.
+- Larger same-seed forward jumps now use `refresh`, preventing a public client from presenting unseen intermediate activity as if it had been observed.
+- Identity, same-clock changes, rewinds, and seed switches retain their existing unchanged, refresh, or replace behavior.
+- Added focused multi-slot update-mode coverage, retaining 210 deterministic tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.179.0 — Exact observer clock distance
 
 - Observer comparison advances to schema 4 with signed `clock_delta_slots`, computed from the verified day and four-slot clock positions.

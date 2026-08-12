@@ -410,7 +410,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(comparison["clock_relation"], "same")
         self.assertEqual(comparison["update_mode"], "unchanged")
         self.assertEqual(comparison["changed_sections"], [])
-        self.assertEqual(comparison["comparison_schema_version"], 4)
+        self.assertEqual(comparison["comparison_schema_version"], 5)
         self.assertEqual(comparison["observer_schema_version"], 4)
         self.assertEqual(comparison["left"]["digest"], comparison["right"]["digest"])
 
@@ -487,6 +487,7 @@ class ObserverSnapshotTests(unittest.TestCase):
 
         self.assertEqual(forward["clock_relation"], "forward")
         self.assertEqual(forward["clock_delta_slots"], 9)
+        self.assertEqual(forward["update_mode"], "refresh")
         self.assertEqual(backward["clock_relation"], "backward")
         self.assertEqual(backward["clock_delta_slots"], -9)
 
