@@ -511,6 +511,41 @@ def observer_presentation_contract() -> dict[str, Any]:
     }
 
 
+def verify_observer_presentation_contract(
+        contract: dict[str, Any]) -> dict[str, Any]:
+    """Verify a downloaded presentation contract without changing it."""
+    expected = observer_presentation_contract()
+    expected_keys = set(expected)
+    if not isinstance(contract, dict) or set(contract) != expected_keys:
+        raise ValueError("Observer presentation contract is malformed")
+    claimed = contract["contract_sha256"]
+    if not isinstance(claimed, str) or len(claimed) != 64:
+        raise ValueError("Observer presentation contract digest is malformed")
+    payload = {
+        key: value for key, value in contract.items()
+        if key != "contract_sha256"
+    }
+    canonical = json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    actual = hashlib.sha256(canonical).hexdigest()
+    if not hmac.compare_digest(claimed, actual):
+        raise ValueError("Observer presentation contract integrity check failed")
+    expected_payload = {
+        key: value for key, value in expected.items()
+        if key != "contract_sha256"
+    }
+    if payload != expected_payload:
+        raise ValueError("Observer presentation contract is unsupported")
+    return {
+        "comparison_schema_version": OBSERVER_COMPARISON_SCHEMA_VERSION,
+        "contract_schema_version": OBSERVER_PRESENTATION_CONTRACT_SCHEMA_VERSION,
+        "contract_sha256": claimed,
+        "observer_schema_version": OBSERVER_SNAPSHOT_SCHEMA_VERSION,
+        "status": "valid",
+    }
+
+
 def _animation_cue(action: str) -> str:
     if action in _STORY_TITLES:
         return "story"

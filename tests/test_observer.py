@@ -14,6 +14,7 @@ from awakened_zero_rank import (
     observer_presentation_contract,
     observer_snapshot,
     save_observer_snapshot,
+    verify_observer_presentation_contract,
     verify_observer_snapshot,
 )
 from awakened_zero_rank.content import STORY_ANCHORS
@@ -422,6 +423,42 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertIn("story", first["animation_cues"])
         first["animation_cues"].append("client-local")
         self.assertNotIn("client-local", second["animation_cues"])
+
+    def test_presentation_contract_verifier_accepts_without_mutation(
+            self) -> None:
+        contract = observer_presentation_contract()
+        before = deepcopy(contract)
+
+        summary = verify_observer_presentation_contract(contract)
+
+        self.assertEqual(contract, before)
+        self.assertEqual(summary, {
+            "comparison_schema_version": 8,
+            "contract_schema_version": 2,
+            "contract_sha256": contract["contract_sha256"],
+            "observer_schema_version": 4,
+            "status": "valid",
+        })
+
+    def test_presentation_contract_verifier_rejects_changed_content(
+            self) -> None:
+        tampered = observer_presentation_contract()
+        tampered["animation_cues"].append("control")
+        with self.assertRaisesRegex(ValueError, "integrity check failed"):
+            verify_observer_presentation_contract(tampered)
+
+        unsupported = observer_presentation_contract()
+        unsupported["control_capabilities"] = ["pause"]
+        payload = {
+            key: value for key, value in unsupported.items()
+            if key != "contract_sha256"
+        }
+        canonical = json.dumps(
+            payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        unsupported["contract_sha256"] = hashlib.sha256(canonical).hexdigest()
+        with self.assertRaisesRegex(ValueError, "unsupported"):
+            verify_observer_presentation_contract(unsupported)
 
     def test_snapshot_comparison_ignores_path_provenance(self) -> None:
         left = observer_snapshot(Simulation(seed=379))

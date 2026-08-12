@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.186.0 — Verifiable presentation contract
+
+- Added public `verify_observer_presentation_contract(contract)` with strict key, digest-shape, constant-time SHA-256 integrity, and supported-vocabulary validation.
+- Authenticated but unsupported schemas, vocabularies, or control capabilities are rejected rather than silently accepted.
+- Added `--verify-observer-presentation-contract FILE` for read-only downloaded-contract verification with canonical status JSON and no file rewrite.
+- Added mutation-free API, tamper, unsupported-content, and CLI verification coverage, raising the deterministic suite to 218 tests; simulation, balance, comparison schema, and RL behavior are unchanged.
+
 ## 0.185.0 — Content-addressed presentation contract
 
 - Observer presentation contract advances to schema 2 with `contract_sha256`, computed from its complete canonical compact sorted JSON before the digest field is added.

@@ -12,6 +12,7 @@ from .observer import (
     observer_presentation_contract,
     observer_snapshot,
     save_observer_snapshot,
+    verify_observer_presentation_contract,
     verify_observer_snapshot,
 )
 from .persistence import (
@@ -40,6 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
     inspection_modes.add_argument(
         "--observer-presentation-contract", action="store_true",
         help="print the versioned read-only observer presentation vocabulary",
+    )
+    inspection_modes.add_argument(
+        "--verify-observer-presentation-contract", metavar="FILE",
+        help="verify a downloaded observer presentation contract",
     )
     inspection_modes.add_argument(
         "--verify-save", metavar="FILE",
@@ -104,7 +109,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             "--comparison-output requires --compare-experiment-bundles")
     if args.snapshot_output and not args.observer_snapshot:
         parser.error("--snapshot-output requires --observer-snapshot")
-    if (args.observer_presentation_contract or args.verify_save or
+    if (args.observer_presentation_contract or
+            args.verify_observer_presentation_contract or args.verify_save or
             args.story_progress or args.observer_snapshot or
             args.verify_observer_snapshot or args.compare_observer_snapshots or
             args.inspect_experiment_bundle or
@@ -113,6 +119,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
         mode_name = (
             "--observer-presentation-contract"
             if args.observer_presentation_contract
+            else "--verify-observer-presentation-contract"
+            if args.verify_observer_presentation_contract
             else "--verify-save" if args.verify_save
             else "--story-progress" if args.story_progress
             else "--observer-snapshot" if args.observer_snapshot
@@ -132,7 +140,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 for argument in arguments for option in simulation_options):
             parser.error(f"{mode_name} cannot use simulation options")
         if not (
-                args.observer_presentation_contract or args.verify_save or
+                args.observer_presentation_contract or
+                args.verify_observer_presentation_contract or args.verify_save or
                 args.story_progress or
                 args.observer_snapshot or args.verify_observer_snapshot or
                 args.compare_observer_snapshots):
@@ -148,6 +157,18 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             if args.observer_presentation_contract:
                 output = json.dumps(
                     observer_presentation_contract(), indent=2, sort_keys=True)
+            elif args.verify_observer_presentation_contract:
+                contract = json.loads(Path(
+                    args.verify_observer_presentation_contract
+                ).read_text(encoding="utf-8"))
+                summary = verify_observer_presentation_contract(contract)
+                output = json.dumps(
+                    {
+                        "path": args.verify_observer_presentation_contract,
+                        **summary,
+                    },
+                    indent=2, sort_keys=True,
+                )
             elif args.verify_save:
                 summary = verify_simulation_save(args.verify_save)
                 output = json.dumps(

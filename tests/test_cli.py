@@ -10,7 +10,7 @@ from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from awakened_zero_rank import observer_snapshot
+from awakened_zero_rank import observer_presentation_contract, observer_snapshot
 from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.persistence import save_simulation
 from awakened_zero_rank.simulation import Simulation
@@ -79,6 +79,27 @@ class CliValidationTests(unittest.TestCase):
             "--observer-presentation-contract cannot use simulation options",
             errors.getvalue(),
         )
+
+    def test_verify_observer_presentation_contract_is_read_only(
+            self) -> None:
+        contract = observer_presentation_contract()
+        with TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "presentation-contract.json"
+            path.write_text(json.dumps(contract), encoding="utf-8")
+            before = path.read_bytes()
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main((
+                    "--verify-observer-presentation-contract", str(path),
+                ))
+
+            self.assertEqual(path.read_bytes(), before)
+        summary = json.loads(output.getvalue())
+        self.assertEqual(summary["path"], str(path))
+        self.assertEqual(summary["status"], "valid")
+        self.assertEqual(summary["contract_schema_version"], 2)
+        self.assertEqual(summary["contract_sha256"], contract["contract_sha256"])
 
     def test_verify_save_is_read_only_and_reports_json(self) -> None:
         simulation = Simulation(seed=73)
