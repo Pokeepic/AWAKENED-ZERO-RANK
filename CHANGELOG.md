@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.185.0 — Content-addressed presentation contract
+
+- Observer presentation contract advances to schema 2 with `contract_sha256`, computed from its complete canonical compact sorted JSON before the digest field is added.
+- Python and CLI consumers can use the stable identity for cache validation and deployment drift detection without duplicating vocabulary comparison logic.
+- The digest is deterministic content identity, not a signature, authorization token, or proof of trusted delivery; read-only and empty control capabilities remain explicit.
+- Added independent API and CLI digest recomputation coverage while retaining 215 deterministic tests; simulation, balance, comparison schema, and RL behavior are unchanged.
+
 ## 0.184.0 — Versioned observer presentation contract
 
 - Added public `observer_presentation_contract()` with schema versions and canonical animation-cue, update-mode, and recent-activity vocabularies.

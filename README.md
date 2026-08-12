@@ -8,7 +8,7 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.184.0` |
+| Release | `0.185.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
@@ -236,7 +236,7 @@ A later release can add a read-only dashboard for time, weather, Ren's condition
 
 The intended product is a real publicly deployed website that anyone can visit through a normal URL, not a local-only developer demo. Its production plan should include responsive phone and desktop layouts, accessible controls and motion settings, secure read-only data delivery, caching, monitoring, deployment rollback, and a clear separation between the public chronicle and private developer diagnostics.
 
-The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-4, mutation-free, SHA-256-identified JSON boundary for current world, economy, protagonist, relationship, portal, story, and bounded recent-activity state; it exposes no control hooks. Comparison schema 8 adds a stable `animation_cue` beside the copied `appended_event`, so public clients can select accessible motion or sprite treatments without parsing prose or duplicating simulator rules. `observer_presentation_contract()` and `--observer-presentation-contract` expose the versioned cue, update-mode, and activity-relation vocabularies as read-only JSON with no control capabilities. Compatible historical actions use `other`, while non-append comparisons return `null` and never imply shared lineage.
+The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-4, mutation-free, SHA-256-identified JSON boundary for current world, economy, protagonist, relationship, portal, story, and bounded recent-activity state; it exposes no control hooks. Comparison schema 8 adds a stable `animation_cue` beside the copied `appended_event`, so public clients can select accessible motion or sprite treatments without parsing prose or duplicating simulator rules. `observer_presentation_contract()` and `--observer-presentation-contract` expose the versioned cue, update-mode, and activity-relation vocabularies as read-only JSON with no control capabilities. Contract schema 2 adds canonical `contract_sha256` cache identity; it is not a signature or authority token. Compatible historical actions use `other`, while non-append comparisons return `null` and never imply shared lineage.
 
 ### Future game adaptation
 

@@ -401,11 +401,22 @@ class ObserverSnapshotTests(unittest.TestCase):
 
         self.assertEqual(first, second)
         self.assertIsNot(first, second)
-        self.assertEqual(first["contract_schema_version"], 1)
+        self.assertEqual(first["contract_schema_version"], 2)
         self.assertEqual(first["observer_schema_version"], 4)
         self.assertEqual(first["comparison_schema_version"], 8)
         self.assertTrue(first["read_only"])
         self.assertEqual(first["control_capabilities"], [])
+        digest_payload = {
+            key: value for key, value in first.items()
+            if key != "contract_sha256"
+        }
+        canonical = json.dumps(
+            digest_payload, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        self.assertEqual(
+            first["contract_sha256"], hashlib.sha256(canonical).hexdigest())
+        self.assertEqual(len(first["contract_sha256"]), 64)
         self.assertEqual(first["animation_cues"], sorted(first["animation_cues"]))
         self.assertIn("other", first["animation_cues"])
         self.assertIn("story", first["animation_cues"])

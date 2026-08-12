@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -45,10 +46,22 @@ class CliValidationTests(unittest.TestCase):
             cli_main(("--observer-presentation-contract",))
 
         contract = json.loads(output.getvalue())
-        self.assertEqual(contract["contract_schema_version"], 1)
+        self.assertEqual(contract["contract_schema_version"], 2)
         self.assertEqual(contract["comparison_schema_version"], 8)
         self.assertTrue(contract["read_only"])
         self.assertEqual(contract["control_capabilities"], [])
+        digest_payload = {
+            key: value for key, value in contract.items()
+            if key != "contract_sha256"
+        }
+        canonical = json.dumps(
+            digest_payload, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        self.assertEqual(
+            contract["contract_sha256"],
+            hashlib.sha256(canonical).hexdigest(),
+        )
         self.assertIn("mission", contract["animation_cues"])
 
     def test_observer_presentation_contract_rejects_simulation_options(

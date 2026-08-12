@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
 OBSERVER_COMPARISON_SCHEMA_VERSION = 8
-OBSERVER_PRESENTATION_CONTRACT_SCHEMA_VERSION = 1
+OBSERVER_PRESENTATION_CONTRACT_SCHEMA_VERSION = 2
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
@@ -490,7 +490,7 @@ def verify_observer_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
 
 def observer_presentation_contract() -> dict[str, Any]:
     """Return the versioned read-only presentation vocabulary."""
-    return {
+    contract = {
         "animation_cues": sorted(
             set(_EVENT_ANIMATION_CUES.values()) | {"other", "story"}
         ),
@@ -501,6 +501,13 @@ def observer_presentation_contract() -> dict[str, Any]:
         "read_only": True,
         "recent_activity_relations": ["append", "replace", "unchanged"],
         "update_modes": ["animate", "refresh", "replace", "unchanged"],
+    }
+    canonical = json.dumps(
+        contract, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return {
+        **contract,
+        "contract_sha256": hashlib.sha256(canonical).hexdigest(),
     }
 
 
