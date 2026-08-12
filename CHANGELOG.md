@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.183.0 — Stable observer animation cues
+
+- Observer comparison advances to schema 8 with a stable `animation_cue` derived from the verified appended event rather than its outcome prose.
+- Canonical actions and story titles map to semantic presentation categories; recurring-character introductions map to social, and compatible unknown historical actions fall back to other.
+- Comparisons without an appended event expose `null`, keeping refresh and replacement paths free of guessed animation metadata.
+- Added exhaustive canonical-cue, fallback, API, CLI, and nullability coverage, raising the deterministic suite to 212 tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.182.0 — Verified observer event payload
 
 - Observer comparison advances to schema 7 with `appended_event`, a copied payload of the exact verified recent event when the bounded window relation is append.

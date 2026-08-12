@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
-OBSERVER_COMPARISON_SCHEMA_VERSION = 7
+OBSERVER_COMPARISON_SCHEMA_VERSION = 8
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
@@ -63,6 +63,26 @@ _INVESTIGATION_KEYS = {
 }
 _PORTAL_NAMES = {portal.name for portal in PORTALS}
 _NPC_NAMES = set(NPCS)
+_STORY_TITLES = {anchor.title for anchor in STORY_ANCHORS}
+_EVENT_ANIMATION_CUES = {
+    "Awakening assessment": "awakening",
+    "Eat": "food",
+    "Gate mission": "mission",
+    "Guild patrol": "patrol",
+    "Guild registration": "registration",
+    "Investigation consequence": "consequence",
+    "Part-time work": "work",
+    "Pay rent arrears": "finance",
+    "Prepare portal": "portal_preparation",
+    "Rent deadline": "finance",
+    "Rest": "rest",
+    "Seek treatment": "treatment",
+    "Study": "study",
+    "Talk with Aiko": "social",
+    "Tanabata evening": "festival",
+    "Train": "train",
+    "Visit hunter shop": "shopping",
+}
 _WEATHER_TEMPERATURES = {
     weather.name: weather.temperature_c for weather in SUMMER_WEATHER
 }
@@ -467,6 +487,14 @@ def verify_observer_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _animation_cue(action: str) -> str:
+    if action in _STORY_TITLES:
+        return "story"
+    if action.startswith("Meet "):
+        return "social"
+    return _EVENT_ANIMATION_CUES.get(action, "other")
+
+
 def compare_observer_snapshots(
         left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
     """Verify and compare two observer snapshots without changing either input."""
@@ -504,6 +532,9 @@ def compare_observer_snapshots(
     appended_event = (
         dict(right_events[-1]) if recent_activity_relation == "append" else None
     )
+    animation_cue = (
+        _animation_cue(appended_event["action"]) if appended_event else None
+    )
     update_mode = (
         "unchanged" if not changed_sections
         else "replace" if not same_seed or clock_relation == "backward"
@@ -513,6 +544,7 @@ def compare_observer_snapshots(
         else "refresh"
     )
     return {
+        "animation_cue": animation_cue,
         "appended_event": appended_event,
         "changed_sections": changed_sections,
         "clock_delta_slots": clock_delta_slots,

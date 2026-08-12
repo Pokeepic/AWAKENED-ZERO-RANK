@@ -411,8 +411,9 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(comparison["update_mode"], "unchanged")
         self.assertEqual(comparison["recent_activity_relation"], "unchanged")
         self.assertIsNone(comparison["appended_event"])
+        self.assertIsNone(comparison["animation_cue"])
         self.assertEqual(comparison["changed_sections"], [])
-        self.assertEqual(comparison["comparison_schema_version"], 7)
+        self.assertEqual(comparison["comparison_schema_version"], 8)
         self.assertEqual(comparison["observer_schema_version"], 4)
         self.assertEqual(comparison["left"]["digest"], comparison["right"]["digest"])
 
@@ -434,6 +435,9 @@ class ObserverSnapshotTests(unittest.TestCase):
             comparison["appended_event"], right["activity"]["recent_events"][-1])
         self.assertIsNot(
             comparison["appended_event"], right["activity"]["recent_events"][-1])
+        self.assertIn(comparison["animation_cue"], {
+            "food", "rest", "work", "study", "train",
+        })
         self.assertEqual(
             comparison["changed_sections"],
             sorted(comparison["changed_sections"]),
@@ -497,7 +501,45 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(comparison["clock_delta_slots"], 1)
         self.assertEqual(comparison["recent_activity_relation"], "unchanged")
         self.assertIsNone(comparison["appended_event"])
+        self.assertIsNone(comparison["animation_cue"])
         self.assertEqual(comparison["update_mode"], "refresh")
+
+    def test_snapshot_comparison_maps_stable_animation_cues(self) -> None:
+        simulation = Simulation(seed=448)
+        left = observer_snapshot(simulation)
+        simulation.step()
+        template = observer_snapshot(simulation)
+        cases = {
+            "Eat": "food",
+            "Rest": "rest",
+            "Part-time work": "work",
+            "Pay rent arrears": "finance",
+            "Study": "study",
+            "Train": "train",
+            "Seek treatment": "treatment",
+            "Prepare portal": "portal_preparation",
+            "Visit hunter shop": "shopping",
+            "Talk with Aiko": "social",
+            "Meet Daichi Mori": "social",
+            "Guild patrol": "patrol",
+            "Gate mission": "mission",
+            "Tanabata evening": "festival",
+            "Awakening assessment": "awakening",
+            "Guild registration": "registration",
+            "Rent deadline": "finance",
+            "Investigation consequence": "consequence",
+            STORY_ANCHORS[0].title: "story",
+            "Historical custom action": "other",
+        }
+
+        for action, cue in cases.items():
+            with self.subTest(action=action):
+                right = deepcopy(template)
+                right["activity"]["recent_events"][-1]["action"] = action
+                _redigest(right)
+                comparison = compare_observer_snapshots(left, right)
+                self.assertEqual(comparison["animation_cue"], cue)
+                self.assertEqual(comparison["update_mode"], "animate")
 
     def test_snapshot_comparison_reports_multi_day_clock_distance(self) -> None:
         simulation = Simulation(seed=449)
@@ -513,6 +555,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(forward["update_mode"], "refresh")
         self.assertEqual(forward["recent_activity_relation"], "replace")
         self.assertIsNone(forward["appended_event"])
+        self.assertIsNone(forward["animation_cue"])
         self.assertEqual(backward["clock_relation"], "backward")
         self.assertEqual(backward["clock_delta_slots"], -9)
 

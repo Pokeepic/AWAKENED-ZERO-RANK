@@ -303,6 +303,7 @@ class CliValidationTests(unittest.TestCase):
             comparison["appended_event"],
             right["activity"]["recent_events"][-1],
         )
+        self.assertIsInstance(comparison["animation_cue"], str)
         self.assertIn("clock", comparison["changed_sections"])
 
     def test_compare_observer_snapshots_rejects_simulation_options(self) -> None:
@@ -341,6 +342,7 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(comparison["clock_delta_slots"], 0)
         self.assertEqual(comparison["recent_activity_relation"], "unchanged")
         self.assertIsNone(comparison["appended_event"])
+        self.assertIsNone(comparison["animation_cue"])
         self.assertEqual(comparison["changed_sections"], [])
 
     def test_observer_comparison_equality_gate_reports_drift(self) -> None:
@@ -375,6 +377,7 @@ class CliValidationTests(unittest.TestCase):
             comparison["appended_event"],
             right_snapshot["activity"]["recent_events"][-1],
         )
+        self.assertIsInstance(comparison["animation_cue"], str)
         self.assertIn("clock", comparison["changed_sections"])
 
     def test_observer_summary_reports_named_story_ending(self) -> None:
