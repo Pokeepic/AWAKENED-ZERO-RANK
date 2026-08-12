@@ -295,6 +295,7 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(comparison["right_path"], str(right_path))
         self.assertFalse(comparison["identical"])
         self.assertTrue(comparison["same_seed"])
+        self.assertEqual(comparison["clock_delta_slots"], 1)
         self.assertEqual(comparison["clock_relation"], "forward")
         self.assertEqual(comparison["update_mode"], "animate")
         self.assertIn("clock", comparison["changed_sections"])
@@ -332,6 +333,7 @@ class CliValidationTests(unittest.TestCase):
 
         comparison = json.loads(output.getvalue())
         self.assertTrue(comparison["identical"])
+        self.assertEqual(comparison["clock_delta_slots"], 0)
         self.assertEqual(comparison["changed_sections"], [])
 
     def test_observer_comparison_equality_gate_reports_drift(self) -> None:
@@ -358,6 +360,7 @@ class CliValidationTests(unittest.TestCase):
         comparison = json.loads(output.getvalue())
         self.assertFalse(comparison["identical"])
         self.assertTrue(comparison["same_seed"])
+        self.assertEqual(comparison["clock_delta_slots"], 1)
         self.assertEqual(comparison["clock_relation"], "forward")
         self.assertEqual(comparison["update_mode"], "animate")
         self.assertIn("clock", comparison["changed_sections"])

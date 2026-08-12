@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.179.0 — Exact observer clock distance
+
+- Observer comparison advances to schema 4 with signed `clock_delta_slots`, computed from the verified day and four-slot clock positions.
+- Forward movement is positive, rewinds are negative, and equal positions are zero, including across day boundaries.
+- The distance helps public clients choose between a single animation and a large refresh; it remains timestamp metadata rather than proof of shared lineage.
+- Added focused identity, forward, backward, same-clock, different-seed, CLI, and multi-day coverage, raising the deterministic suite to 210 tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.178.0 — Conservative observer update modes
 
 - Observer comparison advances to schema 3 with a deterministic update mode for public clients: unchanged, animate, refresh, or replace.

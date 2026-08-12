@@ -406,10 +406,11 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(right, right_before)
         self.assertTrue(comparison["identical"])
         self.assertTrue(comparison["same_seed"])
+        self.assertEqual(comparison["clock_delta_slots"], 0)
         self.assertEqual(comparison["clock_relation"], "same")
         self.assertEqual(comparison["update_mode"], "unchanged")
         self.assertEqual(comparison["changed_sections"], [])
-        self.assertEqual(comparison["comparison_schema_version"], 3)
+        self.assertEqual(comparison["comparison_schema_version"], 4)
         self.assertEqual(comparison["observer_schema_version"], 4)
         self.assertEqual(comparison["left"]["digest"], comparison["right"]["digest"])
 
@@ -423,6 +424,7 @@ class ObserverSnapshotTests(unittest.TestCase):
 
         self.assertFalse(comparison["identical"])
         self.assertTrue(comparison["same_seed"])
+        self.assertEqual(comparison["clock_delta_slots"], 1)
         self.assertEqual(comparison["clock_relation"], "forward")
         self.assertEqual(comparison["update_mode"], "animate")
         self.assertEqual(
@@ -451,9 +453,11 @@ class ObserverSnapshotTests(unittest.TestCase):
             earlier, observer_snapshot(Simulation(seed=431)))
 
         self.assertEqual(backward["clock_relation"], "backward")
+        self.assertEqual(backward["clock_delta_slots"], -1)
         self.assertEqual(backward["update_mode"], "replace")
         self.assertTrue(backward["same_seed"])
         self.assertEqual(different_seed["clock_relation"], "same")
+        self.assertEqual(different_seed["clock_delta_slots"], 0)
         self.assertFalse(different_seed["same_seed"])
         self.assertEqual(different_seed["update_mode"], "replace")
         self.assertIn("seed", different_seed["changed_sections"])
@@ -467,9 +471,24 @@ class ObserverSnapshotTests(unittest.TestCase):
         comparison = compare_observer_snapshots(left, right)
 
         self.assertEqual(comparison["clock_relation"], "same")
+        self.assertEqual(comparison["clock_delta_slots"], 0)
         self.assertTrue(comparison["same_seed"])
         self.assertEqual(comparison["update_mode"], "refresh")
         self.assertEqual(comparison["changed_sections"], ["protagonist"])
+
+    def test_snapshot_comparison_reports_multi_day_clock_distance(self) -> None:
+        simulation = Simulation(seed=449)
+        left = observer_snapshot(simulation)
+        simulation.run(9)
+        right = observer_snapshot(simulation)
+
+        forward = compare_observer_snapshots(left, right)
+        backward = compare_observer_snapshots(right, left)
+
+        self.assertEqual(forward["clock_relation"], "forward")
+        self.assertEqual(forward["clock_delta_slots"], 9)
+        self.assertEqual(backward["clock_relation"], "backward")
+        self.assertEqual(backward["clock_delta_slots"], -9)
 
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))
