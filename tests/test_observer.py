@@ -405,8 +405,10 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(left, left_before)
         self.assertEqual(right, right_before)
         self.assertTrue(comparison["identical"])
+        self.assertTrue(comparison["same_seed"])
+        self.assertEqual(comparison["clock_relation"], "same")
         self.assertEqual(comparison["changed_sections"], [])
-        self.assertEqual(comparison["comparison_schema_version"], 1)
+        self.assertEqual(comparison["comparison_schema_version"], 2)
         self.assertEqual(comparison["observer_schema_version"], 4)
         self.assertEqual(comparison["left"]["digest"], comparison["right"]["digest"])
 
@@ -419,6 +421,8 @@ class ObserverSnapshotTests(unittest.TestCase):
         comparison = compare_observer_snapshots(left, right)
 
         self.assertFalse(comparison["identical"])
+        self.assertTrue(comparison["same_seed"])
+        self.assertEqual(comparison["clock_relation"], "forward")
         self.assertEqual(
             comparison["changed_sections"],
             sorted(comparison["changed_sections"]),
@@ -433,6 +437,22 @@ class ObserverSnapshotTests(unittest.TestCase):
         tampered["clock"]["day"] += 1
         with self.assertRaisesRegex(ValueError, "integrity check failed"):
             compare_observer_snapshots(left, tampered)
+
+    def test_snapshot_comparison_reports_direction_and_seed_change(self) -> None:
+        simulation = Simulation(seed=421)
+        earlier = observer_snapshot(simulation)
+        simulation.step()
+        later = observer_snapshot(simulation)
+
+        backward = compare_observer_snapshots(later, earlier)
+        different_seed = compare_observer_snapshots(
+            earlier, observer_snapshot(Simulation(seed=431)))
+
+        self.assertEqual(backward["clock_relation"], "backward")
+        self.assertTrue(backward["same_seed"])
+        self.assertEqual(different_seed["clock_relation"], "same")
+        self.assertFalse(different_seed["same_seed"])
+        self.assertIn("seed", different_seed["changed_sections"])
 
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))

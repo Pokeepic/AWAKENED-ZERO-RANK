@@ -294,6 +294,8 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(comparison["left_path"], str(left_path))
         self.assertEqual(comparison["right_path"], str(right_path))
         self.assertFalse(comparison["identical"])
+        self.assertTrue(comparison["same_seed"])
+        self.assertEqual(comparison["clock_relation"], "forward")
         self.assertIn("clock", comparison["changed_sections"])
 
     def test_compare_observer_snapshots_rejects_simulation_options(self) -> None:
@@ -354,6 +356,8 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(context.exception.code, 1)
         comparison = json.loads(output.getvalue())
         self.assertFalse(comparison["identical"])
+        self.assertTrue(comparison["same_seed"])
+        self.assertEqual(comparison["clock_relation"], "forward")
         self.assertIn("clock", comparison["changed_sections"])
 
     def test_observer_summary_reports_named_story_ending(self) -> None:

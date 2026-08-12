@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.176.0` |
+| Release | `0.177.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 207 |
+| Automated tests | 208 |
 
 ## Why this project exists
 
@@ -112,6 +112,8 @@ awakened-zero-rank --verify-observer-snapshot snapshot.json
 ```
 
 Compare two verified observer snapshots without rewriting either file:
+
+Comparison schema 2 reports sorted changed sections, whether seeds match, and a directional clock relation of `forward`, `same`, or `backward`. Seed equality is useful continuity metadata but does not claim that two saves are an unbranched timeline.
 
 ```bash
 awakened-zero-rank --compare-observer-snapshots before.json after.json

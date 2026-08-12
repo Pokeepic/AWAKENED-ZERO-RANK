@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.177.0 — Direction-aware observer comparison
+
+- Observer comparison advances to schema 2 with explicit clock-relation values of forward, same, or backward after both snapshot clocks pass semantic verification.
+- Added same-seed continuity metadata and retained seed in changed sections when inputs differ; equal seeds are not presented as proof of an unbranched timeline.
+- CLI comparison and equality-gate JSON expose the new metadata so a future public website can avoid animating rewinds or seed switches as normal forward updates.
+- Added focused forward, backward, same-clock, and different-seed coverage, raising the deterministic suite to 208 tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.176.0 — Observer comparison equality gate
 
 - `--require-identical` now supports verified observer snapshot comparisons as well as experiment-bundle comparisons.

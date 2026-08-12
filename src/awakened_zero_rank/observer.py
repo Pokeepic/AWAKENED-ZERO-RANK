@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
-OBSERVER_COMPARISON_SCHEMA_VERSION = 1
+OBSERVER_COMPARISON_SCHEMA_VERSION = 2
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
@@ -477,8 +477,18 @@ def compare_observer_snapshots(
         section for section in comparable_sections
         if left[section] != right[section]
     )
+    left_position = (
+        left["clock"]["day"], _SLOTS.index(left["clock"]["slot"]))
+    right_position = (
+        right["clock"]["day"], _SLOTS.index(right["clock"]["slot"]))
+    clock_relation = (
+        "forward" if left_position < right_position
+        else "backward" if left_position > right_position
+        else "same"
+    )
     return {
         "changed_sections": changed_sections,
+        "clock_relation": clock_relation,
         "comparison_schema_version": OBSERVER_COMPARISON_SCHEMA_VERSION,
         "identical": not changed_sections,
         "left": {
@@ -492,6 +502,7 @@ def compare_observer_snapshots(
             "digest": right["identity"]["digest"],
             "seed": right["seed"],
         },
+        "same_seed": left["seed"] == right["seed"],
     }
 
 
