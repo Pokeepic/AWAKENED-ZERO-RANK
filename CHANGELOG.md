@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.178.0 — Conservative observer update modes
+
+- Observer comparison advances to schema 3 with a deterministic update mode for public clients: unchanged, animate, refresh, or replace.
+- Identical content is unchanged; seed switches and rewinds require replacement; same-seed forward clocks may animate; same-clock changed content refreshes without transition animation.
+- The mode is presentation advice derived from two verified snapshots, not proof that equal seeds share an unbranched history and not a simulation control.
+- Added focused same-clock refresh coverage and mode assertions across every existing comparison relation, raising the deterministic suite to 209 tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.177.0 — Direction-aware observer comparison
 
 - Observer comparison advances to schema 2 with explicit clock-relation values of forward, same, or backward after both snapshot clocks pass semantic verification.

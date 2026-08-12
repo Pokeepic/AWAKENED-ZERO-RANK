@@ -296,6 +296,7 @@ class CliValidationTests(unittest.TestCase):
         self.assertFalse(comparison["identical"])
         self.assertTrue(comparison["same_seed"])
         self.assertEqual(comparison["clock_relation"], "forward")
+        self.assertEqual(comparison["update_mode"], "animate")
         self.assertIn("clock", comparison["changed_sections"])
 
     def test_compare_observer_snapshots_rejects_simulation_options(self) -> None:
@@ -358,6 +359,7 @@ class CliValidationTests(unittest.TestCase):
         self.assertFalse(comparison["identical"])
         self.assertTrue(comparison["same_seed"])
         self.assertEqual(comparison["clock_relation"], "forward")
+        self.assertEqual(comparison["update_mode"], "animate")
         self.assertIn("clock", comparison["changed_sections"])
 
     def test_observer_summary_reports_named_story_ending(self) -> None:

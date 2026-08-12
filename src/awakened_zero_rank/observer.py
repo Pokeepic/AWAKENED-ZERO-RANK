@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
-OBSERVER_COMPARISON_SCHEMA_VERSION = 2
+OBSERVER_COMPARISON_SCHEMA_VERSION = 3
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
@@ -486,6 +486,13 @@ def compare_observer_snapshots(
         else "backward" if left_position > right_position
         else "same"
     )
+    same_seed = left["seed"] == right["seed"]
+    update_mode = (
+        "unchanged" if not changed_sections
+        else "replace" if not same_seed or clock_relation == "backward"
+        else "animate" if clock_relation == "forward"
+        else "refresh"
+    )
     return {
         "changed_sections": changed_sections,
         "clock_relation": clock_relation,
@@ -502,7 +509,8 @@ def compare_observer_snapshots(
             "digest": right["identity"]["digest"],
             "seed": right["seed"],
         },
-        "same_seed": left["seed"] == right["seed"],
+        "same_seed": same_seed,
+        "update_mode": update_mode,
     }
 
 

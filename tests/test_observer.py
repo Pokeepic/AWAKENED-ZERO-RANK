@@ -407,8 +407,9 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertTrue(comparison["identical"])
         self.assertTrue(comparison["same_seed"])
         self.assertEqual(comparison["clock_relation"], "same")
+        self.assertEqual(comparison["update_mode"], "unchanged")
         self.assertEqual(comparison["changed_sections"], [])
-        self.assertEqual(comparison["comparison_schema_version"], 2)
+        self.assertEqual(comparison["comparison_schema_version"], 3)
         self.assertEqual(comparison["observer_schema_version"], 4)
         self.assertEqual(comparison["left"]["digest"], comparison["right"]["digest"])
 
@@ -423,6 +424,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertFalse(comparison["identical"])
         self.assertTrue(comparison["same_seed"])
         self.assertEqual(comparison["clock_relation"], "forward")
+        self.assertEqual(comparison["update_mode"], "animate")
         self.assertEqual(
             comparison["changed_sections"],
             sorted(comparison["changed_sections"]),
@@ -449,10 +451,25 @@ class ObserverSnapshotTests(unittest.TestCase):
             earlier, observer_snapshot(Simulation(seed=431)))
 
         self.assertEqual(backward["clock_relation"], "backward")
+        self.assertEqual(backward["update_mode"], "replace")
         self.assertTrue(backward["same_seed"])
         self.assertEqual(different_seed["clock_relation"], "same")
         self.assertFalse(different_seed["same_seed"])
+        self.assertEqual(different_seed["update_mode"], "replace")
         self.assertIn("seed", different_seed["changed_sections"])
+
+    def test_snapshot_comparison_refreshes_same_clock_changes(self) -> None:
+        left = observer_snapshot(Simulation(seed=443))
+        right = deepcopy(left)
+        right["protagonist"]["current_goal"] = "Review the latest Gate report"
+        _redigest(right)
+
+        comparison = compare_observer_snapshots(left, right)
+
+        self.assertEqual(comparison["clock_relation"], "same")
+        self.assertTrue(comparison["same_seed"])
+        self.assertEqual(comparison["update_mode"], "refresh")
+        self.assertEqual(comparison["changed_sections"], ["protagonist"])
 
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))
