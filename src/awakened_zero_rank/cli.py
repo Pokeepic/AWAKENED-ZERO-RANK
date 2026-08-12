@@ -9,6 +9,7 @@ from . import __version__
 from .journal import journal_entry
 from .observer import (
     compare_observer_snapshots,
+    observer_presentation_contract,
     observer_snapshot,
     save_observer_snapshot,
     verify_observer_snapshot,
@@ -36,6 +37,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--save", metavar="FILE", help="save after this run")
     parser.add_argument("--technical-log", action="store_true", help="show decision reasons")
     inspection_modes = parser.add_mutually_exclusive_group()
+    inspection_modes.add_argument(
+        "--observer-presentation-contract", action="store_true",
+        help="print the versioned read-only observer presentation vocabulary",
+    )
     inspection_modes.add_argument(
         "--verify-save", metavar="FILE",
         help="verify a timeline save without advancing it",
@@ -99,13 +104,16 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             "--comparison-output requires --compare-experiment-bundles")
     if args.snapshot_output and not args.observer_snapshot:
         parser.error("--snapshot-output requires --observer-snapshot")
-    if (args.verify_save or args.story_progress or args.observer_snapshot or
+    if (args.observer_presentation_contract or args.verify_save or
+            args.story_progress or args.observer_snapshot or
             args.verify_observer_snapshot or args.compare_observer_snapshots or
             args.inspect_experiment_bundle or
             args.compare_experiment_bundles or
             args.inspect_comparison_artifact):
         mode_name = (
-            "--verify-save" if args.verify_save
+            "--observer-presentation-contract"
+            if args.observer_presentation_contract
+            else "--verify-save" if args.verify_save
             else "--story-progress" if args.story_progress
             else "--observer-snapshot" if args.observer_snapshot
             else "--verify-observer-snapshot"
@@ -124,7 +132,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 for argument in arguments for option in simulation_options):
             parser.error(f"{mode_name} cannot use simulation options")
         if not (
-                args.verify_save or args.story_progress or
+                args.observer_presentation_contract or args.verify_save or
+                args.story_progress or
                 args.observer_snapshot or args.verify_observer_snapshot or
                 args.compare_observer_snapshots):
             from .learning import (
@@ -136,7 +145,10 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 save_experiment_bundle_comparison,
             )
         try:
-            if args.verify_save:
+            if args.observer_presentation_contract:
+                output = json.dumps(
+                    observer_presentation_contract(), indent=2, sort_keys=True)
+            elif args.verify_save:
                 summary = verify_simulation_save(args.verify_save)
                 output = json.dumps(
                     {"path": args.verify_save, **summary},

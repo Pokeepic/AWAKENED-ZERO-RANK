@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
 OBSERVER_COMPARISON_SCHEMA_VERSION = 8
+OBSERVER_PRESENTATION_CONTRACT_SCHEMA_VERSION = 1
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
@@ -484,6 +485,22 @@ def verify_observer_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
         "schema_version": OBSERVER_SNAPSHOT_SCHEMA_VERSION,
         "seed": snapshot["seed"],
         "status": "valid",
+    }
+
+
+def observer_presentation_contract() -> dict[str, Any]:
+    """Return the versioned read-only presentation vocabulary."""
+    return {
+        "animation_cues": sorted(
+            set(_EVENT_ANIMATION_CUES.values()) | {"other", "story"}
+        ),
+        "comparison_schema_version": OBSERVER_COMPARISON_SCHEMA_VERSION,
+        "contract_schema_version": OBSERVER_PRESENTATION_CONTRACT_SCHEMA_VERSION,
+        "control_capabilities": [],
+        "observer_schema_version": OBSERVER_SNAPSHOT_SCHEMA_VERSION,
+        "read_only": True,
+        "recent_activity_relations": ["append", "replace", "unchanged"],
+        "update_modes": ["animate", "refresh", "replace", "unchanged"],
     }
 
 

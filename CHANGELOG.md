@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.184.0 — Versioned observer presentation contract
+
+- Added public `observer_presentation_contract()` with schema versions and canonical animation-cue, update-mode, and recent-activity vocabularies.
+- The contract explicitly reports read-only status and an empty control-capability list, and every call returns isolated mutable containers.
+- Added `--observer-presentation-contract` for canonical JSON discovery without loading a save; simulation options are rejected consistently with other inspection modes.
+- Added API, isolation, CLI, and option-conflict coverage, raising the deterministic suite to 215 tests; simulation, balance, and RL behavior are unchanged.
+
 ## 0.183.0 — Stable observer animation cues
 
 - Observer comparison advances to schema 8 with a stable `animation_cue` derived from the verified appended event rather than its outcome prose.

@@ -38,6 +38,35 @@ class CliValidationTests(unittest.TestCase):
         self.assertIn("error: --days must be at least 1", errors.getvalue())
         self.assertNotIn("Traceback", errors.getvalue())
 
+    def test_observer_presentation_contract_reports_read_only_json(self) -> None:
+        output = StringIO()
+
+        with redirect_stdout(output):
+            cli_main(("--observer-presentation-contract",))
+
+        contract = json.loads(output.getvalue())
+        self.assertEqual(contract["contract_schema_version"], 1)
+        self.assertEqual(contract["comparison_schema_version"], 8)
+        self.assertTrue(contract["read_only"])
+        self.assertEqual(contract["control_capabilities"], [])
+        self.assertIn("mission", contract["animation_cues"])
+
+    def test_observer_presentation_contract_rejects_simulation_options(
+            self) -> None:
+        output, errors = StringIO(), StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main((
+                    "--observer-presentation-contract", "--days", "1",
+                ))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn(
+            "--observer-presentation-contract cannot use simulation options",
+            errors.getvalue(),
+        )
+
     def test_verify_save_is_read_only_and_reports_json(self) -> None:
         simulation = Simulation(seed=73)
         simulation.run(5)

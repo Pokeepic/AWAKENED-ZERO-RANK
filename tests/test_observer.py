@@ -11,6 +11,7 @@ from tempfile import TemporaryDirectory
 
 from awakened_zero_rank import (
     compare_observer_snapshots,
+    observer_presentation_contract,
     observer_snapshot,
     save_observer_snapshot,
     verify_observer_snapshot,
@@ -392,6 +393,24 @@ class ObserverSnapshotTests(unittest.TestCase):
         _redigest(collaborator)
         with self.assertRaisesRegex(ValueError, "portal collaborator"):
             verify_observer_snapshot(collaborator)
+
+    def test_presentation_contract_is_versioned_read_only_and_isolated(
+            self) -> None:
+        first = observer_presentation_contract()
+        second = observer_presentation_contract()
+
+        self.assertEqual(first, second)
+        self.assertIsNot(first, second)
+        self.assertEqual(first["contract_schema_version"], 1)
+        self.assertEqual(first["observer_schema_version"], 4)
+        self.assertEqual(first["comparison_schema_version"], 8)
+        self.assertTrue(first["read_only"])
+        self.assertEqual(first["control_capabilities"], [])
+        self.assertEqual(first["animation_cues"], sorted(first["animation_cues"]))
+        self.assertIn("other", first["animation_cues"])
+        self.assertIn("story", first["animation_cues"])
+        first["animation_cues"].append("client-local")
+        self.assertNotIn("client-local", second["animation_cues"])
 
     def test_snapshot_comparison_ignores_path_provenance(self) -> None:
         left = observer_snapshot(Simulation(seed=379))
