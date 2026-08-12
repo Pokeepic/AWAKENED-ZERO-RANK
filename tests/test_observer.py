@@ -13,6 +13,7 @@ from awakened_zero_rank import (
     compare_observer_snapshots,
     observer_presentation_contract,
     observer_snapshot,
+    save_observer_presentation_contract,
     save_observer_snapshot,
     verify_observer_presentation_contract,
     verify_observer_snapshot,
@@ -459,6 +460,40 @@ class ObserverSnapshotTests(unittest.TestCase):
         unsupported["contract_sha256"] = hashlib.sha256(canonical).hexdigest()
         with self.assertRaisesRegex(ValueError, "unsupported"):
             verify_observer_presentation_contract(unsupported)
+
+    def test_presentation_contract_publication_is_canonical_and_non_overwriting(
+            self) -> None:
+        contract = observer_presentation_contract()
+        with TemporaryDirectory() as temporary_directory:
+            target = Path(temporary_directory) / "nested" / "contract.json"
+
+            published = save_observer_presentation_contract(contract, target)
+
+            self.assertEqual(published, target)
+            self.assertEqual(
+                target.read_text(encoding="utf-8"),
+                json.dumps(
+                    contract, ensure_ascii=False, indent=2, sort_keys=True
+                ) + "\n",
+            )
+            verify_observer_presentation_contract(
+                json.loads(target.read_text(encoding="utf-8")))
+            original = target.read_bytes()
+            with self.assertRaisesRegex(ValueError, "already exists"):
+                save_observer_presentation_contract(contract, target)
+            self.assertEqual(target.read_bytes(), original)
+
+    def test_presentation_contract_publication_rejects_before_creating_file(
+            self) -> None:
+        contract = observer_presentation_contract()
+        contract["read_only"] = False
+        with TemporaryDirectory() as temporary_directory:
+            target = Path(temporary_directory) / "contract.json"
+
+            with self.assertRaisesRegex(ValueError, "integrity check failed"):
+                save_observer_presentation_contract(contract, target)
+
+            self.assertFalse(target.exists())
 
     def test_snapshot_comparison_ignores_path_provenance(self) -> None:
         left = observer_snapshot(Simulation(seed=379))

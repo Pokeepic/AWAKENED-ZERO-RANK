@@ -64,6 +64,50 @@ class CliValidationTests(unittest.TestCase):
         )
         self.assertIn("mission", contract["animation_cues"])
 
+    def test_presentation_contract_output_publishes_exact_printed_payload(
+            self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            target = Path(temporary_directory) / "contract.json"
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main((
+                    "--observer-presentation-contract",
+                    "--presentation-contract-output", str(target),
+                ))
+
+            self.assertEqual(
+                json.loads(target.read_text(encoding="utf-8")),
+                json.loads(output.getvalue()),
+            )
+            original = target.read_bytes()
+            errors = StringIO()
+            with redirect_stdout(StringIO()), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main((
+                        "--observer-presentation-contract",
+                        "--presentation-contract-output", str(target),
+                    ))
+            self.assertEqual(context.exception.code, 2)
+            self.assertIn("destination already exists", errors.getvalue())
+            self.assertEqual(target.read_bytes(), original)
+
+    def test_presentation_contract_output_requires_generation_mode(self) -> None:
+        output, errors = StringIO(), StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main((
+                    "--presentation-contract-output", "contract.json",
+                ))
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn(
+            "--presentation-contract-output requires "
+            "--observer-presentation-contract",
+            errors.getvalue(),
+        )
+
     def test_observer_presentation_contract_rejects_simulation_options(
             self) -> None:
         output, errors = StringIO(), StringIO()

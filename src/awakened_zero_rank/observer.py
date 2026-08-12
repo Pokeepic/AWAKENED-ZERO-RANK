@@ -546,6 +546,35 @@ def verify_observer_presentation_contract(
     }
 
 
+def save_observer_presentation_contract(
+        contract: dict[str, Any], destination: str | Path) -> Path:
+    """Validate, stage, and publish a non-overwriting presentation contract."""
+    verify_observer_presentation_contract(contract)
+    target = Path(destination)
+    if target.exists():
+        raise ValueError(
+            "Observer presentation contract destination already exists")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(
+            prefix=f".{target.name}.staging-", dir=target.parent) as temporary:
+        staging = Path(temporary) / target.name
+        staging.write_text(
+            json.dumps(
+                contract, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        loaded = json.loads(staging.read_text(encoding="utf-8"))
+        verify_observer_presentation_contract(loaded)
+        if loaded != contract:
+            raise ValueError(
+                "Observer presentation contract staging verification failed")
+        if target.exists():
+            raise ValueError(
+                "Observer presentation contract destination appeared during staging")
+        staging.rename(target)
+    return target
+
+
 def _animation_cue(action: str) -> str:
     if action in _STORY_TITLES:
         return "story"

@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.187.0 — Deployable presentation contract
+
+- Added public `save_observer_presentation_contract(contract, destination)` with strict preflight verification, canonical UTF-8 JSON staging, reread verification, atomic publication, parent creation, and non-overwrite protection.
+- Added `--presentation-contract-output FILE`, available only with `--observer-presentation-contract`, so deployment pipelines can publish exactly the JSON printed to stdout without shell redirection or partial artifacts.
+- Added invalid-input, canonical-output, exact-payload, option-contract, and non-overwrite coverage, raising the deterministic suite to 222 tests.
+- Refreshed README release/test totals and the observer deployment boundary; simulation, balance, schemas, and RL behavior are unchanged.
+
 ## 0.186.0 — Verifiable presentation contract
 
 - Added public `verify_observer_presentation_contract(contract)` with strict key, digest-shape, constant-time SHA-256 integrity, and supported-vocabulary validation.

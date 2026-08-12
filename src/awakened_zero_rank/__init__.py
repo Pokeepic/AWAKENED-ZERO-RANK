@@ -4,17 +4,19 @@ from .observer import (
     compare_observer_snapshots,
     observer_presentation_contract,
     observer_snapshot,
+    save_observer_presentation_contract,
     save_observer_snapshot,
     verify_observer_presentation_contract,
     verify_observer_snapshot,
 )
 from .simulation import Simulation
 
-__version__ = "0.186.0"
+__version__ = "0.187.0"
 
 __all__ = [
     "Simulation", "__version__", "compare_observer_snapshots",
     "observer_presentation_contract", "observer_snapshot",
-    "save_observer_snapshot", "verify_observer_presentation_contract",
+    "save_observer_presentation_contract", "save_observer_snapshot",
+    "verify_observer_presentation_contract",
     "verify_observer_snapshot",
 ]

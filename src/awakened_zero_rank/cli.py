@@ -11,6 +11,7 @@ from .observer import (
     compare_observer_snapshots,
     observer_presentation_contract,
     observer_snapshot,
+    save_observer_presentation_contract,
     save_observer_snapshot,
     verify_observer_presentation_contract,
     verify_observer_snapshot,
@@ -83,6 +84,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="save verified comparison JSON without overwriting",
     )
     parser.add_argument(
+        "--presentation-contract-output", metavar="FILE",
+        help="save presentation contract JSON without overwriting",
+    )
+    parser.add_argument(
         "--snapshot-output", metavar="FILE",
         help="save observer snapshot JSON without overwriting",
     )
@@ -109,6 +114,11 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             "--comparison-output requires --compare-experiment-bundles")
     if args.snapshot_output and not args.observer_snapshot:
         parser.error("--snapshot-output requires --observer-snapshot")
+    if (args.presentation_contract_output and
+            not args.observer_presentation_contract):
+        parser.error(
+            "--presentation-contract-output requires "
+            "--observer-presentation-contract")
     if (args.observer_presentation_contract or
             args.verify_observer_presentation_contract or args.verify_save or
             args.story_progress or args.observer_snapshot or
@@ -155,8 +165,11 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             )
         try:
             if args.observer_presentation_contract:
-                output = json.dumps(
-                    observer_presentation_contract(), indent=2, sort_keys=True)
+                contract = observer_presentation_contract()
+                output = json.dumps(contract, indent=2, sort_keys=True)
+                if args.presentation_contract_output:
+                    save_observer_presentation_contract(
+                        contract, args.presentation_contract_output)
             elif args.verify_observer_presentation_contract:
                 contract = json.loads(Path(
                     args.verify_observer_presentation_contract
