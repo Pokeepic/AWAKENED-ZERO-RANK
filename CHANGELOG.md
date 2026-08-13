@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.249.0 - Fixed-event state evidence
+
+- Browser, save, and Python observer validation now require ability mastery 1 at the exact post-Awakening boundary.
+- The exact post-registration boundary requires the authored Gate alert level 2; later mastery and alert changes remain unrestricted.
+- Added both fixed-event state boundaries. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.248.0 - Fixed-event location evidence
 
 - Browser, save, and Python observer validation now bind the exact post-Awakening boundary to the Tokyo Awakening Bureau.

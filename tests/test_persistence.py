@@ -321,6 +321,23 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
+    def test_fixed_events_require_authored_state_evidence(self) -> None:
+        for steps, mutate, message in (
+                (10, lambda simulation: setattr(
+                    simulation.state.protagonist, "ability_mastery", 2),
+                 "Awakening mastery evidence"),
+                (13, lambda simulation: setattr(
+                    simulation.state, "gate_alert_level", 1),
+                 "Guild alert evidence")):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=94)
+                simulation.run(steps)
+                mutate(simulation)
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, message):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30
@@ -339,6 +356,7 @@ class PersistenceSafetyTests(unittest.TestCase):
         simulation.state.clock.day = 3
         simulation.state.clock.slot = TimeSlot.EVENING
         protagonist.location = "Tokyo Awakening Bureau"
+        protagonist.ability_mastery = 1
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"
             with self.assertRaisesRegex(ValueError, "mission evidence"):
@@ -356,6 +374,7 @@ class PersistenceSafetyTests(unittest.TestCase):
         simulation.state.clock.day = 3
         simulation.state.clock.slot = TimeSlot.EVENING
         protagonist.location = "Tokyo Awakening Bureau"
+        protagonist.ability_mastery = 1
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"
             with self.assertRaisesRegex(ValueError, "exact awards"):

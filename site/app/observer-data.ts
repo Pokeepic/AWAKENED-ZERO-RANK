@@ -290,6 +290,8 @@ function isIdentity(value: unknown): value is Identity {
 
 function isEnvironment(
   value: unknown,
+  day: number,
+  slot: string,
 ): value is ObserverSnapshot["environment"] {
   return (
     isRecord(value) &&
@@ -298,6 +300,7 @@ function isEnvironment(
     value.season === "Summer" &&
     isInteger(value.gate_alert_level) &&
     value.gate_alert_level <= 3 &&
+    !(day === 4 && slot === "Afternoon" && value.gate_alert_level !== 2) &&
     Number.isSafeInteger(value.temperature_c) &&
     SUMMER_TEMPERATURES[value.weather] === value.temperature_c
   );
@@ -736,7 +739,11 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !hasExactKeys(value.clock, ["day", "slot"]) ||
     !isInteger(value.clock.day, 1) ||
     !isString(value.clock.slot) ||
-    !isEnvironment(value.environment) ||
+    !isEnvironment(
+      value.environment,
+      value.clock.day as number,
+      value.clock.slot as string,
+    ) ||
     !isEconomy(value.economy, value.clock.day as number, value.clock.slot as string) ||
     !isRecord(value.protagonist)
   ) {
@@ -797,6 +804,8 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     ]) ||
     !["ability_mastery", "combat_readiness"].every((name) =>
       isIntegerInRange(protagonist.progression[name], 0, 100)) ||
+    (value.clock.day === 3 && value.clock.slot === "Evening" &&
+      protagonist.progression.ability_mastery !== 1) ||
     ![
       "rank_points", "fitness", "knowledge", "missions_attempted",
       "missions_completed",

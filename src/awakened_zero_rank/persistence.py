@@ -198,6 +198,16 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             clock_position in fixed_locations and
             protagonist.location != fixed_locations[clock_position]):
         raise ValueError("Invalid save fixed-event location")
+    if (
+            clock_position ==
+            (3, tuple(TimeSlot).index(TimeSlot.EVENING)) and
+            protagonist.ability_mastery != 1):
+        raise ValueError("Invalid save Awakening mastery evidence")
+    if (
+            clock_position ==
+            (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)) and
+            state.gate_alert_level != 2):
+        raise ValueError("Invalid save Guild alert evidence")
     if not awakened_by_clock:
         expected_goal = "Earn enough yen to pay rent"
     elif clock_position < (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)):

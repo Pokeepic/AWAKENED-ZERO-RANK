@@ -152,7 +152,7 @@ def _validate_activity(
         raise ValueError("Observer snapshot key memories are out of order")
 
 
-def _validate_environment(environment: Any) -> None:
+def _validate_environment(environment: Any, day: int, slot: str) -> None:
     if not isinstance(environment, dict) or set(environment) != _ENVIRONMENT_KEYS:
         raise ValueError("Observer snapshot environment is malformed")
     alert = _integer(environment["gate_alert_level"], "gate alert level")
@@ -160,6 +160,10 @@ def _validate_environment(environment: Any) -> None:
     weather = environment["weather"]
     if not 0 <= alert <= 3:
         raise ValueError("Observer snapshot gate alert level is invalid")
+    if (
+            (day, _SLOTS.index(slot)) ==
+            (4, _SLOTS.index("Afternoon")) and alert != 2):
+        raise ValueError("Observer snapshot Guild alert evidence is invalid")
     if (
             environment["season"] != "Summer" or
             weather not in _WEATHER_TEMPERATURES or
@@ -408,6 +412,10 @@ def _validate_protagonist(
         for name, value in progression.items()
     }
     if (
+            position == (3, _SLOTS.index("Evening")) and
+            progression_values["ability_mastery"] != 1):
+        raise ValueError("Observer snapshot Awakening mastery evidence is invalid")
+    if (
             any(
                 not 0 <= progression_values[name] <= 100
                 for name in ("ability_mastery", "combat_readiness")
@@ -533,7 +541,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
         raise ValueError("Observer snapshot clock is invalid")
     _validate_activity(snapshot["activity"], day, clock["slot"])
     _validate_economy(snapshot["economy"], day, clock["slot"])
-    _validate_environment(snapshot["environment"])
+    _validate_environment(snapshot["environment"], day, clock["slot"])
     _validate_portals(snapshot["portals"])
     _validate_relationships(snapshot["relationships"], day, clock["slot"])
     _validate_story(snapshot["story"], day)

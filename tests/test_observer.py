@@ -497,6 +497,24 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "fixed-event location"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_requires_fixed_event_state_evidence(self) -> None:
+        cases = (
+            (10, "protagonist", "ability_mastery"),
+            (13, "environment", "gate_alert_level"),
+        )
+        for steps, section, field in cases:
+            with self.subTest(steps=steps, field=field):
+                simulation = Simulation(seed=327)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                target = (
+                    snapshot["protagonist"]["progression"]
+                    if section == "protagonist" else snapshot["environment"])
+                target[field] += 1
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "evidence"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
         weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"
