@@ -10,11 +10,13 @@ from .journal import journal_entry
 from .observer import (
     compare_observer_site_data,
     compare_observer_snapshots,
+    load_observer_site_comparison_artifact,
     observer_presentation_contract,
     observer_snapshot,
     publish_observer_site_data,
     save_observer_presentation_contract,
     save_observer_snapshot,
+    save_observer_site_comparison,
     verify_observer_presentation_contract,
     verify_observer_site_data,
     verify_observer_snapshot,
@@ -94,9 +96,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--inspect-comparison-artifact", metavar="FILE",
         help="verify saved comparison JSON and print it canonically",
     )
+    inspection_modes.add_argument(
+        "--inspect-observer-site-comparison", metavar="FILE",
+        help="verify saved observer site comparison JSON",
+    )
     parser.add_argument(
         "--comparison-output", metavar="FILE",
         help="save verified comparison JSON without overwriting",
+    )
+    parser.add_argument(
+        "--observer-site-comparison-output", metavar="FILE",
+        help="save verified observer site comparison JSON without overwriting",
     )
     parser.add_argument(
         "--presentation-contract-output", metavar="FILE",
@@ -128,6 +138,11 @@ def main(argv: tuple[str, ...] | None = None) -> None:
     if args.comparison_output and not args.compare_experiment_bundles:
         parser.error(
             "--comparison-output requires --compare-experiment-bundles")
+    if (args.observer_site_comparison_output and
+            not args.compare_observer_site_data):
+        parser.error(
+            "--observer-site-comparison-output requires "
+            "--compare-observer-site-data")
     if args.snapshot_output and not args.observer_snapshot:
         parser.error("--snapshot-output requires --observer-snapshot")
     if (args.presentation_contract_output and
@@ -143,7 +158,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             args.compare_observer_site_data or args.compare_observer_snapshots or
             args.inspect_experiment_bundle or
             args.compare_experiment_bundles or
-            args.inspect_comparison_artifact):
+            args.inspect_comparison_artifact or
+            args.inspect_observer_site_comparison):
         mode_name = (
             "--observer-presentation-contract"
             if args.observer_presentation_contract
@@ -165,7 +181,9 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             else "--inspect-experiment-bundle" if args.inspect_experiment_bundle
             else "--compare-experiment-bundles"
             if args.compare_experiment_bundles
-            else "--inspect-comparison-artifact")
+            else "--inspect-comparison-artifact"
+            if args.inspect_comparison_artifact
+            else "--inspect-observer-site-comparison")
         simulation_options = (
             "--days", "--seed", "--load", "--save", "--technical-log",
         )
@@ -181,7 +199,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 args.publish_observer_site_data or
                 args.verify_observer_site_data or
                 args.compare_observer_site_data or
-                args.compare_observer_snapshots):
+                args.compare_observer_snapshots or
+                args.inspect_observer_site_comparison):
             from .learning import (
                 compare_experiment_bundles,
                 experiment_bundle_comparison_json,
@@ -274,6 +293,9 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 comparison = compare_observer_site_data(
                     left_directory, right_directory)
                 comparison_identical = comparison["identical"]
+                if args.observer_site_comparison_output:
+                    save_observer_site_comparison(
+                        comparison, args.observer_site_comparison_output)
                 output = json.dumps(
                     {
                         "left_directory": left_directory,
@@ -296,6 +318,10 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                     },
                     indent=2, sort_keys=True,
                 )
+            elif args.inspect_observer_site_comparison:
+                artifact = load_observer_site_comparison_artifact(
+                    args.inspect_observer_site_comparison)
+                output = json.dumps(artifact, indent=2, sort_keys=True)
             elif args.inspect_experiment_bundle:
                 result = inspect_experiment_bundle(
                     args.inspect_experiment_bundle)

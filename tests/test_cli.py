@@ -553,6 +553,69 @@ class CliValidationTests(unittest.TestCase):
             self.assertEqual(context.exception.code, 2)
             self.assertIn("contents are malformed", errors.getvalue())
 
+    def test_site_comparison_output_and_inspection_are_verified(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=571))
+        with TemporaryDirectory() as temporary_directory:
+            left = Path(temporary_directory) / "left"
+            right = Path(temporary_directory) / "right"
+            artifact = Path(temporary_directory) / "comparison.json"
+            publish_observer_site_data(snapshot, left)
+            publish_observer_site_data(snapshot, right)
+            comparison_output = StringIO()
+
+            with redirect_stdout(comparison_output):
+                cli_main((
+                    "--compare-observer-site-data", str(left), str(right),
+                    "--observer-site-comparison-output", str(artifact),
+                ))
+
+            comparison = json.loads(comparison_output.getvalue())
+            saved = json.loads(artifact.read_text(encoding="utf-8"))
+            self.assertEqual(
+                saved["comparison"]["identical"], comparison["identical"])
+            before = artifact.read_bytes()
+            inspection_output = StringIO()
+            with redirect_stdout(inspection_output):
+                cli_main((
+                    "--inspect-observer-site-comparison", str(artifact),
+                ))
+            self.assertEqual(artifact.read_bytes(), before)
+            self.assertEqual(json.loads(inspection_output.getvalue()), saved)
+
+    def test_site_comparison_artifact_cli_rejects_misuse_and_tampering(
+            self) -> None:
+        output, errors = StringIO(), StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main((
+                    "--observer-site-comparison-output", "comparison.json",
+                ))
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn(
+            "--observer-site-comparison-output requires "
+            "--compare-observer-site-data",
+            errors.getvalue(),
+        )
+
+        with TemporaryDirectory() as temporary_directory:
+            artifact = Path(temporary_directory) / "comparison.json"
+            artifact.write_text(
+                json.dumps({
+                    "artifact_schema_version": 1,
+                    "comparison": {},
+                    "comparison_sha256": "0" * 64,
+                }),
+                encoding="utf-8",
+            )
+            errors = StringIO()
+            with redirect_stdout(StringIO()), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main((
+                        "--inspect-observer-site-comparison", str(artifact),
+                    ))
+            self.assertEqual(context.exception.code, 2)
+            self.assertIn("integrity verification failed", errors.getvalue())
+
     def test_compare_observer_snapshots_is_read_only_and_reports_json(
             self) -> None:
         simulation = Simulation(seed=389)

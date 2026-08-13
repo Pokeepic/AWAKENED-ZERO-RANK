@@ -12,10 +12,12 @@ from tempfile import TemporaryDirectory
 from awakened_zero_rank import (
     compare_observer_site_data,
     compare_observer_snapshots,
+    load_observer_site_comparison_artifact,
     observer_presentation_contract,
     observer_snapshot,
     publish_observer_site_data,
     save_observer_presentation_contract,
+    save_observer_site_comparison,
     save_observer_snapshot,
     verify_observer_presentation_contract,
     verify_observer_site_data,
@@ -799,6 +801,81 @@ class ObserverSnapshotTests(unittest.TestCase):
                 comparison["left"]["snapshot_sha256"],
                 comparison["right"]["snapshot_sha256"],
             )
+
+    def test_site_comparison_artifact_is_verified_and_non_overwriting(
+            self) -> None:
+        simulation = Simulation(seed=557)
+        left_snapshot = observer_snapshot(simulation)
+        simulation.step()
+        right_snapshot = observer_snapshot(simulation)
+        with TemporaryDirectory() as directory:
+            left = Path(directory) / "left"
+            right = Path(directory) / "right"
+            artifact_path = Path(directory) / "artifacts" / "comparison.json"
+            publish_observer_site_data(left_snapshot, left)
+            publish_observer_site_data(right_snapshot, right)
+            comparison = compare_observer_site_data(left, right)
+
+            published = save_observer_site_comparison(
+                comparison, artifact_path)
+            loaded = load_observer_site_comparison_artifact(artifact_path)
+
+            self.assertEqual(published, artifact_path)
+            self.assertEqual(loaded["artifact_schema_version"], 1)
+            self.assertEqual(loaded["comparison"], comparison)
+            self.assertEqual(len(loaded["comparison_sha256"]), 64)
+            self.assertTrue(artifact_path.read_bytes().endswith(b"\n"))
+            original = artifact_path.read_bytes()
+            with self.assertRaisesRegex(ValueError, "already exists"):
+                save_observer_site_comparison(comparison, artifact_path)
+            self.assertEqual(artifact_path.read_bytes(), original)
+
+    def test_site_comparison_artifact_rejects_digest_tampering(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=563))
+        with TemporaryDirectory() as directory:
+            left = Path(directory) / "left"
+            right = Path(directory) / "right"
+            artifact_path = Path(directory) / "comparison.json"
+            publish_observer_site_data(snapshot, left)
+            publish_observer_site_data(snapshot, right)
+            save_observer_site_comparison(
+                compare_observer_site_data(left, right), artifact_path)
+            artifact = json.loads(
+                artifact_path.read_text(encoding="utf-8"))
+            artifact["comparison"]["identical"] = False
+            artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "integrity verification"):
+                load_observer_site_comparison_artifact(artifact_path)
+
+    def test_site_comparison_artifact_rejects_redigested_inconsistency(
+            self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=569))
+        with TemporaryDirectory() as directory:
+            left = Path(directory) / "left"
+            right = Path(directory) / "right"
+            artifact_path = Path(directory) / "comparison.json"
+            publish_observer_site_data(snapshot, left)
+            publish_observer_site_data(snapshot, right)
+            save_observer_site_comparison(
+                compare_observer_site_data(left, right), artifact_path)
+            artifact = json.loads(
+                artifact_path.read_text(encoding="utf-8"))
+            artifact["comparison"]["snapshot"]["same_seed"] = False
+            payload = {
+                "artifact_schema_version": artifact["artifact_schema_version"],
+                "comparison": artifact["comparison"],
+            }
+            canonical = json.dumps(
+                payload, ensure_ascii=False, sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+            artifact["comparison_sha256"] = hashlib.sha256(
+                canonical).hexdigest()
+            artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "content is invalid"):
+                load_observer_site_comparison_artifact(artifact_path)
 
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))

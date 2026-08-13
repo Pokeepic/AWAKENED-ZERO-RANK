@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.191.0 — Content-addressed deployment decisions
+
+- Added schema-1 observer site comparison artifacts containing the path-independent verified deployment comparison plus canonical SHA-256 content identity.
+- Added public `save_observer_site_comparison(comparison, destination)` and `load_observer_site_comparison_artifact(path)` with strict fields, schema, digest, deployment/snapshot identity agreement, clock, seed, vocabulary, append/cue, and derived update-mode validation.
+- Added `--observer-site-comparison-output FILE` for atomic non-overwriting publication during verified deployment comparison and `--inspect-observer-site-comparison FILE` for canonical read-only inspection.
+- Added publication, reload, overwrite, digest tamper, re-digested semantic forgery, CLI inspection, immutability, and option-contract coverage, raising the deterministic suite to 239 tests; simulation, balance, schemas, and RL behavior are unchanged.
+
 ## 0.190.0 — Verified deployment comparison
 
 - Added public `compare_observer_site_data(left, right)`, which loads each exact two-file deployment once, strictly verifies the loaded contract and snapshot, and then reuses the complete schema-8 snapshot comparison semantics.

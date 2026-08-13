@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
 OBSERVER_COMPARISON_SCHEMA_VERSION = 8
 OBSERVER_PRESENTATION_CONTRACT_SCHEMA_VERSION = 2
+OBSERVER_SITE_COMPARISON_ARTIFACT_SCHEMA_VERSION = 1
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
 _SNAPSHOT_KEYS = {
@@ -742,6 +743,180 @@ def compare_observer_site_data(
         "right": right_summary,
         "snapshot": snapshot_comparison,
     }
+
+
+def _validate_observer_site_comparison(comparison: dict[str, Any]) -> None:
+    def fail() -> None:
+        raise ValueError("Observer site comparison artifact content is invalid")
+
+    if not isinstance(comparison, dict) or set(comparison) != {
+            "contract_identical", "identical", "left", "right", "snapshot"}:
+        fail()
+
+    def valid_digest(value: Any) -> bool:
+        return (
+            isinstance(value, str) and len(value) == 64 and
+            all(character in "0123456789abcdef" for character in value)
+        )
+
+    def valid_summary(summary: Any) -> bool:
+        return (
+            isinstance(summary, dict) and set(summary) == {
+                "contract_sha256", "day", "observer_schema_version", "seed",
+                "snapshot_sha256", "status",
+            } and valid_digest(summary["contract_sha256"]) and
+            type(summary["day"]) is int and summary["day"] >= 1 and
+            summary["observer_schema_version"] ==
+            OBSERVER_SNAPSHOT_SCHEMA_VERSION and
+            type(summary["seed"]) is int and
+            valid_digest(summary["snapshot_sha256"]) and
+            summary["status"] == "valid"
+        )
+
+    left, right = comparison["left"], comparison["right"]
+    snapshot = comparison["snapshot"]
+    if not valid_summary(left) or not valid_summary(right):
+        fail()
+    if not isinstance(snapshot, dict) or set(snapshot) != {
+            "animation_cue", "appended_event", "changed_sections",
+            "clock_delta_slots", "clock_relation", "comparison_schema_version",
+            "identical", "left", "observer_schema_version",
+            "recent_activity_relation", "right", "same_seed", "update_mode",
+    }:
+        fail()
+    if (snapshot["comparison_schema_version"] !=
+            OBSERVER_COMPARISON_SCHEMA_VERSION or
+            snapshot["observer_schema_version"] !=
+            OBSERVER_SNAPSHOT_SCHEMA_VERSION):
+        fail()
+    endpoints = (("left", left), ("right", right))
+    for name, summary in endpoints:
+        endpoint = snapshot[name]
+        if (not isinstance(endpoint, dict) or set(endpoint) != {
+                "clock", "digest", "seed"} or
+                not isinstance(endpoint["clock"], dict) or
+                set(endpoint["clock"]) != {"day", "slot"} or
+                endpoint["clock"]["day"] != summary["day"] or
+                endpoint["clock"]["slot"] not in _SLOTS or
+                endpoint["digest"] != summary["snapshot_sha256"] or
+                endpoint["seed"] != summary["seed"]):
+            fail()
+    contract_identical = (
+        left["contract_sha256"] == right["contract_sha256"])
+    if (type(comparison["contract_identical"]) is not bool or
+            comparison["contract_identical"] != contract_identical or
+            type(snapshot["identical"]) is not bool or
+            type(comparison["identical"]) is not bool or
+            comparison["identical"] != (
+                contract_identical and snapshot["identical"])):
+        fail()
+    changed = snapshot["changed_sections"]
+    if (not isinstance(changed, list) or changed != sorted(set(changed)) or
+            not set(changed) <= (_SNAPSHOT_KEYS - {"identity"}) or
+            snapshot["identical"] != (not changed)):
+        fail()
+    delta = snapshot["clock_delta_slots"]
+    relation = snapshot["clock_relation"]
+    if (type(delta) is not int or relation not in {"backward", "forward", "same"} or
+            relation != ("forward" if delta > 0 else "backward" if delta < 0
+                         else "same")):
+        fail()
+    if (type(snapshot["same_seed"]) is not bool or
+            snapshot["same_seed"] != (left["seed"] == right["seed"]) or
+            snapshot["recent_activity_relation"] not in {
+                "append", "replace", "unchanged"} or
+            snapshot["update_mode"] not in {
+                "animate", "refresh", "replace", "unchanged"}):
+        fail()
+    cue = snapshot["animation_cue"]
+    if cue is not None and cue not in observer_presentation_contract()[
+            "animation_cues"]:
+        fail()
+    appended = snapshot["appended_event"]
+    is_append = snapshot["recent_activity_relation"] == "append"
+    if is_append != isinstance(appended, dict) or is_append != (cue is not None):
+        fail()
+    expected_update = (
+        "unchanged" if snapshot["identical"]
+        else "replace" if not snapshot["same_seed"] or relation == "backward"
+        else "animate" if delta == 1 and is_append
+        else "refresh"
+    )
+    if snapshot["update_mode"] != expected_update:
+        fail()
+
+
+def observer_site_comparison_artifact(
+        comparison: dict[str, Any]) -> dict[str, Any]:
+    """Return a content-addressed verified deployment comparison artifact."""
+    _validate_observer_site_comparison(comparison)
+    payload = {
+        "artifact_schema_version":
+            OBSERVER_SITE_COMPARISON_ARTIFACT_SCHEMA_VERSION,
+        "comparison": comparison,
+    }
+    canonical = json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return {
+        **payload,
+        "comparison_sha256": hashlib.sha256(canonical).hexdigest(),
+    }
+
+
+def load_observer_site_comparison_artifact(
+        path: str | Path) -> dict[str, Any]:
+    """Load a deployment comparison artifact after strict verification."""
+    artifact = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(artifact, dict) or set(artifact) != {
+            "artifact_schema_version", "comparison", "comparison_sha256"}:
+        raise ValueError("Observer site comparison artifact fields are invalid")
+    if (artifact["artifact_schema_version"] !=
+            OBSERVER_SITE_COMPARISON_ARTIFACT_SCHEMA_VERSION):
+        raise ValueError("Observer site comparison artifact schema is unsupported")
+    claimed = artifact["comparison_sha256"]
+    if not isinstance(claimed, str) or len(claimed) != 64:
+        raise ValueError("Observer site comparison artifact digest is malformed")
+    payload = {
+        "artifact_schema_version": artifact["artifact_schema_version"],
+        "comparison": artifact["comparison"],
+    }
+    canonical = json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    actual = hashlib.sha256(canonical).hexdigest()
+    if not hmac.compare_digest(claimed, actual):
+        raise ValueError(
+            "Observer site comparison artifact integrity verification failed")
+    _validate_observer_site_comparison(artifact["comparison"])
+    return artifact
+
+
+def save_observer_site_comparison(
+        comparison: dict[str, Any], destination: str | Path) -> Path:
+    """Stage and publish a verified non-overwriting comparison artifact."""
+    artifact = observer_site_comparison_artifact(comparison)
+    target = Path(destination)
+    if target.exists():
+        raise ValueError("Observer site comparison destination already exists")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(
+            prefix=f".{target.name}.staging-", dir=target.parent) as temporary:
+        staging = Path(temporary) / target.name
+        staging.write_text(
+            json.dumps(
+                artifact, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        loaded = load_observer_site_comparison_artifact(staging)
+        if loaded != artifact:
+            raise ValueError(
+                "Observer site comparison artifact staging verification failed")
+        if target.exists():
+            raise ValueError(
+                "Observer site comparison destination appeared during staging")
+        staging.rename(target)
+    return target
 
 
 def save_observer_snapshot(
