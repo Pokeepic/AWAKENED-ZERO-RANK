@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.202.0 - Production observer package cleanup
+
+- Replaced the generic vinext starter manual with concise observer-specific setup, trusted-data-boundary, product-constraint, project-map, and private-deployment guidance.
+- Removed the three confirmed-unreferenced starter SVG assets while preserving the production favicon, social card, and authenticated demonstration data.
+- Added a focused package regression check that requires production observer documentation and prevents the generic starter manual or assets from returning.
+- Runtime presentation, simulator, balance, schemas, RL behavior, observer artifacts, and read-only capabilities are unchanged.
+
 ## 0.201.0 - Resilient verification states
 
 - The skip link now retains a valid chronicle main-landmark target during initial authentication, verified display, and terminal verification failure.
