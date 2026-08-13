@@ -444,6 +444,7 @@ function isPortals(value: unknown): value is ObserverSnapshot["portals"] {
     investigationNames.every(
       (name, index) => index === 0 || investigationNames[index - 1] < name,
     ) &&
+    investigationNames.every((name) => value.discovered.includes(name)) &&
     (value.active_plan === null || investigationNames.includes(value.active_plan))
   );
 }

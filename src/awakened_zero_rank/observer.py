@@ -211,6 +211,8 @@ def _validate_portals(portals: Any) -> None:
         names.append(name)
     if names != sorted(set(names)):
         raise ValueError("Observer snapshot portal investigations are not canonical")
+    if any(name not in discovered for name in names):
+        raise ValueError("Observer snapshot portal investigation is undiscovered")
     active_plan = portals["active_plan"]
     if active_plan is not None and active_plan not in names:
         raise ValueError("Observer snapshot active portal plan is invalid")

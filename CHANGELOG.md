@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.236.0 - Portal discovery consistency
+
+- Observer and save validation now reject portal investigations whose portal is absent from the discovery ledger.
+- The invariant matches normal simulation behavior, which always records discovery before creating or advancing an investigation.
+- Added browser, observer-verifier, and persistence regression coverage. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.235.0 - Signed simulation seeds
 
 - Browser validation now matches the simulator by accepting negative, zero, and positive deterministic seeds.

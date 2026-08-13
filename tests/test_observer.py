@@ -284,6 +284,13 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "investigation bounds"):
             verify_observer_snapshot(bounds)
 
+        undiscovered = observer_snapshot(simulation)
+        undiscovered["portals"]["discovered"].remove(
+            undiscovered["portals"]["investigations"][0]["portal_name"])
+        _redigest(undiscovered)
+        with self.assertRaisesRegex(ValueError, "undiscovered"):
+            verify_observer_snapshot(undiscovered)
+
         plan = observer_snapshot(Simulation(seed=293))
         plan["portals"]["active_plan"] = "Flooded Service Tunnel"
         _redigest(plan)

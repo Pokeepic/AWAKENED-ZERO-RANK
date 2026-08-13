@@ -345,6 +345,11 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             raise ValueError(
                 f"Invalid save field portal_investigations[{name!r}]"
                 ".reported_to: expected catalogued NPC names")
+    if any(name not in state.discovered_portals
+           for name in state.portal_investigations):
+        raise ValueError(
+            "Invalid save field portal_investigations: "
+            "investigated portals must be discovered")
     if (state.active_portal_plan is not None and
             state.active_portal_plan not in state.portal_investigations):
         raise ValueError(

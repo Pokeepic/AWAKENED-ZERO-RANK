@@ -202,6 +202,17 @@ class PersistenceSafetyTests(unittest.TestCase):
 
             self.assertFalse(destination.exists())
 
+    def test_portal_investigation_requires_discovery(self) -> None:
+        simulation = Simulation(seed=69)
+        simulation.run(24)
+        self.assertTrue(simulation.state.portal_investigations)
+        simulation.state.discovered_portals.clear()
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            with self.assertRaisesRegex(ValueError, "must be discovered"):
+                save_simulation(simulation, destination)
+            self.assertFalse(destination.exists())
+
     def test_unknown_relationship_cannot_replace_existing_save(self) -> None:
         simulation = Simulation(seed=71)
         simulation.run(20)
