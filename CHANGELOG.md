@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.206.0 - Complete story-ending observer state
+
+- Added explicit browser types and runtime validation for the authenticated named-ending projection, including title, summary, tier, identity, and outcome counts.
+- The observer now enforces consistent next-anchor, ending-reached, and ending-summary states instead of accepting contradictory re-hashed render data.
+- Completed three-year arcs render the named ending and summary with an explicit ARC COMPLETE state; they no longer display undefined day or countdown values.
+- Added focused valid-ending, malformed-ending, conditional-render, and no-undefined-countdown regression checks. Simulator, balance, schemas, RL behavior, and read-only capabilities are unchanged.
+
 ## 0.205.0 - Connectivity-aware verification
 
 - A browser offline event now marks an already trusted chronicle as refresh-delayed immediately instead of waiting for the next scheduled request.

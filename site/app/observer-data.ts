@@ -18,6 +18,15 @@ export type Relationship = {
   role: string;
   trust: number;
 };
+export type StoryEnding = {
+  id: string;
+  isolated_count: number;
+  prepared_count: number;
+  resilient_count: number;
+  summary: string;
+  tier: string;
+  title: string;
+};
 export type ObserverSnapshot = {
   schema_version: number;
   seed: number;
@@ -48,6 +57,8 @@ export type ObserverSnapshot = {
   story: {
     completed_count: number;
     total_anchors: number;
+    ending: StoryEnding | null;
+    ending_reached: boolean;
     next: { title: string; day: number; days_remaining: number } | null;
   };
   relationships: Relationship[];
@@ -138,6 +149,18 @@ function isStoryNext(
   );
 }
 
+function isStoryEnding(
+  value: unknown,
+): value is StoryEnding | null {
+  return (
+    value === null ||
+    (isRecord(value) &&
+      hasRenderedStrings(value, ["id", "summary", "tier", "title"]) &&
+      isInteger(value.isolated_count) &&
+      isInteger(value.prepared_count) &&
+      isInteger(value.resilient_count))
+  );
+}
 export function isPresentationContract(
   value: unknown,
 ): value is PresentationContract {
@@ -202,7 +225,11 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !isInteger(value.story.completed_count) ||
     !isInteger(value.story.total_anchors, 1) ||
     value.story.completed_count > value.story.total_anchors ||
+    typeof value.story.ending_reached !== "boolean" ||
+    !isStoryEnding(value.story.ending) ||
     !isStoryNext(value.story.next) ||
+    (value.story.next === null) !== value.story.ending_reached ||
+    (value.story.ending !== null) !== value.story.ending_reached ||
     !Array.isArray(value.relationships) ||
     !value.relationships.every(isRelationship) ||
     !isRecord(value.portals) ||
