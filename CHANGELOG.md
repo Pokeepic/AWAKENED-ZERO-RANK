@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.199.0 — Semantic observer accessibility
+
+- Replaced six invalid form-label elements with real level-two section headings while retaining the established visual hierarchy; Ren's name and the current story anchor now sit beneath them as level-three headings.
+- The world-condition strip now has a named navigation landmark, and observer refresh state uses an atomic polite status region for assistive technology.
+- Health, energy, hunger, stress, and morale now expose labeled progressbar roles with exact 0–100 bounds and current verified values.
+- Added focused semantic heading, no-form-label, landmark, live-status, and progressbar checks. Simulator, balance, schemas, RL behavior, and visible layout are unchanged.
+
 ## 0.198.0 — Verified chronicle advance signal
 
 - A newly authenticated snapshot whose SHA-256 identity differs from the previously rendered snapshot now produces a brief Chronicle advanced / verified live-region announcement and restrained observer pulse.
