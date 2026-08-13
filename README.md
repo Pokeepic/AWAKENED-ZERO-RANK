@@ -8,7 +8,7 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.195.0` |
+| Release | `0.196.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
@@ -251,7 +251,7 @@ International travel should remain grounded in passports or clearance, airfare, 
 
 ### Observer website
 
-Version 0.195.0 provides the first production-shaped observer surface in `site/`: a responsive, control-free chronicle that verifies both the presentation contract and snapshot identities in the browser before rendering Ren's current condition, goal, recent decisions, hunter record, story countdown, relationships, portals, and content identities. After the first trusted load it refreshes the artifact pair every 60 seconds without cache reuse, keeps the last verified chronicle visible through transient refresh failures, and never exposes simulation controls. The checked-in seed-42 day-11 dataset is deterministic demonstration content and can be replaced atomically with `--publish-observer-site-data`.
+Version 0.196.0 provides the first production-shaped observer surface in `site/`: a responsive, control-free chronicle that verifies both the presentation contract and snapshot identities in the browser before rendering Ren's current condition, goal, recent decisions, hunter record, story countdown, relationships, portals, and content identities. After the first trusted load it refreshes the artifact pair every 60 seconds without cache reuse, keeps the last verified chronicle visible through transient refresh failures, pauses network work in hidden tabs, refreshes immediately when the page becomes visible, and never exposes simulation controls. The client uses explicit contract, snapshot, resource, activity, relationship, and story types rather than permissive untyped data. The checked-in seed-42 day-11 dataset is deterministic demonstration content and can be replaced atomically with `--publish-observer-site-data`.
 
 
 A later release can add a read-only dashboard for time, weather, Ren's condition, current concerns, decisions, relationships, finances, inventory, investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity.

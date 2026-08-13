@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.196.0 — Visibility-aware typed observer
+
+- Hidden browser tabs now skip scheduled network refreshes; returning to a visible tab triggers an immediate authenticated artifact-pair refresh.
+- The refresh lifecycle registers and removes one visibility listener while preserving the existing overlap guard, abort cleanup, timer cleanup, stale-data behavior, and control-free boundary.
+- Replaced the permissive observer payload type and compact integrity client with explicit contract, snapshot, resource, activity, relationship, portal, story, and identity types plus readable canonical hashing and verification code.
+- Expanded focused source checks for hidden-tab suppression and visibility-listener cleanup; simulator, balance, schemas, and RL behavior are unchanged.
+
 ## 0.195.0 — Resilient authenticated refresh
 
 - The observer automatically requests the contract and snapshot together every 60 seconds with cache reuse disabled, then authenticates both artifacts before replacing the visible chronicle.
