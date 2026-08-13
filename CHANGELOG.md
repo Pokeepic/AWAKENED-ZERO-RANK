@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.211.0 - Canonical browser environment
+
+- The browser trust boundary now accepts only the simulator's five canonical Summer weather states with their exact integer temperatures.
+- Gate alert levels must be integers from 0 through 3, and non-Summer, unknown-weather, mismatched-temperature, or fractional-alert data fails closed.
+- Added focused coverage for every valid weather pair plus altered temperature, excessive and fractional alert, wrong season, and unknown weather.
+- Simulator, balance, schemas, RL behavior, observer artifacts, presentation, and read-only capabilities are unchanged.
+
 ## 0.210.0 - Canonical signed-trust relationships
 
 - Corrected browser trust validation to accept the simulator's full signed integer range from -100 through 100, so valid strained relationships no longer fail closed.

@@ -80,6 +80,13 @@ export const RESOURCE_NAMES: ResourceName[] = [
   "morale",
 ];
 const TIME_SLOTS = ["Morning", "Afternoon", "Evening", "Late Night"] as const;
+const SUMMER_TEMPERATURES: Record<string, number> = {
+  Clear: 29,
+  Cloudy: 27,
+  Rain: 25,
+  Heatwave: 36,
+  Thunderstorm: 26,
+};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -112,6 +119,20 @@ function isIdentity(value: unknown): value is Identity {
     value.algorithm === "sha256" &&
     typeof value.digest === "string" &&
     /^[0-9a-f]{64}$/.test(value.digest)
+  );
+}
+
+function isEnvironment(
+  value: unknown,
+): value is ObserverSnapshot["environment"] {
+  return (
+    isRecord(value) &&
+    isString(value.weather) &&
+    value.season === "Summer" &&
+    isInteger(value.gate_alert_level) &&
+    value.gate_alert_level <= 3 &&
+    Number.isInteger(value.temperature_c) &&
+    SUMMER_TEMPERATURES[value.weather] === value.temperature_c
   );
 }
 
@@ -267,10 +288,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !isRecord(value.clock) ||
     !isInteger(value.clock.day, 1) ||
     !isString(value.clock.slot) ||
-    !isRecord(value.environment) ||
-    !hasRenderedStrings(value.environment, ["weather", "season"]) ||
-    !isInteger(value.environment.gate_alert_level) ||
-    !isNumberInRange(value.environment.temperature_c, -100, 100) ||
+    !isEnvironment(value.environment) ||
     !isRecord(value.protagonist)
   ) {
     return false;
