@@ -223,6 +223,25 @@ class PersistenceSafetyTests(unittest.TestCase):
                 save_simulation(simulation, destination)
             self.assertFalse(destination.exists())
 
+    def test_hunter_status_requires_authored_awakening_chronology(self) -> None:
+        cases = (
+            (1, TimeSlot.MORNING, "F", "Threat Sense"),
+            (3, TimeSlot.AFTERNOON, "F", "Threat Sense"),
+            (3, TimeSlot.EVENING, "Unranked", "None"),
+            (4, TimeSlot.MORNING, "Unranked", "None"),
+        )
+        for day, slot, rank, ability in cases:
+            with self.subTest(day=day, slot=slot, rank=rank), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=82)
+                simulation.state.clock.day = day
+                simulation.state.clock.slot = slot
+                simulation.state.protagonist.hunter_rank = rank
+                simulation.state.protagonist.ability = ability
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "Awakening chronology"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30
@@ -238,6 +257,8 @@ class PersistenceSafetyTests(unittest.TestCase):
         protagonist.hunter_rank = "F"
         protagonist.ability = "Threat Sense"
         protagonist.rank_points = 10
+        simulation.state.clock.day = 3
+        simulation.state.clock.slot = TimeSlot.EVENING
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"
             with self.assertRaisesRegex(ValueError, "mission evidence"):
@@ -252,6 +273,8 @@ class PersistenceSafetyTests(unittest.TestCase):
         protagonist.missions_attempted = 1
         protagonist.missions_completed = 1
         protagonist.rank_points = 11
+        simulation.state.clock.day = 3
+        simulation.state.clock.slot = TimeSlot.EVENING
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"
             with self.assertRaisesRegex(ValueError, "exact awards"):
@@ -287,6 +310,8 @@ class PersistenceSafetyTests(unittest.TestCase):
                 simulation = Simulation(seed=80)
                 simulation.state.clock.day = day
                 simulation.state.clock.slot = slot
+                simulation.state.protagonist.hunter_rank = "F"
+                simulation.state.protagonist.ability = "Threat Sense"
                 simulation.state.rent_payments = 1
                 destination = Path(temporary_directory) / "timeline.json"
                 with self.assertRaisesRegex(ValueError, "predates"):
@@ -362,6 +387,8 @@ class PersistenceSafetyTests(unittest.TestCase):
     def test_redigested_invalid_story_outcome_is_rejected(self) -> None:
         simulation = Simulation(seed=103)
         simulation.state.clock.day = 183
+        simulation.state.protagonist.hunter_rank = "F"
+        simulation.state.protagonist.ability = "Threat Sense"
         simulation.step()
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"
@@ -381,6 +408,8 @@ class PersistenceSafetyTests(unittest.TestCase):
     def test_missing_legacy_story_ledger_migrates_honestly(self) -> None:
         simulation = Simulation(seed=131)
         simulation.state.clock.day = 183
+        simulation.state.protagonist.hunter_rank = "F"
+        simulation.state.protagonist.ability = "Threat Sense"
         simulation.step()
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"

@@ -173,6 +173,8 @@ class CliValidationTests(unittest.TestCase):
     def test_story_progress_is_read_only_and_reports_json(self) -> None:
         simulation = Simulation(seed=113)
         simulation.state.clock.day = 183
+        simulation.state.protagonist.hunter_rank = "F"
+        simulation.state.protagonist.ability = "Threat Sense"
         simulation.step()
         with TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "timeline.json"
@@ -732,6 +734,8 @@ class CliValidationTests(unittest.TestCase):
     def test_observer_summary_reports_named_story_ending(self) -> None:
         simulation = Simulation(seed=151)
         simulation.state.clock.day = 1095
+        simulation.state.protagonist.hunter_rank = "F"
+        simulation.state.protagonist.ability = "Threat Sense"
         from awakened_zero_rank.content import STORY_ANCHORS
         simulation.state.calendar_events_seen.extend(
             anchor.key for anchor in STORY_ANCHORS)

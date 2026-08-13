@@ -184,6 +184,11 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         raise ValueError(
             "Invalid save protagonist lifecycle: "
             "hunter rank and ability are inconsistent")
+    awakened_by_clock = (
+        state.clock.day, tuple(TimeSlot).index(state.clock.slot)
+    ) >= (3, tuple(TimeSlot).index(TimeSlot.EVENING))
+    if (protagonist.hunter_rank == "Unranked") == awakened_by_clock:
+        raise ValueError("Invalid save protagonist Awakening chronology")
     for field, expected_kind in (
             ("equipped_weapon", "weapon"),
             ("equipped_armor", "armor")):

@@ -166,6 +166,15 @@ const MOODS = new Set([
 function isRankAbilityConsistent(rank: string, ability: string): boolean {
   return rank === "Unranked" ? ability === "None" : ability !== "None";
 }
+function isAwakeningChronologyConsistent(
+  day: number,
+  slot: string,
+  rank: string,
+): boolean {
+  const awakened = day > 3 ||
+    (day === 3 && TIME_SLOTS.indexOf(slot as (typeof TIME_SLOTS)[number]) >= 2);
+  return (rank !== "Unranked") === awakened;
+}
 function isRankPointsConsistent(rank: string, points: number): boolean {
   if (rank === "Unranked" || rank === "F") return points < 30;
   if (rank === "E") return points >= 30 && points < 60;
@@ -704,6 +713,11 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !isRankAbilityConsistent(
       protagonist.hunter_rank as string,
       protagonist.ability as string,
+    ) ||
+    !isAwakeningChronologyConsistent(
+      value.clock.day as number,
+      value.clock.slot as string,
+      protagonist.hunter_rank as string,
     ) ||
     !LOCATIONS.has(protagonist.location as string) ||
     !isEquipment(protagonist.equipment) ||

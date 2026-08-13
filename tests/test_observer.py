@@ -350,7 +350,9 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "rank points"):
             verify_observer_snapshot(points)
 
-        mission_points = observer_snapshot(Simulation(seed=311))
+        mission_simulation = Simulation(seed=311)
+        mission_simulation.run(10)
+        mission_points = observer_snapshot(mission_simulation)
         mission_points["protagonist"]["hunter_rank"] = "F"
         mission_points["protagonist"]["ability"] = "Threat Sense"
         mission_points["protagonist"]["progression"]["rank_points"] = 10
@@ -358,7 +360,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "mission rank points"):
             verify_observer_snapshot(mission_points)
 
-        impossible_award = observer_snapshot(Simulation(seed=311))
+        impossible_award = observer_snapshot(mission_simulation)
         impossible_award["protagonist"]["hunter_rank"] = "F"
         impossible_award["protagonist"]["ability"] = "Threat Sense"
         impossible_award["protagonist"]["progression"]["missions_attempted"] = 1
@@ -373,6 +375,25 @@ class ObserverSnapshotTests(unittest.TestCase):
         _redigest(counters)
         with self.assertRaisesRegex(ValueError, "mission counters"):
             verify_observer_snapshot(counters)
+
+    def test_verifier_requires_authored_awakening_chronology(self) -> None:
+        cases = (
+            (1, TimeSlot.MORNING, "F", "Threat Sense"),
+            (3, TimeSlot.AFTERNOON, "F", "Threat Sense"),
+            (3, TimeSlot.EVENING, "Unranked", "None"),
+            (4, TimeSlot.MORNING, "Unranked", "None"),
+        )
+        for day, slot, rank, ability in cases:
+            with self.subTest(day=day, slot=slot, rank=rank):
+                simulation = Simulation(seed=315)
+                simulation.state.clock.day = day
+                simulation.state.clock.slot = slot
+                snapshot = observer_snapshot(simulation)
+                snapshot["protagonist"]["hunter_rank"] = rank
+                snapshot["protagonist"]["ability"] = ability
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "Awakening chronology"):
+                    verify_observer_snapshot(snapshot)
 
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
@@ -408,6 +429,8 @@ class ObserverSnapshotTests(unittest.TestCase):
 
         simulation = Simulation(seed=331)
         simulation.state.clock.day = STORY_ANCHORS[0].day
+        simulation.state.protagonist.hunter_rank = "F"
+        simulation.state.protagonist.ability = "Threat Sense"
         simulation.state.calendar_events_seen.append(STORY_ANCHORS[0].key)
         simulation.state.story_outcomes[STORY_ANCHORS[0].key] = "resilient"
         authored = observer_snapshot(simulation)
@@ -419,6 +442,8 @@ class ObserverSnapshotTests(unittest.TestCase):
     def test_verifier_rejects_redigested_invalid_story_ending(self) -> None:
         simulation = Simulation(seed=337)
         simulation.state.clock.day = STORY_ANCHORS[-1].day
+        simulation.state.protagonist.hunter_rank = "F"
+        simulation.state.protagonist.ability = "Threat Sense"
         simulation.state.calendar_events_seen.extend(
             anchor.key for anchor in STORY_ANCHORS)
         simulation.state.story_outcomes.update(

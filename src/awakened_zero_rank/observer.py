@@ -348,7 +348,7 @@ def _validate_story(story: Any, current_day: int) -> None:
             ending != _expected_ending(tiers)):
         raise ValueError("Observer snapshot story ending is invalid")
 
-def _validate_protagonist(protagonist: Any) -> None:
+def _validate_protagonist(protagonist: Any, day: int, slot: str) -> None:
     if not isinstance(protagonist, dict) or set(protagonist) != _PROTAGONIST_KEYS:
         raise ValueError("Observer snapshot protagonist is malformed")
     if any(
@@ -364,6 +364,9 @@ def _validate_protagonist(protagonist: Any) -> None:
             (hunter_rank == "Unranked") != (ability == "None") or
             not isinstance(location, str) or location not in LOCATIONS):
         raise ValueError("Observer snapshot protagonist status is invalid")
+    awakened = (day, _SLOTS.index(slot)) >= (3, _SLOTS.index("Evening"))
+    if (hunter_rank == "Unranked") == awakened:
+        raise ValueError("Observer snapshot Awakening chronology is invalid")
 
     resources = protagonist["resources"]
     if not isinstance(resources, dict) or set(resources) != _RESOURCE_KEYS:
@@ -478,7 +481,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     _validate_economy(snapshot["economy"], day, clock["slot"])
     _validate_environment(snapshot["environment"])
     _validate_portals(snapshot["portals"])
-    _validate_protagonist(snapshot["protagonist"])
+    _validate_protagonist(snapshot["protagonist"], day, clock["slot"])
     _validate_relationships(snapshot["relationships"])
     _validate_story(snapshot["story"], day)
 

@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.243.0 - Awakening chronology
+
+- Browser, save, and Python observer validation now bind hunter status to the fixed day-3 Afternoon Awakening event.
+- Ren remains Unranked through day 3 Afternoon; day 3 Evening and later require Rank F or subsequent progression with an awakened ability.
+- Added exact pre/post-event boundary coverage and authenticated long-date fixtures. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.242.0 - Rent deadline chronology
 
 - Browser, save, and Python observer validation now prevent rent payments or arrears from predating the authored deadline.
