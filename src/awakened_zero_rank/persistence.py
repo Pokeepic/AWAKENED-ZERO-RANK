@@ -243,6 +243,12 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             state.rent_payments > 1 or
             (state.rent_payments == 1 and protagonist.rent_arrears > 0)):
         raise ValueError("Invalid save rent ledger")
+    if (
+            (state.clock.day < AUTHORED_RENT_DUE_DAY or
+             (state.clock.day == AUTHORED_RENT_DUE_DAY and
+              state.clock.slot is TimeSlot.MORNING)) and
+            (state.rent_payments != 0 or protagonist.rent_arrears != 0)):
+        raise ValueError("Invalid save rent ledger predates its deadline")
     if protagonist.missions_completed > protagonist.missions_attempted:
         raise ValueError(
             "Invalid save mission counters: completions exceed attempts")

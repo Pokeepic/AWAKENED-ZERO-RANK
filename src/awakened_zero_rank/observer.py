@@ -219,7 +219,7 @@ def _validate_portals(portals: Any) -> None:
     if active_plan is not None and active_plan not in names:
         raise ValueError("Observer snapshot active portal plan is invalid")
 
-def _validate_economy(economy: Any) -> None:
+def _validate_economy(economy: Any, day: int, slot: str) -> None:
     keys = {
         "meal_cost", "rent_arrears", "rent_cost", "rent_due_day",
         "rent_payments", "shop_visits", "wage_modifier",
@@ -245,6 +245,11 @@ def _validate_economy(economy: Any) -> None:
             values["rent_payments"] > 1 or
             (values["rent_payments"] == 1 and values["rent_arrears"] > 0)):
         raise ValueError("Observer snapshot rent ledger is inconsistent")
+    if (
+            (day < AUTHORED_RENT_DUE_DAY or
+             (day == AUTHORED_RENT_DUE_DAY and slot == "Morning")) and
+            (values["rent_payments"] != 0 or values["rent_arrears"] != 0)):
+        raise ValueError("Observer snapshot rent ledger predates its deadline")
 
 def _expected_ending(tiers: list[str]) -> dict[str, Any]:
     counts = {
@@ -470,7 +475,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     if day < 1 or clock["slot"] not in _SLOTS:
         raise ValueError("Observer snapshot clock is invalid")
     _validate_activity(snapshot["activity"], day, clock["slot"])
-    _validate_economy(snapshot["economy"])
+    _validate_economy(snapshot["economy"], day, clock["slot"])
     _validate_environment(snapshot["environment"])
     _validate_portals(snapshot["portals"])
     _validate_protagonist(snapshot["protagonist"])

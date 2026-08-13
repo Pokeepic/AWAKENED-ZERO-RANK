@@ -277,7 +277,11 @@ function isEnvironment(
   );
 }
 
-function isEconomy(value: unknown): value is ObserverSnapshot["economy"] {
+function isEconomy(
+  value: unknown,
+  day: number,
+  slot: string,
+): value is ObserverSnapshot["economy"] {
   if (
     !isRecord(value) ||
     !hasExactKeys(value, [
@@ -300,7 +304,11 @@ function isEconomy(value: unknown): value is ObserverSnapshot["economy"] {
     value.rent_cost === 8000 &&
     (value.rent_arrears as number) <= 8000 &&
     (value.rent_payments as number) <= 1 &&
-    !(value.rent_payments === 1 && (value.rent_arrears as number) > 0)
+    !(value.rent_payments === 1 && (value.rent_arrears as number) > 0) &&
+    !(
+      (day < 8 || (day === 8 && slot === "Morning")) &&
+      (value.rent_payments !== 0 || value.rent_arrears !== 0)
+    )
   );
 }
 
@@ -669,7 +677,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !isInteger(value.clock.day, 1) ||
     !isString(value.clock.slot) ||
     !isEnvironment(value.environment) ||
-    !isEconomy(value.economy) ||
+    !isEconomy(value.economy, value.clock.day as number, value.clock.slot as string) ||
     !isRecord(value.protagonist)
   ) {
     return false;

@@ -12,6 +12,7 @@ import unittest
 from unittest.mock import patch
 
 from awakened_zero_rank.cli import main as cli_main
+from awakened_zero_rank.models import TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.story import story_progress
@@ -277,6 +278,18 @@ class PersistenceSafetyTests(unittest.TestCase):
                 mutate(simulation)
                 destination = Path(temporary_directory) / "timeline.json"
                 with self.assertRaisesRegex(ValueError, "rent ledger"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
+    def test_rent_ledger_cannot_predate_deadline(self) -> None:
+        for day, slot in ((7, TimeSlot.LATE_NIGHT), (8, TimeSlot.MORNING)):
+            with self.subTest(day=day, slot=slot), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=80)
+                simulation.state.clock.day = day
+                simulation.state.clock.slot = slot
+                simulation.state.rent_payments = 1
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "predates"):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 

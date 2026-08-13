@@ -23,6 +23,7 @@ from awakened_zero_rank import (
     verify_observer_site_data,
     verify_observer_snapshot,
 )
+from awakened_zero_rank.models import TimeSlot
 from awakened_zero_rank.content import STORY_ANCHORS
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
@@ -185,6 +186,17 @@ class ObserverSnapshotTests(unittest.TestCase):
         _redigest(contradictory)
         with self.assertRaisesRegex(ValueError, "rent ledger"):
             verify_observer_snapshot(contradictory)
+
+        for day, slot in ((7, TimeSlot.LATE_NIGHT), (8, TimeSlot.MORNING)):
+            with self.subTest(day=day, slot=slot):
+                simulation = Simulation(seed=59)
+                simulation.state.clock.day = day
+                simulation.state.clock.slot = slot
+                simulation.state.rent_payments = 1
+                premature = observer_snapshot(simulation)
+                _redigest(premature)
+                with self.assertRaisesRegex(ValueError, "predates"):
+                    verify_observer_snapshot(premature)
 
     def test_verifier_rejects_redigested_invalid_resources(self) -> None:
         negative_money = observer_snapshot(Simulation(seed=251))
