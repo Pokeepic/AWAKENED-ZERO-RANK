@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.232.0 - Authored story outcomes
+
+- Completed story entries now require each anchor's exact authored focus characters in canonical order.
+- Isolated, resilient, and prepared entries must carry the simulator's exact outcome prose; legacy entries retain the single explicit unavailable-outcome sentence.
+- Completed-arc fixtures now use authored ledger content. Simulator and schemas are unchanged.
+
 ## 0.231.0 - Completed story record integrity
 
 - The browser now requires the authenticated completed-story array length to match its declared count and validates every entry's exact record shape.

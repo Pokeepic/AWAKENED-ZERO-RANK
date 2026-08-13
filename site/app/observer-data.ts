@@ -182,13 +182,14 @@ const LOCATIONS = new Set([
   "Kita-Senju Hunter Supply",
 ]);
 const STORY_ANCHORS = [
-  { day: 183, key: "arc_adachi_warning", title: "The Adachi Warning" },
-  { day: 365, key: "arc_tokyo_fracture", title: "The Tokyo Fracture" },
-  { day: 548, key: "arc_foreign_signal", title: "The Foreign Signal" },
-  { day: 730, key: "arc_guild_reckoning", title: "The Guild Reckoning" },
-  { day: 913, key: "arc_zero_rank_choice", title: "The Zero-Rank Choice" },
-  { day: 1095, key: "arc_awakened_horizon", title: "The Awakened Horizon" },
+  { day: 183, key: "arc_adachi_warning", title: "The Adachi Warning", focus_npcs: ["Aiko Sato", "Daichi Mori"], outcomes: { isolated: "The warning reached Adachi before Ren had anyone ready to believe him.", resilient: "Ren helped hold one evacuation route while the district absorbed the shock.", prepared: "Ren's evidence let the guild clear Adachi before the synchronized breach." } },
+  { day: 365, key: "arc_tokyo_fracture", title: "The Tokyo Fracture", focus_npcs: ["Daichi Mori", "Mei Kuroda"], outcomes: { isolated: "The fracture left Ren outside both camps as patrol routes collapsed.", resilient: "Ren carried evidence between rivals, preserving an uneasy working truce.", prepared: "Ren's trusted coalition exposed the false order before Tokyo divided." } },
+  { day: 548, key: "arc_foreign_signal", title: "The Foreign Signal", focus_npcs: ["Mei Kuroda", "Haruto Ishikawa"], outcomes: { isolated: "The signal faded overseas with no one willing to stake resources on Ren's warning.", resilient: "Ren preserved enough of the signal to guide a limited international response.", prepared: "Ren matched the signal to his portal record and opened a verified aid corridor." } },
+  { day: 730, key: "arc_guild_reckoning", title: "The Guild Reckoning", focus_npcs: ["Aiko Sato", "Daichi Mori"], outcomes: { isolated: "The hearing reduced Ren's life to a rank the guild could dismiss.", resilient: "Ren's record protected low-rank patrols, even as the old hierarchy survived.", prepared: "Ren's allies forced the guild to recognize survival evidence beside rank." } },
+  { day: 913, key: "arc_zero_rank_choice", title: "The Zero-Rank Choice", focus_npcs: ["Aiko Sato", "Daichi Mori", "Mei Kuroda", "Haruto Ishikawa"], outcomes: { isolated: "Ren confronted the final threat without a network strong enough to share its cost.", resilient: "Ren's incomplete circle held long enough to keep the threat from consuming Tokyo.", prepared: "Every bond and discovery converged into a coordinated answer to the final threat." } },
+  { day: 1095, key: "arc_awakened_horizon", title: "The Awakened Horizon", focus_npcs: ["Aiko Sato", "Daichi Mori", "Mei Kuroda", "Haruto Ishikawa"], outcomes: { isolated: "Ren survived three years, carrying an unfinished warning into an uncertain future.", resilient: "Ren left Tokyo steadier than he found it, though some fractures remained.", prepared: "Ren reached the horizon with a trusted circle and a record that changed Tokyo." } },
 ] as const;
+const LEGACY_STORY_OUTCOME = "Outcome tier unavailable in this legacy timeline.";
 const ANIMATION_CUES = [
   "awakening", "consequence", "festival", "finance", "food", "mission",
   "other", "patrol", "portal_preparation", "registration", "rest",
@@ -465,22 +466,27 @@ function isCompletedStory(
   currentDay: number,
 ): value is CompletedStory {
   const anchor = STORY_ANCHORS[index];
+  if (anchor === undefined || !isRecord(value)) {
+    return false;
+  }
+  const tier = isString(value.tier) ? value.tier : "";
+  const expectedOutcome = tier === "legacy-unavailable"
+    ? LEGACY_STORY_OUTCOME
+    : (anchor.outcomes as Record<string, string>)[tier];
   return (
-    anchor !== undefined &&
-    isRecord(value) &&
     hasExactKeys(value, ["day", "focus_npcs", "key", "outcome", "tier", "title"]) &&
     value.day === anchor.day &&
     value.day <= currentDay &&
     value.key === anchor.key &&
     value.title === anchor.title &&
-    isString(value.outcome) &&
+    value.outcome === expectedOutcome &&
     ["isolated", "resilient", "prepared", "legacy-unavailable"].includes(
       value.tier as string,
     ) &&
     Array.isArray(value.focus_npcs) &&
-    value.focus_npcs.every(
-      (name) => isString(name) && name in RELATIONSHIP_ROLES,
-    )
+    value.focus_npcs.length === anchor.focus_npcs.length &&
+    value.focus_npcs.every((name, focusIndex) =>
+      name === anchor.focus_npcs[focusIndex])
   );
 }
 
