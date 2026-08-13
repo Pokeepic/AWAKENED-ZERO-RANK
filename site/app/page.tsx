@@ -89,14 +89,28 @@ export default function Home() {
       }
     }
 
+    function markOffline() {
+      if (trusted) {
+        setStale(true);
+      }
+    }
+
+    function refreshWhenOnline() {
+      void refresh();
+    }
+
     void refresh();
     const interval = window.setInterval(refresh, REFRESH_INTERVAL_MS);
     document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("offline", markOffline);
+    window.addEventListener("online", refreshWhenOnline);
     return () => {
       controller.abort();
       window.clearInterval(interval);
       window.clearTimeout(updateTimer);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("offline", markOffline);
+      window.removeEventListener("online", refreshWhenOnline);
     };
   }, []);
 

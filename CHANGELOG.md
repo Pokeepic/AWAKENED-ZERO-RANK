@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.205.0 - Connectivity-aware verification
+
+- A browser offline event now marks an already trusted chronicle as refresh-delayed immediately instead of waiting for the next scheduled request.
+- A browser online event now triggers immediate artifact-pair reauthentication; the existing in-flight guard prevents overlapping fetches, and both listeners are removed on unmount.
+- Added focused trusted-offline, immediate-online-refresh, listener-registration, and cleanup checks.
+- Simulator, balance, schemas, RL behavior, observer artifacts, refresh cadence, and read-only capabilities are unchanged.
+
 ## 0.204.0 - Private crawler boundary
 
 - Added explicit noindex, nofollow, noarchive, and nosnippet document metadata for the owner-only observer deployment.
