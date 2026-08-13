@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.189.0 — Verifiable observer site data
+
+- Added public `verify_observer_site_data(directory)` to require the exact contract/snapshot file set, strictly authenticate both JSON artifacts, and enforce their shared observer schema.
+- Verification returns compact status, contract and snapshot SHA-256 identities, observer schema, seed, and day metadata without modifying either file.
+- Added `--verify-observer-site-data DIR` for read-only deployment and cache-ingestion checks; simulation options, missing directories, extra or missing files, malformed JSON, tampering, and unsupported schemas fail cleanly.
+- Added API/CLI immutability, identity-summary, tamper, directory-drift, and option-conflict coverage, raising the deterministic suite to 230 tests; simulation, balance, schemas, and RL behavior are unchanged.
+
 ## 0.188.0 — Atomic observer site data
 
 - Added public `publish_observer_site_data(snapshot, destination)` to validate and cross-check the observer snapshot and presentation contract before creating a deployment artifact.

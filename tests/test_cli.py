@@ -10,7 +10,11 @@ from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from awakened_zero_rank import observer_presentation_contract, observer_snapshot
+from awakened_zero_rank import (
+    observer_presentation_contract,
+    observer_snapshot,
+    publish_observer_site_data,
+)
 from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.persistence import save_simulation
 from awakened_zero_rank.simulation import Simulation
@@ -381,6 +385,55 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(context.exception.code, 2)
         self.assertIn(
             "--publish-observer-site-data cannot use simulation options",
+            errors.getvalue(),
+        )
+
+    def test_verify_observer_site_data_reports_without_rewriting(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=499))
+        with TemporaryDirectory() as temporary_directory:
+            target = Path(temporary_directory) / "data"
+            publish_observer_site_data(snapshot, target)
+            before = {
+                path.name: path.read_bytes() for path in target.iterdir()
+            }
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main(("--verify-observer-site-data", str(target)))
+
+            self.assertEqual(
+                {path.name: path.read_bytes() for path in target.iterdir()},
+                before,
+            )
+        summary = json.loads(output.getvalue())
+        self.assertEqual(summary["directory"], str(target))
+        self.assertEqual(summary["status"], "valid")
+        self.assertEqual(summary["seed"], 499)
+        self.assertEqual(
+            summary["snapshot_sha256"], snapshot["identity"]["digest"])
+
+    def test_verify_observer_site_data_rejects_drift_and_simulation_options(
+            self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            target = Path(temporary_directory) / "data"
+            target.mkdir()
+            (target / "unexpected.json").write_text("{}", encoding="utf-8")
+            errors = StringIO()
+            with redirect_stdout(StringIO()), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main(("--verify-observer-site-data", str(target)))
+            self.assertEqual(context.exception.code, 2)
+            self.assertIn("contents are malformed", errors.getvalue())
+
+        errors = StringIO()
+        with redirect_stdout(StringIO()), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main((
+                    "--verify-observer-site-data", "data", "--seed", "1",
+                ))
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn(
+            "--verify-observer-site-data cannot use simulation options",
             errors.getvalue(),
         )
 

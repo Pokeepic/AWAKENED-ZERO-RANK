@@ -608,6 +608,35 @@ def publish_observer_site_data(
     return target
 
 
+def verify_observer_site_data(
+        destination: str | Path) -> dict[str, Any]:
+    """Strictly verify a published observer site-data directory."""
+    root = Path(destination)
+    if not root.is_dir():
+        raise ValueError("Observer site data directory is missing")
+    expected_files = {"observer-contract.json", "observer-snapshot.json"}
+    actual_files = {entry.name for entry in root.iterdir()}
+    if actual_files != expected_files:
+        raise ValueError("Observer site data directory contents are malformed")
+    contract = json.loads(
+        (root / "observer-contract.json").read_text(encoding="utf-8"))
+    snapshot = json.loads(
+        (root / "observer-snapshot.json").read_text(encoding="utf-8"))
+    contract_summary = verify_observer_presentation_contract(contract)
+    snapshot_summary = verify_observer_snapshot(snapshot)
+    if (snapshot_summary["schema_version"] !=
+            contract_summary["observer_schema_version"]):
+        raise ValueError("Observer site data schemas are incompatible")
+    return {
+        "contract_sha256": contract_summary["contract_sha256"],
+        "day": snapshot_summary["day"],
+        "observer_schema_version": snapshot_summary["schema_version"],
+        "seed": snapshot_summary["seed"],
+        "snapshot_sha256": snapshot_summary["digest"],
+        "status": "valid",
+    }
+
+
 def _animation_cue(action: str) -> str:
     if action in _STORY_TITLES:
         return "story"

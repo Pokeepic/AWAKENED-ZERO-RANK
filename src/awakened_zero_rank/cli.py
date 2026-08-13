@@ -15,6 +15,7 @@ from .observer import (
     save_observer_presentation_contract,
     save_observer_snapshot,
     verify_observer_presentation_contract,
+    verify_observer_site_data,
     verify_observer_snapshot,
 )
 from .persistence import (
@@ -67,6 +68,10 @@ def build_parser() -> argparse.ArgumentParser:
     inspection_modes.add_argument(
         "--publish-observer-site-data", nargs=2, metavar=("SAVE", "DIR"),
         help="publish a verified static-site contract and snapshot directory",
+    )
+    inspection_modes.add_argument(
+        "--verify-observer-site-data", metavar="DIR",
+        help="strictly verify a published observer site-data directory",
     )
     inspection_modes.add_argument(
         "--compare-observer-snapshots", nargs=2, metavar=("LEFT", "RIGHT"),
@@ -128,7 +133,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             args.verify_observer_presentation_contract or args.verify_save or
             args.story_progress or args.observer_snapshot or
             args.verify_observer_snapshot or args.publish_observer_site_data or
-            args.compare_observer_snapshots or
+            args.verify_observer_site_data or args.compare_observer_snapshots or
             args.inspect_experiment_bundle or
             args.compare_experiment_bundles or
             args.inspect_comparison_artifact):
@@ -144,6 +149,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             if args.verify_observer_snapshot
             else "--publish-observer-site-data"
             if args.publish_observer_site_data
+            else "--verify-observer-site-data"
+            if args.verify_observer_site_data
             else "--compare-observer-snapshots"
             if args.compare_observer_snapshots
             else "--inspect-experiment-bundle" if args.inspect_experiment_bundle
@@ -163,6 +170,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 args.story_progress or
                 args.observer_snapshot or args.verify_observer_snapshot or
                 args.publish_observer_site_data or
+                args.verify_observer_site_data or
                 args.compare_observer_snapshots):
             from .learning import (
                 compare_experiment_bundles,
@@ -231,6 +239,16 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                             published / "observer-snapshot.json"),
                         "snapshot_sha256": snapshot["identity"]["digest"],
                         "status": "published",
+                    },
+                    indent=2, sort_keys=True,
+                )
+            elif args.verify_observer_site_data:
+                summary = verify_observer_site_data(
+                    args.verify_observer_site_data)
+                output = json.dumps(
+                    {
+                        "directory": args.verify_observer_site_data,
+                        **summary,
                     },
                     indent=2, sort_keys=True,
                 )

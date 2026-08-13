@@ -17,6 +17,7 @@ from awakened_zero_rank import (
     save_observer_presentation_contract,
     save_observer_snapshot,
     verify_observer_presentation_contract,
+    verify_observer_site_data,
     verify_observer_snapshot,
 )
 from awakened_zero_rank.content import STORY_ANCHORS
@@ -704,6 +705,50 @@ class ObserverSnapshotTests(unittest.TestCase):
                 publish_observer_site_data(snapshot, target)
 
             self.assertFalse(target.exists())
+
+    def test_site_data_verifier_is_read_only_and_reports_identity(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=487))
+        with TemporaryDirectory() as directory:
+            target = Path(directory) / "data"
+            publish_observer_site_data(snapshot, target)
+            before = {
+                path.name: path.read_bytes() for path in target.iterdir()
+            }
+
+            summary = verify_observer_site_data(target)
+
+            self.assertEqual(summary, {
+                "contract_sha256": observer_presentation_contract()[
+                    "contract_sha256"],
+                "day": snapshot["clock"]["day"],
+                "observer_schema_version": 4,
+                "seed": 487,
+                "snapshot_sha256": snapshot["identity"]["digest"],
+                "status": "valid",
+            })
+            self.assertEqual(
+                {path.name: path.read_bytes() for path in target.iterdir()},
+                before,
+            )
+
+    def test_site_data_verifier_rejects_tampering_and_directory_drift(
+            self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=491))
+        with TemporaryDirectory() as directory:
+            target = Path(directory) / "data"
+            publish_observer_site_data(snapshot, target)
+            snapshot_path = target / "observer-snapshot.json"
+            original = snapshot_path.read_text(encoding="utf-8")
+            snapshot_path.write_text(
+                original.replace('"seed": 491', '"seed": 492'),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "integrity check failed"):
+                verify_observer_site_data(target)
+            snapshot_path.write_text(original, encoding="utf-8")
+            (target / "unexpected.json").write_text("{}", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "contents are malformed"):
+                verify_observer_site_data(target)
 
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))

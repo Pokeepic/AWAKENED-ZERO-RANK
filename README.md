@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.188.0` |
+| Release | `0.189.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 226 |
+| Automated tests | 230 |
 
 ## Why this project exists
 
@@ -115,9 +115,10 @@ Publish both verified files as one non-overwriting, directory-level transaction 
 
 ```bash
 awakened-zero-rank --publish-observer-site-data saves/ren.json public/data
+awakened-zero-rank --verify-observer-site-data public/data
 ```
 
-The command creates `observer-contract.json` and `observer-snapshot.json` together and prints their paths, schemas, and SHA-256 identities for deployment logs.
+The publish command creates `observer-contract.json` and `observer-snapshot.json` together and prints their paths, schemas, and SHA-256 identities for deployment logs. Verification requires exactly those two files, validates both identities and their shared observer schema, rejects directory drift, and never rewrites the artifact.
 
 Verify a previously exported observer snapshot without rewriting it:
 
@@ -250,7 +251,7 @@ A later release can add a read-only dashboard for time, weather, Ren's condition
 
 The intended product is a real publicly deployed website that anyone can visit through a normal URL, not a local-only developer demo. Its production plan should include responsive phone and desktop layouts, accessible controls and motion settings, secure read-only data delivery, caching, monitoring, deployment rollback, and a clear separation between the public chronicle and private developer diagnostics.
 
-The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-4, mutation-free, SHA-256-identified JSON boundary for current world, economy, protagonist, relationship, portal, story, and bounded recent-activity state; it exposes no control hooks. Comparison schema 8 adds a stable `animation_cue` beside the copied `appended_event`, so public clients can select accessible motion or sprite treatments without parsing prose or duplicating simulator rules. `observer_presentation_contract()` and `--observer-presentation-contract` expose the versioned cue, update-mode, and activity-relation vocabularies as read-only JSON with no control capabilities. Contract schema 2 adds canonical `contract_sha256` cache identity; it is not a signature or authority token. `verify_observer_presentation_contract()` and `--verify-observer-presentation-contract FILE` authenticate downloaded contract structure, content, and supported vocabulary without rewriting it. `save_observer_presentation_contract()` and `--presentation-contract-output FILE` publish the exact canonical contract through a verified, atomic, non-overwriting path suitable for a static public-site build. `publish_observer_site_data()` and `--publish-observer-site-data SAVE DIR` stage, reread, cross-check, and atomically publish the contract and authenticated snapshot as one non-overwriting static-site data directory. Compatible historical actions use `other`, while non-append comparisons return `null` and never imply shared lineage.
+The website must remain a view of the deterministic simulator. Pause, speed, seed, save, reset, and diagnostics are developer controls—not ways to choose Ren's life for him. Published experiment bundles and comparison artifacts can power a separate developer view without coupling presentation code to training. `observer_snapshot(simulation)` now provides the schema-4, mutation-free, SHA-256-identified JSON boundary for current world, economy, protagonist, relationship, portal, story, and bounded recent-activity state; it exposes no control hooks. Comparison schema 8 adds a stable `animation_cue` beside the copied `appended_event`, so public clients can select accessible motion or sprite treatments without parsing prose or duplicating simulator rules. `observer_presentation_contract()` and `--observer-presentation-contract` expose the versioned cue, update-mode, and activity-relation vocabularies as read-only JSON with no control capabilities. Contract schema 2 adds canonical `contract_sha256` cache identity; it is not a signature or authority token. `verify_observer_presentation_contract()` and `--verify-observer-presentation-contract FILE` authenticate downloaded contract structure, content, and supported vocabulary without rewriting it. `save_observer_presentation_contract()` and `--presentation-contract-output FILE` publish the exact canonical contract through a verified, atomic, non-overwriting path suitable for a static public-site build. `publish_observer_site_data()` and `--publish-observer-site-data SAVE DIR` stage, reread, cross-check, and atomically publish the contract and authenticated snapshot as one non-overwriting static-site data directory. `verify_observer_site_data()` and `--verify-observer-site-data DIR` enforce the exact two-file boundary, both content identities, and schema compatibility through a read-only deployment check. Compatible historical actions use `other`, while non-append comparisons return `null` and never imply shared lineage.
 
 ### Future game adaptation
 
