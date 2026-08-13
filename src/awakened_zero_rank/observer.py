@@ -485,6 +485,15 @@ def _validate_relationships(relationships: Any, day: int, slot: str) -> None:
     registered = (day, _SLOTS.index(slot)) >= (4, _SLOTS.index("Afternoon"))
     if ("Aiko Sato" in names) != registered:
         raise ValueError("Observer snapshot Guild registration evidence is invalid")
+    position = (day, _SLOTS.index(slot))
+    introductions = {
+        "Daichi Mori": (5, _SLOTS.index("Afternoon")),
+        "Mei Kuroda": (6, _SLOTS.index("Evening")),
+        "Haruto Ishikawa": (9, _SLOTS.index("Late Night")),
+    }
+    if any((name in names) != (position >= introduced)
+           for name, introduced in introductions.items()):
+        raise ValueError("Observer snapshot relationship chronology is invalid")
 
 
 def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:

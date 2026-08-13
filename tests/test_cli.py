@@ -173,13 +173,9 @@ class CliValidationTests(unittest.TestCase):
 
     def test_story_progress_is_read_only_and_reports_json(self) -> None:
         simulation = Simulation(seed=113)
-        simulation.run(13)
+        simulation.run(35)
         simulation.state.clock.day = 183
         simulation.state.clock.slot = TimeSlot.MORNING
-        simulation.state.protagonist.hunter_rank = "F"
-        simulation.state.protagonist.ability = "Threat Sense"
-        simulation.state.protagonist.awakened = True
-        simulation.state.protagonist.guild_registered = True
         simulation.step()
         with TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "timeline.json"
@@ -195,7 +191,7 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(summary["path"], str(path))
         self.assertEqual(summary["schema_version"], 3)
         self.assertEqual(summary["completed_count"], 1)
-        self.assertEqual(summary["completed"][0]["tier"], "isolated")
+        self.assertEqual(summary["completed"][0]["tier"], "resilient")
         self.assertEqual(summary["next"]["key"], "arc_tokyo_fracture")
         self.assertFalse(summary["ending_reached"])
 
@@ -738,15 +734,8 @@ class CliValidationTests(unittest.TestCase):
 
     def test_observer_summary_reports_named_story_ending(self) -> None:
         simulation = Simulation(seed=151)
+        simulation.run(35)
         simulation.state.clock.day = 1095
-        simulation.state.protagonist.hunter_rank = "F"
-        simulation.state.protagonist.ability = "Threat Sense"
-        simulation.state.protagonist.awakened = True
-        simulation.state.protagonist.guild_registered = True
-        simulation.state.protagonist.current_goal = (
-            "Survive gate work and reach Rank E")
-        simulation.state.protagonist.relationships["Aiko Sato"] = Relationship(
-            "Aiko Sato", "F-rank guild clerk")
         from awakened_zero_rank.content import STORY_ANCHORS
         simulation.state.calendar_events_seen.extend(
             anchor.key for anchor in STORY_ANCHORS)

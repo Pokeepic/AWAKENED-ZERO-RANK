@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.246.0 - Recurring-character chronology
+
+- Browser, save, and Python observer validation now bind Daichi Mori, Mei Kuroda, and Haruto Ishikawa to their fixed authored introductions.
+- Each recurring character remains absent through their meeting slot and is required from the following slot onward.
+- Added exact pre/post-introduction boundary coverage. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.245.0 - Guild registration evidence
 
 - Browser, save, and Python observer validation now bind Guild registration and Aiko Sato's relationship record to the fixed day-4 Morning event.

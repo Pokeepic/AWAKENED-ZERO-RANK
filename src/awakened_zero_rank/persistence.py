@@ -342,6 +342,16 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             protagonist.guild_registered != registered_by_clock or
             has_aiko != registered_by_clock):
         raise ValueError("Invalid save Guild registration evidence")
+    introductions = {
+        "Daichi Mori": (5, tuple(TimeSlot).index(TimeSlot.AFTERNOON)),
+        "Mei Kuroda": (6, tuple(TimeSlot).index(TimeSlot.EVENING)),
+        "Haruto Ishikawa": (9, tuple(TimeSlot).index(TimeSlot.LATE_NIGHT)),
+    }
+    if any(
+            (name in protagonist.relationships) !=
+            (clock_position >= introduced)
+            for name, introduced in introductions.items()):
+        raise ValueError("Invalid save relationship chronology")
     for speaker, connections in state.relationship_network.items():
         if speaker not in npc_names:
             raise ValueError(

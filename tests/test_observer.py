@@ -433,6 +433,36 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Guild registration evidence"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_requires_authored_relationship_chronology(self) -> None:
+        boundaries = (
+            ("Daichi Mori", 16, 17),
+            ("Mei Kuroda", 21, 22),
+            ("Haruto Ishikawa", 34, 35),
+        )
+        for name, before_steps, after_steps in boundaries:
+            later = Simulation(seed=321)
+            later.run(after_steps)
+            authored_relationship = next(
+                item for item in observer_snapshot(later)["relationships"]
+                if item["name"] == name)
+            for steps in (before_steps, after_steps):
+                with self.subTest(name=name, steps=steps):
+                    simulation = Simulation(seed=321)
+                    simulation.run(steps)
+                    snapshot = observer_snapshot(simulation)
+                    names = {item["name"] for item in snapshot["relationships"]}
+                    self.assertEqual(name in names, steps == after_steps)
+                    if steps == before_steps:
+                        snapshot["relationships"].append(authored_relationship)
+                        snapshot["relationships"].sort(key=lambda item: item["name"])
+                    else:
+                        snapshot["relationships"] = [
+                            item for item in snapshot["relationships"]
+                            if item["name"] != name]
+                    _redigest(snapshot)
+                    with self.assertRaisesRegex(ValueError, "relationship chronology"):
+                        verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
         weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"
@@ -466,10 +496,8 @@ class ObserverSnapshotTests(unittest.TestCase):
             verify_observer_snapshot(next_anchor)
 
         simulation = Simulation(seed=331)
-        simulation.run(13)
+        simulation.run(35)
         simulation.state.clock.day = STORY_ANCHORS[0].day
-        simulation.state.protagonist.hunter_rank = "F"
-        simulation.state.protagonist.ability = "Threat Sense"
         simulation.state.calendar_events_seen.append(STORY_ANCHORS[0].key)
         simulation.state.story_outcomes[STORY_ANCHORS[0].key] = "resilient"
         authored = observer_snapshot(simulation)
@@ -480,10 +508,8 @@ class ObserverSnapshotTests(unittest.TestCase):
 
     def test_verifier_rejects_redigested_invalid_story_ending(self) -> None:
         simulation = Simulation(seed=337)
-        simulation.run(13)
+        simulation.run(35)
         simulation.state.clock.day = STORY_ANCHORS[-1].day
-        simulation.state.protagonist.hunter_rank = "F"
-        simulation.state.protagonist.ability = "Threat Sense"
         simulation.state.calendar_events_seen.extend(
             anchor.key for anchor in STORY_ANCHORS)
         simulation.state.story_outcomes.update(

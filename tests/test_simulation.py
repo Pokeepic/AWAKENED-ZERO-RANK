@@ -64,7 +64,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.245.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.246.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -319,13 +319,9 @@ class SimulationTests(unittest.TestCase):
 
     def test_story_outcome_ledger_survives_save_load(self) -> None:
         simulation = Simulation(seed=97)
+        simulation.run(35)
         simulation.state.clock.day = 183
-        simulation.state.protagonist.hunter_rank = "F"
-        simulation.state.protagonist.ability = "Threat Sense"
-        simulation.state.protagonist.awakened = True
-        simulation.state.protagonist.guild_registered = True
-        simulation.state.protagonist.relationships["Aiko Sato"] = Relationship(
-            "Aiko Sato", "F-rank guild clerk")
+        simulation.state.clock.slot = TimeSlot.MORNING
         simulation.step()
         with TemporaryDirectory() as directory:
             path = Path(directory) / "story.json"
@@ -338,13 +334,9 @@ class SimulationTests(unittest.TestCase):
 
     def test_cli_reports_story_arc_progress(self) -> None:
         simulation = Simulation(seed=101)
+        simulation.run(35)
         simulation.state.clock.day = 183
-        simulation.state.protagonist.hunter_rank = "F"
-        simulation.state.protagonist.ability = "Threat Sense"
-        simulation.state.protagonist.awakened = True
-        simulation.state.protagonist.guild_registered = True
-        simulation.state.protagonist.relationships["Aiko Sato"] = Relationship(
-            "Aiko Sato", "F-rank guild clerk")
+        simulation.state.clock.slot = TimeSlot.MORNING
         simulation.step()
         output = StringIO()
         with TemporaryDirectory() as directory:

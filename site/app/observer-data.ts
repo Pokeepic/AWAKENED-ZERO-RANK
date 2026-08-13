@@ -460,9 +460,18 @@ function isRelationships(
   const names = value.map((relationship) => relationship.name);
   const registered = day > 4 ||
     (day === 4 && TIME_SLOTS.indexOf(slot as (typeof TIME_SLOTS)[number]) >= 1);
+  const position = day * TIME_SLOTS.length +
+    TIME_SLOTS.indexOf(slot as (typeof TIME_SLOTS)[number]);
+  const introductions = [
+    ["Daichi Mori", 5 * TIME_SLOTS.length + 1],
+    ["Mei Kuroda", 6 * TIME_SLOTS.length + 2],
+    ["Haruto Ishikawa", 9 * TIME_SLOTS.length + 3],
+  ] as const;
   return names.every(
     (name, index) => index === 0 || names[index - 1] < name,
-  ) && names.includes("Aiko Sato") === registered;
+  ) && names.includes("Aiko Sato") === registered && introductions.every(
+    ([name, introduced]) => names.includes(name) === (position >= introduced),
+  );
 }
 
 function isPortals(value: unknown): value is ObserverSnapshot["portals"] {
