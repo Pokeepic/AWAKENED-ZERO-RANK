@@ -16,6 +16,7 @@ from awakened_zero_rank import (
     publish_observer_site_data,
 )
 from awakened_zero_rank.cli import main as cli_main
+from awakened_zero_rank.models import Relationship
 from awakened_zero_rank.persistence import save_simulation
 from awakened_zero_rank.simulation import Simulation
 
@@ -175,6 +176,8 @@ class CliValidationTests(unittest.TestCase):
         simulation.state.clock.day = 183
         simulation.state.protagonist.hunter_rank = "F"
         simulation.state.protagonist.ability = "Threat Sense"
+        simulation.state.protagonist.awakened = True
+        simulation.state.protagonist.guild_registered = True
         simulation.step()
         with TemporaryDirectory() as temporary_directory:
             path = Path(temporary_directory) / "timeline.json"
@@ -736,6 +739,12 @@ class CliValidationTests(unittest.TestCase):
         simulation.state.clock.day = 1095
         simulation.state.protagonist.hunter_rank = "F"
         simulation.state.protagonist.ability = "Threat Sense"
+        simulation.state.protagonist.awakened = True
+        simulation.state.protagonist.guild_registered = True
+        simulation.state.protagonist.current_goal = (
+            "Survive gate work and reach Rank E")
+        simulation.state.protagonist.relationships["Aiko Sato"] = Relationship(
+            "Aiko Sato", "F-rank guild clerk")
         from awakened_zero_rank.content import STORY_ANCHORS
         simulation.state.calendar_events_seen.extend(
             anchor.key for anchor in STORY_ANCHORS)

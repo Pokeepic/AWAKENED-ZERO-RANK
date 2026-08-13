@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.244.0 - Lifecycle goal consistency
+
+- Browser, save, and Python observer validation now require Ren's displayed goal to match his authored lifecycle phase.
+- Pre-Awakening survival, post-Awakening registration, rent-arrears recovery, Rank-E pursuit, and promoted-rank stability goals are authenticated exactly.
+- Added phase-boundary, formatted-arrears, and tampered-goal coverage. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.243.0 - Awakening chronology
 
 - Browser, save, and Python observer validation now bind hunter status to the fixed day-3 Afternoon Awakening event.

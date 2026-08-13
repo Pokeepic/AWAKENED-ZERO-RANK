@@ -189,6 +189,18 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     ) >= (3, tuple(TimeSlot).index(TimeSlot.EVENING))
     if (protagonist.hunter_rank == "Unranked") == awakened_by_clock:
         raise ValueError("Invalid save protagonist Awakening chronology")
+    position = (state.clock.day, tuple(TimeSlot).index(state.clock.slot))
+    if not awakened_by_clock:
+        expected_goal = "Earn enough yen to pay rent"
+    elif position < (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)):
+        expected_goal = "Register with the Tokyo Hunter Guild"
+    elif protagonist.rent_arrears:
+        expected_goal = f"Clear ¥{protagonist.rent_arrears:,} in rent arrears"
+    elif protagonist.hunter_rank == "F":
+        expected_goal = "Survive gate work and reach Rank E"
+    else:
+        expected_goal = (
+            f"Build a stable life as a Rank {protagonist.hunter_rank} hunter")
     for field, expected_kind in (
             ("equipped_weapon", "weapon"),
             ("equipped_armor", "armor")):
@@ -402,6 +414,8 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         raise ValueError(
             "Invalid save field active_portal_plan: "
             "expected a catalogued investigated portal")
+    if protagonist.current_goal != expected_goal:
+        raise ValueError("Invalid save protagonist current goal")
 
 
 def load_simulation(path: str | Path) -> "Simulation":

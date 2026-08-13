@@ -348,7 +348,8 @@ def _validate_story(story: Any, current_day: int) -> None:
             ending != _expected_ending(tiers)):
         raise ValueError("Observer snapshot story ending is invalid")
 
-def _validate_protagonist(protagonist: Any, day: int, slot: str) -> None:
+def _validate_protagonist(
+        protagonist: Any, day: int, slot: str, rent_arrears: int) -> None:
     if not isinstance(protagonist, dict) or set(protagonist) != _PROTAGONIST_KEYS:
         raise ValueError("Observer snapshot protagonist is malformed")
     if any(
@@ -367,6 +368,19 @@ def _validate_protagonist(protagonist: Any, day: int, slot: str) -> None:
     awakened = (day, _SLOTS.index(slot)) >= (3, _SLOTS.index("Evening"))
     if (hunter_rank == "Unranked") == awakened:
         raise ValueError("Observer snapshot Awakening chronology is invalid")
+    position = (day, _SLOTS.index(slot))
+    if not awakened:
+        expected_goal = "Earn enough yen to pay rent"
+    elif position < (4, _SLOTS.index("Afternoon")):
+        expected_goal = "Register with the Tokyo Hunter Guild"
+    elif rent_arrears:
+        expected_goal = f"Clear ¥{rent_arrears:,} in rent arrears"
+    elif hunter_rank == "F":
+        expected_goal = "Survive gate work and reach Rank E"
+    else:
+        expected_goal = f"Build a stable life as a Rank {hunter_rank} hunter"
+    if protagonist["current_goal"] != expected_goal:
+        raise ValueError("Observer snapshot current goal is inconsistent")
 
     resources = protagonist["resources"]
     if not isinstance(resources, dict) or set(resources) != _RESOURCE_KEYS:
@@ -481,9 +495,11 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     _validate_economy(snapshot["economy"], day, clock["slot"])
     _validate_environment(snapshot["environment"])
     _validate_portals(snapshot["portals"])
-    _validate_protagonist(snapshot["protagonist"], day, clock["slot"])
     _validate_relationships(snapshot["relationships"])
     _validate_story(snapshot["story"], day)
+    _validate_protagonist(
+        snapshot["protagonist"], day, clock["slot"],
+        snapshot["economy"]["rent_arrears"])
 
     return day
 

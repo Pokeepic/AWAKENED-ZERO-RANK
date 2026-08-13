@@ -242,6 +242,17 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
+    def test_current_goal_requires_lifecycle_consistency(self) -> None:
+        for steps in (0, 10, 13):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=84)
+                simulation.run(steps)
+                simulation.state.protagonist.current_goal = "Invented objective"
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "current goal"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30
@@ -389,6 +400,8 @@ class PersistenceSafetyTests(unittest.TestCase):
         simulation.state.clock.day = 183
         simulation.state.protagonist.hunter_rank = "F"
         simulation.state.protagonist.ability = "Threat Sense"
+        simulation.state.protagonist.awakened = True
+        simulation.state.protagonist.guild_registered = True
         simulation.step()
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"
@@ -410,6 +423,8 @@ class PersistenceSafetyTests(unittest.TestCase):
         simulation.state.clock.day = 183
         simulation.state.protagonist.hunter_rank = "F"
         simulation.state.protagonist.ability = "Threat Sense"
+        simulation.state.protagonist.awakened = True
+        simulation.state.protagonist.guild_registered = True
         simulation.step()
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"

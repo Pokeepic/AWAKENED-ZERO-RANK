@@ -395,6 +395,21 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Awakening chronology"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_requires_lifecycle_current_goal(self) -> None:
+        for steps, expected in (
+                (0, "Earn enough yen to pay rent"),
+                (10, "Register with the Tokyo Hunter Guild"),
+                (13, "Survive gate work and reach Rank E")):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=317)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                self.assertEqual(snapshot["protagonist"]["current_goal"], expected)
+                snapshot["protagonist"]["current_goal"] = "Invented objective"
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "current goal"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
         weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"
@@ -676,7 +691,7 @@ class ObserverSnapshotTests(unittest.TestCase):
     def test_snapshot_comparison_refreshes_same_clock_changes(self) -> None:
         left = observer_snapshot(Simulation(seed=443))
         right = deepcopy(left)
-        right["protagonist"]["current_goal"] = "Review the latest Gate report"
+        right["protagonist"]["mood"] = "Steady"
         _redigest(right)
 
         comparison = compare_observer_snapshots(left, right)

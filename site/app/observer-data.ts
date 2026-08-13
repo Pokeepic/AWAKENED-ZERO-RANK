@@ -175,6 +175,23 @@ function isAwakeningChronologyConsistent(
     (day === 3 && TIME_SLOTS.indexOf(slot as (typeof TIME_SLOTS)[number]) >= 2);
   return (rank !== "Unranked") === awakened;
 }
+function expectedCurrentGoal(
+  day: number,
+  slot: string,
+  rank: string,
+  rentArrears: number,
+): string {
+  const slotIndex = TIME_SLOTS.indexOf(slot as (typeof TIME_SLOTS)[number]);
+  if (day < 3 || (day === 3 && slotIndex < 2)) {
+    return "Earn enough yen to pay rent";
+  }
+  if (day < 4 || (day === 4 && slotIndex < 1)) {
+    return "Register with the Tokyo Hunter Guild";
+  }
+  if (rentArrears > 0) return `Clear ¥${rentArrears.toLocaleString("en-US")} in rent arrears`;
+  if (rank === "F") return "Survive gate work and reach Rank E";
+  return `Build a stable life as a Rank ${rank} hunter`;
+}
 function isRankPointsConsistent(rank: string, points: number): boolean {
   if (rank === "Unranked" || rank === "F") return points < 30;
   if (rank === "E") return points >= 30 && points < 60;
@@ -718,6 +735,12 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       value.clock.day as number,
       value.clock.slot as string,
       protagonist.hunter_rank as string,
+    ) ||
+    protagonist.current_goal !== expectedCurrentGoal(
+      value.clock.day as number,
+      value.clock.slot as string,
+      protagonist.hunter_rank as string,
+      (value.economy as ObserverSnapshot["economy"]).rent_arrears,
     ) ||
     !LOCATIONS.has(protagonist.location as string) ||
     !isEquipment(protagonist.equipment) ||
