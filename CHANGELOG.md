@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.219.0 - Story clock consistency
+
+- Browser-rendered story progress now requires every claimed completed anchor to have reached its fixed authored day on the simulation clock.
+- Premature progress and endings fail closed, while an anchor due on the current day may remain upcoming until its scheduled event is processed.
+- Updated completed-arc fixtures to use possible day-1,095 timelines and added focused premature-anchor coverage. Simulator and schemas are unchanged.
+
 ## 0.218.0 - Exact browser integer precision
 
 - Every integer accepted by the browser trust boundary must now be exactly representable as a JavaScript safe integer.

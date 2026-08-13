@@ -354,6 +354,10 @@ function isStory(
   ) {
     return false;
   }
+  const lastCompleted = STORY_ANCHORS[value.completed_count - 1];
+  if (lastCompleted !== undefined && lastCompleted.day > currentDay) {
+    return false;
+  }
   if (value.next !== null) {
     const expected = STORY_ANCHORS[value.completed_count];
     return (
