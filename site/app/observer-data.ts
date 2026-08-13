@@ -504,47 +504,42 @@ function isStoryEnding(
   );
 }
 
-function isEndingConsistent(ending: StoryEnding, total: number): boolean {
+function isEndingConsistent(
+  ending: StoryEnding,
+  completed: CompletedStory[],
+): boolean {
+  const tiers = completed.map((entry) => entry.tier);
+  const isolatedCount = tiers.filter((tier) => tier === "isolated").length;
+  const preparedCount = tiers.filter((tier) => tier === "prepared").length;
+  const resilientCount = tiers.filter((tier) => tier === "resilient").length;
+  const finalTier = tiers.at(-1);
   if (
-    ending.isolated_count < 0 ||
-    ending.isolated_count > total ||
-    ending.prepared_count < 0 ||
-    ending.prepared_count > total ||
-    ending.resilient_count < 0 ||
-    ending.resilient_count > total
+    ending.isolated_count !== isolatedCount ||
+    ending.prepared_count !== preparedCount ||
+    ending.resilient_count !== resilientCount ||
+    ending.tier !== finalTier
   ) {
     return false;
   }
-  const resolved =
-    ending.isolated_count +
-    ending.prepared_count +
-    ending.resilient_count;
-  if (ending.id === "legacy-unavailable") {
+  if (tiers.includes("legacy-unavailable")) {
     return (
-      resolved < total &&
-      ["isolated", "resilient", "prepared", "legacy-unavailable"].includes(
-        ending.tier,
-      ) &&
+      ending.id === "legacy-unavailable" &&
       ending.title === "Legacy Ending Unavailable" &&
       ending.summary ===
         "This timeline predates authenticated story outcome evidence."
     );
   }
-  if (resolved !== total) {
-    return false;
-  }
-  if (ending.id === "unfinished-warning") {
+  if (finalTier === "isolated") {
     return (
-      ending.tier === "isolated" &&
+      ending.id === "unfinished-warning" &&
       ending.title === "The Unfinished Warning" &&
       ending.summary ===
         "Ren survived, but the warning he carried remained unresolved."
     );
   }
-  if (ending.id === "zero-rank-horizon") {
+  if (finalTier === "prepared" && preparedCount >= 4) {
     return (
-      ending.tier === "prepared" &&
-      ending.prepared_count >= 4 &&
+      ending.id === "zero-rank-horizon" &&
       ending.title === "The Zero-Rank Horizon" &&
       ending.summary ===
         "Ren's evidence and trusted circle changed what Tokyo valued in a hunter."
@@ -552,8 +547,6 @@ function isEndingConsistent(ending: StoryEnding, total: number): boolean {
   }
   return (
     ending.id === "quiet-guardian" &&
-    (ending.tier === "resilient" ||
-      (ending.tier === "prepared" && ending.prepared_count < 4)) &&
     ending.title === "Tokyo's Quiet Guardian" &&
     ending.summary ===
       "Ren left Tokyo steadier through persistence rather than recognition."
@@ -603,7 +596,7 @@ function isStory(
   return (
     value.completed_count === value.total_anchors &&
     value.ending !== null &&
-    isEndingConsistent(value.ending, value.total_anchors)
+    isEndingConsistent(value.ending, value.completed)
   );
 }
 export function isPresentationContract(

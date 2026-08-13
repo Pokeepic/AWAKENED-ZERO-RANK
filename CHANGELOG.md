@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.233.0 - Story ending reconciliation
+
+- The browser now recomputes isolated, resilient, and prepared counts from the authenticated completed-story ledger and requires the ending projection to match them exactly.
+- The final completed tier now determines the ending tier and named ending, while any legacy-unavailable entry requires the explicit legacy ending.
+- Updated mixed-ending fixtures to carry ledger evidence consistent with their summaries. Simulator and schemas are unchanged.
+
 ## 0.232.0 - Authored story outcomes
 
 - Completed story entries now require each anchor's exact authored focus characters in canonical order.
