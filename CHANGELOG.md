@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.197.0 — Runtime-validated observer payloads
+
+- Downloaded contract and snapshot JSON now remain unknown until executable runtime guards validate every field rendered by the observer, including identity, clock, environment, protagonist strings, bounded resources, progression, recent activity, story state, relationships, and unique portal names.
+- Moved observer types, canonical JSON, hashing, structural guards, and pair verification into a dedicated data-boundary module; the React page receives typed values only after structure, schema, read-only capability, and both SHA-256 identities pass.
+- Website tests now execute the actual browser verifier against the published artifacts and reject both ordinary tampering and deliberately re-hashed malformed contract and snapshot payloads.
+- Simulator, balance, schemas, and RL behavior are unchanged.
+
 ## 0.196.0 — Visibility-aware typed observer
 
 - Hidden browser tabs now skip scheduled network refreshes; returning to a visible tab triggers an immediate authenticated artifact-pair refresh.
