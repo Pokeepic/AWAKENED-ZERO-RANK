@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.248.0 - Fixed-event location evidence
+
+- Browser, save, and Python observer validation now bind the exact post-Awakening boundary to the Tokyo Awakening Bureau.
+- The exact post-registration boundary likewise requires the Tokyo Hunter Guild; travel remains unrestricted from the following slot onward.
+- Added both fixed-event location boundaries. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.247.0 - Relationship introduction evidence
 
 - Browser, save, and Python observer validation now authenticate each recurring character's initial relationship metrics at the exact post-introduction slot.

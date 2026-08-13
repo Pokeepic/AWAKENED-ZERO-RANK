@@ -190,6 +190,14 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     if (protagonist.hunter_rank == "Unranked") == awakened_by_clock:
         raise ValueError("Invalid save protagonist Awakening chronology")
     clock_position = (state.clock.day, tuple(TimeSlot).index(state.clock.slot))
+    fixed_locations = {
+        (3, tuple(TimeSlot).index(TimeSlot.EVENING)): "Tokyo Awakening Bureau",
+        (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)): "Tokyo Hunter Guild",
+    }
+    if (
+            clock_position in fixed_locations and
+            protagonist.location != fixed_locations[clock_position]):
+        raise ValueError("Invalid save fixed-event location")
     if not awakened_by_clock:
         expected_goal = "Earn enough yen to pay rent"
     elif clock_position < (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)):

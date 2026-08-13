@@ -306,6 +306,21 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
+    def test_fixed_events_require_authored_locations(self) -> None:
+        for steps, expected_location in (
+                (10, "Tokyo Awakening Bureau"),
+                (13, "Tokyo Hunter Guild")):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=92)
+                simulation.run(steps)
+                self.assertEqual(
+                    simulation.state.protagonist.location, expected_location)
+                simulation.state.protagonist.location = "Adachi Apartment"
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "fixed-event location"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30
@@ -323,6 +338,7 @@ class PersistenceSafetyTests(unittest.TestCase):
         protagonist.rank_points = 10
         simulation.state.clock.day = 3
         simulation.state.clock.slot = TimeSlot.EVENING
+        protagonist.location = "Tokyo Awakening Bureau"
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"
             with self.assertRaisesRegex(ValueError, "mission evidence"):
@@ -339,6 +355,7 @@ class PersistenceSafetyTests(unittest.TestCase):
         protagonist.rank_points = 11
         simulation.state.clock.day = 3
         simulation.state.clock.slot = TimeSlot.EVENING
+        protagonist.location = "Tokyo Awakening Bureau"
         with TemporaryDirectory() as temporary_directory:
             destination = Path(temporary_directory) / "timeline.json"
             with self.assertRaisesRegex(ValueError, "exact awards"):

@@ -482,6 +482,21 @@ class ObserverSnapshotTests(unittest.TestCase):
                         ValueError, "relationship introduction evidence"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_requires_fixed_event_locations(self) -> None:
+        for steps, expected_location in (
+                (10, "Tokyo Awakening Bureau"),
+                (13, "Tokyo Hunter Guild")):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=325)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                self.assertEqual(
+                    snapshot["protagonist"]["location"], expected_location)
+                snapshot["protagonist"]["location"] = "Adachi Apartment"
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "fixed-event location"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
         weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"

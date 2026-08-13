@@ -770,6 +770,10 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       value.clock.slot as string,
       protagonist.hunter_rank as string,
     ) ||
+    (value.clock.day === 3 && value.clock.slot === "Evening" &&
+      protagonist.location !== "Tokyo Awakening Bureau") ||
+    (value.clock.day === 4 && value.clock.slot === "Afternoon" &&
+      protagonist.location !== "Tokyo Hunter Guild") ||
     protagonist.current_goal !== expectedCurrentGoal(
       value.clock.day as number,
       value.clock.slot as string,

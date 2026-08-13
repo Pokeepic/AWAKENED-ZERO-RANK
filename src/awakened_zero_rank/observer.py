@@ -369,6 +369,12 @@ def _validate_protagonist(
     if (hunter_rank == "Unranked") == awakened:
         raise ValueError("Observer snapshot Awakening chronology is invalid")
     position = (day, _SLOTS.index(slot))
+    fixed_locations = {
+        (3, _SLOTS.index("Evening")): "Tokyo Awakening Bureau",
+        (4, _SLOTS.index("Afternoon")): "Tokyo Hunter Guild",
+    }
+    if position in fixed_locations and location != fixed_locations[position]:
+        raise ValueError("Observer snapshot fixed-event location is invalid")
     if not awakened:
         expected_goal = "Earn enough yen to pay rent"
     elif position < (4, _SLOTS.index("Afternoon")):
