@@ -608,9 +608,9 @@ def publish_observer_site_data(
     return target
 
 
-def verify_observer_site_data(
-        destination: str | Path) -> dict[str, Any]:
-    """Strictly verify a published observer site-data directory."""
+def _load_observer_site_data(
+        destination: str | Path,
+) -> tuple[dict[str, Any], dict[str, Any]]:
     root = Path(destination)
     if not root.is_dir():
         raise ValueError("Observer site data directory is missing")
@@ -627,7 +627,7 @@ def verify_observer_site_data(
     if (snapshot_summary["schema_version"] !=
             contract_summary["observer_schema_version"]):
         raise ValueError("Observer site data schemas are incompatible")
-    return {
+    summary = {
         "contract_sha256": contract_summary["contract_sha256"],
         "day": snapshot_summary["day"],
         "observer_schema_version": snapshot_summary["schema_version"],
@@ -635,6 +635,14 @@ def verify_observer_site_data(
         "snapshot_sha256": snapshot_summary["digest"],
         "status": "valid",
     }
+    return snapshot, summary
+
+
+def verify_observer_site_data(
+        destination: str | Path) -> dict[str, Any]:
+    """Strictly verify a published observer site-data directory."""
+    _, summary = _load_observer_site_data(destination)
+    return summary
 
 
 def _animation_cue(action: str) -> str:
@@ -715,6 +723,24 @@ def compare_observer_snapshots(
         },
         "same_seed": same_seed,
         "update_mode": update_mode,
+    }
+
+
+def compare_observer_site_data(
+        left: str | Path, right: str | Path) -> dict[str, Any]:
+    """Verify and compare two published observer site-data directories."""
+    left_snapshot, left_summary = _load_observer_site_data(left)
+    right_snapshot, right_summary = _load_observer_site_data(right)
+    snapshot_comparison = compare_observer_snapshots(
+        left_snapshot, right_snapshot)
+    contract_identical = (
+        left_summary["contract_sha256"] == right_summary["contract_sha256"])
+    return {
+        "contract_identical": contract_identical,
+        "identical": contract_identical and snapshot_comparison["identical"],
+        "left": left_summary,
+        "right": right_summary,
+        "snapshot": snapshot_comparison,
     }
 
 

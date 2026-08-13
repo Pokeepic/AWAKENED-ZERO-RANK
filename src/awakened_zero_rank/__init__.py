@@ -1,6 +1,7 @@
 """AWAKENED ZERO RANK simulation package."""
 
 from .observer import (
+    compare_observer_site_data,
     compare_observer_snapshots,
     observer_presentation_contract,
     observer_snapshot,
@@ -13,10 +14,11 @@ from .observer import (
 )
 from .simulation import Simulation
 
-__version__ = "0.189.0"
+__version__ = "0.190.0"
 
 __all__ = [
-    "Simulation", "__version__", "compare_observer_snapshots",
+    "Simulation", "__version__", "compare_observer_site_data",
+    "compare_observer_snapshots",
     "observer_presentation_contract", "observer_snapshot",
     "publish_observer_site_data",
     "save_observer_presentation_contract", "save_observer_snapshot",

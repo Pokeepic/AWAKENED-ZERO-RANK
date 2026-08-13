@@ -8,6 +8,7 @@ from pathlib import Path
 from . import __version__
 from .journal import journal_entry
 from .observer import (
+    compare_observer_site_data,
     compare_observer_snapshots,
     observer_presentation_contract,
     observer_snapshot,
@@ -74,6 +75,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="strictly verify a published observer site-data directory",
     )
     inspection_modes.add_argument(
+        "--compare-observer-site-data", nargs=2, metavar=("LEFT", "RIGHT"),
+        help="verify and compare two published observer site-data directories",
+    )
+    inspection_modes.add_argument(
         "--compare-observer-snapshots", nargs=2, metavar=("LEFT", "RIGHT"),
         help="verify and compare two exported observer snapshots",
     )
@@ -116,6 +121,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             args.require_identical and
             not (
                 args.compare_observer_snapshots or
+                args.compare_observer_site_data or
                 args.compare_experiment_bundles
             )):
         parser.error("--require-identical requires a comparison mode")
@@ -133,7 +139,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             args.verify_observer_presentation_contract or args.verify_save or
             args.story_progress or args.observer_snapshot or
             args.verify_observer_snapshot or args.publish_observer_site_data or
-            args.verify_observer_site_data or args.compare_observer_snapshots or
+            args.verify_observer_site_data or
+            args.compare_observer_site_data or args.compare_observer_snapshots or
             args.inspect_experiment_bundle or
             args.compare_experiment_bundles or
             args.inspect_comparison_artifact):
@@ -151,6 +158,8 @@ def main(argv: tuple[str, ...] | None = None) -> None:
             if args.publish_observer_site_data
             else "--verify-observer-site-data"
             if args.verify_observer_site_data
+            else "--compare-observer-site-data"
+            if args.compare_observer_site_data
             else "--compare-observer-snapshots"
             if args.compare_observer_snapshots
             else "--inspect-experiment-bundle" if args.inspect_experiment_bundle
@@ -171,6 +180,7 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 args.observer_snapshot or args.verify_observer_snapshot or
                 args.publish_observer_site_data or
                 args.verify_observer_site_data or
+                args.compare_observer_site_data or
                 args.compare_observer_snapshots):
             from .learning import (
                 compare_experiment_bundles,
@@ -259,6 +269,19 @@ def main(argv: tuple[str, ...] | None = None) -> None:
                 output = json.dumps(
                     {"path": args.verify_observer_snapshot, **summary},
                     indent=2, sort_keys=True)
+            elif args.compare_observer_site_data:
+                left_directory, right_directory = args.compare_observer_site_data
+                comparison = compare_observer_site_data(
+                    left_directory, right_directory)
+                comparison_identical = comparison["identical"]
+                output = json.dumps(
+                    {
+                        "left_directory": left_directory,
+                        "right_directory": right_directory,
+                        **comparison,
+                    },
+                    indent=2, sort_keys=True,
+                )
             elif args.compare_observer_snapshots:
                 left_path, right_path = args.compare_observer_snapshots
                 left = json.loads(Path(left_path).read_text(encoding="utf-8"))

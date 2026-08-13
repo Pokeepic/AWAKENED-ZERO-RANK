@@ -489,6 +489,70 @@ class CliValidationTests(unittest.TestCase):
         self.assertIn("Observer snapshot integrity check failed", errors.getvalue())
         self.assertNotIn("Traceback", errors.getvalue())
 
+    def test_compare_observer_site_data_reports_update_and_exit_status(
+            self) -> None:
+        simulation = Simulation(seed=523)
+        left_snapshot = observer_snapshot(simulation)
+        simulation.step()
+        right_snapshot = observer_snapshot(simulation)
+        with TemporaryDirectory() as temporary_directory:
+            left = Path(temporary_directory) / "left"
+            right = Path(temporary_directory) / "right"
+            publish_observer_site_data(left_snapshot, left)
+            publish_observer_site_data(right_snapshot, right)
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main((
+                    "--compare-observer-site-data", str(left), str(right),
+                ))
+
+            comparison = json.loads(output.getvalue())
+            self.assertFalse(comparison["identical"])
+            self.assertTrue(comparison["contract_identical"])
+            self.assertEqual(
+                comparison["snapshot"]["update_mode"], "animate")
+            required_output = StringIO()
+            with redirect_stdout(required_output):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main((
+                        "--compare-observer-site-data", str(left), str(right),
+                        "--require-identical",
+                    ))
+            self.assertEqual(context.exception.code, 1)
+            self.assertEqual(
+                json.loads(required_output.getvalue()), comparison)
+
+    def test_compare_observer_site_data_rejects_options_and_drift(self) -> None:
+        errors = StringIO()
+        with redirect_stdout(StringIO()), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main((
+                    "--compare-observer-site-data", "left", "right",
+                    "--days", "1",
+                ))
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn(
+            "--compare-observer-site-data cannot use simulation options",
+            errors.getvalue(),
+        )
+
+        with TemporaryDirectory() as temporary_directory:
+            left = Path(temporary_directory) / "left"
+            right = Path(temporary_directory) / "right"
+            snapshot = observer_snapshot(Simulation(seed=541))
+            publish_observer_site_data(snapshot, left)
+            publish_observer_site_data(snapshot, right)
+            (right / "unexpected.json").write_text("{}", encoding="utf-8")
+            errors = StringIO()
+            with redirect_stdout(StringIO()), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main((
+                        "--compare-observer-site-data", str(left), str(right),
+                    ))
+            self.assertEqual(context.exception.code, 2)
+            self.assertIn("contents are malformed", errors.getvalue())
+
     def test_compare_observer_snapshots_is_read_only_and_reports_json(
             self) -> None:
         simulation = Simulation(seed=389)

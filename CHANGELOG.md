@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.190.0 — Verified deployment comparison
+
+- Added public `compare_observer_site_data(left, right)`, which loads each exact two-file deployment once, strictly verifies the loaded contract and snapshot, and then reuses the complete schema-8 snapshot comparison semantics.
+- Comparison reports per-deployment identities, contract continuity, overall identity, and nested update mode, animation cue, copied appended event, recent-activity relation, changed sections, and signed clock movement.
+- Added `--compare-observer-site-data LEFT RIGHT` with canonical JSON, simulation-option rejection, directory-drift failure, and `--require-identical` exit status for deployment CI.
+- Added API/CLI identity, one-slot animation, immutability, drift, option-conflict, and required-identity coverage, raising the deterministic suite to 234 tests; simulation, balance, schemas, and RL behavior are unchanged.
+
 ## 0.189.0 — Verifiable observer site data
 
 - Added public `verify_observer_site_data(directory)` to require the exact contract/snapshot file set, strictly authenticate both JSON artifacts, and enforce their shared observer schema.

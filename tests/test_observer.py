@@ -10,6 +10,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from awakened_zero_rank import (
+    compare_observer_site_data,
     compare_observer_snapshots,
     observer_presentation_contract,
     observer_snapshot,
@@ -749,6 +750,55 @@ class ObserverSnapshotTests(unittest.TestCase):
             (target / "unexpected.json").write_text("{}", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "contents are malformed"):
                 verify_observer_site_data(target)
+
+    def test_site_data_comparison_reuses_verified_snapshot_semantics(
+            self) -> None:
+        simulation = Simulation(seed=509)
+        left_snapshot = observer_snapshot(simulation)
+        simulation.step()
+        right_snapshot = observer_snapshot(simulation)
+        with TemporaryDirectory() as directory:
+            left = Path(directory) / "left"
+            right = Path(directory) / "right"
+            publish_observer_site_data(left_snapshot, left)
+            publish_observer_site_data(right_snapshot, right)
+            before = {
+                (root.name, file.name): file.read_bytes()
+                for root in (left, right) for file in root.iterdir()
+            }
+
+            comparison = compare_observer_site_data(left, right)
+
+            self.assertTrue(comparison["contract_identical"])
+            self.assertFalse(comparison["identical"])
+            self.assertEqual(comparison["snapshot"]["update_mode"], "animate")
+            self.assertEqual(comparison["snapshot"]["clock_delta_slots"], 1)
+            self.assertEqual(comparison["left"]["status"], "valid")
+            self.assertEqual(comparison["right"]["status"], "valid")
+            self.assertEqual(
+                {
+                    (root.name, file.name): file.read_bytes()
+                    for root in (left, right) for file in root.iterdir()
+                },
+                before,
+            )
+
+    def test_site_data_comparison_reports_identical_deployments(self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=521))
+        with TemporaryDirectory() as directory:
+            left = Path(directory) / "left"
+            right = Path(directory) / "right"
+            publish_observer_site_data(snapshot, left)
+            publish_observer_site_data(snapshot, right)
+
+            comparison = compare_observer_site_data(left, right)
+
+            self.assertTrue(comparison["identical"])
+            self.assertTrue(comparison["snapshot"]["identical"])
+            self.assertEqual(
+                comparison["left"]["snapshot_sha256"],
+                comparison["right"]["snapshot_sha256"],
+            )
 
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))
