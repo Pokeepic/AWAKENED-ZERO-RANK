@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.200.0 - Keyboard-ready observer metadata
+
+- Corrected the browser and share-card title separator and added canonical production URL metadata, consistent Open Graph and X titles, and descriptive image alternative text.
+- Added a keyboard-visible skip link that moves focus directly to the chronicle main landmark without altering the page's visual presentation for pointer users.
+- Added focused source-level regression checks for canonical metadata, the corrected title, skip-link target, focus behavior, and focus styling.
+- Simulator, balance, schemas, RL behavior, observer data, and read-only capabilities are unchanged.
+
 ## 0.199.0 — Semantic observer accessibility
 
 - Replaced six invalid form-label elements with real level-two section headings while retaining the established visual hierarchy; Ren's name and the current story anchor now sit beneath them as level-three headings.
