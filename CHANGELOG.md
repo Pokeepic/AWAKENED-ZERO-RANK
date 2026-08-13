@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.223.0 - Exact presentation contract
+
+- The browser now requires the complete nine-field presentation contract and its exact authored comparison version, animation cues, update modes, and recent-activity relations.
+- Re-digested contracts with invented vocabulary, omitted modes, reordered relations, or shadow metadata fail closed before the snapshot is trusted.
+- Added focused browser coverage for the canonical contract and five incompatible variants. Simulator and schemas are unchanged.
+
 ## 0.222.0 - Exact rendered record shapes
 
 - Small records rendered by the browser now require their exact schema keys, matching the Python verifier instead of accepting undeclared shadow fields.

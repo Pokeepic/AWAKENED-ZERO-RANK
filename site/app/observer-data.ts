@@ -66,10 +66,14 @@ export type ObserverSnapshot = {
   portals: { discovered: string[] };
 };
 export type PresentationContract = {
+  animation_cues: string[];
+  comparison_schema_version: number;
   contract_sha256: string;
   contract_schema_version: number;
   observer_schema_version: number;
   read_only: boolean;
+  recent_activity_relations: string[];
+  update_modes: string[];
   control_capabilities: unknown[];
 };
 
@@ -137,6 +141,13 @@ const STORY_ANCHORS = [
   { day: 913, key: "arc_zero_rank_choice", title: "The Zero-Rank Choice" },
   { day: 1095, key: "arc_awakened_horizon", title: "The Awakened Horizon" },
 ] as const;
+const ANIMATION_CUES = [
+  "awakening", "consequence", "festival", "finance", "food", "mission",
+  "other", "patrol", "portal_preparation", "registration", "rest",
+  "shopping", "social", "story", "study", "train", "treatment", "work",
+];
+const RECENT_ACTIVITY_RELATIONS = ["append", "replace", "unchanged"];
+const UPDATE_MODES = ["animate", "refresh", "replace", "unchanged"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -149,6 +160,12 @@ function isString(value: unknown): value is string {
 function hasExactKeys(value: Record<string, unknown>, keys: string[]): boolean {
   const actual = Object.keys(value).sort();
   return actual.length === keys.length && keys.every((key, index) => key === actual[index]);
+}
+
+function hasExactStrings(value: unknown, expected: string[]): value is string[] {
+  return Array.isArray(value) &&
+    value.length === expected.length &&
+    value.every((item, index) => item === expected[index]);
 }
 
 function isInteger(value: unknown, minimum = 0): value is number {
@@ -408,12 +425,21 @@ export function isPresentationContract(
 ): value is PresentationContract {
   return (
     isRecord(value) &&
+    hasExactKeys(value, [
+      "animation_cues", "comparison_schema_version", "contract_schema_version",
+      "contract_sha256", "control_capabilities", "observer_schema_version",
+      "read_only", "recent_activity_relations", "update_modes",
+    ]) &&
+    hasExactStrings(value.animation_cues, ANIMATION_CUES) &&
+    value.comparison_schema_version === 8 &&
     typeof value.contract_sha256 === "string" &&
     /^[0-9a-f]{64}$/.test(value.contract_sha256) &&
     isInteger(value.contract_schema_version, 1) &&
     isInteger(value.observer_schema_version, 1) &&
     typeof value.read_only === "boolean" &&
-    Array.isArray(value.control_capabilities)
+    Array.isArray(value.control_capabilities) &&
+    hasExactStrings(value.recent_activity_relations, RECENT_ACTIVITY_RELATIONS) &&
+    hasExactStrings(value.update_modes, UPDATE_MODES)
   );
 }
 
