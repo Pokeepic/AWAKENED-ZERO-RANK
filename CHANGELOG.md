@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.204.0 - Private crawler boundary
+
+- Added explicit noindex, nofollow, noarchive, and nosnippet document metadata for the owner-only observer deployment.
+- Added a generated robots.txt policy that disallows all crawler paths, matching the current private access posture and remaining intentionally reversible for a future approved public launch.
+- Extended production-render tests to request both the document and robots route and require the matching private crawler policies.
+- Simulator, balance, schemas, RL behavior, refresh behavior, observer artifacts, and read-only capabilities are unchanged.
+
 ## 0.203.0 - Visible verification freshness
 
 - The observer header now shows the UTC time of the most recent successfully authenticated artifact pair, making freshness visible without exposing a control.
