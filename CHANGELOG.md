@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.218.0 - Exact browser integer precision
+
+- Every integer accepted by the browser trust boundary must now be exactly representable as a JavaScript safe integer.
+- Oversized seeds, dates, money, progression values, counters, and other numeric fields fail closed instead of being rounded during validation or display.
+- Added focused coverage across clock, identity, finances, and progression, including the valid maximum safe integer. Simulator and schemas are unchanged.
+
 ## 0.217.0 - Authored relationship catalogue
 
 - Browser-rendered relationships now require one of the four authored recurring characters and that character's exact canonical role.

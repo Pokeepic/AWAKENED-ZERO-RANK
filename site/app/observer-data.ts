@@ -131,7 +131,7 @@ function isString(value: unknown): value is string {
 }
 
 function isInteger(value: unknown, minimum = 0): value is number {
-  return Number.isInteger(value) && (value as number) >= minimum;
+  return Number.isSafeInteger(value) && (value as number) >= minimum;
 }
 
 function isIntegerInRange(
@@ -140,7 +140,7 @@ function isIntegerInRange(
   maximum: number,
 ): value is number {
   return (
-    Number.isInteger(value) &&
+    Number.isSafeInteger(value) &&
     (value as number) >= minimum &&
     (value as number) <= maximum
   );
@@ -164,7 +164,7 @@ function isEnvironment(
     value.season === "Summer" &&
     isInteger(value.gate_alert_level) &&
     value.gate_alert_level <= 3 &&
-    Number.isInteger(value.temperature_c) &&
+    Number.isSafeInteger(value.temperature_c) &&
     SUMMER_TEMPERATURES[value.weather] === value.temperature_c
   );
 }
@@ -228,7 +228,7 @@ function isRelationship(value: unknown): value is Relationship {
     isRecord(value) &&
     hasRenderedStrings(value, ["name", "role"]) &&
     RELATIONSHIP_ROLES[value.name as string] === value.role &&
-    Number.isInteger(value.trust) &&
+    Number.isSafeInteger(value.trust) &&
     (value.trust as number) >= -100 &&
     (value.trust as number) <= 100
   );
