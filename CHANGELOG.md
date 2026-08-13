@@ -4,7 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
-## 0.193.0 ? Fail-closed website verification
+## 0.194.0 — Authenticated website snapshots
+
+- The private observer now recomputes the snapshot's canonical SHA-256 identity in the browser, excluding only the identity block and optional path provenance exactly like the Python verifier.
+- Snapshot algorithm, digest shape, content identity, contract identity, read-only capability, empty controls, and shared schema must all pass before any chronicle data renders.
+- Added a focused content-tamper test and expanded the production artifact test; simulation, balance, schemas, and RL behavior are unchanged.
+
+## 0.193.0 — Fail-closed website verification
 
 - The deployed observer now loads the presentation contract and snapshot together, recomputes the contract's canonical SHA-256 identity in the browser, and renders only after read-only capability, empty controls, schema, and digest checks pass.
 - Added a fail-closed observer-offline state plus visible contract and snapshot identities, so incompatible or partially published data never appears as a trusted chronicle.
