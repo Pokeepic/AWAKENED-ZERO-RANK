@@ -575,6 +575,39 @@ def save_observer_presentation_contract(
     return target
 
 
+def publish_observer_site_data(
+        snapshot: dict[str, Any], destination: str | Path) -> Path:
+    """Atomically publish a verified contract and snapshot directory."""
+    snapshot_summary = verify_observer_snapshot(snapshot)
+    contract = observer_presentation_contract()
+    contract_summary = verify_observer_presentation_contract(contract)
+    if (snapshot_summary["schema_version"] !=
+            contract_summary["observer_schema_version"]):
+        raise ValueError("Observer site data schemas are incompatible")
+    target = Path(destination)
+    if target.exists():
+        raise ValueError("Observer site data destination already exists")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with TemporaryDirectory(
+            prefix=f".{target.name}.staging-", dir=target.parent) as temporary:
+        staging = Path(temporary)
+        contract_path = staging / "observer-contract.json"
+        snapshot_path = staging / "observer-snapshot.json"
+        save_observer_presentation_contract(contract, contract_path)
+        save_observer_snapshot(snapshot, snapshot_path)
+        loaded_contract = json.loads(contract_path.read_text(encoding="utf-8"))
+        loaded_snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        verify_observer_presentation_contract(loaded_contract)
+        verify_observer_snapshot(loaded_snapshot)
+        if loaded_contract != contract or loaded_snapshot != snapshot:
+            raise ValueError("Observer site data staging verification failed")
+        if target.exists():
+            raise ValueError(
+                "Observer site data destination appeared during staging")
+        staging.rename(target)
+    return target
+
+
 def _animation_cue(action: str) -> str:
     if action in _STORY_TITLES:
         return "story"

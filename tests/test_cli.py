@@ -322,6 +322,68 @@ class CliValidationTests(unittest.TestCase):
             errors.getvalue(),
         )
 
+    def test_publish_observer_site_data_reports_verified_artifacts(
+            self) -> None:
+        simulation = Simulation(seed=463)
+        with TemporaryDirectory() as temporary_directory:
+            save_path = Path(temporary_directory) / "timeline.json"
+            target = Path(temporary_directory) / "public" / "data"
+            save_simulation(simulation, save_path)
+            save_before = save_path.read_bytes()
+            output = StringIO()
+
+            with redirect_stdout(output):
+                cli_main((
+                    "--publish-observer-site-data",
+                    str(save_path), str(target),
+                ))
+
+            self.assertEqual(save_path.read_bytes(), save_before)
+            summary = json.loads(output.getvalue())
+            self.assertEqual(summary["status"], "published")
+            self.assertEqual(summary["directory"], str(target))
+            contract = json.loads(
+                (target / "observer-contract.json").read_text(encoding="utf-8"))
+            snapshot = json.loads(
+                (target / "observer-snapshot.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                summary["contract_sha256"], contract["contract_sha256"])
+            self.assertEqual(
+                summary["snapshot_sha256"], snapshot["identity"]["digest"])
+            self.assertEqual(snapshot["path"], str(save_path))
+
+    def test_publish_observer_site_data_rejects_options_and_existing_target(
+            self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            save_path = Path(temporary_directory) / "timeline.json"
+            target = Path(temporary_directory) / "data"
+            save_simulation(Simulation(seed=467), save_path)
+            target.mkdir()
+            errors = StringIO()
+
+            with redirect_stdout(StringIO()), redirect_stderr(errors):
+                with self.assertRaises(SystemExit) as context:
+                    cli_main((
+                        "--publish-observer-site-data",
+                        str(save_path), str(target),
+                    ))
+
+            self.assertEqual(context.exception.code, 2)
+            self.assertIn("destination already exists", errors.getvalue())
+
+        errors = StringIO()
+        with redirect_stdout(StringIO()), redirect_stderr(errors):
+            with self.assertRaises(SystemExit) as context:
+                cli_main((
+                    "--publish-observer-site-data", "save.json", "data",
+                    "--days", "1",
+                ))
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn(
+            "--publish-observer-site-data cannot use simulation options",
+            errors.getvalue(),
+        )
+
     def test_verify_observer_snapshot_is_read_only_and_reports_summary(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=211))
         with TemporaryDirectory() as temporary_directory:

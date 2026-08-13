@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.188.0 — Atomic observer site data
+
+- Added public `publish_observer_site_data(snapshot, destination)` to validate and cross-check the observer snapshot and presentation contract before creating a deployment artifact.
+- The contract and snapshot are written into a sibling staging directory, reread through both strict verifiers, checked for schema compatibility and exact content, and renamed into place together; existing destinations are never overwritten.
+- Added `--publish-observer-site-data SAVE DIR` for authenticated, non-advancing save export with deterministic JSON paths, schema, status, and content identities suitable for deployment logs.
+- Added atomic-pair, invalid-input, source-save immutability, option-conflict, summary, and non-overwrite coverage, raising the deterministic suite to 226 tests; simulation, balance, schemas, and RL behavior are unchanged.
+
 ## 0.187.0 — Deployable presentation contract
 
 - Added public `save_observer_presentation_contract(contract, destination)` with strict preflight verification, canonical UTF-8 JSON staging, reread verification, atomic publication, parent creation, and non-overwrite protection.

@@ -13,6 +13,7 @@ from awakened_zero_rank import (
     compare_observer_snapshots,
     observer_presentation_contract,
     observer_snapshot,
+    publish_observer_site_data,
     save_observer_presentation_contract,
     save_observer_snapshot,
     verify_observer_presentation_contract,
@@ -660,6 +661,49 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertIsNone(forward["animation_cue"])
         self.assertEqual(backward["clock_relation"], "backward")
         self.assertEqual(backward["clock_delta_slots"], -9)
+
+    def test_site_data_publication_is_atomic_verified_and_non_overwriting(
+            self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=457))
+        snapshot["path"] = "saves/ren.json"
+        with TemporaryDirectory() as directory:
+            target = Path(directory) / "public" / "data"
+
+            published = publish_observer_site_data(snapshot, target)
+
+            self.assertEqual(published, target)
+            self.assertEqual(
+                sorted(path.name for path in target.iterdir()),
+                ["observer-contract.json", "observer-snapshot.json"],
+            )
+            contract = json.loads(
+                (target / "observer-contract.json").read_text(encoding="utf-8"))
+            loaded_snapshot = json.loads(
+                (target / "observer-snapshot.json").read_text(encoding="utf-8"))
+            verify_observer_presentation_contract(contract)
+            verify_observer_snapshot(loaded_snapshot)
+            self.assertEqual(loaded_snapshot, snapshot)
+            before = {
+                path.name: path.read_bytes() for path in target.iterdir()
+            }
+            with self.assertRaisesRegex(ValueError, "already exists"):
+                publish_observer_site_data(snapshot, target)
+            self.assertEqual(
+                {path.name: path.read_bytes() for path in target.iterdir()},
+                before,
+            )
+
+    def test_site_data_publication_rejects_invalid_snapshot_without_directory(
+            self) -> None:
+        snapshot = observer_snapshot(Simulation(seed=461))
+        snapshot["clock"]["day"] += 1
+        with TemporaryDirectory() as directory:
+            target = Path(directory) / "data"
+
+            with self.assertRaisesRegex(ValueError, "integrity check failed"):
+                publish_observer_site_data(snapshot, target)
+
+            self.assertFalse(target.exists())
 
     def test_snapshot_publication_is_canonical_and_non_overwriting(self) -> None:
         snapshot = observer_snapshot(Simulation(seed=229))
