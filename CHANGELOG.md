@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.229.0 - Portal investigation integrity
+
+- The browser now validates the complete authenticated portal-investigation record, including canonical portal identities, non-empty strategies, known collaborators, and exact record shape.
+- Progress and risk remain within 0–100, preparation and joint-mission counters remain non-negative safe integers, and active plans must reference a present investigation.
+- Added focused valid-boundary and malformed-record coverage. Simulator and schemas are unchanged.
+
 ## 0.228.0 - Complete relationship metrics
 
 - The browser now validates all five authenticated relationship metrics: affection and trust allow signed -100 through 100 values, while familiarity, loyalty, and tension remain within 0–100.

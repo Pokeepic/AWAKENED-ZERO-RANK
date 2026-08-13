@@ -22,6 +22,15 @@ export type Relationship = {
   tension: number;
   trust: number;
 };
+export type PortalInvestigation = {
+  cooperating_npc: string | null;
+  joint_missions: number;
+  portal_name: string;
+  preparation_bonus: number;
+  preparation_strategy: string;
+  progress: number;
+  risk: number;
+};
 export type StoryEnding = {
   id: string;
   isolated_count: number;
@@ -84,7 +93,11 @@ export type ObserverSnapshot = {
     next: { key: string; title: string; day: number; days_remaining: number } | null;
   };
   relationships: Relationship[];
-  portals: { discovered: string[] };
+  portals: {
+    active_plan: string | null;
+    discovered: string[];
+    investigations: PortalInvestigation[];
+  };
 };
 export type PresentationContract = {
   animation_cues: string[];
@@ -365,7 +378,37 @@ function isPortals(value: unknown): value is ObserverSnapshot["portals"] {
   ) {
     return false;
   }
-  return new Set(value.discovered).size === value.discovered.length;
+  const investigations = value.investigations;
+  if (!investigations.every((investigation) =>
+    isRecord(investigation) &&
+    hasExactKeys(investigation, [
+      "cooperating_npc", "joint_missions", "portal_name",
+      "preparation_bonus", "preparation_strategy", "progress", "risk",
+    ]) &&
+    isString(investigation.portal_name) &&
+    PORTAL_NAMES.has(investigation.portal_name) &&
+    isString(investigation.preparation_strategy) &&
+    investigation.preparation_strategy.length > 0 &&
+    (investigation.cooperating_npc === null ||
+      (isString(investigation.cooperating_npc) &&
+        investigation.cooperating_npc in RELATIONSHIP_ROLES)) &&
+    isIntegerInRange(investigation.progress, 0, 100) &&
+    isIntegerInRange(investigation.risk, 0, 100) &&
+    isInteger(investigation.preparation_bonus, 0) &&
+    isInteger(investigation.joint_missions, 0)
+  )) {
+    return false;
+  }
+  const investigationNames = investigations.map(
+    (investigation) => investigation.portal_name as string,
+  );
+  return (
+    new Set(value.discovered).size === value.discovered.length &&
+    investigationNames.every(
+      (name, index) => index === 0 || investigationNames[index - 1] < name,
+    ) &&
+    (value.active_plan === null || investigationNames.includes(value.active_plan))
+  );
 }
 function isStoryNext(
   value: unknown,
