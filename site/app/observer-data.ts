@@ -87,6 +87,14 @@ const SUMMER_TEMPERATURES: Record<string, number> = {
   Heatwave: 36,
   Thunderstorm: 26,
 };
+const PORTAL_NAMES = new Set([
+  "Flooded Service Tunnel",
+  "Ashen Shopping Arcade",
+  "Moonlit Cedar Path",
+  "Frostbound Platform",
+  "Sunken Courtyard",
+  "Glass Office Labyrinth",
+]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -209,6 +217,19 @@ function isRelationships(value: unknown): value is Relationship[] {
     (name, index) => index === 0 || names[index - 1] < name,
   );
 }
+
+function isPortals(value: unknown): value is ObserverSnapshot["portals"] {
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value.discovered) ||
+    !value.discovered.every(
+      (name) => isString(name) && PORTAL_NAMES.has(name),
+    )
+  ) {
+    return false;
+  }
+  return new Set(value.discovered).size === value.discovered.length;
+}
 function isStoryNext(
   value: unknown,
 ): value is ObserverSnapshot["story"]["next"] {
@@ -321,10 +342,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !isActivity(value.activity, value.clock.day, value.clock.slot) ||
         !isStory(value.story, value.clock.day) ||
     !isRelationships(value.relationships) ||
-    !isRecord(value.portals) ||
-    !Array.isArray(value.portals.discovered) ||
-    !value.portals.discovered.every(isString) ||
-    new Set(value.portals.discovered).size !== value.portals.discovered.length
+    !isPortals(value.portals)
   ) {
     return false;
   }

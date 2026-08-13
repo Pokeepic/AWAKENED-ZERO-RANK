@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.212.0 - Authored browser portal vocabulary
+
+- The browser trust boundary now accepts discovered portal names only from the simulator's six authored Tokyo portal profiles.
+- Empty discovery ledgers and any unique combination of authored portal names remain valid; invented or duplicated portal identities fail closed.
+- Added focused coverage for every authored portal plus empty, unknown, and duplicate ledgers.
+- Simulator, balance, schemas, RL behavior, observer artifacts, presentation, and read-only capabilities are unchanged.
+
 ## 0.211.0 - Canonical browser environment
 
 - The browser trust boundary now accepts only the simulator's five canonical Summer weather states with their exact integer temperatures.
