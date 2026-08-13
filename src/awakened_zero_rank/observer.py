@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 from .content import NPCS, PORTALS, STORY_ANCHORS
 from .environment import SUMMER_WEATHER
 from .story import STORY_PROGRESS_SCHEMA_VERSION, story_progress
-from .world import ITEMS, LOCATIONS
+from .world import ITEMS, LOCATIONS, mission_rank_points_are_possible
 
 if TYPE_CHECKING:
     from .simulation import Simulation
@@ -397,8 +397,7 @@ def _validate_protagonist(protagonist: Any) -> None:
             progression_values["missions_attempted"]):
         raise ValueError("Observer snapshot mission counters are invalid")
     completed = progression_values["missions_completed"]
-    if ((completed == 0 and points != 0) or
-            (completed > 0 and not 10 * completed <= points <= 17 * completed)):
+    if not mission_rank_points_are_possible(completed, points):
         raise ValueError("Observer snapshot mission rank points are inconsistent")
 
     equipment = protagonist["equipment"]

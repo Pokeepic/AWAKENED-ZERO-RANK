@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.240.0 - Exact mission award evidence
+
+- Browser, save, and Python observer validation now require rank points to be an exact composition of the authored 10, 13, and 17-point Gate mission awards.
+- Impossible in-range totals such as 11 points from one clear or 21 points from two clears now fail closed without enumerating long mission histories.
+- Added boundary, large-safe-integer, and exhaustive small-history coverage. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.239.0 - Mission rank-point evidence
 
 - Browser, save, and Python observer validation now require accumulated rank points to be supported by completed Gate missions.

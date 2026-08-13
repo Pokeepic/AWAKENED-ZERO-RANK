@@ -59,6 +59,20 @@ GATE_ENCOUNTERS = (
     GateEncounter("Goblin Scavenger Pack", 49, 6_600, 13, 3),
     GateEncounter("Armored Fang Boar", 57, 8_200, 17, 7),
 )
+MISSION_RANK_POINT_AWARDS = (10, 13, 17)
+
+
+def mission_rank_points_are_possible(completed: int, points: int) -> bool:
+    """Return whether points can be composed from authored mission awards."""
+    if completed == 0:
+        return points == 0
+    remainder = points - completed * MISSION_RANK_POINT_AWARDS[0]
+    if remainder < 0 or remainder > 7 * completed:
+        return False
+    minimum_sevens = max(0, (remainder - 3 * completed + 3) // 4)
+    maximum_sevens = min(completed, remainder // 7)
+    first_sevens = minimum_sevens + (remainder - minimum_sevens) % 3
+    return first_sevens <= maximum_sevens
 
 JOBS = {
     "konbini": Job("Kita-Senju konbini shift", "Kita-Senju", 2_200, 22),

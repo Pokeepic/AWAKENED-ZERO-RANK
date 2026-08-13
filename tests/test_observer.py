@@ -329,6 +329,16 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "mission rank points"):
             verify_observer_snapshot(mission_points)
 
+        impossible_award = observer_snapshot(Simulation(seed=311))
+        impossible_award["protagonist"]["hunter_rank"] = "F"
+        impossible_award["protagonist"]["ability"] = "Threat Sense"
+        impossible_award["protagonist"]["progression"]["missions_attempted"] = 1
+        impossible_award["protagonist"]["progression"]["missions_completed"] = 1
+        impossible_award["protagonist"]["progression"]["rank_points"] = 11
+        _redigest(impossible_award)
+        with self.assertRaisesRegex(ValueError, "mission rank points"):
+            verify_observer_snapshot(impossible_award)
+
         counters = observer_snapshot(Simulation(seed=311))
         counters["protagonist"]["progression"]["missions_completed"] = 1
         _redigest(counters)

@@ -12,7 +12,7 @@ from typing import Any, TYPE_CHECKING
 from .content import NPCS, PORTALS, STORY_ANCHORS
 from .models import (Clock, DelayedConsequence, DialogueExchange, Event, Memory,
                      PortalInvestigation, Protagonist, Relationship, TimeSlot, WorldState)
-from .world import ITEMS, LOCATIONS
+from .world import ITEMS, LOCATIONS, mission_rank_points_are_possible
 
 
 if TYPE_CHECKING:
@@ -224,13 +224,11 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         raise ValueError(
             "Invalid save protagonist progression: "
             "hunter rank and rank points are inconsistent")
-    if ((protagonist.missions_completed == 0 and protagonist.rank_points != 0) or
-            (protagonist.missions_completed > 0 and not
-             10 * protagonist.missions_completed <= protagonist.rank_points <=
-             17 * protagonist.missions_completed)):
+    if not mission_rank_points_are_possible(
+            protagonist.missions_completed, protagonist.rank_points):
         raise ValueError(
             "Invalid save protagonist progression: "
-            "rank points require completed mission evidence")
+            "rank points require completed mission evidence from exact awards")
     _require_integer_range(
         "protagonist.rent_due_day", protagonist.rent_due_day, 1)
     _require_integer_range("protagonist.rent_cost", protagonist.rent_cost, 0)

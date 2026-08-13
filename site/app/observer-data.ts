@@ -173,9 +173,16 @@ function isRankPointsConsistent(rank: string, points: number): boolean {
   return rank === "C" && points >= 90;
 }
 function isMissionPointsConsistent(completed: number, points: number): boolean {
-  return completed === 0
-    ? points === 0
-    : points >= completed * 10 && points <= completed * 17;
+  if (completed === 0) return points === 0;
+  const remainder = points - completed * 10;
+  if (remainder < 0 || remainder > completed * 7) return false;
+  const minimumSevens = Math.max(
+    0,
+    Math.ceil((remainder - completed * 3) / 4),
+  );
+  const maximumSevens = Math.min(completed, Math.floor(remainder / 7));
+  const firstSevens = minimumSevens + ((remainder - minimumSevens) % 3);
+  return firstSevens <= maximumSevens;
 }
 const RELATIONSHIP_ROLES: Record<string, string> = {
   "Aiko Sato": "F-rank guild clerk",
