@@ -352,6 +352,24 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             (clock_position >= introduced)
             for name, introduced in introductions.items()):
         raise ValueError("Invalid save relationship chronology")
+    initial_evidence = {
+        "Aiko Sato": ((4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)), 3, 5, 4),
+        "Daichi Mori": ((5, tuple(TimeSlot).index(TimeSlot.AFTERNOON)), 4, 3, 2),
+        "Mei Kuroda": ((6, tuple(TimeSlot).index(TimeSlot.EVENING)), 1, 2, 2),
+        "Haruto Ishikawa": ((9, tuple(TimeSlot).index(TimeSlot.LATE_NIGHT)), 3, 3, 2),
+    }
+    for name, (introduced, trust, familiarity, loyalty) in initial_evidence.items():
+        if clock_position != introduced:
+            continue
+        relationship = protagonist.relationships[name]
+        if (
+                relationship.trust != trust or
+                relationship.familiarity != familiarity or
+                relationship.loyalty != loyalty or
+                relationship.affection != 0 or
+                relationship.tension != 0 or
+                relationship.meetings != 1):
+            raise ValueError("Invalid save relationship introduction evidence")
     for speaker, connections in state.relationship_network.items():
         if speaker not in npc_names:
             raise ValueError(

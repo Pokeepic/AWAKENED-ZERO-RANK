@@ -463,6 +463,25 @@ class ObserverSnapshotTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "relationship chronology"):
                         verify_observer_snapshot(snapshot)
 
+    def test_verifier_requires_relationship_introduction_evidence(self) -> None:
+        for name, steps in (
+                ("Aiko Sato", 13),
+                ("Daichi Mori", 17),
+                ("Mei Kuroda", 22),
+                ("Haruto Ishikawa", 35)):
+            with self.subTest(name=name):
+                simulation = Simulation(seed=323)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                relationship = next(
+                    item for item in snapshot["relationships"]
+                    if item["name"] == name)
+                relationship["trust"] += 1
+                _redigest(snapshot)
+                with self.assertRaisesRegex(
+                        ValueError, "relationship introduction evidence"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
         weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"

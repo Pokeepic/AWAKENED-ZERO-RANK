@@ -467,11 +467,30 @@ function isRelationships(
     ["Mei Kuroda", 6 * TIME_SLOTS.length + 2],
     ["Haruto Ishikawa", 9 * TIME_SLOTS.length + 3],
   ] as const;
-  return names.every(
+  const canonical = names.every(
     (name, index) => index === 0 || names[index - 1] < name,
   ) && names.includes("Aiko Sato") === registered && introductions.every(
     ([name, introduced]) => names.includes(name) === (position >= introduced),
   );
+  if (!canonical) {
+    return false;
+  }
+  const initialEvidence = [
+    ["Aiko Sato", 4 * TIME_SLOTS.length + 1, 3, 5, 4],
+    ["Daichi Mori", 5 * TIME_SLOTS.length + 1, 4, 3, 2],
+    ["Mei Kuroda", 6 * TIME_SLOTS.length + 2, 1, 2, 2],
+    ["Haruto Ishikawa", 9 * TIME_SLOTS.length + 3, 3, 3, 2],
+  ] as const;
+  return initialEvidence.every(([name, introduced, trust, familiarity, loyalty]) => {
+    if (position !== introduced) {
+      return true;
+    }
+    const relationship = value.find((item) => item.name === name)!;
+    return relationship.trust === trust &&
+      relationship.familiarity === familiarity &&
+      relationship.loyalty === loyalty &&
+      relationship.affection === 0 && relationship.tension === 0;
+  });
 }
 
 function isPortals(value: unknown): value is ObserverSnapshot["portals"] {

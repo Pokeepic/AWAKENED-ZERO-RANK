@@ -290,6 +290,22 @@ class PersistenceSafetyTests(unittest.TestCase):
                         save_simulation(simulation, destination)
                     self.assertFalse(destination.exists())
 
+    def test_relationship_introductions_require_authored_evidence(self) -> None:
+        for name, steps in (
+                ("Aiko Sato", 13),
+                ("Daichi Mori", 17),
+                ("Mei Kuroda", 22),
+                ("Haruto Ishikawa", 35)):
+            with self.subTest(name=name), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=90)
+                simulation.run(steps)
+                simulation.state.protagonist.relationships[name].meetings += 1
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(
+                        ValueError, "relationship introduction evidence"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30

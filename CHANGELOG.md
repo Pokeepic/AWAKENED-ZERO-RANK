@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.247.0 - Relationship introduction evidence
+
+- Browser, save, and Python observer validation now authenticate each recurring character's initial relationship metrics at the exact post-introduction slot.
+- Saved timelines additionally require the authored first-meeting count at that boundary; later organic relationship changes remain unrestricted.
+- Added exact Aiko, Daichi, Mei, and Haruto evidence coverage. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.246.0 - Recurring-character chronology
 
 - Browser, save, and Python observer validation now bind Daichi Mori, Mei Kuroda, and Haruto Ishikawa to their fixed authored introductions.

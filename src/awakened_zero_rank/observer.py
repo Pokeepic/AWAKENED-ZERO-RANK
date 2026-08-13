@@ -494,6 +494,28 @@ def _validate_relationships(relationships: Any, day: int, slot: str) -> None:
     if any((name in names) != (position >= introduced)
            for name, introduced in introductions.items()):
         raise ValueError("Observer snapshot relationship chronology is invalid")
+    initial_evidence = {
+        "Aiko Sato": ((4, _SLOTS.index("Afternoon")), 3, 5, 4),
+        "Daichi Mori": ((5, _SLOTS.index("Afternoon")), 4, 3, 2),
+        "Mei Kuroda": ((6, _SLOTS.index("Evening")), 1, 2, 2),
+        "Haruto Ishikawa": ((9, _SLOTS.index("Late Night")), 3, 3, 2),
+    }
+    relationships_by_name = {
+        relationship["name"]: relationship for relationship in relationships}
+    for name, (introduced, trust, familiarity, loyalty) in initial_evidence.items():
+        if position != introduced:
+            continue
+        relationship = relationships_by_name[name]
+        if relationship != {
+                "name": name,
+                "role": NPCS[name].role,
+                "trust": trust,
+                "familiarity": familiarity,
+                "affection": 0,
+                "tension": 0,
+                "loyalty": loyalty}:
+            raise ValueError(
+                "Observer snapshot relationship introduction evidence is invalid")
 
 
 def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
