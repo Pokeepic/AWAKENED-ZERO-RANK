@@ -309,6 +309,12 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "protagonist status"):
             verify_observer_snapshot(rank)
 
+        lifecycle = observer_snapshot(Simulation(seed=311))
+        lifecycle["protagonist"]["ability"] = "Threat Sense"
+        _redigest(lifecycle)
+        with self.assertRaisesRegex(ValueError, "protagonist status"):
+            verify_observer_snapshot(lifecycle)
+
         counters = observer_snapshot(Simulation(seed=311))
         counters["protagonist"]["progression"]["missions_completed"] = 1
         _redigest(counters)

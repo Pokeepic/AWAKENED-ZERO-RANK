@@ -19,6 +19,8 @@ if TYPE_CHECKING:
     from .simulation import Simulation
 
 SAVE_VERSION = 2
+_HUNTER_RANKS = {"Unranked", "F", "E", "D", "C"}
+_ABILITIES = {"None", "Threat Sense", "Threat Sense / Echo Fragment"}
 
 
 def _tuplify(value: Any) -> Any:
@@ -172,6 +174,14 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         raise ValueError(
             f"Invalid save field protagonist.location: "
             f"unknown location {protagonist.location!r}")
+    if (
+            protagonist.hunter_rank not in _HUNTER_RANKS or
+            protagonist.ability not in _ABILITIES or
+            (protagonist.hunter_rank == "Unranked") !=
+            (protagonist.ability == "None")):
+        raise ValueError(
+            "Invalid save protagonist lifecycle: "
+            "hunter rank and ability are inconsistent")
     for field, expected_kind in (
             ("equipped_weapon", "weapon"),
             ("equipped_armor", "armor")):

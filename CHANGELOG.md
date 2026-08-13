@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.237.0 - Hunter lifecycle consistency
+
+- Save and Python observer validation now require hunter rank and ability to describe a possible lifecycle, matching the browser's existing rule.
+- Unranked Ren must have no ability; every ranked state must carry Threat Sense or its Echo Fragment development.
+- Added browser, observer-verifier, and persistence coverage. Valid timelines, decisions, and schemas are unchanged.
+
 ## 0.236.0 - Portal discovery consistency
 
 - Observer and save validation now reject portal investigations whose portal is absent from the discovery ledger.

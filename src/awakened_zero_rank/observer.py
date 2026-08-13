@@ -40,6 +40,7 @@ _PROGRESSION_KEYS = {
     "missions_attempted", "missions_completed", "rank_points",
 }
 _HUNTER_RANKS = {"Unranked", "F", "E", "D", "C"}
+_ABILITIES = {"None", "Threat Sense", "Threat Sense / Echo Fragment"}
 _STORY_KEYS = {
     "completed", "completed_count", "ending", "ending_reached", "next",
     "schema_version", "total_anchors",
@@ -342,9 +343,12 @@ def _validate_protagonist(protagonist: Any) -> None:
             for name in ("ability", "current_goal", "mood", "name")):
         raise ValueError("Observer snapshot protagonist identity is invalid")
     hunter_rank = protagonist["hunter_rank"]
+    ability = protagonist["ability"]
     location = protagonist["location"]
     if (
             not isinstance(hunter_rank, str) or hunter_rank not in _HUNTER_RANKS or
+            ability not in _ABILITIES or
+            (hunter_rank == "Unranked") != (ability == "None") or
             not isinstance(location, str) or location not in LOCATIONS):
         raise ValueError("Observer snapshot protagonist status is invalid")
 
