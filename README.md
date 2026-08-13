@@ -8,7 +8,7 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.191.0` |
+| Release | `0.192.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
@@ -250,6 +250,9 @@ On timelines spanning roughly three or four in-world years, major portal disaste
 International travel should remain grounded in passports or clearance, airfare, lodging, travel time, language, local contacts, mission invitations, personal risk, and whether Ren can responsibly afford the trip. Ren should autonomously decide whether to travel, remain in Japan, contribute remotely, or decline.
 
 ### Observer website
+
+Version 0.192.0 adds the first production-shaped observer surface in `site/`: a responsive, control-free chronicle that consumes the verified presentation contract and snapshot, shows Ren's current condition, goal, recent decisions, hunter record, story countdown, relationships, portals, and snapshot identity, and includes a bespoke social preview card. The checked-in seed-42 day-11 dataset is deterministic demonstration content and can be replaced atomically with `--publish-observer-site-data`.
+
 
 A later release can add a read-only dashboard for time, weather, Ren's condition, current concerns, decisions, relationships, finances, inventory, investigations, and chronicles. Lightweight sprite animation can visualize travel, work, rest, training, conversations, and Gate activity.
 

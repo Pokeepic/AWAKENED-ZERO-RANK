@@ -1,0 +1,39 @@
+{
+  "animation_cues": [
+    "awakening",
+    "consequence",
+    "festival",
+    "finance",
+    "food",
+    "mission",
+    "other",
+    "patrol",
+    "portal_preparation",
+    "registration",
+    "rest",
+    "shopping",
+    "social",
+    "story",
+    "study",
+    "train",
+    "treatment",
+    "work"
+  ],
+  "comparison_schema_version": 8,
+  "contract_schema_version": 2,
+  "contract_sha256": "f6423a4059f686133d71bab5d1b5ea0d32775bae911e41dac57252392ae0bc47",
+  "control_capabilities": [],
+  "observer_schema_version": 4,
+  "read_only": true,
+  "recent_activity_relations": [
+    "append",
+    "replace",
+    "unchanged"
+  ],
+  "update_modes": [
+    "animate",
+    "refresh",
+    "replace",
+    "unchanged"
+  ]
+}

@@ -1,0 +1,264 @@
+{
+  "activity": {
+    "key_memories": [
+      {
+        "day": 3,
+        "importance": 10,
+        "summary": "Awakening assessment: Awakened at Rank F with Threat Sense."
+      },
+      {
+        "day": 8,
+        "importance": 8,
+        "summary": "Rent deadline: Paid ¥8,000 rent in full."
+      },
+      {
+        "day": 4,
+        "importance": 8,
+        "summary": "Guild registration: Aiko Sato issued an F-rank license; travel and filing cost ¥280."
+      },
+      {
+        "day": 7,
+        "importance": 7,
+        "summary": "Gate mission: Cleared Tunnel Slime Nest inside Frostbound Platform (ice; hazard: whiteout) in clear weather (roll 76 vs 50) for ¥5,400 and 10 rank points; gained 2 ability exposure; fare cost ¥240. Discovered Frostbound Platform: an arriving ghost train. Investigation reached 25%. Mei later reacted to the Frostbound Platform report: “Describe the anomaly. Leave theories out of it.”"
+      },
+      {
+        "day": 7,
+        "importance": 7,
+        "summary": "Gate mission: Cleared Tunnel Slime Nest inside Ashen Shopping Arcade (urban ruin; hazard: cinder wind) in clear weather (roll 71 vs 49) for ¥5,400 and 10 rank points; gained 2 ability exposure; fare cost ¥0. Discovered Ashen Shopping Arcade: a working payphone. Investigation reached 25%. Mei later reacted to the Ashen Shopping Arcade report: “Describe the anomaly. Leave theories out of it.” Promoted to Rank E!"
+      }
+    ],
+    "recent_events": [
+      {
+        "action": "Rent deadline",
+        "day": 8,
+        "outcome": "Paid ¥8,000 rent in full.",
+        "reason": "the apartment payment was automatically due (world event)",
+        "slot": "Morning"
+      },
+      {
+        "action": "Eat",
+        "day": 8,
+        "outcome": "Bought a filling konbini meal.",
+        "reason": "hunger is 51/100 (utility 93.7)",
+        "slot": "Afternoon"
+      },
+      {
+        "action": "Guild patrol",
+        "day": 8,
+        "outcome": "Completed a guild perimeter patrol for ¥3,200; fare cost ¥280.",
+        "reason": "safe hunter experience pays while readiness is 82/100 (utility 48.9)",
+        "slot": "Evening"
+      },
+      {
+        "action": "Rest",
+        "day": 8,
+        "outcome": "Returned home and rested; travel cost ¥280.",
+        "reason": "energy is 48/100 and stress is 13/100 (utility 111.0)",
+        "slot": "Late Night"
+      },
+      {
+        "action": "Investigation consequence",
+        "day": 9,
+        "outcome": "Evidence from Frostbound Platform was verified and changed the guild patrol route Mei Kuroda's trust rose; Daichi Mori's trust rose; Aiko Sato's trust rose.",
+        "reason": "an earlier portal decision finally affected other people (delayed event)",
+        "slot": "Morning"
+      },
+      {
+        "action": "Investigation consequence",
+        "day": 9,
+        "outcome": "Evidence from Ashen Shopping Arcade was verified and changed the guild patrol route Mei Kuroda's trust rose; Daichi Mori's trust rose; Aiko Sato's trust rose.",
+        "reason": "an earlier portal decision finally affected other people (delayed event)",
+        "slot": "Afternoon"
+      },
+      {
+        "action": "Meet Haruto Ishikawa",
+        "day": 9,
+        "outcome": "Haruto Ishikawa introduced himself at the supply counter and quietly explained which cheap gear fails.",
+        "reason": "Ren's routine crossed another recurring life in Tokyo (world event)",
+        "slot": "Evening"
+      },
+      {
+        "action": "Eat",
+        "day": 9,
+        "outcome": "Bought a filling konbini meal.",
+        "reason": "hunger is 32/100 (utility 57.8)",
+        "slot": "Late Night"
+      },
+      {
+        "action": "Visit hunter shop",
+        "day": 10,
+        "outcome": "Bought Padded Jacket for ¥3,200 and equipped it when possible; fare cost ¥180.",
+        "reason": "equipment is Field Knife and no armor (utility 50.9)",
+        "slot": "Morning"
+      },
+      {
+        "action": "Guild patrol",
+        "day": 10,
+        "outcome": "Completed a guild perimeter patrol for ¥3,200; fare cost ¥280. At Tokyo Hunter Guild, Aiko Sato chose to approach me: “Tell me what happened, not what you think the report wants to hear.” The brief exchange made us more familiar.",
+        "reason": "safe hunter experience pays while readiness is 90/100 (utility 48.2)",
+        "slot": "Afternoon"
+      },
+      {
+        "action": "Guild patrol",
+        "day": 10,
+        "outcome": "Completed a guild perimeter patrol for ¥3,200; fare cost ¥0.",
+        "reason": "safe hunter experience pays while readiness is 85/100 (utility 48.1)",
+        "slot": "Evening"
+      },
+      {
+        "action": "Rest",
+        "day": 10,
+        "outcome": "Returned home and rested; travel cost ¥280.",
+        "reason": "energy is 44/100 and stress is 16/100 (utility 99.6)",
+        "slot": "Late Night"
+      }
+    ]
+  },
+  "clock": {
+    "day": 11,
+    "slot": "Morning"
+  },
+  "economy": {
+    "meal_cost": 700,
+    "rent_arrears": 0,
+    "rent_cost": 8000,
+    "rent_due_day": 8,
+    "rent_payments": 1,
+    "shop_visits": 2,
+    "wage_modifier": 100
+  },
+  "environment": {
+    "gate_alert_level": 1,
+    "season": "Summer",
+    "temperature_c": 29,
+    "weather": "Clear"
+  },
+  "identity": {
+    "algorithm": "sha256",
+    "digest": "c26e3e51c56fee5cd2a01be4c86a6b47508aa1527b9207ae16efdbd7d4c7e824"
+  },
+  "portals": {
+    "active_plan": null,
+    "discovered": [
+      "Glass Office Labyrinth",
+      "Frostbound Platform",
+      "Ashen Shopping Arcade"
+    ],
+    "investigations": [
+      {
+        "cooperating_npc": null,
+        "joint_missions": 0,
+        "portal_name": "Ashen Shopping Arcade",
+        "preparation_bonus": 0,
+        "preparation_strategy": "Unprepared",
+        "progress": 25,
+        "risk": 5
+      },
+      {
+        "cooperating_npc": null,
+        "joint_missions": 0,
+        "portal_name": "Frostbound Platform",
+        "preparation_bonus": 0,
+        "preparation_strategy": "Unprepared",
+        "progress": 25,
+        "risk": 5
+      },
+      {
+        "cooperating_npc": null,
+        "joint_missions": 0,
+        "portal_name": "Glass Office Labyrinth",
+        "preparation_bonus": 0,
+        "preparation_strategy": "Unprepared",
+        "progress": 25,
+        "risk": 5
+      }
+    ]
+  },
+  "protagonist": {
+    "ability": "Threat Sense",
+    "current_goal": "Build a stable life as a Rank E hunter",
+    "equipment": {
+      "armor": "Padded Jacket",
+      "inventory": {
+        "Field Knife": 1,
+        "Padded Jacket": 1
+      },
+      "weapon": "Field Knife"
+    },
+    "hunter_rank": "E",
+    "location": "Adachi Apartment",
+    "mood": "Hopeful",
+    "name": "Ren Takahashi",
+    "progression": {
+      "ability_mastery": 16,
+      "combat_readiness": 88,
+      "fitness": 4,
+      "knowledge": 9,
+      "missions_attempted": 3,
+      "missions_completed": 3,
+      "rank_points": 33
+    },
+    "resources": {
+      "energy": 86,
+      "health": 100,
+      "hunger": 44,
+      "money": 16440,
+      "morale": 86,
+      "stress": 0
+    }
+  },
+  "relationships": [
+    {
+      "affection": 0,
+      "familiarity": 13,
+      "loyalty": 4,
+      "name": "Aiko Sato",
+      "role": "F-rank guild clerk",
+      "tension": 0,
+      "trust": 13
+    },
+    {
+      "affection": 0,
+      "familiarity": 5,
+      "loyalty": 2,
+      "name": "Daichi Mori",
+      "role": "Rank E patrol leader",
+      "tension": 0,
+      "trust": 8
+    },
+    {
+      "affection": 0,
+      "familiarity": 3,
+      "loyalty": 2,
+      "name": "Haruto Ishikawa",
+      "role": "hunter supply owner",
+      "tension": 0,
+      "trust": 3
+    },
+    {
+      "affection": 0,
+      "familiarity": 8,
+      "loyalty": 4,
+      "name": "Mei Kuroda",
+      "role": "independent portal researcher",
+      "tension": 0,
+      "trust": 9
+    }
+  ],
+  "schema_version": 4,
+  "seed": 42,
+  "story": {
+    "completed": [],
+    "completed_count": 0,
+    "ending": null,
+    "ending_reached": false,
+    "next": {
+      "day": 183,
+      "days_remaining": 172,
+      "key": "arc_adachi_warning",
+      "title": "The Adachi Warning"
+    },
+    "schema_version": 3,
+    "total_anchors": 6
+  }
+}

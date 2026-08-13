@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.192.0 ? First observer website
+
+- Added the first responsive, production-shaped read-only observer website under `site/`, consuming the verified static contract and snapshot boundary with no simulation controls.
+- The dashboard presents Ren's day and slot, weather, resources, current goal, recent autonomous decisions, progression, story countdown, relationships, portals, and authenticated snapshot identity across desktop and mobile layouts.
+- Added deterministic seed-42 demonstration data, accessible loading/offline states, reduced-motion handling, project metadata, and a bespoke social preview card generated for the finished visual direction.
+- The Sites/Cloudflare production build and all 239 deterministic simulator tests pass; simulation, balance, schemas, and RL behavior are unchanged.
+
 ## 0.191.0 — Content-addressed deployment decisions
 
 - Added schema-1 observer site comparison artifacts containing the path-independent verified deployment comparison plus canonical SHA-256 content identity.
