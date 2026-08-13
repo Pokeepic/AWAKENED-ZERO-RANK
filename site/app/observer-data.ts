@@ -32,6 +32,15 @@ export type ObserverSnapshot = {
   seed: number;
   identity: Identity;
   clock: { day: number; slot: string };
+  economy: {
+    meal_cost: number;
+    rent_arrears: number;
+    rent_cost: number;
+    rent_due_day: number;
+    rent_payments: number;
+    shop_visits: number;
+    wage_modifier: number;
+  };
   environment: {
     weather: string;
     temperature_c: number;
@@ -206,6 +215,28 @@ function isEnvironment(
     value.gate_alert_level <= 3 &&
     Number.isSafeInteger(value.temperature_c) &&
     SUMMER_TEMPERATURES[value.weather] === value.temperature_c
+  );
+}
+
+function isEconomy(value: unknown): value is ObserverSnapshot["economy"] {
+  if (
+    !isRecord(value) ||
+    !hasExactKeys(value, [
+      "meal_cost", "rent_arrears", "rent_cost", "rent_due_day",
+      "rent_payments", "shop_visits", "wage_modifier",
+    ]) ||
+    !["rent_arrears", "rent_cost", "rent_payments", "shop_visits"].every(
+      (name) => isInteger(value[name]),
+    ) ||
+    !isInteger(value.rent_due_day, 1) ||
+    !Number.isSafeInteger(value.meal_cost) ||
+    !Number.isSafeInteger(value.wage_modifier)
+  ) {
+    return false;
+  }
+  return (
+    [500, 600, 700, 800].includes(value.meal_cost as number) &&
+    [85, 95, 100, 105, 115].includes(value.wage_modifier as number)
   );
 }
 
@@ -468,11 +499,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !isInteger(value.clock.day, 1) ||
     !isString(value.clock.slot) ||
     !isEnvironment(value.environment) ||
-    !isRecord(value.economy) ||
-    !hasExactKeys(value.economy, [
-      "meal_cost", "rent_arrears", "rent_cost", "rent_due_day",
-      "rent_payments", "shop_visits", "wage_modifier",
-    ]) ||
+    !isEconomy(value.economy) ||
     !isRecord(value.protagonist)
   ) {
     return false;

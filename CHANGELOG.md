@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.225.0 - Authored economy semantics
+
+- The browser now validates all seven economy values with the same integer bounds and fixed meal-cost and wage-modifier catalogues as the Python verifier.
+- Negative arrears or counters, invalid rent days, fractional values, unsafe integers, and unauthored market modifiers fail closed.
+- Added focused coverage for all authored meal and wage values plus six malformed economy variants. Dynamic narrative goal text remains unchanged.
+
 ## 0.224.0 - Complete snapshot envelope
 
 - The browser now requires the exact schema-4 top-level snapshot envelope and exact structural keys for activity, economy, portals, protagonist, equipment, resources, progression, and story.
