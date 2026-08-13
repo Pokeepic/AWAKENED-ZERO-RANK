@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.193.0 ? Fail-closed website verification
+
+- The deployed observer now loads the presentation contract and snapshot together, recomputes the contract's canonical SHA-256 identity in the browser, and renders only after read-only capability, empty controls, schema, and digest checks pass.
+- Added a fail-closed observer-offline state plus visible contract and snapshot identities, so incompatible or partially published data never appears as a trusted chronicle.
+- Replaced obsolete starter tests with production shell and artifact-integrity coverage; the Sites production build, site tests, Ruff, and all 239 simulator tests pass.
+- Presentation and verification behavior changed only; simulation, balance, schemas, and RL behavior are unchanged.
+
 ## 0.192.0 ? First observer website
 
 - Added the first responsive, production-shaped read-only observer website under `site/`, consuming the verified static contract and snapshot boundary with no simulation controls.
