@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.226.0 - Canonical hunter progression
+
+- Browser validation now matches Python for all seven progression values: ability mastery and readiness stay within 0–100, while long-term growth and mission counters remain nonnegative safe integers.
+- Completed missions can no longer exceed attempted missions in an authenticated browser snapshot.
+- Added focused boundary, long-term growth, negative-counter, and impossible mission-record coverage. Simulator and schemas are unchanged.
+
 ## 0.225.0 - Authored economy semantics
 
 - The browser now validates all seven economy values with the same integer bounds and fixed meal-cost and wage-modifier catalogues as the Python verifier.

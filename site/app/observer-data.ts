@@ -56,10 +56,13 @@ export type ObserverSnapshot = {
     current_goal: string;
     resources: Resources;
     progression: {
+      ability_mastery: number;
       combat_readiness: number;
       rank_points: number;
       fitness: number;
       knowledge: number;
+      missions_attempted: number;
+      missions_completed: number;
     };
   };
   activity: { recent_events: ActivityEvent[] };
@@ -543,9 +546,14 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       "ability_mastery", "combat_readiness", "fitness", "knowledge",
       "missions_attempted", "missions_completed", "rank_points",
     ]) ||
-    !isIntegerInRange(protagonist.progression.combat_readiness, 0, 100) ||
-    !["rank_points", "fitness", "knowledge"].every((name) =>
-      isInteger(protagonist.progression[name]))
+    !["ability_mastery", "combat_readiness"].every((name) =>
+      isIntegerInRange(protagonist.progression[name], 0, 100)) ||
+    ![
+      "rank_points", "fitness", "knowledge", "missions_attempted",
+      "missions_completed",
+    ].every((name) => isInteger(protagonist.progression[name])) ||
+    (protagonist.progression.missions_completed as number) >
+      (protagonist.progression.missions_attempted as number)
   ) {
     return false;
   }
