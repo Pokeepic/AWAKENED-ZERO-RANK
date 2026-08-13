@@ -384,6 +384,14 @@ def _validate_protagonist(protagonist: Any) -> None:
                 )
             )):
         raise ValueError("Observer snapshot progression bounds are invalid")
+    points = progression_values["rank_points"]
+    rank_bounds = {
+        "Unranked": (0, 29), "F": (0, 29), "E": (30, 59),
+        "D": (60, 89), "C": (90, None),
+    }
+    minimum, maximum = rank_bounds[hunter_rank]
+    if points < minimum or (maximum is not None and points > maximum):
+        raise ValueError("Observer snapshot hunter rank points are inconsistent")
     if (
             progression_values["missions_completed"] >
             progression_values["missions_attempted"]):

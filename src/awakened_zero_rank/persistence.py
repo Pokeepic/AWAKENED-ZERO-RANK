@@ -214,6 +214,16 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             "treatments_received", "rent_arrears", "gates_witnessed"):
         _require_integer_range(
             f"protagonist.{name}", getattr(protagonist, name), 0)
+    rank_bounds = {
+        "Unranked": (0, 29), "F": (0, 29), "E": (30, 59),
+        "D": (60, 89), "C": (90, None),
+    }
+    minimum, maximum = rank_bounds[protagonist.hunter_rank]
+    if (protagonist.rank_points < minimum or
+            (maximum is not None and protagonist.rank_points > maximum)):
+        raise ValueError(
+            "Invalid save protagonist progression: "
+            "hunter rank and rank points are inconsistent")
     _require_integer_range(
         "protagonist.rent_due_day", protagonist.rent_due_day, 1)
     _require_integer_range("protagonist.rent_cost", protagonist.rent_cost, 0)

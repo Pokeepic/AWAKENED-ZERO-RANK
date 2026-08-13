@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.238.0 - Hunter promotion consistency
+
+- Browser, save, and Python observer validation now reconcile hunter rank with the simulator's immediate 30/60/90-point promotion thresholds.
+- Unranked and F states remain below 30 points, E spans 30–59, D spans 60–89, and C begins at 90.
+- Added exact boundary and impossible-state coverage. Valid timelines, decisions, and schemas are unchanged.
+
 ## 0.237.0 - Hunter lifecycle consistency
 
 - Save and Python observer validation now require hunter rank and ability to describe a possible lifecycle, matching the browser's existing rule.

@@ -166,6 +166,12 @@ const MOODS = new Set([
 function isRankAbilityConsistent(rank: string, ability: string): boolean {
   return rank === "Unranked" ? ability === "None" : ability !== "None";
 }
+function isRankPointsConsistent(rank: string, points: number): boolean {
+  if (rank === "Unranked" || rank === "F") return points < 30;
+  if (rank === "E") return points >= 30 && points < 60;
+  if (rank === "D") return points >= 60 && points < 90;
+  return rank === "C" && points >= 90;
+}
 const RELATIONSHIP_ROLES: Record<string, string> = {
   "Aiko Sato": "F-rank guild clerk",
   "Daichi Mori": "Rank E patrol leader",
@@ -695,6 +701,10 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       "rank_points", "fitness", "knowledge", "missions_attempted",
       "missions_completed",
     ].every((name) => isInteger(protagonist.progression[name])) ||
+    !isRankPointsConsistent(
+      protagonist.hunter_rank as string,
+      protagonist.progression.rank_points as number,
+    ) ||
     (protagonist.progression.missions_completed as number) >
       (protagonist.progression.missions_attempted as number)
   ) {

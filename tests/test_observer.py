@@ -315,6 +315,12 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "protagonist status"):
             verify_observer_snapshot(lifecycle)
 
+        points = observer_snapshot(Simulation(seed=311))
+        points["protagonist"]["progression"]["rank_points"] = 30
+        _redigest(points)
+        with self.assertRaisesRegex(ValueError, "rank points"):
+            verify_observer_snapshot(points)
+
         counters = observer_snapshot(Simulation(seed=311))
         counters["protagonist"]["progression"]["missions_completed"] = 1
         _redigest(counters)
