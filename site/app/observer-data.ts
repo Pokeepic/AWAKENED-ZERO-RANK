@@ -79,6 +79,7 @@ export const RESOURCE_NAMES: ResourceName[] = [
   "stress",
   "morale",
 ];
+const TIME_SLOTS = ["Morning", "Afternoon", "Evening", "Late Night"] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -125,10 +126,49 @@ function isActivityEvent(value: unknown): value is ActivityEvent {
   return (
     isRecord(value) &&
     hasRenderedStrings(value, ["action", "outcome", "reason", "slot"]) &&
-    isInteger(value.day, 1)
+    isInteger(value.day, 1) &&
+    TIME_SLOTS.includes(value.slot as (typeof TIME_SLOTS)[number])
   );
 }
 
+function isActivity(
+  value: unknown,
+  currentDay: number,
+  currentSlot: string,
+): value is ObserverSnapshot["activity"] {
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value.recent_events) ||
+    value.recent_events.length > 12 ||
+    !value.recent_events.every(isActivityEvent)
+  ) {
+    return false;
+  }
+  const currentSlotIndex = TIME_SLOTS.indexOf(
+    currentSlot as (typeof TIME_SLOTS)[number],
+  );
+  if (currentSlotIndex < 0) {
+    return false;
+  }
+  const positions = value.recent_events.map((event) => [
+    event.day,
+    TIME_SLOTS.indexOf(event.slot as (typeof TIME_SLOTS)[number]),
+  ]);
+  const beforeCurrent = positions.every(
+    ([day, slot]) =>
+      day < currentDay || (day === currentDay && slot < currentSlotIndex),
+  );
+  return (
+    beforeCurrent &&
+    positions.every(
+      (position, index) =>
+        index === 0 ||
+        positions[index - 1][0] < position[0] ||
+        (positions[index - 1][0] === position[0] &&
+          positions[index - 1][1] < position[1]),
+    )
+  );
+}
 function isRelationship(value: unknown): value is Relationship {
   return (
     isRecord(value) &&
@@ -249,10 +289,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
   }
 
   if (
-    !isRecord(value.activity) ||
-    !Array.isArray(value.activity.recent_events) ||
-    value.activity.recent_events.length > 12 ||
-    !value.activity.recent_events.every(isActivityEvent) ||
+    !isActivity(value.activity, value.clock.day, value.clock.slot) ||
         !isStory(value.story, value.clock.day) ||
     !Array.isArray(value.relationships) ||
     !value.relationships.every(isRelationship) ||

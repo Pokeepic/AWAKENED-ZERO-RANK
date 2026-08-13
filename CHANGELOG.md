@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.209.0 - Browser-verified activity chronology
+
+- Added the canonical four-slot timeline vocabulary to the browser trust boundary and reject recent events with unsupported slots.
+- Recent decisions must now be strictly chronological, unique in timeline position, and earlier than the authenticated observer clock before they can render.
+- Added focused normal-artifact, reversed-order, current-clock, unsupported-slot, and duplicate-position regression checks.
+- Simulator, balance, schemas, RL behavior, observer artifacts, presentation, and read-only capabilities are unchanged.
+
 ## 0.208.0 - Browser-verified story chronology
 
 - Consolidated browser story validation into a consistency guard that checks completed counts, terminal status, named-ending presence, and next-anchor presence together.
