@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.208.0 - Browser-verified story chronology
+
+- Consolidated browser story validation into a consistency guard that checks completed counts, terminal status, named-ending presence, and next-anchor presence together.
+- Pending arcs now require a completed count below the total and an exact days-remaining value derived from the authenticated current day and anchor day.
+- Completed arcs now require all anchors complete and isolated, resilient, and prepared ending counts that sum exactly to the total anchor count.
+- Added focused tampered-countdown, premature-completion, ending-count-total, and valid-completion regression checks. Simulator, schemas, RL behavior, and presentation remain unchanged.
+
 ## 0.207.0 - Honest empty chronicle states
 
 - Valid new-timeline snapshots with no recent decisions, trusted relationships, or discovered portals now show concise explanatory empty states instead of visually blank panels.

@@ -161,6 +161,38 @@ function isStoryEnding(
       isInteger(value.resilient_count))
   );
 }
+function isStory(
+  value: unknown,
+  currentDay: number,
+): value is ObserverSnapshot["story"] {
+  if (
+    !isRecord(value) ||
+    !isInteger(value.completed_count) ||
+    !isInteger(value.total_anchors, 1) ||
+    value.completed_count > value.total_anchors ||
+    typeof value.ending_reached !== "boolean" ||
+    !isStoryEnding(value.ending) ||
+    !isStoryNext(value.next) ||
+    (value.next === null) !== value.ending_reached ||
+    (value.ending !== null) !== value.ending_reached
+  ) {
+    return false;
+  }
+  if (value.next !== null) {
+    return (
+      value.completed_count < value.total_anchors &&
+      value.next.days_remaining === Math.max(0, value.next.day - currentDay)
+    );
+  }
+  return (
+    value.completed_count === value.total_anchors &&
+    value.ending !== null &&
+    value.ending.isolated_count +
+      value.ending.prepared_count +
+      value.ending.resilient_count ===
+      value.total_anchors
+  );
+}
 export function isPresentationContract(
   value: unknown,
 ): value is PresentationContract {
@@ -221,15 +253,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !Array.isArray(value.activity.recent_events) ||
     value.activity.recent_events.length > 12 ||
     !value.activity.recent_events.every(isActivityEvent) ||
-    !isRecord(value.story) ||
-    !isInteger(value.story.completed_count) ||
-    !isInteger(value.story.total_anchors, 1) ||
-    value.story.completed_count > value.story.total_anchors ||
-    typeof value.story.ending_reached !== "boolean" ||
-    !isStoryEnding(value.story.ending) ||
-    !isStoryNext(value.story.next) ||
-    (value.story.next === null) !== value.story.ending_reached ||
-    (value.story.ending !== null) !== value.story.ending_reached ||
+        !isStory(value.story, value.clock.day) ||
     !Array.isArray(value.relationships) ||
     !value.relationships.every(isRelationship) ||
     !isRecord(value.portals) ||
