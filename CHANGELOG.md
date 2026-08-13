@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.213.0 - Canonical rendered protagonist status
+
+- The browser trust boundary now limits Ren's rendered hunter rank and location to the simulator's supported rank progression and eight authored locations.
+- Health, energy, hunger, stress, morale, money, combat readiness, rank points, fitness, and knowledge must now satisfy the simulator's integer and non-negative/bounded rules before rendering.
+- Added focused coverage for every valid rank and location plus invented rank/location, fractional condition, excessive readiness, and negative money.
+- Simulator, balance, schemas, RL behavior, observer artifacts, presentation, and read-only capabilities are unchanged.
+
 ## 0.212.0 - Authored browser portal vocabulary
 
 - The browser trust boundary now accepts discovered portal names only from the simulator's six authored Tokyo portal profiles.

@@ -95,6 +95,17 @@ const PORTAL_NAMES = new Set([
   "Sunken Courtyard",
   "Glass Office Labyrinth",
 ]);
+const HUNTER_RANKS = new Set(["Unranked", "F", "E", "D", "C"]);
+const LOCATIONS = new Set([
+  "Adachi Apartment",
+  "Kita-Senju",
+  "Ueno Library",
+  "Arakawa Riverbank",
+  "Tokyo Awakening Bureau",
+  "Tokyo Hunter Guild",
+  "Adachi Gate Zone",
+  "Kita-Senju Hunter Supply",
+]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -108,16 +119,15 @@ function isInteger(value: unknown, minimum = 0): value is number {
   return Number.isInteger(value) && (value as number) >= minimum;
 }
 
-function isNumberInRange(
+function isIntegerInRange(
   value: unknown,
   minimum: number,
   maximum: number,
 ): value is number {
   return (
-    typeof value === "number" &&
-    Number.isFinite(value) &&
-    value >= minimum &&
-    value <= maximum
+    Number.isInteger(value) &&
+    (value as number) >= minimum &&
+    (value as number) <= maximum
   );
 }
 
@@ -325,15 +335,17 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       "mood",
       "current_goal",
     ]) ||
+    !HUNTER_RANKS.has(protagonist.hunter_rank as string) ||
+    !LOCATIONS.has(protagonist.location as string) ||
     !isRecord(protagonist.resources) ||
     !RESOURCE_NAMES.every((name) =>
-      isNumberInRange(protagonist.resources[name], 0, 100),
+      isIntegerInRange(protagonist.resources[name], 0, 100),
     ) ||
     !isInteger(protagonist.resources.money) ||
     !isRecord(protagonist.progression) ||
-    !["combat_readiness", "rank_points", "fitness", "knowledge"].every((name) =>
-      isInteger(protagonist.progression[name]),
-    )
+    !isIntegerInRange(protagonist.progression.combat_readiness, 0, 100) ||
+    !["rank_points", "fitness", "knowledge"].every((name) =>
+      isInteger(protagonist.progression[name]))
   ) {
     return false;
   }
