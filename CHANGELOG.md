@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.228.0 - Complete relationship metrics
+
+- The browser now validates all five authenticated relationship metrics: affection and trust allow signed -100 through 100 values, while familiarity, loyalty, and tension remain within 0–100.
+- Fractional and out-of-range social state fails closed instead of being silently ignored by the visible trust-only card.
+- Added focused lower and upper boundary coverage for every metric plus five malformed variants. Simulator and schemas are unchanged.
+
 ## 0.227.0 - Canonical equipment semantics
 
 - Browser validation now matches Python for nullable equipped slots, authored weapon and armor kinds, canonical inventory ordering, and positive safe-integer quantities.

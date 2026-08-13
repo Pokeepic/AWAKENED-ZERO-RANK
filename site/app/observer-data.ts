@@ -14,8 +14,12 @@ export type ActivityEvent = {
   slot: string;
 };
 export type Relationship = {
+  affection: number;
+  familiarity: number;
+  loyalty: number;
   name: string;
   role: string;
+  tension: number;
   trust: number;
 };
 export type StoryEnding = {
@@ -331,9 +335,10 @@ function isRelationship(value: unknown): value is Relationship {
     hasExactKeys(value, ["affection", "familiarity", "loyalty", "name", "role", "tension", "trust"]) &&
     hasRenderedStrings(value, ["name", "role"]) &&
     RELATIONSHIP_ROLES[value.name as string] === value.role &&
-    Number.isSafeInteger(value.trust) &&
-    (value.trust as number) >= -100 &&
-    (value.trust as number) <= 100
+    ["affection", "trust"].every((name) =>
+      isIntegerInRange(value[name], -100, 100)) &&
+    ["familiarity", "loyalty", "tension"].every((name) =>
+      isIntegerInRange(value[name], 0, 100))
   );
 }
 
