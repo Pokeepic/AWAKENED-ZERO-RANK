@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.227.0 - Canonical equipment semantics
+
+- Browser validation now matches Python for nullable equipped slots, authored weapon and armor kinds, canonical inventory ordering, and positive safe-integer quantities.
+- Future inventory names remain supported, while swapped equipment kinds, zero, fractional, unsafe, or out-of-order inventory values fail closed.
+- Added focused coverage for all slot combinations, extensible inventory, and six malformed equipment variants. Simulator and schemas are unchanged.
+
 ## 0.226.0 - Canonical hunter progression
 
 - Browser validation now matches Python for all seven progression values: ability mastery and readiness stay within 0–100, while long-term growth and mission counters remain nonnegative safe integers.

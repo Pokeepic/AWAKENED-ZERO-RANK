@@ -54,6 +54,11 @@ export type ObserverSnapshot = {
     location: string;
     mood: string;
     current_goal: string;
+    equipment: {
+      armor: string | null;
+      inventory: Record<string, number>;
+      weapon: string | null;
+    };
     resources: Resources;
     progression: {
       ability_mastery: number;
@@ -240,6 +245,26 @@ function isEconomy(value: unknown): value is ObserverSnapshot["economy"] {
   return (
     [500, 600, 700, 800].includes(value.meal_cost as number) &&
     [85, 95, 100, 105, 115].includes(value.wage_modifier as number)
+  );
+}
+
+function isEquipment(
+  value: unknown,
+): value is ObserverSnapshot["protagonist"]["equipment"] {
+  if (
+    !isRecord(value) ||
+    !hasExactKeys(value, ["armor", "inventory", "weapon"]) ||
+    !(value.weapon === null || value.weapon === "Field Knife") ||
+    !(value.armor === null || value.armor === "Padded Jacket") ||
+    !isRecord(value.inventory)
+  ) {
+    return false;
+  }
+  const names = Object.keys(value.inventory);
+  return (
+    names.every((name) => name.length > 0) &&
+    names.every((name, index) => index === 0 || names[index - 1] < name) &&
+    names.every((name) => isInteger(value.inventory[name], 1))
   );
 }
 
@@ -531,8 +556,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       protagonist.ability as string,
     ) ||
     !LOCATIONS.has(protagonist.location as string) ||
-    !isRecord(protagonist.equipment) ||
-    !hasExactKeys(protagonist.equipment, ["armor", "inventory", "weapon"]) ||
+    !isEquipment(protagonist.equipment) ||
     !isRecord(protagonist.resources) ||
     !hasExactKeys(protagonist.resources, [
       "energy", "health", "hunger", "money", "morale", "stress",
