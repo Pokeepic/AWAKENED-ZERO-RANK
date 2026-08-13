@@ -272,6 +272,62 @@ function isStoryEnding(
       isInteger(value.resilient_count))
   );
 }
+
+function isEndingConsistent(ending: StoryEnding, total: number): boolean {
+  if (
+    ending.isolated_count < 0 ||
+    ending.isolated_count > total ||
+    ending.prepared_count < 0 ||
+    ending.prepared_count > total ||
+    ending.resilient_count < 0 ||
+    ending.resilient_count > total
+  ) {
+    return false;
+  }
+  const resolved =
+    ending.isolated_count +
+    ending.prepared_count +
+    ending.resilient_count;
+  if (ending.id === "legacy-unavailable") {
+    return (
+      resolved < total &&
+      ["isolated", "resilient", "prepared", "legacy-unavailable"].includes(
+        ending.tier,
+      ) &&
+      ending.title === "Legacy Ending Unavailable" &&
+      ending.summary ===
+        "This timeline predates authenticated story outcome evidence."
+    );
+  }
+  if (resolved !== total) {
+    return false;
+  }
+  if (ending.id === "unfinished-warning") {
+    return (
+      ending.tier === "isolated" &&
+      ending.title === "The Unfinished Warning" &&
+      ending.summary ===
+        "Ren survived, but the warning he carried remained unresolved."
+    );
+  }
+  if (ending.id === "zero-rank-horizon") {
+    return (
+      ending.tier === "prepared" &&
+      ending.prepared_count >= 4 &&
+      ending.title === "The Zero-Rank Horizon" &&
+      ending.summary ===
+        "Ren's evidence and trusted circle changed what Tokyo valued in a hunter."
+    );
+  }
+  return (
+    ending.id === "quiet-guardian" &&
+    (ending.tier === "resilient" ||
+      (ending.tier === "prepared" && ending.prepared_count < 4)) &&
+    ending.title === "Tokyo's Quiet Guardian" &&
+    ending.summary ===
+      "Ren left Tokyo steadier through persistence rather than recognition."
+  );
+}
 function isStory(
   value: unknown,
   currentDay: number,
@@ -302,10 +358,7 @@ function isStory(
   return (
     value.completed_count === value.total_anchors &&
     value.ending !== null &&
-    value.ending.isolated_count +
-      value.ending.prepared_count +
-      value.ending.resilient_count ===
-      value.total_anchors
+    isEndingConsistent(value.ending, value.total_anchors)
   );
 }
 export function isPresentationContract(

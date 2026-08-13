@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.215.0 - Authenticated named-ending semantics
+
+- The browser now validates the exact ID, title, summary, final tier, and outcome-count rule for The Unfinished Warning, Tokyo's Quiet Guardian, and The Zero-Rank Horizon.
+- Honest migrated histories with Legacy Ending Unavailable are accepted even though unavailable tiers are intentionally excluded from the three known outcome counts.
+- Invented ending prose, underqualified prepared endings, inconsistent final tiers, and mismatched named-ending fields fail closed.
+- Added focused coverage for all three named endings, a legacy ending, invented prose, and an underqualified Zero-Rank Horizon. Simulator and schemas are unchanged.
+
 ## 0.214.0 - Fixed browser story schedule
 
 - The browser trust boundary now requires exactly the simulator's six story anchors and their fixed day-183 through day-1,095 schedule.
