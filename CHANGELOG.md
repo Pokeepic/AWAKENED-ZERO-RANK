@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.201.0 - Resilient verification states
+
+- The skip link now retains a valid chronicle main-landmark target during initial authentication, verified display, and terminal verification failure.
+- Initial artifact authentication exposes a polite busy status, while an unverifiable first load uses an alert without changing trusted-refresh behavior.
+- Added focused regression checks for all three stable main landmarks, busy/status semantics, failure-alert semantics, and removal of untargeted loading landmarks.
+- Simulator, balance, schemas, RL behavior, refresh cadence, observer artifacts, and read-only capabilities are unchanged.
+
 ## 0.200.0 - Keyboard-ready observer metadata
 
 - Corrected the browser and share-card title separator and added canonical production URL metadata, consistent Open Graph and X titles, and descriptive image alternative text.

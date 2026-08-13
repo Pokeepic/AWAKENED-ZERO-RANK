@@ -99,10 +99,10 @@ export default function Home() {
   }, []);
 
   if (failed) {
-    return <main className="loading"><p>OBSERVER OFFLINE</p><h1>The chronicle could not be verified.</h1></main>;
+    return <main id="chronicle" tabIndex={-1} className="loading"><div role="alert"><p>OBSERVER OFFLINE</p><h1>The chronicle could not be verified.</h1></div></main>;
   }
   if (!snapshot || !contract) {
-    return <main className="loading"><p>AUTHENTICATING CHRONICLE</p><h1>AWAKENED: ZERO RANK</h1></main>;
+    return <main id="chronicle" tabIndex={-1} className="loading" aria-busy="true"><div role="status" aria-live="polite"><p>AUTHENTICATING CHRONICLE</p><h1>AWAKENED: ZERO RANK</h1></div></main>;
   }
 
   const p = snapshot.protagonist;
