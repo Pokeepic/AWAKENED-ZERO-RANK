@@ -169,6 +169,23 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "wage modifier"):
             verify_observer_snapshot(wages)
 
+        for field, value in (
+                ("rent_due_day", 7), ("rent_cost", 7_999),
+                ("rent_arrears", 8_001), ("rent_payments", 2)):
+            with self.subTest(field=field):
+                ledger = observer_snapshot(Simulation(seed=57))
+                ledger["economy"][field] = value
+                _redigest(ledger)
+                with self.assertRaisesRegex(ValueError, "rent ledger"):
+                    verify_observer_snapshot(ledger)
+
+        contradictory = observer_snapshot(Simulation(seed=57))
+        contradictory["economy"]["rent_payments"] = 1
+        contradictory["economy"]["rent_arrears"] = 1
+        _redigest(contradictory)
+        with self.assertRaisesRegex(ValueError, "rent ledger"):
+            verify_observer_snapshot(contradictory)
+
     def test_verifier_rejects_redigested_invalid_resources(self) -> None:
         negative_money = observer_snapshot(Simulation(seed=251))
         negative_money["protagonist"]["resources"]["money"] = -1

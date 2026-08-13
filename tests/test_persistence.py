@@ -257,6 +257,29 @@ class PersistenceSafetyTests(unittest.TestCase):
                 save_simulation(simulation, destination)
             self.assertFalse(destination.exists())
 
+    def test_rent_ledger_requires_authored_consistency(self) -> None:
+        mutations = {
+            "due day": lambda simulation: setattr(
+                simulation.state.protagonist, "rent_due_day", 7),
+            "cost": lambda simulation: setattr(
+                simulation.state.protagonist, "rent_cost", 7_999),
+            "excess arrears": lambda simulation: setattr(
+                simulation.state.protagonist, "rent_arrears", 8_001),
+            "duplicate payment": lambda simulation: setattr(
+                simulation.state, "rent_payments", 2),
+            "paid with arrears": lambda simulation: (
+                setattr(simulation.state, "rent_payments", 1),
+                setattr(simulation.state.protagonist, "rent_arrears", 1)),
+        }
+        for name, mutate in mutations.items():
+            with self.subTest(name=name), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=78)
+                mutate(simulation)
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "rent ledger"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_unknown_relationship_cannot_replace_existing_save(self) -> None:
         simulation = Simulation(seed=71)
         simulation.run(20)

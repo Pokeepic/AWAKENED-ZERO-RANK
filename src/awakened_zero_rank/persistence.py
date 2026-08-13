@@ -10,8 +10,10 @@ from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
 from .content import NPCS, PORTALS, STORY_ANCHORS
-from .models import (Clock, DelayedConsequence, DialogueExchange, Event, Memory,
-                     PortalInvestigation, Protagonist, Relationship, TimeSlot, WorldState)
+from .models import (AUTHORED_RENT_COST, AUTHORED_RENT_DUE_DAY, Clock,
+                     DelayedConsequence, DialogueExchange, Event, Memory,
+                     PortalInvestigation, Protagonist, Relationship, TimeSlot,
+                     WorldState)
 from .world import ITEMS, LOCATIONS, mission_rank_points_are_possible
 
 
@@ -232,6 +234,15 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     _require_integer_range(
         "protagonist.rent_due_day", protagonist.rent_due_day, 1)
     _require_integer_range("protagonist.rent_cost", protagonist.rent_cost, 0)
+    _require_integer_range("rent_payments", state.rent_payments, 0)
+    _require_integer_range("shop_visits", state.shop_visits, 0)
+    if (
+            protagonist.rent_due_day != AUTHORED_RENT_DUE_DAY or
+            protagonist.rent_cost != AUTHORED_RENT_COST or
+            protagonist.rent_arrears > AUTHORED_RENT_COST or
+            state.rent_payments > 1 or
+            (state.rent_payments == 1 and protagonist.rent_arrears > 0)):
+        raise ValueError("Invalid save rent ledger")
     if protagonist.missions_completed > protagonist.missions_attempted:
         raise ValueError(
             "Invalid save mission counters: completions exceed attempts")

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 from .content import NPCS, PORTALS, STORY_ANCHORS
 from .environment import SUMMER_WEATHER
+from .models import AUTHORED_RENT_COST, AUTHORED_RENT_DUE_DAY
 from .story import STORY_PROGRESS_SCHEMA_VERSION, story_progress
 from .world import ITEMS, LOCATIONS, mission_rank_points_are_possible
 
@@ -237,6 +238,13 @@ def _validate_economy(economy: Any) -> None:
         raise ValueError("Observer snapshot wage modifier is invalid")
     if values["meal_cost"] not in {500, 600, 700, 800}:
         raise ValueError("Observer snapshot meal cost is invalid")
+    if (
+            values["rent_due_day"] != AUTHORED_RENT_DUE_DAY or
+            values["rent_cost"] != AUTHORED_RENT_COST or
+            values["rent_arrears"] > AUTHORED_RENT_COST or
+            values["rent_payments"] > 1 or
+            (values["rent_payments"] == 1 and values["rent_arrears"] > 0)):
+        raise ValueError("Observer snapshot rent ledger is inconsistent")
 
 def _expected_ending(tiers: list[str]) -> dict[str, Any]:
     counts = {

@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.241.0 - Authored rent ledger
+
+- Browser, save, and Python observer validation now authenticate the fixed day-8, ¥8,000 rent contract.
+- Arrears cannot exceed one rent charge, the single deadline cannot report multiple full payments, and a full payment cannot coexist with outstanding arrears.
+- Save validation now also rejects negative or non-integer rent-payment and shop-visit counters. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.240.0 - Exact mission award evidence
 
 - Browser, save, and Python observer validation now require rank points to be an exact composition of the authored 10, 13, and 17-point Gate mission awards.

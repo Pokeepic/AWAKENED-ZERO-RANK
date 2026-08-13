@@ -12,6 +12,8 @@ class TimeSlot(str, Enum):
 
 
 SLOTS = tuple(TimeSlot)
+AUTHORED_RENT_DUE_DAY = 8
+AUTHORED_RENT_COST = 8_000
 
 
 @dataclass
@@ -66,8 +68,8 @@ class Protagonist:
     inventory: dict[str, int] = field(default_factory=dict)
     equipped_weapon: str | None = None
     equipped_armor: str | None = None
-    rent_due_day: int = 8
-    rent_cost: int = 8_000
+    rent_due_day: int = AUTHORED_RENT_DUE_DAY
+    rent_cost: int = AUTHORED_RENT_COST
     rent_arrears: int = 0
     gates_witnessed: int = 0
     current_goal: str = "Earn enough yen to pay rent"

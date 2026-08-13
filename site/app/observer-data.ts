@@ -295,7 +295,12 @@ function isEconomy(value: unknown): value is ObserverSnapshot["economy"] {
   }
   return (
     [500, 600, 700, 800].includes(value.meal_cost as number) &&
-    [85, 95, 100, 105, 115].includes(value.wage_modifier as number)
+    [85, 95, 100, 105, 115].includes(value.wage_modifier as number) &&
+    value.rent_due_day === 8 &&
+    value.rent_cost === 8000 &&
+    (value.rent_arrears as number) <= 8000 &&
+    (value.rent_payments as number) <= 1 &&
+    !(value.rent_payments === 1 && (value.rent_arrears as number) > 0)
   );
 }
 
