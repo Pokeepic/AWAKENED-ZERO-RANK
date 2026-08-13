@@ -55,6 +55,7 @@ export type ObserverSnapshot = {
   };
   activity: { recent_events: ActivityEvent[] };
   story: {
+    schema_version: number;
     completed_count: number;
     total_anchors: number;
     ending: StoryEnding | null;
@@ -334,6 +335,7 @@ function isStory(
 ): value is ObserverSnapshot["story"] {
   if (
     !isRecord(value) ||
+    value.schema_version !== 3 ||
     !isInteger(value.completed_count) ||
     value.total_anchors !== STORY_ANCHORS.length ||
     value.completed_count > value.total_anchors ||
@@ -378,7 +380,7 @@ export function isPresentationContract(
 export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
   if (
     !isRecord(value) ||
-    !isInteger(value.schema_version, 1) ||
+    value.schema_version !== 4 ||
     !isInteger(value.seed) ||
     !isIdentity(value.identity) ||
     !isRecord(value.clock) ||

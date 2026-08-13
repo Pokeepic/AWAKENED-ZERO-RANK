@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.216.0 - Fail-closed observer schema versions
+
+- The browser now accepts only observer snapshot schema 4 and nested story-progress schema 3, matching the Python verifier and current published artifacts.
+- Future, stale, invented, or missing schema versions fail closed before any authenticated snapshot is rendered under incompatible assumptions.
+- Added focused browser coverage for supported, adjacent, distant, and missing schema versions. Simulator behavior and artifact schemas are unchanged.
+
 ## 0.215.0 - Authenticated named-ending semantics
 
 - The browser now validates the exact ID, title, summary, final tier, and outcome-count rule for The Unfinished Warning, Tokyo's Quiet Guardian, and The Zero-Rank Horizon.
