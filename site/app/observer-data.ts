@@ -13,6 +13,11 @@ export type ActivityEvent = {
   reason: string;
   slot: string;
 };
+export type KeyMemory = {
+  day: number;
+  importance: number;
+  summary: string;
+};
 export type Relationship = {
   affection: number;
   familiarity: number;
@@ -83,7 +88,7 @@ export type ObserverSnapshot = {
       missions_completed: number;
     };
   };
-  activity: { recent_events: ActivityEvent[] };
+  activity: { key_memories: KeyMemory[]; recent_events: ActivityEvent[] };
   story: {
     schema_version: number;
     completed_count: number;
@@ -302,6 +307,16 @@ function isActivityEvent(value: unknown): value is ActivityEvent {
   );
 }
 
+function isKeyMemory(value: unknown, currentDay: number): value is KeyMemory {
+  return (
+    isRecord(value) &&
+    hasExactKeys(value, ["day", "importance", "summary"]) &&
+    isIntegerInRange(value.day, 1, currentDay) &&
+    isIntegerInRange(value.importance, 1, 10) &&
+    isString(value.summary)
+  );
+}
+
 function isActivity(
   value: unknown,
   currentDay: number,
@@ -311,6 +326,8 @@ function isActivity(
     !isRecord(value) ||
     !hasExactKeys(value, ["key_memories", "recent_events"]) ||
     !Array.isArray(value.key_memories) ||
+    value.key_memories.length > 5 ||
+    !value.key_memories.every((memory) => isKeyMemory(memory, currentDay)) ||
     !Array.isArray(value.recent_events) ||
     value.recent_events.length > 12 ||
     !value.recent_events.every(isActivityEvent)
@@ -331,8 +348,17 @@ function isActivity(
     ([day, slot]) =>
       day < currentDay || (day === currentDay && slot < currentSlotIndex),
   );
+  const memories = value.key_memories;
+  const memoriesCanonical = memories.every(
+    (memory, index) =>
+      index === 0 ||
+      memories[index - 1].importance > memory.importance ||
+      (memories[index - 1].importance === memory.importance &&
+        memories[index - 1].day >= memory.day),
+  );
   return (
     beforeCurrent &&
+    memoriesCanonical &&
     positions.every(
       (position, index) =>
         index === 0 ||

@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.230.0 - Key memory integrity
+
+- The browser now validates the complete authenticated key-memory ledger, including its five-entry limit, exact record shape, current-day chronology, importance bounds, and non-empty summaries.
+- Memories must retain the simulator's canonical priority order: highest importance first, then newest day for equal importance.
+- Added focused valid-boundary and malformed-ledger coverage. Simulator and schemas are unchanged.
+
 ## 0.229.0 - Portal investigation integrity
 
 - The browser now validates the complete authenticated portal-investigation record, including canonical portal identities, non-empty strategies, known collaborators, and exact record shape.
