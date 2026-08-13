@@ -396,6 +396,10 @@ def _validate_protagonist(protagonist: Any) -> None:
             progression_values["missions_completed"] >
             progression_values["missions_attempted"]):
         raise ValueError("Observer snapshot mission counters are invalid")
+    completed = progression_values["missions_completed"]
+    if ((completed == 0 and points != 0) or
+            (completed > 0 and not 10 * completed <= points <= 17 * completed)):
+        raise ValueError("Observer snapshot mission rank points are inconsistent")
 
     equipment = protagonist["equipment"]
     if not isinstance(equipment, dict) or set(equipment) != _EQUIPMENT_KEYS:

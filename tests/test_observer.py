@@ -321,6 +321,14 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "rank points"):
             verify_observer_snapshot(points)
 
+        mission_points = observer_snapshot(Simulation(seed=311))
+        mission_points["protagonist"]["hunter_rank"] = "F"
+        mission_points["protagonist"]["ability"] = "Threat Sense"
+        mission_points["protagonist"]["progression"]["rank_points"] = 10
+        _redigest(mission_points)
+        with self.assertRaisesRegex(ValueError, "mission rank points"):
+            verify_observer_snapshot(mission_points)
+
         counters = observer_snapshot(Simulation(seed=311))
         counters["protagonist"]["progression"]["missions_completed"] = 1
         _redigest(counters)

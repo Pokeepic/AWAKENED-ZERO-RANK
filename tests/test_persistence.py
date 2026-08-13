@@ -231,6 +231,18 @@ class PersistenceSafetyTests(unittest.TestCase):
                 save_simulation(simulation, destination)
             self.assertFalse(destination.exists())
 
+    def test_rank_points_require_completed_mission_evidence(self) -> None:
+        simulation = Simulation(seed=74)
+        protagonist = simulation.state.protagonist
+        protagonist.hunter_rank = "F"
+        protagonist.ability = "Threat Sense"
+        protagonist.rank_points = 10
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            with self.assertRaisesRegex(ValueError, "mission evidence"):
+                save_simulation(simulation, destination)
+            self.assertFalse(destination.exists())
+
     def test_unknown_relationship_cannot_replace_existing_save(self) -> None:
         simulation = Simulation(seed=71)
         simulation.run(20)

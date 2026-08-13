@@ -172,6 +172,11 @@ function isRankPointsConsistent(rank: string, points: number): boolean {
   if (rank === "D") return points >= 60 && points < 90;
   return rank === "C" && points >= 90;
 }
+function isMissionPointsConsistent(completed: number, points: number): boolean {
+  return completed === 0
+    ? points === 0
+    : points >= completed * 10 && points <= completed * 17;
+}
 const RELATIONSHIP_ROLES: Record<string, string> = {
   "Aiko Sato": "F-rank guild clerk",
   "Daichi Mori": "Rank E patrol leader",
@@ -703,6 +708,10 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     ].every((name) => isInteger(protagonist.progression[name])) ||
     !isRankPointsConsistent(
       protagonist.hunter_rank as string,
+      protagonist.progression.rank_points as number,
+    ) ||
+    !isMissionPointsConsistent(
+      protagonist.progression.missions_completed as number,
       protagonist.progression.rank_points as number,
     ) ||
     (protagonist.progression.missions_completed as number) >

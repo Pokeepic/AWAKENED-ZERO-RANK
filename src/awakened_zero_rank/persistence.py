@@ -224,6 +224,13 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         raise ValueError(
             "Invalid save protagonist progression: "
             "hunter rank and rank points are inconsistent")
+    if ((protagonist.missions_completed == 0 and protagonist.rank_points != 0) or
+            (protagonist.missions_completed > 0 and not
+             10 * protagonist.missions_completed <= protagonist.rank_points <=
+             17 * protagonist.missions_completed)):
+        raise ValueError(
+            "Invalid save protagonist progression: "
+            "rank points require completed mission evidence")
     _require_integer_range(
         "protagonist.rent_due_day", protagonist.rent_due_day, 1)
     _require_integer_range("protagonist.rent_cost", protagonist.rent_cost, 0)

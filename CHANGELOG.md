@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.239.0 - Mission rank-point evidence
+
+- Browser, save, and Python observer validation now require accumulated rank points to be supported by completed Gate missions.
+- Zero completions require zero points; otherwise totals must remain within the authored 10–17 points awarded per successful mission.
+- Added exact reward-boundary and impossible-state coverage. Valid timelines, decisions, and schemas are unchanged.
+
 ## 0.238.0 - Hunter promotion consistency
 
 - Browser, save, and Python observer validation now reconcile hunter rank with the simulator's immediate 30/60/90-point promotion thresholds.
