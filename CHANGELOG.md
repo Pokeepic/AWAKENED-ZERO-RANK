@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.235.0 - Signed simulation seeds
+
+- Browser validation now matches the simulator by accepting negative, zero, and positive deterministic seeds.
+- Seeds must remain exact browser-safe integers; booleans, fractions, and values outside JavaScript's safe integer range fail closed.
+- Added focused signed boundary coverage. Simulator and schemas are unchanged.
+
 ## 0.234.0 - Snapshot path provenance
 
 - Browser verification now matches Python by accepting one optional string `path` provenance field on otherwise exact observer snapshots.

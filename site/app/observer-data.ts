@@ -638,7 +638,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
   if (
     !hasValidEnvelope ||
     value.schema_version !== 4 ||
-    !isInteger(value.seed) ||
+    !Number.isSafeInteger(value.seed) ||
     !isIdentity(value.identity) ||
     !isRecord(value.clock) ||
     !hasExactKeys(value.clock, ["day", "slot"]) ||
