@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.214.0 - Fixed browser story schedule
+
+- The browser trust boundary now requires exactly the simulator's six story anchors and their fixed day-183 through day-1,095 schedule.
+- A pending next anchor must match the authored title and day selected by the authenticated completed-anchor count, in addition to the existing derived countdown check.
+- Added focused coverage for every valid next anchor plus invented title, shifted day, and altered total-anchor count.
+- Simulator, balance, schemas, RL behavior, observer artifacts, presentation, and read-only capabilities are unchanged.
+
 ## 0.213.0 - Canonical rendered protagonist status
 
 - The browser trust boundary now limits Ren's rendered hunter rank and location to the simulator's supported rank progression and eight authored locations.

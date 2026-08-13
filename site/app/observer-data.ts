@@ -106,6 +106,14 @@ const LOCATIONS = new Set([
   "Adachi Gate Zone",
   "Kita-Senju Hunter Supply",
 ]);
+const STORY_ANCHORS = [
+  { day: 183, title: "The Adachi Warning" },
+  { day: 365, title: "The Tokyo Fracture" },
+  { day: 548, title: "The Foreign Signal" },
+  { day: 730, title: "The Guild Reckoning" },
+  { day: 913, title: "The Zero-Rank Choice" },
+  { day: 1095, title: "The Awakened Horizon" },
+] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -271,7 +279,7 @@ function isStory(
   if (
     !isRecord(value) ||
     !isInteger(value.completed_count) ||
-    !isInteger(value.total_anchors, 1) ||
+    value.total_anchors !== STORY_ANCHORS.length ||
     value.completed_count > value.total_anchors ||
     typeof value.ending_reached !== "boolean" ||
     !isStoryEnding(value.ending) ||
@@ -282,8 +290,12 @@ function isStory(
     return false;
   }
   if (value.next !== null) {
+    const expected = STORY_ANCHORS[value.completed_count];
     return (
       value.completed_count < value.total_anchors &&
+      expected !== undefined &&
+      value.next.title === expected.title &&
+      value.next.day === expected.day &&
       value.next.days_remaining === Math.max(0, value.next.day - currentDay)
     );
   }
