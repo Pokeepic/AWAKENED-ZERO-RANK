@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.195.0 — Resilient authenticated refresh
+
+- The observer automatically requests the contract and snapshot together every 60 seconds with cache reuse disabled, then authenticates both artifacts before replacing the visible chronicle.
+- A failed first load remains fail-closed; a later transient network or verification failure preserves the last trusted snapshot and exposes an accessible delayed-refresh status instead of blanking authenticated data.
+- Refresh work rejects overlap, aborts on unmount, clears its timer, and adds no buttons or simulation controls. Added focused lifecycle and control-free tests; simulator, balance, schemas, and RL behavior are unchanged.
+
 ## 0.194.0 — Authenticated website snapshots
 
 - The private observer now recomputes the snapshot's canonical SHA-256 identity in the browser, excluding only the identity block and optional path provenance exactly like the Python verifier.
