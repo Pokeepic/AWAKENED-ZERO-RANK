@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.245.0 - Guild registration evidence
+
+- Browser, save, and Python observer validation now bind Guild registration and Aiko Sato's relationship record to the fixed day-4 Morning event.
+- Aiko remains absent through day 4 Morning; day 4 Afternoon and later require both her authored relationship and the registered state.
+- Added exact pre/post-event boundary coverage. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.244.0 - Lifecycle goal consistency
 
 - Browser, save, and Python observer validation now require Ren's displayed goal to match his authored lifecycle phase.

@@ -64,7 +64,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.244.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.245.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -449,6 +449,7 @@ class SimulationTests(unittest.TestCase):
 
     def test_dialogue_history_is_bounded_and_saved(self) -> None:
         simulation = Simulation(seed=1)
+        simulation.run(13)
         p = simulation.state.protagonist
         p.relationships["Aiko Sato"] = Relationship("Aiko Sato", "F-rank guild clerk", trust=20,
                                                      familiarity=30, meetings=3)

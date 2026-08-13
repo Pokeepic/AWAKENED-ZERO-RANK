@@ -253,6 +253,20 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
+    def test_guild_registration_requires_authored_evidence(self) -> None:
+        for steps in (12, 13):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=86)
+                simulation.run(steps)
+                if steps == 12:
+                    simulation.state.protagonist.guild_registered = True
+                else:
+                    simulation.state.protagonist.relationships.pop("Aiko Sato")
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "Guild registration evidence"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30
@@ -319,6 +333,7 @@ class PersistenceSafetyTests(unittest.TestCase):
         for day, slot in ((7, TimeSlot.LATE_NIGHT), (8, TimeSlot.MORNING)):
             with self.subTest(day=day, slot=slot), TemporaryDirectory() as temporary_directory:
                 simulation = Simulation(seed=80)
+                simulation.run(13)
                 simulation.state.clock.day = day
                 simulation.state.clock.slot = slot
                 simulation.state.protagonist.hunter_rank = "F"
@@ -397,7 +412,9 @@ class PersistenceSafetyTests(unittest.TestCase):
 
     def test_redigested_invalid_story_outcome_is_rejected(self) -> None:
         simulation = Simulation(seed=103)
+        simulation.run(13)
         simulation.state.clock.day = 183
+        simulation.state.clock.slot = TimeSlot.MORNING
         simulation.state.protagonist.hunter_rank = "F"
         simulation.state.protagonist.ability = "Threat Sense"
         simulation.state.protagonist.awakened = True
@@ -420,7 +437,9 @@ class PersistenceSafetyTests(unittest.TestCase):
 
     def test_missing_legacy_story_ledger_migrates_honestly(self) -> None:
         simulation = Simulation(seed=131)
+        simulation.run(13)
         simulation.state.clock.day = 183
+        simulation.state.clock.slot = TimeSlot.MORNING
         simulation.state.protagonist.hunter_rank = "F"
         simulation.state.protagonist.ability = "Threat Sense"
         simulation.state.protagonist.awakened = True

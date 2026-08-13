@@ -16,7 +16,7 @@ from awakened_zero_rank import (
     publish_observer_site_data,
 )
 from awakened_zero_rank.cli import main as cli_main
-from awakened_zero_rank.models import Relationship
+from awakened_zero_rank.models import Relationship, TimeSlot
 from awakened_zero_rank.persistence import save_simulation
 from awakened_zero_rank.simulation import Simulation
 
@@ -173,7 +173,9 @@ class CliValidationTests(unittest.TestCase):
 
     def test_story_progress_is_read_only_and_reports_json(self) -> None:
         simulation = Simulation(seed=113)
+        simulation.run(13)
         simulation.state.clock.day = 183
+        simulation.state.clock.slot = TimeSlot.MORNING
         simulation.state.protagonist.hunter_rank = "F"
         simulation.state.protagonist.ability = "Threat Sense"
         simulation.state.protagonist.awakened = True

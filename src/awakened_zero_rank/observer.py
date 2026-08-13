@@ -453,7 +453,7 @@ def _validate_protagonist(
             raise ValueError("Observer snapshot inventory quantity is invalid")
 
 
-def _validate_relationships(relationships: Any) -> None:
+def _validate_relationships(relationships: Any, day: int, slot: str) -> None:
     if not isinstance(relationships, list):
         raise ValueError("Observer snapshot relationships are malformed")
     names: list[str] = []
@@ -482,6 +482,9 @@ def _validate_relationships(relationships: Any) -> None:
             raise ValueError("Observer snapshot relationship metric is invalid")
     if names != sorted(set(names)):
         raise ValueError("Observer snapshot relationships are not canonical")
+    registered = (day, _SLOTS.index(slot)) >= (4, _SLOTS.index("Afternoon"))
+    if ("Aiko Sato" in names) != registered:
+        raise ValueError("Observer snapshot Guild registration evidence is invalid")
 
 
 def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
@@ -495,7 +498,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     _validate_economy(snapshot["economy"], day, clock["slot"])
     _validate_environment(snapshot["environment"])
     _validate_portals(snapshot["portals"])
-    _validate_relationships(snapshot["relationships"])
+    _validate_relationships(snapshot["relationships"], day, clock["slot"])
     _validate_story(snapshot["story"], day)
     _validate_protagonist(
         snapshot["protagonist"], day, clock["slot"],

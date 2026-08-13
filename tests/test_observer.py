@@ -410,6 +410,29 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "current goal"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_requires_guild_registration_evidence(self) -> None:
+        for steps in (12, 13):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=319)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                names = {item["name"] for item in snapshot["relationships"]}
+                self.assertEqual("Aiko Sato" in names, steps == 13)
+                if steps == 12:
+                    snapshot["relationships"].append({
+                        "affection": 0, "familiarity": 5, "loyalty": 4,
+                        "name": "Aiko Sato", "role": "F-rank guild clerk",
+                        "tension": 0, "trust": 3,
+                    })
+                    snapshot["relationships"].sort(key=lambda item: item["name"])
+                else:
+                    snapshot["relationships"] = [
+                        item for item in snapshot["relationships"]
+                        if item["name"] != "Aiko Sato"]
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "Guild registration evidence"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
         weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"
@@ -443,6 +466,7 @@ class ObserverSnapshotTests(unittest.TestCase):
             verify_observer_snapshot(next_anchor)
 
         simulation = Simulation(seed=331)
+        simulation.run(13)
         simulation.state.clock.day = STORY_ANCHORS[0].day
         simulation.state.protagonist.hunter_rank = "F"
         simulation.state.protagonist.ability = "Threat Sense"
@@ -456,6 +480,7 @@ class ObserverSnapshotTests(unittest.TestCase):
 
     def test_verifier_rejects_redigested_invalid_story_ending(self) -> None:
         simulation = Simulation(seed=337)
+        simulation.run(13)
         simulation.state.clock.day = STORY_ANCHORS[-1].day
         simulation.state.protagonist.hunter_rank = "F"
         simulation.state.protagonist.ability = "Threat Sense"

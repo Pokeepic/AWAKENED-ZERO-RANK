@@ -449,14 +449,20 @@ function isRelationship(value: unknown): value is Relationship {
   );
 }
 
-function isRelationships(value: unknown): value is Relationship[] {
+function isRelationships(
+  value: unknown,
+  day: number,
+  slot: string,
+): value is Relationship[] {
   if (!Array.isArray(value) || !value.every(isRelationship)) {
     return false;
   }
   const names = value.map((relationship) => relationship.name);
+  const registered = day > 4 ||
+    (day === 4 && TIME_SLOTS.indexOf(slot as (typeof TIME_SLOTS)[number]) >= 1);
   return names.every(
     (name, index) => index === 0 || names[index - 1] < name,
-  );
+  ) && names.includes("Aiko Sato") === registered;
 }
 
 function isPortals(value: unknown): value is ObserverSnapshot["portals"] {
@@ -780,7 +786,11 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
   if (
     !isActivity(value.activity, value.clock.day, value.clock.slot) ||
         !isStory(value.story, value.clock.day) ||
-    !isRelationships(value.relationships) ||
+    !isRelationships(
+      value.relationships,
+      value.clock.day as number,
+      value.clock.slot as string,
+    ) ||
     !isPortals(value.portals)
   ) {
     return false;

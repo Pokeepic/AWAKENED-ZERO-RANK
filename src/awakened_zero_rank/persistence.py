@@ -189,10 +189,10 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     ) >= (3, tuple(TimeSlot).index(TimeSlot.EVENING))
     if (protagonist.hunter_rank == "Unranked") == awakened_by_clock:
         raise ValueError("Invalid save protagonist Awakening chronology")
-    position = (state.clock.day, tuple(TimeSlot).index(state.clock.slot))
+    clock_position = (state.clock.day, tuple(TimeSlot).index(state.clock.slot))
     if not awakened_by_clock:
         expected_goal = "Earn enough yen to pay rent"
-    elif position < (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)):
+    elif clock_position < (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)):
         expected_goal = "Register with the Tokyo Hunter Guild"
     elif protagonist.rent_arrears:
         expected_goal = f"Clear ¥{protagonist.rent_arrears:,} in rent arrears"
@@ -335,6 +335,13 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             _require_integer_range(
                 f"protagonist.relationships[{name!r}].{field}",
                 getattr(relationship, field), minimum, maximum)
+    registered_by_clock = clock_position >= (
+        4, tuple(TimeSlot).index(TimeSlot.AFTERNOON))
+    has_aiko = "Aiko Sato" in protagonist.relationships
+    if (
+            protagonist.guild_registered != registered_by_clock or
+            has_aiko != registered_by_clock):
+        raise ValueError("Invalid save Guild registration evidence")
     for speaker, connections in state.relationship_network.items():
         if speaker not in npc_names:
             raise ValueError(
