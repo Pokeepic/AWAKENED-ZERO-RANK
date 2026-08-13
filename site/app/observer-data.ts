@@ -112,6 +112,7 @@ export type ObserverSnapshot = {
     discovered: string[];
     investigations: PortalInvestigation[];
   };
+  path?: string;
 };
 export type PresentationContract = {
   animation_cues: string[];
@@ -623,12 +624,19 @@ export function isPresentationContract(
 }
 
 export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const snapshotKeys = [
+    "activity", "clock", "economy", "environment", "identity", "portals",
+    "protagonist", "relationships", "schema_version", "seed", "story",
+  ];
+  const hasValidEnvelope =
+    hasExactKeys(value, snapshotKeys) ||
+    (hasExactKeys(value, [...snapshotKeys, "path"].sort()) &&
+      typeof value.path === "string");
   if (
-    !isRecord(value) ||
-    !hasExactKeys(value, [
-      "activity", "clock", "economy", "environment", "identity", "portals",
-      "protagonist", "relationships", "schema_version", "seed", "story",
-    ]) ||
+    !hasValidEnvelope ||
     value.schema_version !== 4 ||
     !isInteger(value.seed) ||
     !isIdentity(value.identity) ||

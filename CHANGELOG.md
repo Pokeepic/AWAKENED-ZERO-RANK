@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.234.0 - Snapshot path provenance
+
+- Browser verification now matches Python by accepting one optional string `path` provenance field on otherwise exact observer snapshots.
+- Path provenance remains excluded from the canonical content digest, so moving an authenticated snapshot does not change or weaken its identity.
+- Non-string paths and every other unknown top-level field still fail closed. Simulator and schemas are unchanged.
+
 ## 0.233.0 - Story ending reconciliation
 
 - The browser now recomputes isolated, resilient, and prepared counts from the authenticated completed-story ledger and requires the ending projection to match them exactly.
