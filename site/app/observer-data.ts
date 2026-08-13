@@ -60,7 +60,7 @@ export type ObserverSnapshot = {
     total_anchors: number;
     ending: StoryEnding | null;
     ending_reached: boolean;
-    next: { title: string; day: number; days_remaining: number } | null;
+    next: { key: string; title: string; day: number; days_remaining: number } | null;
   };
   relationships: Relationship[];
   portals: { discovered: string[] };
@@ -130,12 +130,12 @@ const LOCATIONS = new Set([
   "Kita-Senju Hunter Supply",
 ]);
 const STORY_ANCHORS = [
-  { day: 183, title: "The Adachi Warning" },
-  { day: 365, title: "The Tokyo Fracture" },
-  { day: 548, title: "The Foreign Signal" },
-  { day: 730, title: "The Guild Reckoning" },
-  { day: 913, title: "The Zero-Rank Choice" },
-  { day: 1095, title: "The Awakened Horizon" },
+  { day: 183, key: "arc_adachi_warning", title: "The Adachi Warning" },
+  { day: 365, key: "arc_tokyo_fracture", title: "The Tokyo Fracture" },
+  { day: 548, key: "arc_foreign_signal", title: "The Foreign Signal" },
+  { day: 730, key: "arc_guild_reckoning", title: "The Guild Reckoning" },
+  { day: 913, key: "arc_zero_rank_choice", title: "The Zero-Rank Choice" },
+  { day: 1095, key: "arc_awakened_horizon", title: "The Awakened Horizon" },
 ] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -144,6 +144,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
+}
+
+function hasExactKeys(value: Record<string, unknown>, keys: string[]): boolean {
+  const actual = Object.keys(value).sort();
+  return actual.length === keys.length && keys.every((key, index) => key === actual[index]);
 }
 
 function isInteger(value: unknown, minimum = 0): value is number {
@@ -165,6 +170,7 @@ function isIntegerInRange(
 function isIdentity(value: unknown): value is Identity {
   return (
     isRecord(value) &&
+    hasExactKeys(value, ["algorithm", "digest"]) &&
     value.algorithm === "sha256" &&
     typeof value.digest === "string" &&
     /^[0-9a-f]{64}$/.test(value.digest)
@@ -176,6 +182,7 @@ function isEnvironment(
 ): value is ObserverSnapshot["environment"] {
   return (
     isRecord(value) &&
+    hasExactKeys(value, ["gate_alert_level", "season", "temperature_c", "weather"]) &&
     isString(value.weather) &&
     value.season === "Summer" &&
     isInteger(value.gate_alert_level) &&
@@ -195,6 +202,7 @@ function hasRenderedStrings(
 function isActivityEvent(value: unknown): value is ActivityEvent {
   return (
     isRecord(value) &&
+    hasExactKeys(value, ["action", "day", "outcome", "reason", "slot"]) &&
     hasRenderedStrings(value, ["action", "outcome", "reason", "slot"]) &&
     isInteger(value.day, 1) &&
     TIME_SLOTS.includes(value.slot as (typeof TIME_SLOTS)[number])
@@ -242,6 +250,7 @@ function isActivity(
 function isRelationship(value: unknown): value is Relationship {
   return (
     isRecord(value) &&
+    hasExactKeys(value, ["affection", "familiarity", "loyalty", "name", "role", "tension", "trust"]) &&
     hasRenderedStrings(value, ["name", "role"]) &&
     RELATIONSHIP_ROLES[value.name as string] === value.role &&
     Number.isSafeInteger(value.trust) &&
@@ -278,6 +287,8 @@ function isStoryNext(
   return (
     value === null ||
     (isRecord(value) &&
+      hasExactKeys(value, ["day", "days_remaining", "key", "title"]) &&
+      isString(value.key) &&
       isString(value.title) &&
       isInteger(value.day, 1) &&
       isInteger(value.days_remaining))
@@ -290,6 +301,7 @@ function isStoryEnding(
   return (
     value === null ||
     (isRecord(value) &&
+      hasExactKeys(value, ["id", "isolated_count", "prepared_count", "resilient_count", "summary", "tier", "title"]) &&
       hasRenderedStrings(value, ["id", "summary", "tier", "title"]) &&
       isInteger(value.isolated_count) &&
       isInteger(value.prepared_count) &&
@@ -379,6 +391,7 @@ function isStory(
     return (
       value.completed_count < value.total_anchors &&
       expected !== undefined &&
+      value.next.key === expected.key &&
       value.next.title === expected.title &&
       value.next.day === expected.day &&
       value.next.days_remaining === Math.max(0, value.next.day - currentDay)
@@ -411,6 +424,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !isInteger(value.seed) ||
     !isIdentity(value.identity) ||
     !isRecord(value.clock) ||
+    !hasExactKeys(value.clock, ["day", "slot"]) ||
     !isInteger(value.clock.day, 1) ||
     !isString(value.clock.slot) ||
     !isEnvironment(value.environment) ||

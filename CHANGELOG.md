@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.222.0 - Exact rendered record shapes
+
+- Small records rendered by the browser now require their exact schema keys, matching the Python verifier instead of accepting undeclared shadow fields.
+- Story countdowns now authenticate the canonical anchor key as well as the title and day.
+- Added focused shadow-field coverage across identity, clock, environment, activity, relationships, and story countdowns. Larger unrendered projections are unchanged.
+
 ## 0.221.0 - Protagonist lifecycle consistency
 
 - Browser-rendered rank and ability must now form a possible simulator lifecycle: Unranked pairs with no ability, while every ranked state carries Threat Sense or its Echo Fragment extension.
