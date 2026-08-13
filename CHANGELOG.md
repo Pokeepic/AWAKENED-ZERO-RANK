@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.210.0 - Canonical signed-trust relationships
+
+- Corrected browser trust validation to accept the simulator's full signed integer range from -100 through 100, so valid strained relationships no longer fail closed.
+- Fractional or out-of-range trust values are rejected, and rendered relationships must have unique names in canonical ascending order.
+- Added focused negative-boundary, fractional, out-of-range, reversed-order, and duplicate-identity regression checks.
+- Simulator, balance, schemas, RL behavior, observer artifacts, presentation, and read-only capabilities are unchanged.
+
 ## 0.209.0 - Browser-verified activity chronology
 
 - Added the canonical four-slot timeline vocabulary to the browser trust boundary and reject recent events with unsupported slots.

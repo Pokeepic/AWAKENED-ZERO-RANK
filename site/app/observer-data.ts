@@ -173,10 +173,21 @@ function isRelationship(value: unknown): value is Relationship {
   return (
     isRecord(value) &&
     hasRenderedStrings(value, ["name", "role"]) &&
-    isNumberInRange(value.trust, 0, 100)
+    Number.isInteger(value.trust) &&
+    (value.trust as number) >= -100 &&
+    (value.trust as number) <= 100
   );
 }
 
+function isRelationships(value: unknown): value is Relationship[] {
+  if (!Array.isArray(value) || !value.every(isRelationship)) {
+    return false;
+  }
+  const names = value.map((relationship) => relationship.name);
+  return names.every(
+    (name, index) => index === 0 || names[index - 1] < name,
+  );
+}
 function isStoryNext(
   value: unknown,
 ): value is ObserverSnapshot["story"]["next"] {
@@ -291,8 +302,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
   if (
     !isActivity(value.activity, value.clock.day, value.clock.slot) ||
         !isStory(value.story, value.clock.day) ||
-    !Array.isArray(value.relationships) ||
-    !value.relationships.every(isRelationship) ||
+    !isRelationships(value.relationships) ||
     !isRecord(value.portals) ||
     !Array.isArray(value.portals.discovered) ||
     !value.portals.discovered.every(isString) ||
