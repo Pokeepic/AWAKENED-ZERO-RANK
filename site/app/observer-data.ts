@@ -97,6 +97,12 @@ const PORTAL_NAMES = new Set([
   "Glass Office Labyrinth",
 ]);
 const HUNTER_RANKS = new Set(["Unranked", "F", "E", "D", "C"]);
+const RELATIONSHIP_ROLES: Record<string, string> = {
+  "Aiko Sato": "F-rank guild clerk",
+  "Daichi Mori": "Rank E patrol leader",
+  "Haruto Ishikawa": "hunter supply owner",
+  "Mei Kuroda": "independent portal researcher",
+};
 const LOCATIONS = new Set([
   "Adachi Apartment",
   "Kita-Senju",
@@ -221,6 +227,7 @@ function isRelationship(value: unknown): value is Relationship {
   return (
     isRecord(value) &&
     hasRenderedStrings(value, ["name", "role"]) &&
+    RELATIONSHIP_ROLES[value.name as string] === value.role &&
     Number.isInteger(value.trust) &&
     (value.trust as number) >= -100 &&
     (value.trust as number) <= 100

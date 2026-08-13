@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.217.0 - Authored relationship catalogue
+
+- Browser-rendered relationships now require one of the four authored recurring characters and that character's exact canonical role.
+- Empty and partial relationship lists remain valid, as do signed trust values from -100 through 100; invented people and reassigned roles fail closed.
+- Added focused coverage for every authored character, an invented relationship, and a canonical character with an invented role. Simulator and schemas are unchanged.
+
 ## 0.216.0 - Fail-closed observer schema versions
 
 - The browser now accepts only observer snapshot schema 4 and nested story-progress schema 3, matching the Python verifier and current published artifacts.
