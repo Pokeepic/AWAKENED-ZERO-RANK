@@ -110,6 +110,9 @@ const MOODS = new Set([
   "Exhausted",
   "Overwhelmed",
 ]);
+function isRankAbilityConsistent(rank: string, ability: string): boolean {
+  return rank === "Unranked" ? ability === "None" : ability !== "None";
+}
 const RELATIONSHIP_ROLES: Record<string, string> = {
   "Aiko Sato": "F-rank guild clerk",
   "Daichi Mori": "Rank E patrol leader",
@@ -430,6 +433,10 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !ABILITIES.has(protagonist.ability as string) ||
     !MOODS.has(protagonist.mood as string) ||
     !HUNTER_RANKS.has(protagonist.hunter_rank as string) ||
+    !isRankAbilityConsistent(
+      protagonist.hunter_rank as string,
+      protagonist.ability as string,
+    ) ||
     !LOCATIONS.has(protagonist.location as string) ||
     !isRecord(protagonist.resources) ||
     !RESOURCE_NAMES.every((name) =>

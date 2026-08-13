@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.221.0 - Protagonist lifecycle consistency
+
+- Browser-rendered rank and ability must now form a possible simulator lifecycle: Unranked pairs with no ability, while every ranked state carries Threat Sense or its Echo Fragment extension.
+- Individually valid but impossible rank/ability mixtures fail closed before rendering.
+- Updated independent-field fixtures to use possible combinations and added focused impossible-lifecycle coverage. Simulator and schemas are unchanged.
+
 ## 0.220.0 - Authored protagonist identity
 
 - The browser now requires the invariant protagonist name, the three simulator-authored ability states, and the six simulator-authored moods before rendering them.
