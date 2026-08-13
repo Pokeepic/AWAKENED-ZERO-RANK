@@ -233,6 +233,8 @@ function isActivity(
 ): value is ObserverSnapshot["activity"] {
   if (
     !isRecord(value) ||
+    !hasExactKeys(value, ["key_memories", "recent_events"]) ||
+    !Array.isArray(value.key_memories) ||
     !Array.isArray(value.recent_events) ||
     value.recent_events.length > 12 ||
     !value.recent_events.every(isActivityEvent)
@@ -289,6 +291,9 @@ function isRelationships(value: unknown): value is Relationship[] {
 function isPortals(value: unknown): value is ObserverSnapshot["portals"] {
   if (
     !isRecord(value) ||
+    !hasExactKeys(value, ["active_plan", "discovered", "investigations"]) ||
+    !(value.active_plan === null || isString(value.active_plan)) ||
+    !Array.isArray(value.investigations) ||
     !Array.isArray(value.discovered) ||
     !value.discovered.every(
       (name) => isString(name) && PORTAL_NAMES.has(name),
@@ -387,6 +392,11 @@ function isStory(
 ): value is ObserverSnapshot["story"] {
   if (
     !isRecord(value) ||
+    !hasExactKeys(value, [
+      "completed", "completed_count", "ending", "ending_reached", "next",
+      "schema_version", "total_anchors",
+    ]) ||
+    !Array.isArray(value.completed) ||
     value.schema_version !== 3 ||
     !isInteger(value.completed_count) ||
     value.total_anchors !== STORY_ANCHORS.length ||
@@ -446,6 +456,10 @@ export function isPresentationContract(
 export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
   if (
     !isRecord(value) ||
+    !hasExactKeys(value, [
+      "activity", "clock", "economy", "environment", "identity", "portals",
+      "protagonist", "relationships", "schema_version", "seed", "story",
+    ]) ||
     value.schema_version !== 4 ||
     !isInteger(value.seed) ||
     !isIdentity(value.identity) ||
@@ -454,6 +468,11 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     !isInteger(value.clock.day, 1) ||
     !isString(value.clock.slot) ||
     !isEnvironment(value.environment) ||
+    !isRecord(value.economy) ||
+    !hasExactKeys(value.economy, [
+      "meal_cost", "rent_arrears", "rent_cost", "rent_due_day",
+      "rent_payments", "shop_visits", "wage_modifier",
+    ]) ||
     !isRecord(value.protagonist)
   ) {
     return false;
@@ -461,6 +480,10 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
 
   const protagonist = value.protagonist;
   if (
+    !hasExactKeys(protagonist, [
+      "ability", "current_goal", "equipment", "hunter_rank", "location",
+      "mood", "name", "progression", "resources",
+    ]) ||
     !hasRenderedStrings(protagonist, [
       "name",
       "hunter_rank",
@@ -478,12 +501,21 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       protagonist.ability as string,
     ) ||
     !LOCATIONS.has(protagonist.location as string) ||
+    !isRecord(protagonist.equipment) ||
+    !hasExactKeys(protagonist.equipment, ["armor", "inventory", "weapon"]) ||
     !isRecord(protagonist.resources) ||
+    !hasExactKeys(protagonist.resources, [
+      "energy", "health", "hunger", "money", "morale", "stress",
+    ]) ||
     !RESOURCE_NAMES.every((name) =>
       isIntegerInRange(protagonist.resources[name], 0, 100),
     ) ||
     !isInteger(protagonist.resources.money) ||
     !isRecord(protagonist.progression) ||
+    !hasExactKeys(protagonist.progression, [
+      "ability_mastery", "combat_readiness", "fitness", "knowledge",
+      "missions_attempted", "missions_completed", "rank_points",
+    ]) ||
     !isIntegerInRange(protagonist.progression.combat_readiness, 0, 100) ||
     !["rank_points", "fitness", "knowledge"].every((name) =>
       isInteger(protagonist.progression[name]))

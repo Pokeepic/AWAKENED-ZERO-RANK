@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.224.0 - Complete snapshot envelope
+
+- The browser now requires the exact schema-4 top-level snapshot envelope and exact structural keys for activity, economy, portals, protagonist, equipment, resources, progression, and story.
+- Missing required projections and undeclared structural sections fail closed even when the currently visible subset would otherwise render.
+- Added focused coverage for twelve omitted or shadowed structural cases. Detailed semantics for unrendered values remain the Python publisher's responsibility.
+
 ## 0.223.0 - Exact presentation contract
 
 - The browser now requires the complete nine-field presentation contract and its exact authored comparison version, animation cues, update modes, and recent-activity relations.
