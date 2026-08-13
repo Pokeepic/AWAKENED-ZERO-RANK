@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.231.0 - Completed story record integrity
+
+- The browser now requires the authenticated completed-story array length to match its declared count and validates every entry's exact record shape.
+- Completed entries must follow the canonical anchor prefix with valid chronology, known focus characters, supported outcome tiers, and non-empty outcome text.
+- Added focused malformed-record coverage and updated completed-arc fixtures to carry honest ledger data. Simulator and schemas are unchanged.
+
 ## 0.230.0 - Key memory integrity
 
 - The browser now validates the complete authenticated key-memory ledger, including its five-entry limit, exact record shape, current-day chronology, importance bounds, and non-empty summaries.

@@ -45,6 +45,14 @@ export type StoryEnding = {
   tier: string;
   title: string;
 };
+export type CompletedStory = {
+  day: number;
+  focus_npcs: string[];
+  key: string;
+  outcome: string;
+  tier: string;
+  title: string;
+};
 export type ObserverSnapshot = {
   schema_version: number;
   seed: number;
@@ -90,6 +98,7 @@ export type ObserverSnapshot = {
   };
   activity: { key_memories: KeyMemory[]; recent_events: ActivityEvent[] };
   story: {
+    completed: CompletedStory[];
     schema_version: number;
     completed_count: number;
     total_anchors: number;
@@ -450,6 +459,31 @@ function isStoryNext(
   );
 }
 
+function isCompletedStory(
+  value: unknown,
+  index: number,
+  currentDay: number,
+): value is CompletedStory {
+  const anchor = STORY_ANCHORS[index];
+  return (
+    anchor !== undefined &&
+    isRecord(value) &&
+    hasExactKeys(value, ["day", "focus_npcs", "key", "outcome", "tier", "title"]) &&
+    value.day === anchor.day &&
+    value.day <= currentDay &&
+    value.key === anchor.key &&
+    value.title === anchor.title &&
+    isString(value.outcome) &&
+    ["isolated", "resilient", "prepared", "legacy-unavailable"].includes(
+      value.tier as string,
+    ) &&
+    Array.isArray(value.focus_npcs) &&
+    value.focus_npcs.every(
+      (name) => isString(name) && name in RELATIONSHIP_ROLES,
+    )
+  );
+}
+
 function isStoryEnding(
   value: unknown,
 ): value is StoryEnding | null {
@@ -532,6 +566,9 @@ function isStory(
     !Array.isArray(value.completed) ||
     value.schema_version !== 3 ||
     !isInteger(value.completed_count) ||
+    value.completed_count !== value.completed.length ||
+    !value.completed.every((entry, index) =>
+      isCompletedStory(entry, index, currentDay)) ||
     value.total_anchors !== STORY_ANCHORS.length ||
     value.completed_count > value.total_anchors ||
     typeof value.ending_reached !== "boolean" ||
