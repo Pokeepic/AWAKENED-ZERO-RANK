@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.198.0 — Verified chronicle advance signal
+
+- A newly authenticated snapshot whose SHA-256 identity differs from the previously rendered snapshot now produces a brief Chronicle advanced / verified live-region announcement and restrained observer pulse.
+- Initial loads and identity-stable refreshes remain quiet; stale refresh status retains priority, and the signal is driven only after the complete runtime and integrity boundary succeeds.
+- The 1.8-second signal timer is replaced safely on rapid updates and cleared on unmount. Existing reduced-motion CSS disables the new hero and status animations.
+- Added focused identity-change, timeout-cleanup, announcement, styling, and reduced-motion checks. Simulator, balance, schemas, and RL behavior are unchanged.
+
 ## 0.197.0 — Runtime-validated observer payloads
 
 - Downloaded contract and snapshot JSON now remain unknown until executable runtime guards validate every field rendered by the observer, including identity, clock, environment, protagonist strings, bounded resources, progression, recent activity, story state, relationships, and unique portal names.
