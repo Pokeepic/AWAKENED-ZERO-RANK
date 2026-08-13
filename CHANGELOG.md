@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.207.0 - Honest empty chronicle states
+
+- Valid new-timeline snapshots with no recent decisions, trusted relationships, or discovered portals now show concise explanatory empty states instead of visually blank panels.
+- Empty-state copy remains observational and introduces no actions, controls, or invented simulation data; populated collections retain their existing presentation.
+- Added focused three-collection conditional-render, exact-copy, count, and shared-style regression checks.
+- Simulator, balance, schemas, RL behavior, observer artifacts, refresh behavior, and read-only capabilities are unchanged.
+
 ## 0.206.0 - Complete story-ending observer state
 
 - Added explicit browser types and runtime validation for the authenticated named-ending projection, including title, summary, tier, identity, and outcome counts.
