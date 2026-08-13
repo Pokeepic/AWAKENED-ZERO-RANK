@@ -97,6 +97,19 @@ const PORTAL_NAMES = new Set([
   "Glass Office Labyrinth",
 ]);
 const HUNTER_RANKS = new Set(["Unranked", "F", "E", "D", "C"]);
+const ABILITIES = new Set([
+  "None",
+  "Threat Sense",
+  "Threat Sense / Echo Fragment",
+]);
+const MOODS = new Set([
+  "Uneasy",
+  "Anxious",
+  "Steady",
+  "Hopeful",
+  "Exhausted",
+  "Overwhelmed",
+]);
 const RELATIONSHIP_ROLES: Record<string, string> = {
   "Aiko Sato": "F-rank guild clerk",
   "Daichi Mori": "Rank E patrol leader",
@@ -413,6 +426,9 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       "mood",
       "current_goal",
     ]) ||
+    protagonist.name !== "Ren Takahashi" ||
+    !ABILITIES.has(protagonist.ability as string) ||
+    !MOODS.has(protagonist.mood as string) ||
     !HUNTER_RANKS.has(protagonist.hunter_rank as string) ||
     !LOCATIONS.has(protagonist.location as string) ||
     !isRecord(protagonist.resources) ||

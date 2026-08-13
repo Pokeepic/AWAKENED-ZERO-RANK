@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.220.0 - Authored protagonist identity
+
+- The browser now requires the invariant protagonist name, the three simulator-authored ability states, and the six simulator-authored moods before rendering them.
+- Invented identities, abilities, and emotional states fail closed; dynamic goals remain unrestricted because legitimate rent-arrears goals contain changing amounts.
+- Added focused coverage for every valid ability and mood plus invented visible protagonist text. Simulator and schemas are unchanged.
+
 ## 0.219.0 - Story clock consistency
 
 - Browser-rendered story progress now requires every claimed completed anchor to have reached its fixed authored day on the simulation clock.
