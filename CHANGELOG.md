@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.264.0 - Complete save event text
+
+- Save validation now rejects events with a missing action, decision reason, or outcome, matching observer artifact requirements.
+- Incomplete event prose can no longer enter a persisted chronicle.
+- Added rejection coverage for every event text field and verified that invalid saves cannot replace an existing timeline.
+
 ## 0.263.0 - Strict save event chronology
 
 - Save validation now rejects duplicate day-and-slot event positions, matching the observer snapshot and browser rules.

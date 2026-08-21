@@ -326,6 +326,12 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     previous_event_position: tuple[int, int] | None = None
     for index, event in enumerate(state.events):
         _require_integer_range(f"events[{index}].day", event.day, 1, state.clock.day)
+        for field in ("action", "reason", "outcome"):
+            value = getattr(event, field)
+            if not isinstance(value, str) or not value:
+                raise ValueError(
+                    f"Invalid save field events[{index}].{field}: "
+                    "expected non-empty text")
         position = (event.day, slot_order[event.slot])
         if position >= clock_position:
             raise ValueError(

@@ -508,6 +508,21 @@ class PersistenceSafetyTests(unittest.TestCase):
                 save_simulation(simulation, destination)
             self.assertFalse(destination.exists())
 
+    def test_events_require_complete_text(self) -> None:
+        for field in ("action", "reason", "outcome"):
+            with self.subTest(field=field), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=110)
+                simulation.run(1)
+                simulation.state.events[-1] = replace(
+                    simulation.state.events[-1], **{field: ""})
+                destination = Path(temporary_directory) / "timeline.json"
+                destination.write_text("existing timeline", encoding="utf-8")
+                with self.assertRaisesRegex(
+                        ValueError, rf"events\[0\]\.{field}.*non-empty text"):
+                    save_simulation(simulation, destination)
+                self.assertEqual(
+                    destination.read_text(encoding="utf-8"), "existing timeline")
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30
