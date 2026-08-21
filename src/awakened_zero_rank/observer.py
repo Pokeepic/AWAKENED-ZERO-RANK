@@ -20,15 +20,17 @@ if TYPE_CHECKING:
     from .simulation import Simulation
 
 
-OBSERVER_SNAPSHOT_SCHEMA_VERSION = 4
+OBSERVER_SNAPSHOT_SCHEMA_VERSION = 5
 OBSERVER_COMPARISON_SCHEMA_VERSION = 8
 OBSERVER_PRESENTATION_CONTRACT_SCHEMA_VERSION = 2
 OBSERVER_SITE_COMPARISON_ARTIFACT_SCHEMA_VERSION = 1
 RECENT_EVENT_LIMIT = 12
 KEY_MEMORY_LIMIT = 5
+CONVERSATION_LIMIT = 6
 _SNAPSHOT_KEYS = {
-    "activity", "clock", "economy", "environment", "identity", "portals",
-    "protagonist", "relationships", "schema_version", "seed", "story",
+    "activity", "clock", "conversations", "economy", "environment",
+    "identity", "portals", "protagonist", "relationships", "schema_version",
+    "seed", "story",
 }
 _SLOTS = ("Morning", "Afternoon", "Evening", "Late Night")
 _RESOURCE_KEYS = {"energy", "health", "hunger", "money", "morale", "stress"}
@@ -61,6 +63,9 @@ _RELATIONSHIP_KEYS = {
 }
 _EVENT_KEYS = {"action", "day", "outcome", "reason", "slot"}
 _MEMORY_KEYS = {"day", "importance", "summary"}
+_CONVERSATION_KEYS = {
+    "day", "intention", "npc_line", "npc_name", "reaction", "ren_line",
+}
 _ENVIRONMENT_KEYS = {"gate_alert_level", "season", "temperature_c", "weather"}
 _PORTAL_KEYS = {"active_plan", "discovered", "investigations"}
 _INVESTIGATION_KEYS = {
@@ -663,6 +668,32 @@ def _validate_relationships(relationships: Any, day: int, slot: str) -> None:
                 "Observer snapshot relationship introduction evidence is invalid")
 
 
+def _validate_conversations(conversations: Any, current_day: int) -> None:
+    if not isinstance(conversations, list) or len(conversations) > CONVERSATION_LIMIT:
+        raise ValueError("Observer snapshot conversations are malformed")
+    introduction_days = {
+        "Aiko Sato": 4,
+        "Daichi Mori": 5,
+        "Mei Kuroda": 6,
+        "Haruto Ishikawa": 9,
+    }
+    previous_day = 0
+    for conversation in conversations:
+        if (not isinstance(conversation, dict) or
+                set(conversation) != _CONVERSATION_KEYS):
+            raise ValueError("Observer snapshot conversation record is malformed")
+        day = _integer(conversation["day"], "conversation day")
+        npc_name = conversation["npc_name"]
+        text_fields = (
+            "intention", "npc_line", "npc_name", "reaction", "ren_line")
+        if (any(not isinstance(conversation[field], str) or
+                not conversation[field].strip() for field in text_fields) or
+                npc_name not in NPCS or day < introduction_days[npc_name] or
+                day < previous_day or day > current_day):
+            raise ValueError("Observer snapshot conversation chronology is invalid")
+        previous_day = day
+
+
 def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     clock = snapshot["clock"]
     if not isinstance(clock, dict) or set(clock) != {"day", "slot"}:
@@ -671,6 +702,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     if day < 1 or clock["slot"] not in _SLOTS:
         raise ValueError("Observer snapshot clock is invalid")
     _validate_activity(snapshot["activity"], day, clock["slot"])
+    _validate_conversations(snapshot["conversations"], day)
     _validate_economy(snapshot["economy"], day, clock["slot"])
     _validate_environment(snapshot["environment"], day, clock["slot"])
     _validate_portals(snapshot["portals"], day, clock["slot"])
@@ -1221,12 +1253,24 @@ def observer_snapshot(simulation: Simulation) -> dict[str, Any]:
         }
         for memory in protagonist.memories[:KEY_MEMORY_LIMIT]
     ]
+    conversations = [
+        {
+            "day": exchange.day,
+            "intention": exchange.intention,
+            "npc_line": exchange.npc_line,
+            "npc_name": exchange.npc_name,
+            "reaction": exchange.reaction,
+            "ren_line": exchange.ren_line,
+        }
+        for exchange in protagonist.dialogue_history[-CONVERSATION_LIMIT:]
+    ]
     snapshot = {
         "activity": {
             "key_memories": key_memories,
             "recent_events": recent_events,
         },
         "clock": {"day": state.clock.day, "slot": state.clock.slot.value},
+        "conversations": conversations,
         "economy": {
             "meal_cost": state.meal_cost,
             "rent_arrears": protagonist.rent_arrears,

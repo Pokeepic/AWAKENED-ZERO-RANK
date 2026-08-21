@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.275.0 - Authenticated conversation history
+
+- Advanced observer snapshots to schema 5 with a bounded, mutation-free projection of the six most recent complete recurring-character exchanges.
+- Added strict Python and browser validation for conversation shape, authored identity, introduction chronology, ordering, horizon, and nonblank dialogue.
+- Added a responsive read-only conversation section to the production observer and regenerated the authenticated demonstration artifacts.
+
 ## 0.274.0 - Persistent recurring-character exchanges
 
 - Added distinct guarded and trusted dialogue for Aiko, Daichi, Mei, and Haruto across routine, portal, injury, and guild contexts.

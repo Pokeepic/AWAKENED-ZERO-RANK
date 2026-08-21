@@ -18,6 +18,14 @@ export type KeyMemory = {
   importance: number;
   summary: string;
 };
+export type Conversation = {
+  day: number;
+  intention: string;
+  npc_line: string;
+  npc_name: string;
+  reaction: string;
+  ren_line: string;
+};
 export type Relationship = {
   affection: number;
   familiarity: number;
@@ -62,6 +70,7 @@ export type ObserverSnapshot = {
   seed: number;
   identity: Identity;
   clock: { day: number; slot: string };
+  conversations: Conversation[];
   economy: {
     meal_cost: number;
     rent_arrears: number;
@@ -492,6 +501,39 @@ function isActivity(
     )
   );
 }
+
+function isConversations(
+  value: unknown,
+  currentDay: number,
+): value is Conversation[] {
+  if (!Array.isArray(value) || value.length > 6) return false;
+  const introductionDays: Record<string, number> = {
+    "Aiko Sato": 4,
+    "Daichi Mori": 5,
+    "Mei Kuroda": 6,
+    "Haruto Ishikawa": 9,
+  };
+  return value.every((conversation, index) =>
+    isRecord(conversation) &&
+    hasExactKeys(conversation, [
+      "day", "intention", "npc_line", "npc_name", "reaction", "ren_line",
+    ]) &&
+    hasRenderedStrings(conversation, [
+      "intention", "npc_line", "npc_name", "reaction", "ren_line",
+    ]) &&
+    ["intention", "npc_line", "npc_name", "reaction", "ren_line"].every(
+      (key) => (conversation[key] as string).trim().length > 0,
+    ) &&
+    conversation.npc_name in RELATIONSHIP_ROLES &&
+    isIntegerInRange(
+      conversation.day,
+      introductionDays[conversation.npc_name as string],
+      currentDay,
+    ) &&
+    (index === 0 ||
+      (value[index - 1] as Conversation).day <= conversation.day)
+  );
+}
 function isRelationship(value: unknown): value is Relationship {
   return (
     isRecord(value) &&
@@ -806,8 +848,8 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     return false;
   }
   const snapshotKeys = [
-    "activity", "clock", "economy", "environment", "identity", "portals",
-    "protagonist", "relationships", "schema_version", "seed", "story",
+    "activity", "clock", "conversations", "economy", "environment", "identity",
+    "portals", "protagonist", "relationships", "schema_version", "seed", "story",
   ];
   const hasValidEnvelope =
     hasExactKeys(value, snapshotKeys) ||
@@ -815,7 +857,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       typeof value.path === "string");
   if (
     !hasValidEnvelope ||
-    value.schema_version !== 4 ||
+    value.schema_version !== 5 ||
     !Number.isSafeInteger(value.seed) ||
     !isIdentity(value.identity) ||
     !isRecord(value.clock) ||
@@ -934,6 +976,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
 
   if (
     !isActivity(value.activity, value.clock.day, value.clock.slot) ||
+    !isConversations(value.conversations, value.clock.day) ||
         !isStory(value.story, value.clock.day) ||
     !isRelationships(
       value.relationships,

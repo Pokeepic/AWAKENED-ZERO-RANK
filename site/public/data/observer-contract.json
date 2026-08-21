@@ -21,9 +21,9 @@
   ],
   "comparison_schema_version": 8,
   "contract_schema_version": 2,
-  "contract_sha256": "f6423a4059f686133d71bab5d1b5ea0d32775bae911e41dac57252392ae0bc47",
+  "contract_sha256": "9b2e896b4157e351efd04671d6fdc5dbe9a579b4b3244e125bf80126946fc06e",
   "control_capabilities": [],
-  "observer_schema_version": 4,
+  "observer_schema_version": 5,
   "read_only": true,
   "recent_activity_relations": [
     "append",

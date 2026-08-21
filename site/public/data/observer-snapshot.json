@@ -118,6 +118,24 @@
     "day": 11,
     "slot": "Morning"
   },
+  "conversations": [
+    {
+      "day": 7,
+      "intention": "Express gratitude",
+      "npc_line": "Most hunters forget advice the moment the gate opens. I'm glad you didn't.",
+      "npc_name": "Aiko Sato",
+      "reaction": "pleased",
+      "ren_line": "You remembered what I said before. Thank you, Aiko."
+    },
+    {
+      "day": 10,
+      "intention": "Portal encounter",
+      "npc_line": "Tell me what happened, not what you think the report wants to hear.",
+      "npc_name": "Aiko Sato",
+      "reaction": "attentive",
+      "ren_line": "I can give you the honest version."
+    }
+  ],
   "economy": {
     "meal_cost": 700,
     "rent_arrears": 0,
@@ -135,9 +153,9 @@
   },
   "identity": {
     "algorithm": "sha256",
-    "digest": "2c33a2b03ab984c2bf0c6acb2f38ab1da0acf10cf66be80bb72547525a1dca68"
+    "digest": "7cb899807fe16feca170e83aabce0769d75a975909e689d3f9ea8668e9a6c84d"
   },
-  "path": "C:\\Users\\user\\AppData\\Local\\Temp\\azr-dialogue-d0980c432c9e40cd9abc8c9211c2cff4\\ren.json",
+  "path": "C:\\Users\\user\\AppData\\Local\\Temp\\azr-conversations-01298869a31345e3ad0f97e9f4f0f408\\ren.json",
   "portals": {
     "active_plan": null,
     "discovered": [
@@ -236,7 +254,7 @@
       "trust": 3
     }
   ],
-  "schema_version": 4,
+  "schema_version": 5,
   "seed": 42,
   "story": {
     "completed": [],

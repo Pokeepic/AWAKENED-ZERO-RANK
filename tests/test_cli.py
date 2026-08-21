@@ -241,7 +241,7 @@ class CliValidationTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), original)
         snapshot = json.loads(output.getvalue())
         self.assertEqual(snapshot["path"], str(path))
-        self.assertEqual(snapshot["schema_version"], 4)
+        self.assertEqual(snapshot["schema_version"], 5)
         self.assertEqual(snapshot["seed"], 157)
         self.assertEqual(snapshot["clock"], {
             "day": simulation.state.clock.day,
@@ -457,7 +457,7 @@ class CliValidationTests(unittest.TestCase):
         summary = json.loads(output.getvalue())
         self.assertEqual(summary["path"], str(path))
         self.assertEqual(summary["status"], "valid")
-        self.assertEqual(summary["schema_version"], 4)
+        self.assertEqual(summary["schema_version"], 5)
         self.assertEqual(summary["seed"], 211)
         self.assertEqual(summary["day"], 1)
         self.assertEqual(summary["digest"], snapshot["identity"]["digest"])

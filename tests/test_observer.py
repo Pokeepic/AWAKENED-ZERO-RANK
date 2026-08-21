@@ -49,11 +49,12 @@ class ObserverSnapshotTests(unittest.TestCase):
         snapshot = observer_snapshot(simulation)
 
         self.assertEqual(simulation.state, before)
-        self.assertEqual(snapshot["schema_version"], 4)
+        self.assertEqual(snapshot["schema_version"], 5)
         self.assertEqual(snapshot["seed"], 163)
         self.assertEqual(snapshot["clock"], {"day": 1, "slot": "Morning"})
         self.assertEqual(snapshot["protagonist"]["name"], "Ren Takahashi")
         self.assertEqual(snapshot["relationships"], [])
+        self.assertEqual(snapshot["conversations"], [])
         self.assertEqual(snapshot["activity"], {
             "key_memories": [],
             "recent_events": [],
@@ -85,6 +86,52 @@ class ObserverSnapshotTests(unittest.TestCase):
             event["reason"] and event["outcome"]
             for event in activity["recent_events"]
         ))
+
+    def test_conversations_are_bounded_ordered_and_read_only(self) -> None:
+        simulation = Simulation(seed=181)
+        simulation.run(160)
+        before = deepcopy(simulation.state)
+
+        conversations = observer_snapshot(simulation)["conversations"]
+
+        self.assertEqual(simulation.state, before)
+        self.assertLessEqual(len(conversations), 6)
+        self.assertEqual(conversations, [
+            {
+                "day": exchange.day,
+                "intention": exchange.intention,
+                "npc_line": exchange.npc_line,
+                "npc_name": exchange.npc_name,
+                "reaction": exchange.reaction,
+                "ren_line": exchange.ren_line,
+            }
+            for exchange in simulation.state.protagonist.dialogue_history[-6:]
+        ])
+
+    def test_verifier_rejects_invalid_conversation_records(self) -> None:
+        simulation = Simulation(seed=187)
+        simulation.run(80)
+        original = observer_snapshot(simulation)
+        self.assertTrue(original["conversations"])
+
+        mutations = (
+            lambda item: item.update(npc_name="Unknown Hunter"),
+            lambda item: item.update(ren_line=""),
+            lambda item: item.update(day=1),
+            lambda item: item.update(day=original["clock"]["day"] + 1),
+        )
+        for mutate in mutations:
+            snapshot = deepcopy(original)
+            mutate(snapshot["conversations"][0])
+            _redigest(snapshot)
+            with self.assertRaisesRegex(ValueError, "conversation"):
+                verify_observer_snapshot(snapshot)
+
+        oversized = deepcopy(original)
+        oversized["conversations"] = oversized["conversations"] * 7
+        _redigest(oversized)
+        with self.assertRaisesRegex(ValueError, "conversations"):
+            verify_observer_snapshot(oversized)
 
     def test_identity_is_canonical_and_changes_after_a_transition(self) -> None:
         simulation = Simulation(seed=191)
@@ -118,7 +165,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(summary, {
             "day": 1,
             "digest": snapshot["identity"]["digest"],
-            "schema_version": 4,
+            "schema_version": 5,
             "seed": 197,
             "status": "valid",
         })
@@ -771,7 +818,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertIsNot(first, second)
         self.assertEqual(first["contract_schema_version"], 2)
-        self.assertEqual(first["observer_schema_version"], 4)
+        self.assertEqual(first["observer_schema_version"], 5)
         self.assertEqual(first["comparison_schema_version"], 8)
         self.assertTrue(first["read_only"])
         self.assertEqual(first["control_capabilities"], [])
@@ -804,7 +851,7 @@ class ObserverSnapshotTests(unittest.TestCase):
             "comparison_schema_version": 8,
             "contract_schema_version": 2,
             "contract_sha256": contract["contract_sha256"],
-            "observer_schema_version": 4,
+            "observer_schema_version": 5,
             "status": "valid",
         })
 
@@ -883,7 +930,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertIsNone(comparison["animation_cue"])
         self.assertEqual(comparison["changed_sections"], [])
         self.assertEqual(comparison["comparison_schema_version"], 8)
-        self.assertEqual(comparison["observer_schema_version"], 4)
+        self.assertEqual(comparison["observer_schema_version"], 5)
         self.assertEqual(comparison["left"]["digest"], comparison["right"]["digest"])
 
     def test_snapshot_comparison_reports_sorted_world_sections(self) -> None:
@@ -1086,7 +1133,7 @@ class ObserverSnapshotTests(unittest.TestCase):
                 "contract_sha256": observer_presentation_contract()[
                     "contract_sha256"],
                 "day": snapshot["clock"]["day"],
-                "observer_schema_version": 4,
+                "observer_schema_version": 5,
                 "seed": 487,
                 "snapshot_sha256": snapshot["identity"]["digest"],
                 "status": "valid",
