@@ -82,6 +82,14 @@ def _shop_priority(p: Protagonist, available_money: int | None = None) -> str | 
         return "Field Knife"
     if p.equipped_armor is None and affordable("Padded Jacket", reserve_rent=True):
         return "Padded Jacket"
+    if (p.health < 45 and p.item_count("Trauma Foam") < 1 and
+            rank_meets_requirement(p.hunter_rank, "E") and
+            affordable("Trauma Foam")):
+        return "Trauma Foam"
+    if (p.energy < 35 and p.item_count("Focus Ampoule") < 1 and
+            rank_meets_requirement(p.hunter_rank, "E") and
+            affordable("Focus Ampoule")):
+        return "Focus Ampoule"
     if p.item_count("Healing Gel") < 2 and p.health < 80 and affordable("Healing Gel"):
         return "Healing Gel"
     if p.item_count("Energy Drink") < 2 and p.energy < 65 and affordable("Energy Drink"):
@@ -103,6 +111,15 @@ def _shop_priority(p: Protagonist, available_money: int | None = None) -> str | 
                 affordable(name, reserve_rent=True)):
             return name
 
+    if (p.item_count("Trauma Foam") < 1 and
+            rank_meets_requirement(p.hunter_rank, "E") and
+            affordable("Trauma Foam")):
+        return "Trauma Foam"
+    if (p.item_count("Focus Ampoule") < 1 and
+            rank_meets_requirement(p.hunter_rank, "E") and
+            affordable("Focus Ampoule")):
+        return "Focus Ampoule"
+
     if p.item_count("Healing Gel") < 2 and affordable("Healing Gel"):
         return "Healing Gel"
     if p.item_count("Energy Drink") < 2 and affordable("Energy Drink"):
@@ -123,6 +140,10 @@ def _shop_score(p: Protagonist, slot: TimeSlot, alert: int) -> float:
         purchase_value = 14 * (2 - p.item_count(priority))
     elif priority == "Energy Drink" and p.energy < 60 and p.money >= ITEMS[priority].price:
         purchase_value = 12 * (2 - p.item_count(priority))
+    elif priority == "Trauma Foam":
+        purchase_value = 34 if p.health < 45 else 18
+    elif priority == "Focus Ampoule":
+        purchase_value = 30 if p.energy < 35 else 16
     elif priority == "Reinforced Machete":
         purchase_value = 62
     elif priority == "Gateweave Vest":

@@ -68,7 +68,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.330.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.340.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -252,6 +252,8 @@ class SimulationTests(unittest.TestCase):
         p.equipped_armor = "Padded Jacket"
         p.add_item("Healing Gel", 2)
         p.add_item("Energy Drink", 2)
+        p.add_item("Trauma Foam")
+        p.add_item("Focus Ampoule")
 
         outcome = _shop(p)
 
@@ -271,6 +273,60 @@ class SimulationTests(unittest.TestCase):
 
         self.assertIn("Healing Gel", outcome)
         self.assertEqual(p.equipped_weapon, "Field Knife")
+
+    def test_rank_e_shop_prioritizes_emergency_supplies_when_severe(self) -> None:
+        simulation = Simulation(seed=69)
+        p = simulation.state.protagonist
+        p.hunter_rank = "E"
+        p.money = 30_000
+        p.health = 40
+        p.equipped_weapon = "Field Knife"
+        p.equipped_armor = "Padded Jacket"
+
+        outcome = _shop(p)
+
+        self.assertIn("Trauma Foam", outcome)
+        self.assertEqual(p.item_count("Trauma Foam"), 1)
+        self.assertEqual(p.equipped_weapon, "Field Knife")
+
+    def test_emergency_supply_stock_is_bounded_to_one_each(self) -> None:
+        simulation = Simulation(seed=70)
+        p = simulation.state.protagonist
+        p.hunter_rank = "C"
+        p.money = 100_000
+        p.equipped_weapon = "Riftglass Katana"
+        p.equipped_armor = "Aegis Longcoat"
+        p.add_item("Healing Gel", 2)
+        p.add_item("Energy Drink", 2)
+        p.add_item("Trauma Foam")
+        p.add_item("Focus Ampoule")
+
+        outcome = _shop(p)
+
+        self.assertIn("already carried the planned field stock", outcome)
+        self.assertEqual(p.item_count("Trauma Foam"), 1)
+        self.assertEqual(p.item_count("Focus Ampoule"), 1)
+
+    def test_gate_mission_uses_advanced_supplies_before_starter_items(self) -> None:
+        simulation = Simulation(seed=72)
+        p = simulation.state.protagonist
+        p.guild_registered = True
+        p.hunter_rank = "E"
+        p.health = 40
+        p.energy = 25
+        p.add_item("Trauma Foam")
+        p.add_item("Focus Ampoule")
+        p.add_item("Healing Gel")
+        p.add_item("Energy Drink")
+
+        outcome = simulation._resolve_gate_mission()
+
+        self.assertIn("used Trauma Foam (+35 health)", outcome)
+        self.assertIn("used Focus Ampoule (+30 energy)", outcome)
+        self.assertEqual(p.item_count("Trauma Foam"), 0)
+        self.assertEqual(p.item_count("Focus Ampoule"), 0)
+        self.assertEqual(p.item_count("Healing Gel"), 1)
+        self.assertEqual(p.item_count("Energy Drink"), 1)
 
     def test_rank_e_catalog_upgrades_have_stronger_typed_bonuses(self) -> None:
         machete = ITEMS["Reinforced Machete"]

@@ -154,6 +154,13 @@ export const GATE_ENCOUNTER_CATALOG = [
   { difficulty: 82, minimumRank: "C", name: "Mirror Oni Vanguard", reward: 18000 },
 ] as const;
 
+export const FIELD_SUPPLY_CATALOG = [
+  { effect: "HEALTH +22", maximum: 2, minimumRank: "F", name: "Healing Gel", price: 900 },
+  { effect: "ENERGY +18", maximum: 2, minimumRank: "F", name: "Energy Drink", price: 450 },
+  { effect: "HEALTH +35", maximum: 1, minimumRank: "E", name: "Trauma Foam", price: 1800 },
+  { effect: "ENERGY +30", maximum: 1, minimumRank: "E", name: "Focus Ampoule", price: 1200 },
+] as const;
+
 export type PresentationContract = {
   animation_cues: string[];
   comparison_schema_version: number;

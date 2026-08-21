@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.340.0 - Emergency field supplies
+
+- Added Rank E Trauma Foam and Focus Ampoules for severe health and energy recovery.
+- Made emergency purchases outrank equipment upgrades during severe conditions while keeping one-item reserve caps.
+- Made Gate missions consume stronger supplies first, preserving starter items when advanced recovery is sufficient.
+- Added a Field Supplies observer panel with rank locks, effects, prices, bounded capacity, and live carried counts.
+- Verified 12 fixed seeds for 240 steps: every timeline survived, only one total injury occurred, none carried rent arrears, minimum health was 87, and emergency stock did not accumulate at the horizon.
+- No RL training or verdict change was produced.
+
 ## 0.330.0 - Rank-scaled Gate missions
 
 - Expanded the Gate encounter catalog from three starter threats to six authored F-through-C mission bands.

@@ -54,6 +54,12 @@ ITEMS = {
     "Padded Jacket": Item("Padded Jacket", "armor", 3_200, 5, "Basic protection against claws and debris."),
     "Healing Gel": Item("Healing Gel", "consumable", 900, description="Restores 22 health."),
     "Energy Drink": Item("Energy Drink", "consumable", 450, description="Restores 18 energy."),
+    "Trauma Foam": Item(
+        "Trauma Foam", "consumable", 1_800,
+        description="Restores 35 health.", minimum_rank="E"),
+    "Focus Ampoule": Item(
+        "Focus Ampoule", "consumable", 1_200,
+        description="Restores 30 energy.", minimum_rank="E"),
     "Reinforced Machete": Item(
         "Reinforced Machete", "weapon", 7_200, 11,
         "A durable Rank E blade for repeated Gate work.", "E"),

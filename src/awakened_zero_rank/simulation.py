@@ -477,10 +477,18 @@ class Simulation:
             investigation.cooperating_npc = None
             self.state.active_portal_plan = None
         preparation = []
+        if p.health < 60 and p.consume_item("Trauma Foam"):
+            healed = min(35, 100 - p.health)
+            p.health += healed
+            preparation.append(f"used Trauma Foam (+{healed} health)")
         if p.health < 68 and p.consume_item("Healing Gel"):
             healed = min(22, 100 - p.health)
             p.health += healed
             preparation.append(f"used Healing Gel (+{healed} health)")
+        if p.energy < 38 and p.consume_item("Focus Ampoule"):
+            restored = min(30, 100 - p.energy)
+            p.energy += restored
+            preparation.append(f"used Focus Ampoule (+{restored} energy)")
         if p.energy < 48 and p.consume_item("Energy Drink"):
             restored = min(18, 100 - p.energy)
             p.energy += restored
