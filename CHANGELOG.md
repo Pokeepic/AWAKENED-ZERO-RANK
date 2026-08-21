@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.261.0 - Fixed-event memory chronology
+
+- Browser, save, and Python observer validation now require Awakening and Guild-registration memories to be absent before their events and present afterward.
+- Fixed memories are authenticated across the complete lifecycle instead of only at the exact post-event snapshots.
+- Added premature-memory and missing-later-memory coverage across all three validation surfaces.
+
 ## 0.260.0 - Awakened mastery persistence
 
 - Browser, save, and Python observer validation now reject zero ability mastery after the Awakening assessment.

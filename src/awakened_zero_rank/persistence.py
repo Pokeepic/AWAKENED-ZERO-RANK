@@ -500,6 +500,25 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             (state.discovered_portals or state.portal_investigations or
              state.active_portal_plan is not None)):
         raise ValueError("Invalid save portal chronology")
+    awakening_position = (3, tuple(TimeSlot).index(TimeSlot.EVENING))
+    registration_position = (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON))
+    awakening_count = sum(
+        memory == Memory(
+            day=3,
+            summary="Awakening assessment: Awakened at Rank F with Threat Sense.",
+            importance=10)
+        for memory in protagonist.memories)
+    registration_count = sum(
+        memory.day == 4 and memory.importance == 8 and
+        re.fullmatch(
+            r"Guild registration: Aiko Sato issued an F-rank license; "
+            r"travel and filing cost ¥(?:0|[1-9]\d{0,2}(?:,\d{3})*)\.",
+            memory.summary) is not None
+        for memory in protagonist.memories)
+    if (
+            awakening_count != int(clock_position >= awakening_position) or
+            registration_count != int(clock_position >= registration_position)):
+        raise ValueError("Invalid save fixed-event memory chronology")
     fixed_events = {
         (3, tuple(TimeSlot).index(TimeSlot.EVENING)): (
             3, TimeSlot.AFTERNOON, "Awakening assessment",

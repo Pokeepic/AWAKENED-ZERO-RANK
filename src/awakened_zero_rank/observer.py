@@ -157,6 +157,28 @@ def _validate_fixed_event_activity(
         activity: dict[str, Any], current_day: int, current_slot: str) -> None:
     events = activity["recent_events"]
     current_position = (current_day, _SLOTS.index(current_slot))
+    awakening_position = (3, _SLOTS.index("Evening"))
+    registration_position = (4, _SLOTS.index("Afternoon"))
+    awakening_count = sum(
+        memory == {
+            "day": 3,
+            "importance": 10,
+            "summary": (
+                "Awakening assessment: Awakened at Rank F with Threat Sense."),
+        }
+        for memory in activity["key_memories"])
+    registration_count = sum(
+        memory["day"] == 4 and memory["importance"] == 8 and
+        re.fullmatch(
+            r"Guild registration: Aiko Sato issued an F-rank license; "
+            r"travel and filing cost ¥(?:0|[1-9]\d{0,2}(?:,\d{3})*)\.",
+            memory["summary"]) is not None
+        for memory in activity["key_memories"])
+    if (
+            awakening_count != int(current_position >= awakening_position) or
+            registration_count != int(
+                current_position >= registration_position)):
+        raise ValueError("Observer snapshot fixed-event memory chronology is invalid")
     fixed_events = {
         (3, _SLOTS.index("Evening")): {
             "action": "Awakening assessment",

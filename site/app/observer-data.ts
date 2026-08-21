@@ -463,11 +463,9 @@ function isActivity(
       memory.summary,
     )
   ).length;
-  const fixedMemoryValid = currentPosition === awakeningPosition
-    ? awakeningMemoryCount === 1
-    : currentPosition === registrationPosition
-      ? awakeningMemoryCount === 1 && registrationMemoryCount === 1
-      : true;
+  const fixedMemoryValid =
+    awakeningMemoryCount === Number(currentPosition >= awakeningPosition) &&
+    registrationMemoryCount === Number(currentPosition >= registrationPosition);
   return (
     beforeCurrent &&
     memoriesCanonical &&

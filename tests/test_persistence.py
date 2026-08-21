@@ -13,7 +13,7 @@ import unittest
 from unittest.mock import patch
 
 from awakened_zero_rank.cli import main as cli_main
-from awakened_zero_rank.models import TimeSlot
+from awakened_zero_rank.models import Memory, TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.story import story_progress
@@ -457,7 +457,27 @@ class PersistenceSafetyTests(unittest.TestCase):
                     memory for memory in simulation.state.protagonist.memories
                     if memory.day != day]
                 destination = Path(temporary_directory) / "timeline.json"
-                with self.assertRaisesRegex(ValueError, "memory evidence"):
+                with self.assertRaisesRegex(ValueError, "memory (?:evidence|chronology)"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
+    def test_fixed_event_memories_follow_their_chronology(self) -> None:
+        awakening = Memory(
+            3, "Awakening assessment: Awakened at Rank F with Threat Sense.", 10)
+        registration = Memory(
+            4, "Guild registration: Aiko Sato issued an F-rank license; "
+            "travel and filing cost ¥0.", 8)
+        for steps, mutate in (
+                (9, lambda memories: memories.append(awakening)),
+                (11, lambda memories: memories.clear()),
+                (12, lambda memories: memories.append(registration)),
+                (14, lambda memories: memories.clear())):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=107)
+                simulation.run(steps)
+                mutate(simulation.state.protagonist.memories)
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "memory chronology"):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 

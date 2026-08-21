@@ -336,6 +336,24 @@ class ObserverSnapshotTests(unittest.TestCase):
         _redigest(plan)
         with self.assertRaisesRegex(ValueError, "active portal plan"):
             verify_observer_snapshot(plan)
+    def test_verifier_rejects_fixed_memory_chronology(self) -> None:
+        later = Simulation(seed=331)
+        later.run(14)
+        later_memories = observer_snapshot(later)["activity"]["key_memories"]
+        awakening = next(memory for memory in later_memories if memory["day"] == 3)
+        registration = next(memory for memory in later_memories if memory["day"] == 4)
+        for steps, memories in (
+                (9, [awakening]), (11, []),
+                (12, [awakening, registration]), (14, [])):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=331)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["activity"]["key_memories"] = deepcopy(memories)
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "memory chronology"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_protagonist(self) -> None:
         identity = observer_snapshot(Simulation(seed=311))
         identity["protagonist"]["name"] = ""
@@ -647,7 +665,7 @@ class ObserverSnapshotTests(unittest.TestCase):
                     memory for memory in snapshot["activity"]["key_memories"]
                     if memory["day"] != day]
                 _redigest(snapshot)
-                with self.assertRaisesRegex(ValueError, "memory evidence"):
+                with self.assertRaisesRegex(ValueError, "memory (?:evidence|chronology)"):
                     verify_observer_snapshot(snapshot)
 
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
