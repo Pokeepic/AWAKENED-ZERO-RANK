@@ -523,6 +523,18 @@ class PersistenceSafetyTests(unittest.TestCase):
                 self.assertEqual(
                     destination.read_text(encoding="utf-8"), "existing timeline")
 
+    def test_memories_require_summary_text(self) -> None:
+        simulation = Simulation(seed=111)
+        simulation.state.protagonist.memories.append(Memory(1, "", 1))
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            destination.write_text("existing timeline", encoding="utf-8")
+            with self.assertRaisesRegex(
+                    ValueError, r"memories\[0\]\.summary.*non-empty text"):
+                save_simulation(simulation, destination)
+            self.assertEqual(
+                destination.read_text(encoding="utf-8"), "existing timeline")
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30

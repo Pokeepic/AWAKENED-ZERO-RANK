@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.265.0 - Complete save memory text
+
+- Save validation now rejects memories with missing summary text, matching observer artifact requirements.
+- Blank recollections can no longer enter the persistent chronicle.
+- Added atomic-save rejection coverage and verified that an invalid memory cannot replace an existing timeline.
+
 ## 0.264.0 - Complete save event text
 
 - Save validation now rejects events with a missing action, decision reason, or outcome, matching observer artifact requirements.

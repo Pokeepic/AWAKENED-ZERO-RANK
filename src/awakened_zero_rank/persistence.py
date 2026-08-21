@@ -347,6 +347,10 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         _require_integer_range(
             f"protagonist.memories[{index}].importance",
             memory.importance, 1, 10)
+        if not isinstance(memory.summary, str) or not memory.summary:
+            raise ValueError(
+                f"Invalid save field protagonist.memories[{index}].summary: "
+                "expected non-empty text")
     for index, exchange in enumerate(protagonist.dialogue_history):
         _require_integer_range(
             f"protagonist.dialogue_history[{index}].day",
