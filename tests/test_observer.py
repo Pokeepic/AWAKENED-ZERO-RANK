@@ -577,7 +577,19 @@ class ObserverSnapshotTests(unittest.TestCase):
                 snapshot["portals"]["discovered"] = [
                     "Ashen Shopping Arcade"]
                 _redigest(snapshot)
-                with self.assertRaisesRegex(ValueError, "portal evidence"):
+                with self.assertRaisesRegex(ValueError, "portal chronology"):
+                    verify_observer_snapshot(snapshot)
+
+    def test_verifier_rejects_portals_before_registration(self) -> None:
+        for steps in (0, 10, 13):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=317)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["portals"]["discovered"] = [
+                    "Ashen Shopping Arcade"]
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "portal chronology"):
                     verify_observer_snapshot(snapshot)
 
     def test_verifier_requires_fixed_event_activity_evidence(self) -> None:

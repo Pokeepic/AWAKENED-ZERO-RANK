@@ -288,13 +288,10 @@ def _validate_portals(portals: Any, day: int, slot: str) -> None:
     if active_plan is not None and active_plan not in names:
         raise ValueError("Observer snapshot active portal plan is invalid")
     if (
-            (day, _SLOTS.index(slot)) in {
-                (3, _SLOTS.index("Evening")),
-                (4, _SLOTS.index("Afternoon")),
-            } and
+            (day, _SLOTS.index(slot)) <=
+            (4, _SLOTS.index("Afternoon")) and
             (discovered or investigations or active_plan is not None)):
-        raise ValueError(
-            "Observer snapshot fixed-event portal evidence is invalid")
+        raise ValueError("Observer snapshot portal chronology is invalid")
 
 def _validate_economy(economy: Any, day: int, slot: str) -> None:
     keys = {

@@ -387,7 +387,19 @@ class PersistenceSafetyTests(unittest.TestCase):
                 simulation.state.discovered_portals.append(
                     "Ashen Shopping Arcade")
                 destination = Path(temporary_directory) / "timeline.json"
-                with self.assertRaisesRegex(ValueError, "portal evidence"):
+                with self.assertRaisesRegex(ValueError, "portal chronology"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
+    def test_portal_evidence_cannot_predate_registration(self) -> None:
+        for steps in (0, 10, 13):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=102)
+                simulation.run(steps)
+                simulation.state.discovered_portals.append(
+                    "Ashen Shopping Arcade")
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "portal chronology"):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 

@@ -580,9 +580,8 @@ function isPortals(
   const investigationNames = investigations.map(
     (investigation) => investigation.portal_name as string,
   );
-  const fixedLifecycleBoundary =
-    (day === 3 && slot === "Evening") ||
-    (day === 4 && slot === "Afternoon");
+  const beforeHunterWorkUnlock =
+    day < 4 || (day === 4 && ["Morning", "Afternoon"].includes(slot));
   return (
     new Set(value.discovered).size === value.discovered.length &&
     investigationNames.every(
@@ -590,7 +589,7 @@ function isPortals(
     ) &&
     investigationNames.every((name) => value.discovered.includes(name)) &&
     (value.active_plan === null || investigationNames.includes(value.active_plan)) &&
-    !(fixedLifecycleBoundary &&
+    !(beforeHunterWorkUnlock &&
       (value.discovered.length > 0 || investigations.length > 0 ||
        value.active_plan !== null))
   );

@@ -490,10 +490,11 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             "Invalid save field active_portal_plan: "
             "expected a catalogued investigated portal")
     if (
-            clock_position in fixed_hunter_record_positions and
+            clock_position <=
+            (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)) and
             (state.discovered_portals or state.portal_investigations or
              state.active_portal_plan is not None)):
-        raise ValueError("Invalid save fixed-event portal evidence")
+        raise ValueError("Invalid save portal chronology")
     fixed_events = {
         (3, tuple(TimeSlot).index(TimeSlot.EVENING)): (
             3, TimeSlot.AFTERNOON, "Awakening assessment",
