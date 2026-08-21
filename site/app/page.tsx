@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
+  EQUIPMENT_CATALOG,
   RESOURCE_NAMES,
   verifyArtifacts,
   type ObserverSnapshot,
@@ -106,6 +107,15 @@ export default function Home() {
   const discovered = snapshot.portals.discovered;
   const investigations = snapshot.portals.investigations;
   const inventory = Object.entries(p.equipment.inventory);
+  const rankOrder = { Unranked: 0, F: 1, E: 2, D: 3, C: 4 } as const;
+  const currentRank = rankOrder[p.hunter_rank as keyof typeof rankOrder];
+  const equipmentStatus = (item: (typeof EQUIPMENT_CATALOG)[number]) => {
+    if (p.equipment[item.kind] === item.name) return "EQUIPPED";
+    if ((p.equipment.inventory[item.name] ?? 0) > 0) return "OWNED";
+    if (currentRank < rankOrder[item.minimumRank]) return `LOCKED / RANK ${item.minimumRank}`;
+    const shortfall = Math.max(0, item.price + snapshot.economy.rent_cost - p.resources.money);
+    return shortfall > 0 ? `SAVE ¥${shortfall.toLocaleString()}` : "AVAILABLE";
+  };
   const storyProgress = Math.round((snapshot.story.completed_count / snapshot.story.total_anchors) * 100);
   const currentSlot = SLOT_NUMBER[snapshot.clock.slot as keyof typeof SLOT_NUMBER];
   const rentStatus = snapshot.economy.rent_arrears > 0
@@ -129,6 +139,8 @@ export default function Home() {
       <section className="conversations"><h2 className="section-label">RECENT CONVERSATIONS <span>{snapshot.conversations.length} RETAINED</span></h2>{snapshot.conversations.length===0?<p className="empty-state">No recurring conversation has been recorded yet.</p>:snapshot.conversations.map((conversation)=><article key={`${conversation.day}-${conversation.npc_name}-${conversation.intention}`}><header><time>DAY {conversation.day}</time><b>{conversation.npc_name}</b><small>{conversation.reaction}</small></header><blockquote><p>“{conversation.npc_line}”</p><footer>REN / “{conversation.ren_line}”</footer></blockquote></article>)}</section>
 
       <section className="hunter"><h2 className="section-label">HUNTER RECORD <span>{p.ability}</span></h2><div className="stats"><Metric name="Readiness" value={p.progression.combat_readiness} /><Metric name="Rank points" value={p.progression.rank_points} /><Metric name="Mastery" value={p.progression.ability_mastery} /><Metric name="Knowledge" value={p.progression.knowledge} /></div><div className="record-line"><span>MISSIONS</span><b>{p.progression.missions_completed} / {p.progression.missions_attempted} CLEARED</b></div><div className="record-line"><span>WEAPON</span><b>{p.equipment.weapon ?? "None"}</b></div><div className="record-line"><span>ARMOR</span><b>{p.equipment.armor ?? "None"}</b></div><div className="inventory" aria-label="Inventory">{inventory.length === 0 ? <small>NO CARRIED EQUIPMENT</small> : inventory.map(([name, quantity]) => <span key={name}>{name}<b>x{quantity}</b></span>)}</div></section>
+
+      <section className="gear"><h2 className="section-label">EQUIPMENT PROGRESSION <span>RENT RESERVE PROTECTED</span></h2><p className="gear-intro">The shop reveals what Ren can equip next without spending the ¥{snapshot.economy.rent_cost.toLocaleString()} held for rent.</p><div className="gear-grid">{EQUIPMENT_CATALOG.map((item) => { const status = equipmentStatus(item); return <article key={item.name} className={status.startsWith("LOCKED") ? "locked" : ""}><header><small>RANK {item.minimumRank} / {item.kind.toUpperCase()}</small><b>{item.name}</b></header><dl><div><dt>COMBAT</dt><dd>+{item.bonus}</dd></div><div><dt>PRICE</dt><dd>¥{item.price.toLocaleString()}</dd></div></dl><strong>{status}</strong></article>; })}</div></section>
 
       <section className="economy"><h2 className="section-label">LIFE LEDGER <span>JPY</span></h2><strong className="ledger-balance">¥{p.resources.money.toLocaleString()}</strong><div className="record-line"><span>RENT / DAY {snapshot.economy.rent_due_day}</span><b>{rentStatus}</b></div><div className="record-line"><span>RENT COST</span><b>¥{snapshot.economy.rent_cost.toLocaleString()}</b></div><div className="record-line"><span>MEAL COST</span><b>¥{snapshot.economy.meal_cost.toLocaleString()}</b></div><div className="record-line"><span>SHOP VISITS</span><b>{snapshot.economy.shop_visits}</b></div></section>
 

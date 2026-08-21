@@ -127,6 +127,20 @@ export type ObserverSnapshot = {
   };
   path?: string;
 };
+export type EquipmentCatalogItem = {
+  bonus: number;
+  kind: "weapon" | "armor";
+  minimumRank: "F" | "E";
+  name: string;
+  price: number;
+};
+export const EQUIPMENT_CATALOG: readonly EquipmentCatalogItem[] = [
+  { bonus: 7, kind: "weapon", minimumRank: "F", name: "Field Knife", price: 2400 },
+  { bonus: 5, kind: "armor", minimumRank: "F", name: "Padded Jacket", price: 3200 },
+  { bonus: 11, kind: "weapon", minimumRank: "E", name: "Reinforced Machete", price: 7200 },
+  { bonus: 9, kind: "armor", minimumRank: "E", name: "Gateweave Vest", price: 8400 },
+] as const;
+
 export type PresentationContract = {
   animation_cues: string[];
   comparison_schema_version: number;

@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.300.0 - Visible equipment progression
+
+- Added a dedicated responsive equipment-progression panel to the private observer.
+- Shows every authored weapon and armor tier with rank requirement, combat bonus, and price.
+- Derives locked, available, owned, equipped, and savings-gap states from the verified protagonist and economy snapshot.
+- Makes the protected ¥8,000 rent reserve explicit so affordability matches autonomous shop policy.
+- Added browser contract coverage for the exact catalog and progression presentation; no simulation or RL behavior changed.
+
 ## 0.290.0 - Rank-gated equipment progression
 
 - Added the Rank E Reinforced Machete and Gateweave Vest as stronger upgrades to the starter equipment tier.
