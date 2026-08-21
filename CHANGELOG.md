@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.262.0 - Save event clock parity
+
+- Save validation now rejects events in the current or a later clock slot, matching the existing Python observer and browser rules.
+- Same-day future events can no longer pass merely because their day number equals the save day.
+- Added current-slot and later-slot atomic-save rejection coverage; valid saves and schemas are unchanged.
+
 ## 0.261.0 - Fixed-event memory chronology
 
 - Browser, save, and Python observer validation now require Awakening and Guild-registration memories to be absent before their events and present afterward.

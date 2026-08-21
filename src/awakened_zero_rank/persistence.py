@@ -327,6 +327,9 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     for index, event in enumerate(state.events):
         _require_integer_range(f"events[{index}].day", event.day, 1, state.clock.day)
         position = (event.day, slot_order[event.slot])
+        if position >= clock_position:
+            raise ValueError(
+                "Invalid save field events: event is at or ahead of clock")
         if previous_event_position is not None and position < previous_event_position:
             raise ValueError(
                 "Invalid save field events: expected chronological order")

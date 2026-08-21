@@ -481,6 +481,20 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
+    def test_events_must_precede_save_clock(self) -> None:
+        for steps, slot in ((1, TimeSlot.AFTERNOON), (2, TimeSlot.LATE_NIGHT)):
+            with self.subTest(steps=steps, slot=slot), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=108)
+                simulation.run(steps)
+                simulation.state.events[-1] = replace(
+                    simulation.state.events[-1],
+                    day=simulation.state.clock.day,
+                    slot=slot)
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "ahead of clock"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30
