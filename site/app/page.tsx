@@ -9,6 +9,8 @@ import {
   GATE_ENCOUNTER_CATALOG,
   PORTAL_PROFILE_CATALOG,
   RESOURCE_NAMES,
+  SEASONAL_EVENT_CATALOG,
+  nextSeasonalEvent,
   verifyArtifacts,
   type ObserverSnapshot,
   type PresentationContract,
@@ -123,6 +125,7 @@ export default function Home() {
   const currentSlot = SLOT_NUMBER[snapshot.clock.slot as keyof typeof SLOT_NUMBER];
   const calendarYear = Math.floor((snapshot.clock.day - 1) / 365) + 1;
   const dayOfYear = ((snapshot.clock.day - 1) % 365) + 1;
+  const nextSeasonal = nextSeasonalEvent(snapshot.clock.day);
   const rentStatus = snapshot.economy.rent_arrears > 0
     ? `¥${snapshot.economy.rent_arrears.toLocaleString()} overdue`
     : snapshot.economy.rent_payments > 0
@@ -154,6 +157,8 @@ export default function Home() {
       <section className="economy"><h2 className="section-label">LIFE LEDGER <span>JPY</span></h2><strong className="ledger-balance">¥{p.resources.money.toLocaleString()}</strong><div className="record-line"><span>RENT / DAY {snapshot.economy.rent_due_day}</span><b>{rentStatus}</b></div><div className="record-line"><span>RENT COST</span><b>¥{snapshot.economy.rent_cost.toLocaleString()}</b></div><div className="record-line"><span>MEAL COST</span><b>¥{snapshot.economy.meal_cost.toLocaleString()}</b></div><div className="record-line"><span>SHOP VISITS</span><b>{snapshot.economy.shop_visits}</b></div></section>
 
       <section className="story"><h2 className="section-label">THREE-YEAR ARC <span>{snapshot.story.completed_count}/{snapshot.story.total_anchors}</span></h2><div className="arc-meter" role="progressbar" aria-label="Story arc progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={storyProgress}><i style={{ width: `${storyProgress}%` }} /></div>{snapshot.story.next ? <><h3>{snapshot.story.next.title}</h3><p>Fixed story anchor arrives on day {snapshot.story.next.day}.</p><strong>{snapshot.story.next.days_remaining}<small>DAYS REMAINING</small></strong></> : <><h3>{snapshot.story.ending?.title || "Ending reached"}</h3><p>{snapshot.story.ending?.summary || "Ren's three-year chronicle is complete."}</p><strong>ARC<small>COMPLETE</small></strong></>}{snapshot.story.completed.length > 0 && <ol className="completed-arcs">{snapshot.story.completed.map((arc) => <li key={arc.key}><time>DAY {arc.day}</time><div><b>{arc.title}</b><p>{arc.scene}</p><p>{arc.outcome}</p>{arc.international_link && <small>WORLD LINK / {arc.international_link}</small>}</div><small>{arc.tier}</small></li>)}</ol>}</section>
+
+      <section className="calendar"><h2 className="section-label">SEASONAL CALENDAR <span>REPEATS YEARLY</span></h2><div className="calendar-next"><small>NEXT MOMENT / DAY {nextSeasonal.day}</small><b>{nextSeasonal.title}</b><strong>{nextSeasonal.daysRemaining}<small>DAYS</small></strong></div><div className="calendar-grid">{SEASONAL_EVENT_CATALOG.map((event) => <article key={event.title} className={event.title === nextSeasonal.title ? "next" : undefined}><small>{event.season.toUpperCase()} / D{event.dayOfYear}</small><b>{event.title}</b><span>{event.place}</span></article>)}</div><p>These world events recur without giving the observer control. Ren's condition and known relationships shape who shares them.</p></section>
 
       <section className="people"><h2 className="section-label">PEOPLE IN ORBIT <span>{snapshot.relationships.length} KNOWN</span></h2>{snapshot.relationships.length===0&&<p className="empty-state">No trusted relationships have formed yet.</p>}{snapshot.relationships.map((relationship) => <article key={relationship.name}><i aria-hidden="true">{relationship.name.split(" ").map((part) => part[0]).join("")}</i><div><b>{relationship.name}</b><small>{relationship.role}</small></div><dl><div><dt>TRUST</dt><dd>{relationship.trust}</dd></div><div><dt>FAMILIAR</dt><dd>{relationship.familiarity}</dd></div><div><dt>LOYAL</dt><dd>{relationship.loyalty}</dd></div><div><dt>TENSION</dt><dd>{relationship.tension}</dd></div></dl></article>)}</section>
 

@@ -10,7 +10,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
-from .content import NPCS, PORTALS, STORY_ANCHORS
+from .content import NPCS, PORTALS, SEASONAL_EVENTS, STORY_ANCHORS
 from .environment import season_for_day, weather_for
 from .models import (AUTHORED_RENT_COST, AUTHORED_RENT_DUE_DAY, Clock,
                      DelayedConsequence, DialogueExchange, Event, Memory,
@@ -382,6 +382,20 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
                     f"Invalid save field protagonist.dialogue_history"
                     f"[{index}].{field}: expected non-empty text")
     story_anchor_keys = {anchor.key for anchor in STORY_ANCHORS}
+    seasonal_keys = {event.key for event in SEASONAL_EVENTS}
+    if len(state.calendar_events_seen) != len(set(state.calendar_events_seen)):
+        raise ValueError(
+            "Invalid save field calendar_events_seen: expected unique entries")
+    for key in state.calendar_events_seen:
+        if key == "Tanabata" or key in story_anchor_keys:
+            continue
+        parts = key.split(":")
+        if (len(parts) != 3 or parts[0] != "seasonal" or
+                not parts[1].isdigit() or int(parts[1]) < 1 or
+                parts[2] not in seasonal_keys):
+            raise ValueError(
+                "Invalid save field calendar_events_seen: "
+                f"unsupported calendar key {key!r}")
     resolved_story_keys = set(state.story_outcomes)
     calendar_story_keys = set(state.calendar_events_seen) & story_anchor_keys
     if resolved_story_keys != calendar_story_keys:

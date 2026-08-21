@@ -21,6 +21,18 @@ from awakened_zero_rank.story import story_progress
 
 
 class PersistenceSafetyTests(unittest.TestCase):
+    def test_save_rejects_unknown_or_duplicate_seasonal_history(self) -> None:
+        for history in (
+                ["seasonal:1:invented"],
+                ["seasonal:1:tanabata", "seasonal:1:tanabata"]):
+            simulation = Simulation(seed=17)
+            simulation.state.calendar_events_seen = history
+            with TemporaryDirectory() as temporary_directory:
+                destination = Path(temporary_directory) / "calendar.json"
+                with self.assertRaisesRegex(ValueError, "calendar_events_seen"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_save_rejects_impossible_season_weather_combination(self) -> None:
         simulation = Simulation(seed=17)
         simulation.run(365)

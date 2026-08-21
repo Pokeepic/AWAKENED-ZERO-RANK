@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.370.0` |
+| Release | `0.380.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 334 Python + 76 browser |
+| Automated tests | 338 Python + 77 browser |
 
 ## Why this project exists
 
@@ -34,7 +34,7 @@ The project follows six rules:
 
 - Four daily periods: Morning, Afternoon, Evening, and Late Night.
 - Work, meals, rest, study, training, commuting, rent, arrears, and debt recovery.
-- A fixed 365-day Summer–Autumn–Winter–Spring calendar with seeded seasonal weather, plus variable wages, meal costs, seasonal events, and Gate alerts.
+- A fixed 365-day Summer–Autumn–Winter–Spring calendar with seeded weather and four authored recurring life events that affect Ren's condition, relationships, and neighborhood priorities.
 - Persistent health, energy, hunger, stress, morale, injuries, money, equipment, and inventory.
 
 ### Hunter progression

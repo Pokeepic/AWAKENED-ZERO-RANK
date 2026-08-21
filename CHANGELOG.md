@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.380.0 - Recurring seasonal life
+
+- Added four authored annual moments across Summer, Autumn, Winter, and Spring: Tanabata, Tsukimi, a year-end ward patrol, and hanami.
+- Seasonal moments now affect Ren's condition, world objectives, and relationships with recurring characters who are already part of his life.
+- Preserved the original day-seven Tanabata outcome and seeded early-game behavior while adding stable per-year occurrence identities for persistence.
+- Added strict save validation for unique, catalogued seasonal occurrence keys.
+- Added a read-only Seasonal Calendar to the observer with the next event, countdown, locations, and complete yearly schedule.
+- Kept fixed six-month story anchors at higher priority and did not run or adopt a new RL experiment.
+
 ## 0.370.0 - Four-season Tokyo calendar
 
 - Replaced the permanent Summer environment with a fixed, repeating 365-day Summer, Autumn, Winter, and Spring calendar.

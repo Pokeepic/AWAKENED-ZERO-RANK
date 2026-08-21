@@ -20,7 +20,7 @@ from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS, gate_encounters_for_rank
 from awakened_zero_rank.content import (
-    NPCS, PORTALS, STORY_ANCHORS, available_portals, dialogue_context_count, npc_context_count,
+    NPCS, PORTALS, SEASONAL_EVENTS, STORY_ANCHORS, available_portals, dialogue_context_count, npc_context_count,
     portal_situation_count)
 from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.learning import (
@@ -69,7 +69,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.370.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.380.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -621,6 +621,46 @@ class SimulationTests(unittest.TestCase):
         events = simulation.run(32)
         self.assertEqual(sum(event.action == "Tanabata evening" for event in events), 1)
         self.assertIn("Tanabata", simulation.state.calendar_events_seen)
+        self.assertIn("seasonal:1:tanabata", simulation.state.calendar_events_seen)
+
+    def test_seasonal_catalog_matches_the_fixed_calendar(self) -> None:
+        self.assertEqual(len(SEASONAL_EVENTS), 4)
+        self.assertEqual(len({event.key for event in SEASONAL_EVENTS}), 4)
+        self.assertEqual(
+            [season_for_day(event.day_of_year) for event in SEASONAL_EVENTS],
+            [event.season for event in SEASONAL_EVENTS])
+
+    def test_authored_seasonal_event_changes_life_and_known_relationship(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(28)
+        p = simulation.state.protagonist
+        before_trust = p.relationships["Daichi Mori"].trust
+        p.energy, p.stress, p.morale = 50, 50, 50
+        simulation.state.clock.day = 137
+        simulation.state.clock.slot = TimeSlot.EVENING
+
+        event = simulation.step()
+
+        self.assertEqual(event.action, "Tsukimi river watch")
+        self.assertEqual((p.energy, p.stress, p.morale), (53, 45, 55))
+        self.assertEqual(p.relationships["Daichi Mori"].trust, before_trust + 1)
+        self.assertIn("seasonal:1:tsukimi", simulation.state.calendar_events_seen)
+
+    def test_seasonal_events_repeat_once_per_year(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(28)
+        simulation.state.clock.day = 372
+        simulation.state.clock.slot = TimeSlot.EVENING
+
+        first = simulation.step()
+        simulation.state.clock.day = 372
+        simulation.state.clock.slot = TimeSlot.EVENING
+        second = simulation.step()
+
+        self.assertEqual(first.action, "Tanabata evening")
+        self.assertNotEqual(second.action, "Tanabata evening")
+        self.assertEqual(
+            simulation.state.calendar_events_seen.count("seasonal:2:tanabata"), 1)
 
     def test_gate_log_includes_environment(self) -> None:
         events = Simulation(seed=42).run(180)

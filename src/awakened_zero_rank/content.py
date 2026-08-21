@@ -41,6 +41,25 @@ class StoryAnchor:
 
 
 @dataclass(frozen=True)
+class SeasonalEvent:
+    key: str
+    day_of_year: int
+    slot: str
+    season: str
+    title: str
+    location: str
+    premise: str
+    focus_npcs: tuple[str, ...]
+    energy: int = 0
+    stress: int = 0
+    morale: int = 0
+    objective: str | None = None
+
+    def occurrence_key(self, year: int) -> str:
+        return f"seasonal:{year}:{self.key}"
+
+
+@dataclass(frozen=True)
 class NPCProfile:
     name: str
     role: str
@@ -87,6 +106,33 @@ PORTAL_EXPANSION_DAY = 46
 def available_portals(day: int) -> tuple[PortalProfile, ...]:
     """Unlock the regional catalog without changing early seeded chronicles."""
     return PORTALS if day >= PORTAL_EXPANSION_DAY else PORTALS[:6]
+
+
+SEASONAL_EVENTS = (
+    SeasonalEvent(
+        "tanabata", 7, "Evening", "Summer", "Tanabata evening",
+        "Arakawa Riverbank",
+        "Paper wishes and festival lights give the neighborhood one hopeful night.",
+        ("Aiko Sato",), stress=-8),
+    SeasonalEvent(
+        "tsukimi", 137, "Evening", "Autumn", "Tsukimi river watch",
+        "Arakawa Riverbank",
+        "The ward gathers beneath the harvest moon and watches the river for Gate-light.",
+        ("Daichi Mori",), energy=3, stress=-5, morale=5,
+        objective="relationships"),
+    SeasonalEvent(
+        "year_end_patrol", 228, "Afternoon", "Winter", "Year-end ward patrol",
+        "Adachi Gate Zone",
+        "Neighbors and low-rank hunters check heaters, exits, and warning routes before the coldest night.",
+        ("Aiko Sato", "Daichi Mori"), energy=-7, stress=2, morale=4,
+        objective="survival"),
+    SeasonalEvent(
+        "hanami", 319, "Morning", "Spring", "Hanami morning",
+        "Arakawa Riverbank",
+        "Cherry blossoms turn a familiar evacuation route into a place worth protecting.",
+        ("Mei Kuroda", "Haruto Ishikawa"), energy=4, stress=-6, morale=7,
+        objective="stability"),
+)
 
 STORY_ANCHORS = (
     StoryAnchor(

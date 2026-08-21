@@ -6,7 +6,9 @@ from .agent import UtilityAgent
 from .dialogue import (
     contextual_line, resolve_aiko_dialogue, resolve_contextual_encounter,
 )
-from .content import NPCS, PORTALS, STORY_ANCHORS, StoryAnchor, available_portals, scheduled_location
+from .content import (NPCS, PORTALS, SEASONAL_EVENTS, STORY_ANCHORS,
+                      SeasonalEvent, StoryAnchor, available_portals,
+                      scheduled_location)
 from .environment import season_for_day, seasonal_weather, weather_for
 from .models import (DelayedConsequence, Event, Memory, PortalInvestigation,
                      Relationship, TimeSlot, WorldState)
@@ -233,6 +235,31 @@ class Simulation:
             "a fixed six-month story anchor arrived (world event)",
             f"{anchor.premise} {resolution}")
 
+    def _seasonal_event(self, seasonal: SeasonalEvent, year: int) -> Event:
+        """Apply one authored annual moment without taking control from Ren."""
+        state = self.state
+        protagonist = state.protagonist
+        protagonist.location = seasonal.location
+        protagonist.energy += seasonal.energy
+        protagonist.stress += seasonal.stress
+        protagonist.morale += seasonal.morale
+        present = []
+        for name in seasonal.focus_npcs:
+            relationship = protagonist.relationships.get(name)
+            if relationship is not None:
+                relationship.change(1, 1)
+                present.append(name)
+        if seasonal.objective is not None:
+            state.objective_scores[seasonal.objective] += 2
+        protagonist.clamp()
+        state.calendar_events_seen.append(seasonal.occurrence_key(year))
+        company = (f" {' and '.join(present)} joined Ren." if present else
+                   " Ren observed it quietly among his neighbors.")
+        return Event(
+            state.clock.day, state.clock.slot, seasonal.title,
+            "an authored seasonal moment arrived on the recurring calendar (world event)",
+            f"{seasonal.premise}{company}")
+
     def _special_event(self) -> Event | None:
         clock = self.state.clock
         p = self.state.protagonist
@@ -244,6 +271,22 @@ class Simulation:
             None)
         if story_anchor is not None and clock.slot is TimeSlot.MORNING:
             return self._story_anchor_event(story_anchor)
+
+        day_of_year = ((clock.day - 1) % 365) + 1
+        calendar_year = ((clock.day - 1) // 365) + 1
+        seasonal = next(
+            (event for event in SEASONAL_EVENTS
+             if event.day_of_year == day_of_year and
+             event.slot == clock.slot.value),
+            None)
+        if seasonal is not None:
+            occurrence_key = seasonal.occurrence_key(calendar_year)
+            if occurrence_key not in self.state.calendar_events_seen:
+                # Preserve the original day-seven event and its historical key.
+                if calendar_year == 1 and seasonal.key == "tanabata":
+                    self.state.calendar_events_seen.append(occurrence_key)
+                else:
+                    return self._seasonal_event(seasonal, calendar_year)
 
         if clock.day == 7 and clock.slot.value == "Evening" and "Tanabata" not in self.state.calendar_events_seen:
             self.state.calendar_events_seen.append("Tanabata")

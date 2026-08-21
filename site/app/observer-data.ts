@@ -134,6 +134,28 @@ export type EquipmentCatalogItem = {
   name: string;
   price: number;
 };
+export type SeasonalCalendarEvent = {
+  dayOfYear: number;
+  season: "Summer" | "Autumn" | "Winter" | "Spring";
+  title: string;
+  place: string;
+};
+export const SEASONAL_EVENT_CATALOG: readonly SeasonalCalendarEvent[] = [
+  { dayOfYear: 7, season: "Summer", title: "Tanabata evening", place: "Arakawa Riverbank" },
+  { dayOfYear: 137, season: "Autumn", title: "Tsukimi river watch", place: "Arakawa Riverbank" },
+  { dayOfYear: 228, season: "Winter", title: "Year-end ward patrol", place: "Adachi Gate Zone" },
+  { dayOfYear: 319, season: "Spring", title: "Hanami morning", place: "Arakawa Riverbank" },
+];
+export function nextSeasonalEvent(day: number) {
+  const year = Math.floor((day - 1) / 365) + 1;
+  const candidates = SEASONAL_EVENT_CATALOG.map((event) => ({
+    event, day: (year - 1) * 365 + event.dayOfYear,
+  }));
+  const next = candidates.find((candidate) => candidate.day >= day) ?? {
+    event: SEASONAL_EVENT_CATALOG[0], day: year * 365 + SEASONAL_EVENT_CATALOG[0].dayOfYear,
+  };
+  return { ...next.event, day: next.day, daysRemaining: next.day - day };
+}
 export const EQUIPMENT_CATALOG: readonly EquipmentCatalogItem[] = [
   { bonus: 7, kind: "weapon", minimumRank: "F", name: "Field Knife", price: 2400 },
   { bonus: 5, kind: "armor", minimumRank: "F", name: "Padded Jacket", price: 3200 },
