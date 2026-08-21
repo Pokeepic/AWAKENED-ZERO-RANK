@@ -330,9 +330,9 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         if position >= clock_position:
             raise ValueError(
                 "Invalid save field events: event is at or ahead of clock")
-        if previous_event_position is not None and position < previous_event_position:
+        if previous_event_position is not None and position <= previous_event_position:
             raise ValueError(
-                "Invalid save field events: expected chronological order")
+                "Invalid save field events: expected strictly chronological order")
         previous_event_position = position
     for index, memory in enumerate(protagonist.memories):
         _require_integer_range(

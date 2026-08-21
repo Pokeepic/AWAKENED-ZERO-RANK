@@ -495,6 +495,19 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
+    def test_events_cannot_share_a_clock_position(self) -> None:
+        simulation = Simulation(seed=109)
+        simulation.run(2)
+        simulation.state.events[-1] = replace(
+            simulation.state.events[-1],
+            day=simulation.state.events[-2].day,
+            slot=simulation.state.events[-2].slot)
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            with self.assertRaisesRegex(ValueError, "strictly chronological order"):
+                save_simulation(simulation, destination)
+            self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30

@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.263.0 - Strict save event chronology
+
+- Save validation now rejects duplicate day-and-slot event positions, matching the observer snapshot and browser rules.
+- Duplicate timestamps can no longer create an ambiguous history order.
+- Added atomic-save rejection coverage; valid saves and schemas are unchanged.
+
 ## 0.262.0 - Save event clock parity
 
 - Save validation now rejects events in the current or a later clock slot, matching the existing Python observer and browser rules.
