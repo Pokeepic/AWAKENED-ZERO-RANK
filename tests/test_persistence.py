@@ -553,6 +553,24 @@ class PersistenceSafetyTests(unittest.TestCase):
                 self.assertEqual(
                     destination.read_text(encoding="utf-8"), "existing timeline")
 
+    def test_dialogue_history_must_be_chronological(self) -> None:
+        simulation = Simulation(seed=113)
+        simulation.state.protagonist.dialogue_history.extend((
+            DialogueExchange(
+                2, "Ask for guidance", "How should I prepare?", "Aiko Sato",
+                "Watch the exits first.", "attentive"),
+            DialogueExchange(
+                1, "Express gratitude", "Thank you.", "Aiko Sato",
+                "Stay careful.", "pleased")))
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            destination.write_text("existing timeline", encoding="utf-8")
+            with self.assertRaisesRegex(
+                    ValueError, r"dialogue_history.*chronological order"):
+                save_simulation(simulation, destination)
+            self.assertEqual(
+                destination.read_text(encoding="utf-8"), "existing timeline")
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30

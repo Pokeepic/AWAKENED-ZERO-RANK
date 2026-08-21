@@ -351,10 +351,16 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             raise ValueError(
                 f"Invalid save field protagonist.memories[{index}].summary: "
                 "expected non-empty text")
+    previous_dialogue_day: int | None = None
     for index, exchange in enumerate(protagonist.dialogue_history):
         _require_integer_range(
             f"protagonist.dialogue_history[{index}].day",
             exchange.day, 1)
+        if previous_dialogue_day is not None and exchange.day < previous_dialogue_day:
+            raise ValueError(
+                "Invalid save field protagonist.dialogue_history: "
+                "expected chronological order")
+        previous_dialogue_day = exchange.day
         for field in (
                 "intention", "ren_line", "npc_name", "npc_line", "reaction"):
             value = getattr(exchange, field)

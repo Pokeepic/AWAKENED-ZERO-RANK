@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.267.0 - Ordered save dialogue history
+
+- Save validation now rejects dialogue exchanges whose day moves backward within the retained history.
+- Conversation history can no longer contradict its own chronological sequence.
+- Added atomic-save rejection coverage while preserving supported synthetic and migrated dialogue dates.
+
 ## 0.266.0 - Complete save dialogue text
 
 - Save validation now rejects dialogue exchanges with a missing intention, Ren line, NPC name, NPC line, or reaction.
