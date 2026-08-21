@@ -25,6 +25,7 @@ class Item:
     price: int
     combat_bonus: int = 0
     description: str = ""
+    minimum_rank: str = "Unranked"
 
 
 @dataclass(frozen=True)
@@ -52,7 +53,20 @@ ITEMS = {
     "Padded Jacket": Item("Padded Jacket", "armor", 3_200, 5, "Basic protection against claws and debris."),
     "Healing Gel": Item("Healing Gel", "consumable", 900, description="Restores 22 health."),
     "Energy Drink": Item("Energy Drink", "consumable", 450, description="Restores 18 energy."),
+    "Reinforced Machete": Item(
+        "Reinforced Machete", "weapon", 7_200, 11,
+        "A durable Rank E blade for repeated Gate work.", "E"),
+    "Gateweave Vest": Item(
+        "Gateweave Vest", "armor", 8_400, 9,
+        "Layered Rank E protection against claws and mana debris.", "E"),
 }
+
+HUNTER_RANK_ORDER = {"Unranked": 0, "F": 1, "E": 2, "D": 3, "C": 4}
+
+
+def rank_meets_requirement(rank: str, minimum_rank: str) -> bool:
+    """Return whether a hunter rank can legally buy the requested equipment."""
+    return HUNTER_RANK_ORDER.get(rank, -1) >= HUNTER_RANK_ORDER.get(minimum_rank, 99)
 
 GATE_ENCOUNTERS = (
     GateEncounter("Tunnel Slime Nest", 42, 5_400, 10),

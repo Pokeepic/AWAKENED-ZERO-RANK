@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.290.0 - Rank-gated equipment progression
+
+- Added the Rank E Reinforced Machete and Gateweave Vest as stronger upgrades to the starter equipment tier.
+- Made shop planning rank-aware, affordability-aware, deterministic, and consistent between utility scoring and purchase execution.
+- Kept urgent Healing Gel and Energy Drink purchases ahead of upgrades, reserved a full rent payment for equipment, and blocked upgrades during arrears.
+- Preserved replaced equipment in inventory and added rank validation to saves, observer snapshots, and browser-side authenticated rendering.
+- Verified a conservative 12-seed, 120-step utility audit: every eligible timeline acquired both upgrades, none carried rent arrears, minimum health was 87, and minimum cash was ¥80,000.
+- Did not train or change an RL policy; the published RL verdicts remain unchanged.
+
 ## 0.280.0 - Coherent field-stock planning
 
 - Centralized the hunter-shop purchase plan so action scoring and purchase execution select the same next item.

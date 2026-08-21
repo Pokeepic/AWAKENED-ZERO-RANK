@@ -15,7 +15,8 @@ from .models import (AUTHORED_RENT_COST, AUTHORED_RENT_DUE_DAY, Clock,
                      DelayedConsequence, DialogueExchange, Event, Memory,
                      PortalInvestigation, Protagonist, Relationship, TimeSlot,
                      WorldState)
-from .world import ITEMS, LOCATIONS, mission_rank_points_are_possible
+from .world import (ITEMS, LOCATIONS, mission_rank_points_are_possible,
+                    rank_meets_requirement)
 
 
 if TYPE_CHECKING:
@@ -235,6 +236,9 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             raise ValueError(
                 f"Invalid save field protagonist.{field}: "
                 f"expected catalogued {expected_kind}")
+        if not rank_meets_requirement(protagonist.hunter_rank, item.minimum_rank):
+            raise ValueError(
+                f"Invalid save field protagonist.{field}: hunter rank is too low")
     for name in (
             "health", "energy", "hunger", "stress", "ability_mastery",
             "social_confidence"):

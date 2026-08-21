@@ -21,6 +21,39 @@ from awakened_zero_rank.story import story_progress
 
 
 class PersistenceSafetyTests(unittest.TestCase):
+    def test_rank_e_equipment_round_trips_through_save(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(300)
+        protagonist = simulation.state.protagonist
+        self.assertIn(protagonist.hunter_rank, {"E", "D", "C"})
+        protagonist.add_item("Reinforced Machete")
+        protagonist.add_item("Gateweave Vest")
+        protagonist.equipped_weapon = "Reinforced Machete"
+        protagonist.equipped_armor = "Gateweave Vest"
+
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            save_simulation(simulation, destination)
+            restored = load_simulation(destination)
+
+        self.assertEqual(restored.state.protagonist.equipped_weapon,
+                         "Reinforced Machete")
+        self.assertEqual(restored.state.protagonist.equipped_armor,
+                         "Gateweave Vest")
+
+    def test_rank_f_cannot_save_rank_e_equipment(self) -> None:
+        simulation = Simulation(seed=43)
+        simulation.run(20)
+        protagonist = simulation.state.protagonist
+        self.assertEqual(protagonist.hunter_rank, "F")
+        protagonist.add_item("Reinforced Machete")
+        protagonist.equipped_weapon = "Reinforced Machete"
+
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            with self.assertRaisesRegex(ValueError, "hunter rank is too low"):
+                save_simulation(simulation, destination)
+
     def test_failed_atomic_replace_preserves_existing_save(self) -> None:
         simulation = Simulation(seed=42)
         simulation.run(4)

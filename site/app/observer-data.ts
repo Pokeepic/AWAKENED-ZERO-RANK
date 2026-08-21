@@ -372,8 +372,14 @@ function isEquipment(
   if (
     !isRecord(value) ||
     !hasExactKeys(value, ["armor", "inventory", "weapon"]) ||
-    !(value.weapon === null || value.weapon === "Field Knife") ||
-    !(value.armor === null || value.armor === "Padded Jacket") ||
+    !(
+      value.weapon === null ||
+      ["Field Knife", "Reinforced Machete"].includes(value.weapon as string)
+    ) ||
+    !(
+      value.armor === null ||
+      ["Padded Jacket", "Gateweave Vest"].includes(value.armor as string)
+    ) ||
     !isRecord(value.inventory)
   ) {
     return false;
@@ -914,6 +920,13 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     ) ||
     !LOCATIONS.has(protagonist.location as string) ||
     !isEquipment(protagonist.equipment) ||
+    (
+      !["E", "D", "C"].includes(protagonist.hunter_rank as string) &&
+      (
+        protagonist.equipment.weapon === "Reinforced Machete" ||
+        protagonist.equipment.armor === "Gateweave Vest"
+      )
+    ) ||
     (
       (value.clock.day < 4 ||
         (value.clock.day === 4 && ["Morning", "Afternoon"].includes(value.clock.slot))) &&

@@ -14,7 +14,8 @@ from .content import NPCS, PORTALS, STORY_ANCHORS
 from .environment import SUMMER_WEATHER
 from .models import AUTHORED_RENT_COST, AUTHORED_RENT_DUE_DAY
 from .story import STORY_PROGRESS_SCHEMA_VERSION, story_progress
-from .world import ITEMS, LOCATIONS, mission_rank_points_are_possible
+from .world import (ITEMS, LOCATIONS, mission_rank_points_are_possible,
+                    rank_meets_requirement)
 
 if TYPE_CHECKING:
     from .simulation import Simulation
@@ -585,6 +586,9 @@ def _validate_protagonist(
         if item is None or item.kind != expected_kind:
             raise ValueError(
                 f"Observer snapshot equipped {expected_kind} is invalid")
+        if not rank_meets_requirement(hunter_rank, item.minimum_rank):
+            raise ValueError(
+                f"Observer snapshot equipped {expected_kind} exceeds hunter rank")
     inventory = equipment["inventory"]
     if not isinstance(inventory, dict):
         raise ValueError("Observer snapshot inventory is malformed")

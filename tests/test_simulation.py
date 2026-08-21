@@ -68,7 +68,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.280.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.290.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -220,6 +220,65 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("Energy Drink", outcome)
         self.assertEqual(p.item_count("Energy Drink"), 1)
         self.assertEqual(p.item_count("Healing Gel"), 0)
+
+    def test_shop_reserves_rank_e_upgrades_for_eligible_hunters(self) -> None:
+        simulation = Simulation(seed=59)
+        p = simulation.state.protagonist
+        p.money = 30_000
+        p.equipped_weapon = "Field Knife"
+        p.equipped_armor = "Padded Jacket"
+        p.add_item("Field Knife")
+        p.add_item("Padded Jacket")
+        p.add_item("Healing Gel", 2)
+        p.add_item("Energy Drink", 2)
+
+        self.assertLess(_shop_score(p, TimeSlot.MORNING, 0), 10)
+        p.hunter_rank = "E"
+        self.assertEqual(_shop_score(p, TimeSlot.MORNING, 0), 70)
+
+        outcome = _shop(p)
+
+        self.assertIn("Reinforced Machete", outcome)
+        self.assertEqual(p.equipped_weapon, "Reinforced Machete")
+        self.assertEqual(p.item_count("Field Knife"), 1)
+        self.assertEqual(p.item_count("Reinforced Machete"), 1)
+
+    def test_shop_blocks_upgrades_when_rent_is_at_risk(self) -> None:
+        simulation = Simulation(seed=61)
+        p = simulation.state.protagonist
+        p.hunter_rank = "E"
+        p.money = ITEMS["Reinforced Machete"].price + p.rent_cost - 1
+        p.equipped_weapon = "Field Knife"
+        p.equipped_armor = "Padded Jacket"
+        p.add_item("Healing Gel", 2)
+        p.add_item("Energy Drink", 2)
+
+        outcome = _shop(p)
+
+        self.assertIn("already carried the planned field stock", outcome)
+        self.assertEqual(p.equipped_weapon, "Field Knife")
+
+    def test_shop_prioritizes_urgent_supplies_before_rank_e_upgrades(self) -> None:
+        simulation = Simulation(seed=67)
+        p = simulation.state.protagonist
+        p.hunter_rank = "E"
+        p.money = 30_000
+        p.health = 50
+        p.equipped_weapon = "Field Knife"
+        p.equipped_armor = "Padded Jacket"
+
+        outcome = _shop(p)
+
+        self.assertIn("Healing Gel", outcome)
+        self.assertEqual(p.equipped_weapon, "Field Knife")
+
+    def test_rank_e_catalog_upgrades_have_stronger_typed_bonuses(self) -> None:
+        machete = ITEMS["Reinforced Machete"]
+        vest = ITEMS["Gateweave Vest"]
+        self.assertEqual((machete.kind, machete.minimum_rank), ("weapon", "E"))
+        self.assertEqual((vest.kind, vest.minimum_rank), ("armor", "E"))
+        self.assertGreater(machete.combat_bonus, ITEMS["Field Knife"].combat_bonus)
+        self.assertGreater(vest.combat_bonus, ITEMS["Padded Jacket"].combat_bonus)
 
     def test_equipment_increases_combat_readiness(self) -> None:
         simulation = Simulation(seed=1)

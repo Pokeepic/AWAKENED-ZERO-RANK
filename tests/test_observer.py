@@ -734,6 +734,12 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "inventory is not canonical"):
             verify_observer_snapshot(order)
 
+        rank_locked = observer_snapshot(Simulation(seed=313))
+        rank_locked["protagonist"]["equipment"]["weapon"] = "Reinforced Machete"
+        _redigest(rank_locked)
+        with self.assertRaisesRegex(ValueError, "exceeds hunter rank"):
+            verify_observer_snapshot(rank_locked)
+
     def test_verifier_rejects_redigested_invalid_story_chronology(self) -> None:
         counts = observer_snapshot(Simulation(seed=331))
         counts["story"]["completed_count"] = 1

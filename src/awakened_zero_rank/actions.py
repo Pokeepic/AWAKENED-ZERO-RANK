@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .models import Protagonist, TimeSlot
-from .world import ITEMS, JOBS, travel_cost
+from .world import ITEMS, JOBS, rank_meets_requirement, travel_cost
 
 
 Effect = Callable[[Protagonist], str]
@@ -70,22 +70,45 @@ def _prepare_placeholder(_: Protagonist) -> str:
     return "Portal preparation pending resolution."
 
 
-def _shop_priority(p: Protagonist) -> str | None:
-    """Return the next planned purchase from equipment and field condition."""
-    return (
-        "Field Knife" if p.equipped_weapon is None else
-        "Padded Jacket" if p.equipped_armor is None else
-        "Healing Gel" if p.item_count("Healing Gel") < 2 and p.health < 80 else
-        "Energy Drink" if p.item_count("Energy Drink") < 2 and p.energy < 65 else
-        "Healing Gel" if p.item_count("Healing Gel") < 2 else
-        "Energy Drink" if p.item_count("Energy Drink") < 2 else
-        None
+def _shop_priority(p: Protagonist, available_money: int | None = None) -> str | None:
+    """Return the next affordable, rank-legal purchase without risking rent."""
+    budget = p.money if available_money is None else available_money
+
+    def affordable(name: str, *, reserve_rent: bool = False) -> bool:
+        reserve = p.rent_cost if reserve_rent else 0
+        return budget >= ITEMS[name].price + reserve
+
+    if p.equipped_weapon is None and affordable("Field Knife", reserve_rent=True):
+        return "Field Knife"
+    if p.equipped_armor is None and affordable("Padded Jacket", reserve_rent=True):
+        return "Padded Jacket"
+    if p.item_count("Healing Gel") < 2 and p.health < 80 and affordable("Healing Gel"):
+        return "Healing Gel"
+    if p.item_count("Energy Drink") < 2 and p.energy < 65 and affordable("Energy Drink"):
+        return "Energy Drink"
+
+    upgrades = (
+        ("Reinforced Machete", p.equipped_weapon),
+        ("Gateweave Vest", p.equipped_armor),
     )
+    for name, equipped in upgrades:
+        item = ITEMS[name]
+        if (equipped != name and p.rent_arrears == 0 and
+                rank_meets_requirement(p.hunter_rank, item.minimum_rank) and
+                affordable(name, reserve_rent=True)):
+            return name
+
+    if p.item_count("Healing Gel") < 2 and affordable("Healing Gel"):
+        return "Healing Gel"
+    if p.item_count("Energy Drink") < 2 and affordable("Energy Drink"):
+        return "Energy Drink"
+    return None
 
 
 def _shop_score(p: Protagonist, slot: TimeSlot, alert: int) -> float:
     """Value the exact purchase the shop action would make."""
-    priority = _shop_priority(p)
+    fare = travel_cost(p.location, "Kita-Senju Hunter Supply")
+    priority = _shop_priority(p, p.money - fare)
     purchase_value = 0
     if priority == "Field Knife" and p.money >= ITEMS[priority].price + p.rent_cost:
         purchase_value = 48
@@ -95,12 +118,16 @@ def _shop_score(p: Protagonist, slot: TimeSlot, alert: int) -> float:
         purchase_value = 14 * (2 - p.item_count(priority))
     elif priority == "Energy Drink" and p.energy < 60 and p.money >= ITEMS[priority].price:
         purchase_value = 12 * (2 - p.item_count(priority))
+    elif priority == "Reinforced Machete":
+        purchase_value = 62
+    elif priority == "Gateweave Vest":
+        purchase_value = 56
     return purchase_value + (8 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON) else -25) - alert * 5
 
 
 def _shop(p: Protagonist) -> str:
     fare = _travel(p, "Kita-Senju Hunter Supply")
-    priority = _shop_priority(p)
+    priority = _shop_priority(p, p.money)
     if priority is None:
         return f"Browsed hunter supplies but already carried the planned field stock; fare cost ¥{fare:,}."
     item = ITEMS[priority]
