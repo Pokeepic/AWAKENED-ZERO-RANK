@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.250.0 - Fixed-event hunter record evidence
+
+- Browser, save, and Python observer validation now require zero mission attempts, completions, and rank points at the exact post-Awakening and post-registration boundaries.
+- Added exact boundary and redigested-tamper coverage across all three validation surfaces.
+- Recorded point-and-click interaction as the preferred future game-adaptation direction. Valid timelines, simulator decisions, and schemas are unchanged.
+
 ## 0.249.0 - Fixed-event state evidence
 
 - Browser, save, and Python observer validation now require ability mastery 1 at the exact post-Awakening boundary.

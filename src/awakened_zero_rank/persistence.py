@@ -266,6 +266,15 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         raise ValueError(
             "Invalid save protagonist progression: "
             "rank points require completed mission evidence from exact awards")
+    fixed_hunter_record_positions = {
+        (3, tuple(TimeSlot).index(TimeSlot.EVENING)),
+        (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)),
+    }
+    if (
+            clock_position in fixed_hunter_record_positions and
+            any((protagonist.rank_points, protagonist.missions_attempted,
+                 protagonist.missions_completed))):
+        raise ValueError("Invalid save fixed-event hunter record evidence")
     _require_integer_range(
         "protagonist.rent_due_day", protagonist.rent_due_day, 1)
     _require_integer_range("protagonist.rent_cost", protagonist.rent_cost, 0)

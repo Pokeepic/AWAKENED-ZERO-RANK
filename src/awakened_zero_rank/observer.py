@@ -443,6 +443,16 @@ def _validate_protagonist(
     completed = progression_values["missions_completed"]
     if not mission_rank_points_are_possible(completed, points):
         raise ValueError("Observer snapshot mission rank points are inconsistent")
+    fixed_hunter_record_positions = {
+        (3, _SLOTS.index("Evening")),
+        (4, _SLOTS.index("Afternoon")),
+    }
+    if (
+            position in fixed_hunter_record_positions and
+            any(progression_values[name] for name in (
+                "rank_points", "missions_attempted", "missions_completed"))):
+        raise ValueError(
+            "Observer snapshot fixed-event hunter record evidence is invalid")
 
     equipment = protagonist["equipment"]
     if not isinstance(equipment, dict) or set(equipment) != _EQUIPMENT_KEYS:
