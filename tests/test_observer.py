@@ -542,6 +542,18 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "equipment evidence"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_requires_empty_fixed_event_portals(self) -> None:
+        for steps in (10, 13):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=330)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["portals"]["discovered"] = [
+                    "Ashen Shopping Arcade"]
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "portal evidence"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
         weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"

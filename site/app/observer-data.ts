@@ -496,7 +496,11 @@ function isRelationships(
   });
 }
 
-function isPortals(value: unknown): value is ObserverSnapshot["portals"] {
+function isPortals(
+  value: unknown,
+  day: number,
+  slot: string,
+): value is ObserverSnapshot["portals"] {
   if (
     !isRecord(value) ||
     !hasExactKeys(value, ["active_plan", "discovered", "investigations"]) ||
@@ -533,13 +537,19 @@ function isPortals(value: unknown): value is ObserverSnapshot["portals"] {
   const investigationNames = investigations.map(
     (investigation) => investigation.portal_name as string,
   );
+  const fixedLifecycleBoundary =
+    (day === 3 && slot === "Evening") ||
+    (day === 4 && slot === "Afternoon");
   return (
     new Set(value.discovered).size === value.discovered.length &&
     investigationNames.every(
       (name, index) => index === 0 || investigationNames[index - 1] < name,
     ) &&
     investigationNames.every((name) => value.discovered.includes(name)) &&
-    (value.active_plan === null || investigationNames.includes(value.active_plan))
+    (value.active_plan === null || investigationNames.includes(value.active_plan)) &&
+    !(fixedLifecycleBoundary &&
+      (value.discovered.length > 0 || investigations.length > 0 ||
+       value.active_plan !== null))
   );
 }
 function isStoryNext(
@@ -842,7 +852,11 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       value.clock.day as number,
       value.clock.slot as string,
     ) ||
-    !isPortals(value.portals)
+    !isPortals(
+      value.portals,
+      value.clock.day as number,
+      value.clock.slot as string,
+    )
   ) {
     return false;
   }

@@ -482,6 +482,11 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         raise ValueError(
             "Invalid save field active_portal_plan: "
             "expected a catalogued investigated portal")
+    if (
+            clock_position in fixed_hunter_record_positions and
+            (state.discovered_portals or state.portal_investigations or
+             state.active_portal_plan is not None)):
+        raise ValueError("Invalid save fixed-event portal evidence")
     if protagonist.current_goal != expected_goal:
         raise ValueError("Invalid save protagonist current goal")
 

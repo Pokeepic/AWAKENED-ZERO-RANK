@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.252.0 - Fixed-event portal evidence
+
+- Browser, save, and Python observer validation now require an empty discovery ledger, investigation ledger, and active portal plan at the exact post-Awakening and post-registration boundaries.
+- This binds portal evidence to the authored Guild hunter-work unlock without changing valid decisions or schemas.
+- Added exact boundary and redigested-tamper coverage across all three validation surfaces.
+
 ## 0.251.0 - Fixed-event equipment evidence
 
 - Browser, save, and Python observer validation now require an empty inventory and no equipped weapon or armor at the exact post-Awakening and post-registration boundaries.

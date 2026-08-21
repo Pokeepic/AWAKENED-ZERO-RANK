@@ -365,6 +365,18 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
+    def test_fixed_events_require_empty_portal_evidence(self) -> None:
+        for steps in (10, 13):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=97)
+                simulation.run(steps)
+                simulation.state.discovered_portals.append(
+                    "Ashen Shopping Arcade")
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "portal evidence"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30

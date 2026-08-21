@@ -171,7 +171,7 @@ def _validate_environment(environment: Any, day: int, slot: str) -> None:
         raise ValueError("Observer snapshot environment conditions are invalid")
 
 
-def _validate_portals(portals: Any) -> None:
+def _validate_portals(portals: Any, day: int, slot: str) -> None:
     if not isinstance(portals, dict) or set(portals) != _PORTAL_KEYS:
         raise ValueError("Observer snapshot portals are malformed")
     discovered = portals["discovered"]
@@ -222,6 +222,14 @@ def _validate_portals(portals: Any) -> None:
     active_plan = portals["active_plan"]
     if active_plan is not None and active_plan not in names:
         raise ValueError("Observer snapshot active portal plan is invalid")
+    if (
+            (day, _SLOTS.index(slot)) in {
+                (3, _SLOTS.index("Evening")),
+                (4, _SLOTS.index("Afternoon")),
+            } and
+            (discovered or investigations or active_plan is not None)):
+        raise ValueError(
+            "Observer snapshot fixed-event portal evidence is invalid")
 
 def _validate_economy(economy: Any, day: int, slot: str) -> None:
     keys = {
@@ -558,7 +566,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     _validate_activity(snapshot["activity"], day, clock["slot"])
     _validate_economy(snapshot["economy"], day, clock["slot"])
     _validate_environment(snapshot["environment"], day, clock["slot"])
-    _validate_portals(snapshot["portals"])
+    _validate_portals(snapshot["portals"], day, clock["slot"])
     _validate_relationships(snapshot["relationships"], day, clock["slot"])
     _validate_story(snapshot["story"], day)
     _validate_protagonist(
