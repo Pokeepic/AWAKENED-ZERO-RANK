@@ -349,7 +349,18 @@ class PersistenceSafetyTests(unittest.TestCase):
                 protagonist.missions_attempted = 1
                 protagonist.missions_completed = 1
                 destination = Path(temporary_directory) / "timeline.json"
-                with self.assertRaisesRegex(ValueError, "hunter record evidence"):
+                with self.assertRaisesRegex(ValueError, "hunter record chronology"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
+    def test_hunter_record_cannot_predate_registration(self) -> None:
+        for steps in (0, 10, 13):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=103)
+                simulation.run(steps)
+                simulation.state.protagonist.missions_attempted = 1
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "hunter record chronology"):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 

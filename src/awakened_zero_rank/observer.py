@@ -523,11 +523,11 @@ def _validate_protagonist(
         (4, _SLOTS.index("Afternoon")),
     }
     if (
-            position in fixed_hunter_record_positions and
+            position <= (4, _SLOTS.index("Afternoon")) and
             any(progression_values[name] for name in (
                 "rank_points", "missions_attempted", "missions_completed"))):
         raise ValueError(
-            "Observer snapshot fixed-event hunter record evidence is invalid")
+            "Observer snapshot hunter record chronology is invalid")
 
     equipment = protagonist["equipment"]
     if not isinstance(equipment, dict) or set(equipment) != _EQUIPMENT_KEYS:

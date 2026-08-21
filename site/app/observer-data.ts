@@ -870,8 +870,8 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     ]) ||
     !["ability_mastery", "combat_readiness"].every((name) =>
       isIntegerInRange(protagonist.progression[name], 0, 100)) ||
-    (((value.clock.day === 3 && value.clock.slot === "Evening") ||
-      (value.clock.day === 4 && value.clock.slot === "Afternoon")) &&
+    ((value.clock.day < 4 ||
+      (value.clock.day === 4 && ["Morning", "Afternoon"].includes(value.clock.slot))) &&
       ["rank_points", "missions_attempted", "missions_completed"].some(
         (name) => protagonist.progression[name] !== 0,
       )) ||

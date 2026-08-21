@@ -272,10 +272,11 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)),
     }
     if (
-            clock_position in fixed_hunter_record_positions and
+            clock_position <=
+            (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)) and
             any((protagonist.rank_points, protagonist.missions_attempted,
                  protagonist.missions_completed))):
-        raise ValueError("Invalid save fixed-event hunter record evidence")
+        raise ValueError("Invalid save hunter record chronology")
     if (
             clock_position <=
             (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)) and

@@ -537,7 +537,18 @@ class ObserverSnapshotTests(unittest.TestCase):
                 progression["missions_attempted"] = 1
                 progression["missions_completed"] = 1
                 _redigest(snapshot)
-                with self.assertRaisesRegex(ValueError, "hunter record evidence"):
+                with self.assertRaisesRegex(ValueError, "hunter record chronology"):
+                    verify_observer_snapshot(snapshot)
+
+    def test_verifier_rejects_hunter_record_before_registration(self) -> None:
+        for steps in (0, 10, 13):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=319)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["protagonist"]["progression"]["missions_attempted"] = 1
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "hunter record chronology"):
                     verify_observer_snapshot(snapshot)
 
     def test_verifier_requires_empty_fixed_event_equipment(self) -> None:
