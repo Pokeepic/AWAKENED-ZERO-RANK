@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.269.0 - Portal preparation strategy integrity
+
+- Save validation now rejects portal investigations with a missing preparation strategy, matching observer artifact requirements.
+- Investigation records can no longer persist an unexplained planning state.
+- Added atomic-save rejection coverage while preserving valid portal progress, risk, and planning behavior.
+
 ## 0.268.0 - Complete delayed-consequence text
 
 - Save validation now rejects delayed consequences with a missing source or description.

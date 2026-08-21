@@ -507,6 +507,11 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         _require_integer_range(
             f"portal_investigations[{name!r}].joint_missions",
             investigation.joint_missions, 0)
+        if (not isinstance(investigation.preparation_strategy, str) or
+                not investigation.preparation_strategy):
+            raise ValueError(
+                f"Invalid save field portal_investigations[{name!r}]"
+                ".preparation_strategy: expected non-empty text")
         if (investigation.cooperating_npc is not None and
                 investigation.cooperating_npc not in npc_names):
             raise ValueError(

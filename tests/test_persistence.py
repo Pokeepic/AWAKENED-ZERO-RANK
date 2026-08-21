@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.models import (DelayedConsequence, DialogueExchange,
-                                       Memory, TimeSlot)
+                                       Memory, PortalInvestigation, TimeSlot)
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.story import story_progress
@@ -589,6 +589,22 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertEqual(
                     destination.read_text(encoding="utf-8"), "existing timeline")
+
+    def test_portal_investigation_requires_preparation_strategy(self) -> None:
+        simulation = Simulation(seed=115)
+        simulation.run(14)
+        portal_name = "Ashen Shopping Arcade"
+        simulation.state.discovered_portals.append(portal_name)
+        simulation.state.portal_investigations[portal_name] = PortalInvestigation(
+            portal_name=portal_name, preparation_strategy="")
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            destination.write_text("existing timeline", encoding="utf-8")
+            with self.assertRaisesRegex(
+                    ValueError, r"preparation_strategy.*non-empty text"):
+                save_simulation(simulation, destination)
+            self.assertEqual(
+                destination.read_text(encoding="utf-8"), "existing timeline")
 
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
