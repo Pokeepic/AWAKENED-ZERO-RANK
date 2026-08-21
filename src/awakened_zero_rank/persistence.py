@@ -277,11 +277,12 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
                  protagonist.missions_completed))):
         raise ValueError("Invalid save fixed-event hunter record evidence")
     if (
-            clock_position in fixed_hunter_record_positions and
+            clock_position <=
+            (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)) and
             (protagonist.inventory or
              protagonist.equipped_weapon is not None or
              protagonist.equipped_armor is not None)):
-        raise ValueError("Invalid save fixed-event equipment evidence")
+        raise ValueError("Invalid save equipment chronology")
     _require_integer_range(
         "protagonist.rent_due_day", protagonist.rent_due_day, 1)
     _require_integer_range("protagonist.rent_cost", protagonist.rent_cost, 0)

@@ -550,7 +550,22 @@ class ObserverSnapshotTests(unittest.TestCase):
                 equipment["inventory"] = {"Field Knife": 1}
                 equipment["weapon"] = "Field Knife"
                 _redigest(snapshot)
-                with self.assertRaisesRegex(ValueError, "equipment evidence"):
+                with self.assertRaisesRegex(ValueError, "equipment chronology"):
+                    verify_observer_snapshot(snapshot)
+
+    def test_verifier_rejects_equipment_before_registration(self) -> None:
+        for steps in (0, 10, 13):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=313)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["protagonist"]["equipment"] = {
+                    "armor": None,
+                    "inventory": {"Field Knife": 1},
+                    "weapon": "Field Knife",
+                }
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "equipment chronology"):
                     verify_observer_snapshot(snapshot)
 
     def test_verifier_requires_empty_fixed_event_portals(self) -> None:

@@ -362,7 +362,20 @@ class PersistenceSafetyTests(unittest.TestCase):
                 protagonist.inventory["Field Knife"] = 1
                 protagonist.equipped_weapon = "Field Knife"
                 destination = Path(temporary_directory) / "timeline.json"
-                with self.assertRaisesRegex(ValueError, "equipment evidence"):
+                with self.assertRaisesRegex(ValueError, "equipment chronology"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
+    def test_equipment_cannot_predate_registration(self) -> None:
+        for steps in (0, 10, 13):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=101)
+                simulation.run(steps)
+                protagonist = simulation.state.protagonist
+                protagonist.inventory["Field Knife"] = 1
+                protagonist.equipped_weapon = "Field Knife"
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "equipment chronology"):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 

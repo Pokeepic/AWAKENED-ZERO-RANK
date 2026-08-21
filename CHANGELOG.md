@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.256.0 - Guild equipment chronology
+
+- Browser, save, and Python observer validation now require an empty hunter loadout through the exact post-registration boundary.
+- Equipment evidence is bound to the authored Guild-shop unlock across the full pre-registration timeline rather than only two fixed-event snapshots.
+- Added pre-Awakening, post-Awakening, and post-registration tamper coverage across all three validation surfaces.
+
 ## 0.255.0 - Guild shop chronology
 
 - Browser, save, and Python observer validation now require zero hunter-shop visits through the exact post-registration boundary.
