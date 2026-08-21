@@ -4,6 +4,16 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.350.0 - Portal atlas expansion
+
+- Expanded the authored portal ecosystem from six to eight profiles with the Kawasaki Floodgate Labyrinth and Chiba Glasshouse Breach.
+- Added distinct hazards and anomalous clues while reusing established environment preparation rules; the expanded pool unlocks on day 46 so existing early seeded timelines remain stable.
+- Increased the structured portal situation space from 96 to 128 combinations and verified fixed-seed preparation reaches every profile.
+- Added a responsive read-only Portal Atlas that shows the full world catalog while keeping undiscovered hazard details classified.
+- Extended browser validation to accept both new canonical portal names and reject invented records as before.
+- Verified 12 fixed seeds for 240 steps: all eight profiles were discovered across the batch, every timeline survived, none carried rent arrears, minimum health was 84, minimum cash was ¥146,660, and one mission failure remained recoverable.
+- No RL training or verdict change was produced.
+
 ## 0.340.0 - Emergency field supplies
 
 - Added Rank E Trauma Foam and Focus Ampoules for severe health and energy recovery.

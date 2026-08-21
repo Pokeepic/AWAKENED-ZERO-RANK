@@ -161,6 +161,17 @@ export const FIELD_SUPPLY_CATALOG = [
   { effect: "ENERGY +30", maximum: 1, minimumRank: "E", name: "Focus Ampoule", price: 1200 },
 ] as const;
 
+export const PORTAL_PROFILE_CATALOG = [
+  { environment: "underground", hazard: "rising water", name: "Flooded Service Tunnel" },
+  { environment: "urban ruin", hazard: "cinder wind", name: "Ashen Shopping Arcade" },
+  { environment: "forest", hazard: "false trails", name: "Moonlit Cedar Path" },
+  { environment: "ice", hazard: "whiteout", name: "Frostbound Platform" },
+  { environment: "swamp", hazard: "toxic spores", name: "Sunken Courtyard" },
+  { environment: "urban tower", hazard: "shifting rooms", name: "Glass Office Labyrinth" },
+  { environment: "underground", hazard: "pressure surges", name: "Kawasaki Floodgate Labyrinth" },
+  { environment: "forest", hazard: "razor vines", name: "Chiba Glasshouse Breach" },
+] as const;
+
 export type PresentationContract = {
   animation_cues: string[];
   comparison_schema_version: number;
@@ -195,6 +206,8 @@ const PORTAL_NAMES = new Set([
   "Frostbound Platform",
   "Sunken Courtyard",
   "Glass Office Labyrinth",
+  "Kawasaki Floodgate Labyrinth",
+  "Chiba Glasshouse Breach",
 ]);
 const HUNTER_RANKS = new Set(["Unranked", "F", "E", "D", "C"]);
 const ABILITIES = new Set([

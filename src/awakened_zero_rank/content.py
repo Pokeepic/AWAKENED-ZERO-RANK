@@ -59,7 +59,15 @@ PORTALS = (
     PortalProfile("Frostbound Platform", "ice", "whiteout", "an arriving ghost train"),
     PortalProfile("Sunken Courtyard", "swamp", "toxic spores", "guild equipment in the reeds"),
     PortalProfile("Glass Office Labyrinth", "urban tower", "shifting rooms", "Ren's reflection moves late"),
+    PortalProfile("Kawasaki Floodgate Labyrinth", "underground", "pressure surges", "saltwater flowing uphill"),
+    PortalProfile("Chiba Glasshouse Breach", "forest", "razor vines", "warm footprints beneath the frost"),
 )
+PORTAL_EXPANSION_DAY = 46
+
+
+def available_portals(day: int) -> tuple[PortalProfile, ...]:
+    """Unlock the regional catalog without changing early seeded chronicles."""
+    return PORTALS if day >= PORTAL_EXPANSION_DAY else PORTALS[:6]
 
 STORY_ANCHORS = (
     StoryAnchor(

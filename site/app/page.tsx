@@ -7,6 +7,7 @@ import {
   EQUIPMENT_CATALOG,
   FIELD_SUPPLY_CATALOG,
   GATE_ENCOUNTER_CATALOG,
+  PORTAL_PROFILE_CATALOG,
   RESOURCE_NAMES,
   verifyArtifacts,
   type ObserverSnapshot,
@@ -155,6 +156,8 @@ export default function Home() {
       <section className="people"><h2 className="section-label">PEOPLE IN ORBIT <span>{snapshot.relationships.length} KNOWN</span></h2>{snapshot.relationships.length===0&&<p className="empty-state">No trusted relationships have formed yet.</p>}{snapshot.relationships.map((relationship) => <article key={relationship.name}><i aria-hidden="true">{relationship.name.split(" ").map((part) => part[0]).join("")}</i><div><b>{relationship.name}</b><small>{relationship.role}</small></div><dl><div><dt>TRUST</dt><dd>{relationship.trust}</dd></div><div><dt>FAMILIAR</dt><dd>{relationship.familiarity}</dd></div><div><dt>LOYAL</dt><dd>{relationship.loyalty}</dd></div><div><dt>TENSION</dt><dd>{relationship.tension}</dd></div></dl></article>)}</section>
 
       <section className="portals"><h2 className="section-label">PORTAL LEDGER <span>{discovered.length} FOUND</span></h2>{discovered.length===0&&<p className="empty-state">No portals have been discovered yet.</p>}{discovered.map((name) => { const investigation = investigations.find((item) => item.portal_name === name); return <article className="portal" key={name}><div><b>{name}</b>{snapshot.portals.active_plan === name && <mark>ACTIVE PLAN</mark>}</div>{investigation ? <><span>{investigation.progress}% investigated / risk {investigation.risk}</span><i aria-hidden="true"><u style={{ width: `${investigation.progress}%` }} /></i><small>{investigation.preparation_strategy}{investigation.cooperating_npc ? ` / with ${investigation.cooperating_npc}` : ""}</small></> : <small>DISCOVERED / NOT YET INVESTIGATED</small>}</article>; })}</section>
+
+      <section className="atlas"><h2 className="section-label">PORTAL ATLAS <span>{discovered.length}/{PORTAL_PROFILE_CATALOG.length} DOCUMENTED</span></h2><div className="atlas-grid">{PORTAL_PROFILE_CATALOG.map((portal) => { const known = discovered.includes(portal.name); return <article key={portal.name} className={known ? "known" : "unknown"}><small>{portal.environment.toUpperCase()} / {known ? "DOCUMENTED" : "UNDISCOVERED"}</small><b>{portal.name}</b><span>{known ? `HAZARD / ${portal.hazard}` : "HAZARD / CLASSIFIED"}</span></article>; })}</div></section>
 
       <section className="memories"><h2 className="section-label">KEY MEMORIES <span>{snapshot.activity.key_memories.length} RETAINED</span></h2>{snapshot.activity.key_memories.length === 0 ? <p className="empty-state">No defining memories have formed yet.</p> : <ol>{snapshot.activity.key_memories.map((memory) => <li key={`${memory.day}-${memory.summary}`}><time>DAY {memory.day} / IMPACT {memory.importance}</time><p>{memory.summary}</p></li>)}</ol>}</section>
     </div>

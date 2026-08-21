@@ -6,7 +6,7 @@ from .agent import UtilityAgent
 from .dialogue import (
     contextual_line, resolve_aiko_dialogue, resolve_contextual_encounter,
 )
-from .content import NPCS, PORTALS, STORY_ANCHORS, StoryAnchor, scheduled_location
+from .content import NPCS, PORTALS, STORY_ANCHORS, StoryAnchor, available_portals, scheduled_location
 from .environment import SUMMER_WEATHER, summer_weather
 from .models import (DelayedConsequence, Event, Memory, PortalInvestigation,
                      Relationship, TimeSlot, WorldState)
@@ -447,9 +447,10 @@ class Simulation:
         rank_bonus = {"Unranked": 0, "F": 0, "E": 1, "D": 2, "C": 3}[p.hunter_rank]
         maximum_index = min(len(encounters) - 1, max(0, alert - 1) + rank_bonus)
         encounter = encounters[self.rng.randint(0, maximum_index)]
+        portal_pool = available_portals(self.state.clock.day)
         portal = (next(item for item in PORTALS if item.name == self.state.active_portal_plan)
                   if self.state.active_portal_plan else
-                  PORTALS[self.rng.randrange(len(PORTALS))])
+                  portal_pool[self.rng.randrange(len(portal_pool))])
         newly_discovered = portal.name not in self.state.discovered_portals
         if newly_discovered:
             self.state.discovered_portals.append(portal.name)
@@ -558,7 +559,8 @@ class Simulation:
             )
             portal = next(item for item in PORTALS if item.name == investigation.portal_name)
         else:
-            portal = PORTALS[self.rng.randrange(len(PORTALS))]
+            portal_pool = available_portals(self.state.clock.day)
+            portal = portal_pool[self.rng.randrange(len(portal_pool))]
             investigation, _ = self._record_portal_investigation(portal)
         strategies = {
             "ice": ("thermal route kit", 10), "swamp": ("sealed breathing kit", 11),

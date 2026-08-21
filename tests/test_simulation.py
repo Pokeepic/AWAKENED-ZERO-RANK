@@ -19,7 +19,7 @@ from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS, gate_encounters_for_rank
 from awakened_zero_rank.content import (
-    NPCS, PORTALS, STORY_ANCHORS, dialogue_context_count, npc_context_count,
+    NPCS, PORTALS, STORY_ANCHORS, available_portals, dialogue_context_count, npc_context_count,
     portal_situation_count)
 from awakened_zero_rank.cli import main as cli_main
 from awakened_zero_rank.learning import (
@@ -68,7 +68,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.340.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.350.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -697,7 +697,28 @@ class SimulationTests(unittest.TestCase):
 
     def test_content_system_scales_beyond_one_thousand_dialogue_states(self) -> None:
         self.assertGreaterEqual(dialogue_context_count(), 1_000)
-        self.assertGreaterEqual(portal_situation_count(), 90)
+        self.assertEqual(portal_situation_count(), 128)
+
+    def test_portal_catalog_has_unique_authored_world_evidence(self) -> None:
+        self.assertEqual(len(PORTALS), 8)
+        self.assertEqual(len({portal.name for portal in PORTALS}), len(PORTALS))
+        self.assertEqual(len({portal.hazard for portal in PORTALS}), len(PORTALS))
+        self.assertEqual(len({portal.clue for portal in PORTALS}), len(PORTALS))
+        self.assertEqual(
+            {portal.name for portal in PORTALS[-2:]},
+            {"Kawasaki Floodgate Labyrinth", "Chiba Glasshouse Breach"},
+        )
+        self.assertEqual(available_portals(45), PORTALS[:6])
+        self.assertEqual(available_portals(46), PORTALS)
+
+    def test_fixed_seed_preparation_can_reach_every_portal_profile(self) -> None:
+        prepared = set()
+        for seed in range(100):
+            simulation = Simulation(seed=seed)
+            simulation.state.clock.day = 46
+            outcome = simulation._prepare_portal()
+            prepared.update(portal.name for portal in PORTALS if portal.name in outcome)
+        self.assertEqual(prepared, {portal.name for portal in PORTALS})
 
     def test_learning_observation_and_action_mask_are_stable(self) -> None:
         environment = LearningEnvironment(seed=5)
