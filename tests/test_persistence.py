@@ -13,7 +13,8 @@ import unittest
 from unittest.mock import patch
 
 from awakened_zero_rank.cli import main as cli_main
-from awakened_zero_rank.models import DialogueExchange, Memory, TimeSlot
+from awakened_zero_rank.models import (DelayedConsequence, DialogueExchange,
+                                       Memory, TimeSlot)
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.story import story_progress
@@ -570,6 +571,24 @@ class PersistenceSafetyTests(unittest.TestCase):
                 save_simulation(simulation, destination)
             self.assertEqual(
                 destination.read_text(encoding="utf-8"), "existing timeline")
+
+    def test_delayed_consequences_require_complete_text(self) -> None:
+        consequence = DelayedConsequence(
+            due_day=2, source="Portal investigation", people=(),
+            description="A warning reaches the guild.")
+        for field in ("source", "description"):
+            with self.subTest(field=field), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=114)
+                simulation.state.delayed_consequences.append(
+                    replace(consequence, **{field: ""}))
+                destination = Path(temporary_directory) / "timeline.json"
+                destination.write_text("existing timeline", encoding="utf-8")
+                with self.assertRaisesRegex(
+                        ValueError,
+                        rf"delayed_consequences\[0\]\.{field}.*non-empty text"):
+                    save_simulation(simulation, destination)
+                self.assertEqual(
+                    destination.read_text(encoding="utf-8"), "existing timeline")
 
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)

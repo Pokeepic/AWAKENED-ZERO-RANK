@@ -466,6 +466,12 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         _require_integer_range(
             f"delayed_consequences[{index}].due_day",
             consequence.due_day, 1)
+        for field in ("source", "description"):
+            value = getattr(consequence, field)
+            if not isinstance(value, str) or not value:
+                raise ValueError(
+                    f"Invalid save field delayed_consequences[{index}]."
+                    f"{field}: expected non-empty text")
         if (len(consequence.people) != len(set(consequence.people)) or
                 any(person not in npc_names for person in consequence.people)):
             raise ValueError(

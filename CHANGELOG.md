@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.268.0 - Complete delayed-consequence text
+
+- Save validation now rejects delayed consequences with a missing source or description.
+- Deferred world effects can no longer enter the persistent timeline without an auditable cause and outcome.
+- Added atomic-save rejection coverage for both text fields while preserving valid consequence behavior.
+
 ## 0.267.0 - Ordered save dialogue history
 
 - Save validation now rejects dialogue exchanges whose day moves backward within the retained history.
