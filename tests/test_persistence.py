@@ -69,6 +69,19 @@ class PersistenceSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "hunter rank is too low"):
                 save_simulation(simulation, destination)
 
+    def test_rank_d_cannot_save_rank_c_equipment(self) -> None:
+        simulation = Simulation(seed=53)
+        simulation.run(160)
+        protagonist = simulation.state.protagonist
+        protagonist.hunter_rank = "D"
+        protagonist.add_item("Riftglass Katana")
+        protagonist.equipped_weapon = "Riftglass Katana"
+
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "timeline.json"
+            with self.assertRaisesRegex(ValueError, "hunter rank is too low"):
+                save_simulation(simulation, destination)
+
     def test_failed_atomic_replace_preserves_existing_save(self) -> None:
         simulation = Simulation(seed=42)
         simulation.run(4)

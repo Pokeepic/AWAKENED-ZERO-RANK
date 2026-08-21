@@ -65,6 +65,12 @@ ITEMS = {
     "Barrier Coat": Item(
         "Barrier Coat", "armor", 16_600, 14,
         "Rank D protection woven around a replaceable barrier core.", "D"),
+    "Riftglass Katana": Item(
+        "Riftglass Katana", "weapon", 26_000, 23,
+        "A Rank C blade forged to hold an edge inside unstable Gates.", "C"),
+    "Aegis Longcoat": Item(
+        "Aegis Longcoat", "armor", 28_500, 20,
+        "Rank C armor with layered physical and mana-impact protection.", "C"),
 }
 
 HUNTER_RANK_ORDER = {"Unranked": 0, "F": 1, "E": 2, "D": 3, "C": 4}

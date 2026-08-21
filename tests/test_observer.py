@@ -746,6 +746,12 @@ class ObserverSnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exceeds hunter rank"):
             verify_observer_snapshot(d_rank_locked)
 
+        c_rank_locked = observer_snapshot(Simulation(seed=313))
+        c_rank_locked["protagonist"]["equipment"]["weapon"] = "Riftglass Katana"
+        _redigest(c_rank_locked)
+        with self.assertRaisesRegex(ValueError, "exceeds hunter rank"):
+            verify_observer_snapshot(c_rank_locked)
+
     def test_verifier_rejects_redigested_invalid_story_chronology(self) -> None:
         counts = observer_snapshot(Simulation(seed=331))
         counts["story"]["completed_count"] = 1

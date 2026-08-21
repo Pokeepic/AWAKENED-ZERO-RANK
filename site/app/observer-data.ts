@@ -130,7 +130,7 @@ export type ObserverSnapshot = {
 export type EquipmentCatalogItem = {
   bonus: number;
   kind: "weapon" | "armor";
-  minimumRank: "F" | "E" | "D";
+  minimumRank: "F" | "E" | "D" | "C";
   name: string;
   price: number;
 };
@@ -141,6 +141,8 @@ export const EQUIPMENT_CATALOG: readonly EquipmentCatalogItem[] = [
   { bonus: 9, kind: "armor", minimumRank: "E", name: "Gateweave Vest", price: 8400 },
   { bonus: 16, kind: "weapon", minimumRank: "D", name: "Mana-edge Saber", price: 14800 },
   { bonus: 14, kind: "armor", minimumRank: "D", name: "Barrier Coat", price: 16600 },
+  { bonus: 23, kind: "weapon", minimumRank: "C", name: "Riftglass Katana", price: 26000 },
+  { bonus: 20, kind: "armor", minimumRank: "C", name: "Aegis Longcoat", price: 28500 },
 ] as const;
 
 export type PresentationContract = {
@@ -390,11 +392,11 @@ function isEquipment(
     !hasExactKeys(value, ["armor", "inventory", "weapon"]) ||
     !(
       value.weapon === null ||
-      ["Field Knife", "Reinforced Machete", "Mana-edge Saber"].includes(value.weapon as string)
+      ["Field Knife", "Reinforced Machete", "Mana-edge Saber", "Riftglass Katana"].includes(value.weapon as string)
     ) ||
     !(
       value.armor === null ||
-      ["Padded Jacket", "Gateweave Vest", "Barrier Coat"].includes(value.armor as string)
+      ["Padded Jacket", "Gateweave Vest", "Barrier Coat", "Aegis Longcoat"].includes(value.armor as string)
     ) ||
     !isRecord(value.inventory)
   ) {
@@ -948,6 +950,13 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       (
         protagonist.equipment.weapon === "Mana-edge Saber" ||
         protagonist.equipment.armor === "Barrier Coat"
+      )
+    ) ||
+    (
+      protagonist.hunter_rank !== "C" &&
+      (
+        protagonist.equipment.weapon === "Riftglass Katana" ||
+        protagonist.equipment.armor === "Aegis Longcoat"
       )
     ) ||
     (

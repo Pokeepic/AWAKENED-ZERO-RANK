@@ -92,6 +92,8 @@ def _shop_priority(p: Protagonist, available_money: int | None = None) -> str | 
         ("Gateweave Vest", p.equipped_armor),
         ("Mana-edge Saber", p.equipped_weapon),
         ("Barrier Coat", p.equipped_armor),
+        ("Riftglass Katana", p.equipped_weapon),
+        ("Aegis Longcoat", p.equipped_armor),
     )
     for name, equipped in upgrades:
         item = ITEMS[name]
@@ -129,6 +131,10 @@ def _shop_score(p: Protagonist, slot: TimeSlot, alert: int) -> float:
         purchase_value = 58
     elif priority == "Barrier Coat":
         purchase_value = 52
+    elif priority == "Riftglass Katana":
+        purchase_value = 54
+    elif priority == "Aegis Longcoat":
+        purchase_value = 48
     return purchase_value + (8 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON) else -25) - alert * 5
 
 

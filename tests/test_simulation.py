@@ -68,7 +68,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.310.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.320.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -303,6 +303,29 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(p.item_count("Gateweave Vest"), 1)
         self.assertEqual(ITEMS["Mana-edge Saber"].minimum_rank, "D")
         self.assertEqual(ITEMS["Barrier Coat"].minimum_rank, "D")
+
+    def test_rank_c_shop_completes_the_full_equipment_ladder(self) -> None:
+        simulation = Simulation(seed=73)
+        p = simulation.state.protagonist
+        p.hunter_rank = "C"
+        p.money = 200_000
+        p.equipped_weapon = "Field Knife"
+        p.equipped_armor = "Padded Jacket"
+        p.add_item("Field Knife")
+        p.add_item("Padded Jacket")
+        p.add_item("Healing Gel", 2)
+        p.add_item("Energy Drink", 2)
+
+        outcomes = [_shop(p) for _ in range(6)]
+
+        expected = ("Reinforced Machete", "Gateweave Vest", "Mana-edge Saber",
+                    "Barrier Coat", "Riftglass Katana", "Aegis Longcoat")
+        self.assertTrue(all(name in outcome for name, outcome in zip(expected, outcomes)))
+        self.assertEqual(p.equipped_weapon, "Riftglass Katana")
+        self.assertEqual(p.equipped_armor, "Aegis Longcoat")
+        bonuses = [ITEMS[name].combat_bonus for name in (
+            "Field Knife", "Reinforced Machete", "Mana-edge Saber", "Riftglass Katana")]
+        self.assertEqual(bonuses, sorted(bonuses))
 
     def test_equipment_increases_combat_readiness(self) -> None:
         simulation = Simulation(seed=1)

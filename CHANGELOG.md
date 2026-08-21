@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.320.0 - Complete equipment ladder
+
+- Added the Rank C Riftglass Katana and Aegis Longcoat as the final authored equipment tier.
+- Completed deterministic F → E → D → C autonomous purchasing while retaining every replaced item in inventory.
+- Extended save, observer, browser, and visible-catalog validation to the full eight-item weapon and armor ladder.
+- Verified 12 fixed seeds for 240 steps: every timeline reached Rank C and acquired both final upgrades, none carried rent arrears, minimum health was 87, and minimum cash was ¥139,330.
+- Closed the current equipment-progression roadmap slice; no RL training or verdict change was produced.
+
 ## 0.310.0 - Rank D equipment tier
 
 - Added the Rank D Mana-edge Saber and Barrier Coat with stronger combat bonuses and higher reserve-safe prices.
