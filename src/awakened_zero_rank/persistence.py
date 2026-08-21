@@ -355,6 +355,13 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
         _require_integer_range(
             f"protagonist.dialogue_history[{index}].day",
             exchange.day, 1)
+        for field in (
+                "intention", "ren_line", "npc_name", "npc_line", "reaction"):
+            value = getattr(exchange, field)
+            if not isinstance(value, str) or not value:
+                raise ValueError(
+                    f"Invalid save field protagonist.dialogue_history"
+                    f"[{index}].{field}: expected non-empty text")
     story_anchor_keys = {anchor.key for anchor in STORY_ANCHORS}
     resolved_story_keys = set(state.story_outcomes)
     calendar_story_keys = set(state.calendar_events_seen) & story_anchor_keys

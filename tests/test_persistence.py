@@ -13,7 +13,7 @@ import unittest
 from unittest.mock import patch
 
 from awakened_zero_rank.cli import main as cli_main
-from awakened_zero_rank.models import Memory, TimeSlot
+from awakened_zero_rank.models import DialogueExchange, Memory, TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.story import story_progress
@@ -534,6 +534,24 @@ class PersistenceSafetyTests(unittest.TestCase):
                 save_simulation(simulation, destination)
             self.assertEqual(
                 destination.read_text(encoding="utf-8"), "existing timeline")
+
+    def test_dialogue_history_requires_complete_text(self) -> None:
+        fields = ("intention", "ren_line", "npc_name", "npc_line", "reaction")
+        exchange = DialogueExchange(
+            1, "Ask for guidance", "How should I prepare?", "Aiko Sato",
+            "Watch the exits first.", "attentive")
+        for field in fields:
+            with self.subTest(field=field), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=112)
+                simulation.state.protagonist.dialogue_history.append(
+                    replace(exchange, **{field: ""}))
+                destination = Path(temporary_directory) / "timeline.json"
+                destination.write_text("existing timeline", encoding="utf-8")
+                with self.assertRaisesRegex(
+                        ValueError, rf"dialogue_history\[0\]\.{field}.*non-empty text"):
+                    save_simulation(simulation, destination)
+                self.assertEqual(
+                    destination.read_text(encoding="utf-8"), "existing timeline")
 
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)

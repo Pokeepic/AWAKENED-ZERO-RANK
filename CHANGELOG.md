@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.266.0 - Complete save dialogue text
+
+- Save validation now rejects dialogue exchanges with a missing intention, Ren line, NPC name, NPC line, or reaction.
+- Incomplete conversations can no longer enter the persistent chronicle.
+- Added rejection coverage for every dialogue text field and verified that invalid dialogue cannot replace an existing timeline.
+
 ## 0.265.0 - Complete save memory text
 
 - Save validation now rejects memories with missing summary text, matching observer artifact requirements.
