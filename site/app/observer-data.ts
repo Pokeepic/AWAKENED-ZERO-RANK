@@ -427,9 +427,31 @@ function isActivity(
       (memories[index - 1].importance === memory.importance &&
         memories[index - 1].day >= memory.day),
   );
+  const currentPosition = currentDay * TIME_SLOTS.length + currentSlotIndex;
+  const awakeningPosition = 3 * TIME_SLOTS.length +
+    TIME_SLOTS.indexOf("Evening");
+  const registrationPosition = 4 * TIME_SLOTS.length +
+    TIME_SLOTS.indexOf("Afternoon");
+  const latest = value.recent_events.at(-1);
+  const fixedEventValid = currentPosition === awakeningPosition
+    ? latest?.action === "Awakening assessment" && latest.day === 3 &&
+      latest.slot === "Afternoon" &&
+      latest.reason ===
+        "a city gate alert triggered Ren's mandatory screening (world event)" &&
+      latest.outcome === "Awakened at Rank F with Threat Sense."
+    : currentPosition === registrationPosition
+      ? latest?.action === "Guild registration" && latest.day === 4 &&
+        latest.slot === "Morning" &&
+        latest.reason ===
+          "newly awakened citizens must register before accepting hunter work (world event)" &&
+        /^Aiko Sato issued an F-rank license; travel and filing cost ¥(?:0|[1-9]\d{0,2}(?:,\d{3})*)\.$/.test(
+          latest.outcome,
+        )
+      : true;
   return (
     beforeCurrent &&
     memoriesCanonical &&
+    fixedEventValid &&
     positions.every(
       (position, index) =>
         index === 0 ||

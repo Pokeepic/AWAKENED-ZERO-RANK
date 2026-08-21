@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
+from dataclasses import replace
 from io import StringIO
 import hashlib
 import json
@@ -374,6 +375,18 @@ class PersistenceSafetyTests(unittest.TestCase):
                     "Ashen Shopping Arcade")
                 destination = Path(temporary_directory) / "timeline.json"
                 with self.assertRaisesRegex(ValueError, "portal evidence"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
+    def test_fixed_events_require_authored_activity_evidence(self) -> None:
+        for steps in (10, 13):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=98)
+                simulation.run(steps)
+                simulation.state.events[-1] = replace(
+                    simulation.state.events[-1], action="Invented event")
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "activity evidence"):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 

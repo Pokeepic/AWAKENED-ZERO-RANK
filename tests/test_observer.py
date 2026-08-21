@@ -554,6 +554,18 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "portal evidence"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_requires_fixed_event_activity_evidence(self) -> None:
+        for steps in (10, 13):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=331)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["activity"]["recent_events"][-1]["action"] = (
+                    "Invented event")
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "activity evidence"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
         weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"

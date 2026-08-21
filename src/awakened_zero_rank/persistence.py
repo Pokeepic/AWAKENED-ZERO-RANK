@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import tempfile
 from dataclasses import asdict
 from pathlib import Path
@@ -487,6 +488,30 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             (state.discovered_portals or state.portal_investigations or
              state.active_portal_plan is not None)):
         raise ValueError("Invalid save fixed-event portal evidence")
+    fixed_events = {
+        (3, tuple(TimeSlot).index(TimeSlot.EVENING)): (
+            3, TimeSlot.AFTERNOON, "Awakening assessment",
+            "a city gate alert triggered Ren's mandatory screening (world event)",
+            "Awakened at Rank F with Threat Sense."),
+        (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)): (
+            4, TimeSlot.MORNING, "Guild registration",
+            "newly awakened citizens must register before accepting hunter work "
+            "(world event)", None),
+    }
+    expected_event = fixed_events.get(clock_position)
+    if expected_event is not None:
+        latest = state.events[-1] if state.events else None
+        expected_day, expected_slot, action, reason, outcome = expected_event
+        if (
+                latest is None or latest.day != expected_day or
+                latest.slot is not expected_slot or latest.action != action or
+                latest.reason != reason or
+                (outcome is not None and latest.outcome != outcome) or
+                (outcome is None and re.fullmatch(
+                    r"Aiko Sato issued an F-rank license; travel and filing "
+                    r"cost ¥(?:0|[1-9]\d{0,2}(?:,\d{3})*)\.",
+                    latest.outcome) is None)):
+            raise ValueError("Invalid save fixed-event activity evidence")
     if protagonist.current_goal != expected_goal:
         raise ValueError("Invalid save protagonist current goal")
 

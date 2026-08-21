@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
@@ -150,6 +151,44 @@ def _validate_activity(
         memory_order.append((-importance, -day))
     if memory_order != sorted(memory_order):
         raise ValueError("Observer snapshot key memories are out of order")
+
+
+def _validate_fixed_event_activity(
+        activity: dict[str, Any], current_day: int, current_slot: str) -> None:
+    events = activity["recent_events"]
+    current_position = (current_day, _SLOTS.index(current_slot))
+    fixed_events = {
+        (3, _SLOTS.index("Evening")): {
+            "action": "Awakening assessment",
+            "day": 3,
+            "outcome": "Awakened at Rank F with Threat Sense.",
+            "reason": (
+                "a city gate alert triggered Ren's mandatory screening "
+                "(world event)"),
+            "slot": "Afternoon",
+        },
+        (4, _SLOTS.index("Afternoon")): {
+            "action": "Guild registration",
+            "day": 4,
+            "reason": (
+                "newly awakened citizens must register before accepting "
+                "hunter work (world event)"),
+            "slot": "Morning",
+        },
+    }
+    expected = fixed_events.get(current_position)
+    if expected is not None:
+        latest = events[-1] if events else None
+        if (
+                latest is None or
+                any(latest.get(name) != value for name, value in expected.items()) or
+                (current_position == (4, _SLOTS.index("Afternoon")) and
+                 re.fullmatch(
+                     r"Aiko Sato issued an F-rank license; travel and filing "
+                     r"cost ¥(?:0|[1-9]\d{0,2}(?:,\d{3})*)\.",
+                     latest["outcome"]) is None)):
+            raise ValueError(
+                "Observer snapshot fixed-event activity evidence is invalid")
 
 
 def _validate_environment(environment: Any, day: int, slot: str) -> None:
@@ -572,6 +611,7 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     _validate_protagonist(
         snapshot["protagonist"], day, clock["slot"],
         snapshot["economy"]["rent_arrears"])
+    _validate_fixed_event_activity(snapshot["activity"], day, clock["slot"])
 
     return day
 

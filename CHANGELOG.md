@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.253.0 - Fixed-event activity evidence
+
+- Browser, save, and Python observer validation now require the authored Awakening assessment or Guild registration as the latest event at each exact post-event boundary.
+- Registration accepts the deterministic travel fare while authenticating the event identity, chronology, reason, and outcome format.
+- Added exact boundary and redigested-tamper coverage across all three validation surfaces. Valid decisions and schemas are unchanged.
+
 ## 0.252.0 - Fixed-event portal evidence
 
 - Browser, save, and Python observer validation now require an empty discovery ledger, investigation ledger, and active portal plan at the exact post-Awakening and post-registration boundaries.
