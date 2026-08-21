@@ -48,8 +48,12 @@ export type StoryEnding = {
 export type CompletedStory = {
   day: number;
   focus_npcs: string[];
+  international_link: string | null;
   key: string;
   outcome: string;
+  portal_consequence: string;
+  premise: string;
+  scene: string;
   tier: string;
   title: string;
 };
@@ -233,6 +237,14 @@ const STORY_ANCHORS = [
   { day: 730, key: "arc_guild_reckoning", title: "The Guild Reckoning", focus_npcs: ["Aiko Sato", "Daichi Mori"], outcomes: { isolated: "The hearing reduced Ren's life to a rank the guild could dismiss.", resilient: "Ren's record protected low-rank patrols, even as the old hierarchy survived.", prepared: "Ren's allies forced the guild to recognize survival evidence beside rank." } },
   { day: 913, key: "arc_zero_rank_choice", title: "The Zero-Rank Choice", focus_npcs: ["Aiko Sato", "Daichi Mori", "Mei Kuroda", "Haruto Ishikawa"], outcomes: { isolated: "Ren confronted the final threat without a network strong enough to share its cost.", resilient: "Ren's incomplete circle held long enough to keep the threat from consuming Tokyo.", prepared: "Every bond and discovery converged into a coordinated answer to the final threat." } },
   { day: 1095, key: "arc_awakened_horizon", title: "The Awakened Horizon", focus_npcs: ["Aiko Sato", "Daichi Mori", "Mei Kuroda", "Haruto Ishikawa"], outcomes: { isolated: "Ren survived three years, carrying an unfinished warning into an uncertain future.", resilient: "Ren left Tokyo steadier than he found it, though some fractures remained.", prepared: "Ren reached the horizon with a trusted circle and a record that changed Tokyo." } },
+] as const;
+const STORY_DETAILS = [
+  { premise: "A synchronized Gate pulse forces Tokyo to reassess its weakest districts.", scene: "Aiko maps apartment residents while Daichi marks the patrol routes the guild abandoned.", portal_consequence: "The newest portal record reveals which evacuation route will destabilize first.", international_link: null },
+  { premise: "Conflicting guild orders divide the people responsible for civilian safety.", scene: "Daichi brings the disputed orders to Mei, who finds a portal signature hidden in their timestamps.", portal_consequence: "The recorded portal pattern distinguishes the forged order from the real patrol signal.", international_link: "The forgery uses routing conventions later traced beyond Japan." },
+  { premise: "A repeating portal signature links Japan to a disaster unfolding overseas.", scene: "Mei decodes the signal at Haruto's shuttered shop while he inventories supplies for an unknown city.", portal_consequence: "The latest portal record gives the foreign responders a matching hazard and a safe approach.", international_link: "Responders in Busan confirm the same signature and establish the chronicle's first overseas contact." },
+  { premise: "Tokyo must decide whether rank or lived evidence defines a hunter's worth.", scene: "Aiko reads overlooked incident reports into the record as Daichi names the patrols those reports saved.", portal_consequence: "A documented portal hazard turns Ren's field notes into evidence the hearing cannot dismiss.", international_link: "The Busan contact submits corroborating records that make the reckoning larger than one guild." },
+  { premise: "Ren's accumulated loyalties and discoveries converge around one final threat.", scene: "Aiko coordinates civilians, Daichi holds the perimeter, Mei reads the breach, and Haruto keeps the route supplied.", portal_consequence: "The newest portal record determines where the circle can interrupt the converging breach.", international_link: "The overseas corridor returns the warning, giving Tokyo time bought by people Ren never met." },
+  { premise: "The three-year chronicle reaches an ending shaped by the life Ren built.", scene: "At the Arakawa riverbank, Ren's circle compares the city they inherited with the one their records now protect.", portal_consequence: "Every documented portal remains part of the public warning network rather than disappearing into a private file.", international_link: "Tokyo and Busan keep the corridor open as the first link in a wider civilian warning network." },
 ] as const;
 const LEGACY_STORY_OUTCOME = "Outcome tier unavailable in this legacy timeline.";
 const ANIMATION_CUES = [
@@ -612,7 +624,8 @@ function isCompletedStory(
   currentDay: number,
 ): value is CompletedStory {
   const anchor = STORY_ANCHORS[index];
-  if (anchor === undefined || !isRecord(value)) {
+  const details = STORY_DETAILS[index];
+  if (anchor === undefined || details === undefined || !isRecord(value)) {
     return false;
   }
   const tier = isString(value.tier) ? value.tier : "";
@@ -620,12 +633,16 @@ function isCompletedStory(
     ? LEGACY_STORY_OUTCOME
     : (anchor.outcomes as Record<string, string>)[tier];
   return (
-    hasExactKeys(value, ["day", "focus_npcs", "key", "outcome", "tier", "title"]) &&
+    hasExactKeys(value, ["day", "focus_npcs", "international_link", "key", "outcome", "portal_consequence", "premise", "scene", "tier", "title"]) &&
     value.day === anchor.day &&
     value.day <= currentDay &&
     value.key === anchor.key &&
     value.title === anchor.title &&
     value.outcome === expectedOutcome &&
+    value.premise === details.premise &&
+    value.scene === details.scene &&
+    value.portal_consequence === details.portal_consequence &&
+    value.international_link === details.international_link &&
     ["isolated", "resilient", "prepared", "legacy-unavailable"].includes(
       value.tier as string,
     ) &&
@@ -709,7 +726,7 @@ function isStory(
       "schema_version", "total_anchors",
     ]) ||
     !Array.isArray(value.completed) ||
-    value.schema_version !== 3 ||
+    value.schema_version !== 4 ||
     !isInteger(value.completed_count) ||
     value.completed_count !== value.completed.length ||
     !value.completed.every((entry, index) =>

@@ -189,7 +189,7 @@ class CliValidationTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), original)
         summary = json.loads(output.getvalue())
         self.assertEqual(summary["path"], str(path))
-        self.assertEqual(summary["schema_version"], 3)
+        self.assertEqual(summary["schema_version"], 4)
         self.assertEqual(summary["completed_count"], 1)
         self.assertEqual(summary["completed"][0]["tier"], "resilient")
         self.assertEqual(summary["next"]["key"], "arc_tokyo_fracture")
@@ -245,7 +245,7 @@ class CliValidationTests(unittest.TestCase):
             "day": simulation.state.clock.day,
             "slot": simulation.state.clock.slot.value,
         })
-        self.assertEqual(snapshot["story"]["schema_version"], 3)
+        self.assertEqual(snapshot["story"]["schema_version"], 4)
         self.assertEqual(
             [item["name"] for item in snapshot["relationships"]],
             sorted(simulation.state.protagonist.relationships),

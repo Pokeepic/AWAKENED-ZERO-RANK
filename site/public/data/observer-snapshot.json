@@ -135,8 +135,9 @@
   },
   "identity": {
     "algorithm": "sha256",
-    "digest": "c26e3e51c56fee5cd2a01be4c86a6b47508aa1527b9207ae16efdbd7d4c7e824"
+    "digest": "67c87cd168bc088fab00b5c1ef74a75969d3f64535d14137a070a964b9f29db0"
   },
+  "path": "C:\\Users\\user\\AppData\\Local\\Temp\\azr-story-0cad087ed1a64e72b4b7f27772e10b5f\\ren.json",
   "portals": {
     "active_plan": null,
     "discovered": [
@@ -258,7 +259,7 @@
       "key": "arc_adachi_warning",
       "title": "The Adachi Warning"
     },
-    "schema_version": 3,
+    "schema_version": 4,
     "total_anchors": 6
   }
 }

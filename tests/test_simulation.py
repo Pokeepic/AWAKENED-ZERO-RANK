@@ -64,7 +64,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.270.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.271.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -294,6 +294,10 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(all(
             anchor.focus_npcs and set(anchor.focus_npcs).issubset(NPCS)
             for anchor in STORY_ANCHORS))
+        self.assertTrue(all(anchor.scene for anchor in STORY_ANCHORS))
+        self.assertTrue(all(anchor.portal_consequence for anchor in STORY_ANCHORS))
+        self.assertTrue(all(
+            anchor.international_link for anchor in STORY_ANCHORS[1:]))
 
     def test_story_anchor_resolution_reflects_accumulated_readiness(self) -> None:
         isolated = Simulation(seed=89)
@@ -315,6 +319,8 @@ class SimulationTests(unittest.TestCase):
         self.assertIn("clear Adachi before the synchronized breach", prepared_event.outcome)
         self.assertIn("Trusted support: Aiko Sato, Daichi Mori", prepared_event.outcome)
         self.assertIn("Latest portal evidence: Ashen Shopping Arcade", prepared_event.outcome)
+        self.assertIn("Scene: Aiko maps apartment residents", prepared_event.outcome)
+        self.assertIn("Consequence: The newest portal record", prepared_event.outcome)
         self.assertIn("arc_adachi_warning", prepared.state.calendar_events_seen)
 
     def test_story_outcome_ledger_survives_save_load(self) -> None:

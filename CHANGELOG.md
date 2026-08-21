@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.271.0 - Connected story arc
+
+- Deepened all six fixed story anchors with authored recurring-character scenes and portal-specific consequences without changing their dates or readiness thresholds.
+- Connected the Tokyo Fracture, Busan signal response, guild hearing, final breach, and ending through a deterministic international continuity thread.
+- Advanced the read-only story projection to schema 4 and made the observer authenticate and render the richer completed-arc record.
+- Preserved save compatibility, autonomous decisions, fixed three-year horizons, and the existing honest RL verdicts.
+
 ## 0.270.0 - Production observer completion
 
 - Completed the read-only observer surface with authenticated decision reasons, economy, mission and equipment records, story history, relationship signals, portal investigation progress, and key memories.

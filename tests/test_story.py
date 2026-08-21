@@ -18,7 +18,7 @@ class StoryProgressTests(unittest.TestCase):
         progress = story_progress(state)
 
         self.assertEqual(state, before)
-        self.assertEqual(progress["schema_version"], 3)
+        self.assertEqual(progress["schema_version"], 4)
         self.assertEqual(progress["completed"], [])
         self.assertEqual(progress["completed_count"], 0)
         self.assertEqual(progress["total_anchors"], 6)
@@ -46,6 +46,12 @@ class StoryProgressTests(unittest.TestCase):
         self.assertTrue(all(
             entry["tier"] == "prepared" and entry["outcome"]
             for entry in progress["completed"]))
+        self.assertTrue(all(entry["scene"] for entry in progress["completed"]))
+        self.assertTrue(all(
+            entry["portal_consequence"] for entry in progress["completed"]))
+        self.assertIsNone(progress["completed"][0]["international_link"])
+        self.assertIn(
+            "Busan", progress["completed"][2]["international_link"])
         self.assertEqual(progress["completed_count"], 6)
         self.assertTrue(progress["ending_reached"])
         self.assertEqual(progress["ending"]["id"], "zero-rank-horizon")

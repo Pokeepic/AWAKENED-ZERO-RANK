@@ -58,7 +58,7 @@ class ObserverSnapshotTests(unittest.TestCase):
             "key_memories": [],
             "recent_events": [],
         })
-        self.assertEqual(snapshot["story"]["schema_version"], 3)
+        self.assertEqual(snapshot["story"]["schema_version"], 4)
         json.dumps(snapshot, sort_keys=True)
 
     def test_activity_is_bounded_and_preserves_recent_order(self) -> None:

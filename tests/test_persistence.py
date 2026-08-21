@@ -809,7 +809,7 @@ class PersistenceSafetyTests(unittest.TestCase):
             restored.state.story_outcomes,
             {"arc_adachi_warning": "legacy-unavailable"})
         progress = story_progress(restored.state)
-        self.assertEqual(progress["schema_version"], 3)
+        self.assertEqual(progress["schema_version"], 4)
         self.assertEqual(progress["completed"][0]["tier"], "legacy-unavailable")
         self.assertIn("unavailable", progress["completed"][0]["outcome"])
 

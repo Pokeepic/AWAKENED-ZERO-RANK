@@ -48,7 +48,8 @@ _STORY_KEYS = {
     "schema_version", "total_anchors",
 }
 _COMPLETED_STORY_KEYS = {
-    "day", "focus_npcs", "key", "outcome", "tier", "title",
+    "day", "focus_npcs", "international_link", "key", "outcome",
+    "portal_consequence", "premise", "scene", "tier", "title",
 }
 _ENDING_KEYS = {
     "id", "isolated_count", "prepared_count", "resilient_count", "summary",
@@ -413,8 +414,12 @@ def _validate_story(story: Any, current_day: int) -> None:
         expected = {
             "day": anchor.day,
             "focus_npcs": list(anchor.focus_npcs),
+            "international_link": anchor.international_link,
             "key": anchor.key,
             "outcome": outcome,
+            "portal_consequence": anchor.portal_consequence,
+            "premise": anchor.premise,
+            "scene": anchor.scene,
             "tier": tier,
             "title": anchor.title,
         }

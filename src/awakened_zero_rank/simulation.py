@@ -206,6 +206,7 @@ class Simulation:
         else:
             outcome_tier = "isolated"
         resolution = anchor.outcome(outcome_tier)
+        resolution += f" Scene: {anchor.scene}"
         focused_allies = [
             name for name in anchor.focus_npcs
             if name in protagonist.relationships and
@@ -214,6 +215,9 @@ class Simulation:
             resolution += f" Trusted support: {', '.join(focused_allies)}."
         if state.discovered_portals:
             resolution += f" Latest portal evidence: {state.discovered_portals[-1]}."
+            resolution += f" Consequence: {anchor.portal_consequence}"
+        if anchor.international_link is not None:
+            resolution += f" International link: {anchor.international_link}"
         if anchor.ending:
             resolution += " This became the ending of his three-year chronicle."
         state.calendar_events_seen.append(anchor.key)
