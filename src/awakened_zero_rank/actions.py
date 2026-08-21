@@ -70,15 +70,37 @@ def _prepare_placeholder(_: Protagonist) -> str:
     return "Portal preparation pending resolution."
 
 
-def _shop(p: Protagonist) -> str:
-    fare = _travel(p, "Kita-Senju Hunter Supply")
-    priority = (
+def _shop_priority(p: Protagonist) -> str | None:
+    """Return the next planned purchase from equipment and field condition."""
+    return (
         "Field Knife" if p.equipped_weapon is None else
         "Padded Jacket" if p.equipped_armor is None else
+        "Healing Gel" if p.item_count("Healing Gel") < 2 and p.health < 80 else
+        "Energy Drink" if p.item_count("Energy Drink") < 2 and p.energy < 65 else
         "Healing Gel" if p.item_count("Healing Gel") < 2 else
         "Energy Drink" if p.item_count("Energy Drink") < 2 else
         None
     )
+
+
+def _shop_score(p: Protagonist, slot: TimeSlot, alert: int) -> float:
+    """Value the exact purchase the shop action would make."""
+    priority = _shop_priority(p)
+    purchase_value = 0
+    if priority == "Field Knife" and p.money >= ITEMS[priority].price + p.rent_cost:
+        purchase_value = 48
+    elif priority == "Padded Jacket" and p.money >= ITEMS[priority].price + p.rent_cost:
+        purchase_value = 42
+    elif priority == "Healing Gel" and p.health < 75 and p.money >= ITEMS[priority].price:
+        purchase_value = 14 * (2 - p.item_count(priority))
+    elif priority == "Energy Drink" and p.energy < 60 and p.money >= ITEMS[priority].price:
+        purchase_value = 12 * (2 - p.item_count(priority))
+    return purchase_value + (8 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON) else -25) - alert * 5
+
+
+def _shop(p: Protagonist) -> str:
+    fare = _travel(p, "Kita-Senju Hunter Supply")
+    priority = _shop_priority(p)
     if priority is None:
         return f"Browsed hunter supplies but already carried the planned field stock; fare cost ¥{fare:,}."
     item = ITEMS[priority]
@@ -205,14 +227,7 @@ def available_actions(p: Protagonist) -> tuple[Action, ...]:
         ))
         actions.append(Action(
             "Visit hunter shop",
-            lambda p, slot, alert: (
-                (48 if p.equipped_weapon is None and p.money >= ITEMS["Field Knife"].price + p.rent_cost else 0)
-                + (42 if p.equipped_weapon and p.equipped_armor is None
-                   and p.money >= ITEMS["Padded Jacket"].price + p.rent_cost else 0)
-                + (28 if p.health < 75 and p.item_count("Healing Gel") == 0 and p.money >= 1_500 else 0)
-                + (8 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON) else -25)
-                - alert * 5
-            ),
+            _shop_score,
             _shop,
         ))
         actions.append(Action(

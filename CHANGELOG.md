@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.280.0 - Coherent field-stock planning
+
+- Centralized the hunter-shop purchase plan so action scoring and purchase execution select the same next item.
+- Added proportional utility for partially depleted Healing Gel stock and low-energy Energy Drink replacement.
+- Prioritized Energy Drinks over surplus medical stock when Ren is healthy but fatigued; no RL training or verdict change was produced.
+
 ## 0.279.0 - Bounded field supplies
 
 - Capped planned hunter-shop stock at two Healing Gels and two Energy Drinks after Ren obtains starter weapon and armor.
