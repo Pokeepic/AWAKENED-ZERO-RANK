@@ -350,6 +350,17 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
+    def test_awakened_mastery_cannot_revert_to_zero(self) -> None:
+        for steps in (11, 13, 40):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=106)
+                simulation.run(steps)
+                simulation.state.protagonist.ability_mastery = 0
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "mastery chronology"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_fixed_events_require_empty_hunter_record_evidence(self) -> None:
         for steps in (10, 13):
             with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:

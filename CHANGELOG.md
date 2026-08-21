@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.260.0 - Awakened mastery persistence
+
+- Browser, save, and Python observer validation now reject zero ability mastery after the Awakening assessment.
+- Together with v0.259.0, mastery is zero before Awakening, exactly one at the boundary, and at least one afterward.
+- Added immediate post-Awakening and later-timeline regression coverage across all three validation surfaces.
+
 ## 0.259.0 - Awakening mastery chronology
 
 - Browser, save, and Python observer validation now require zero ability mastery before the assessment and exactly one at the post-Awakening boundary.

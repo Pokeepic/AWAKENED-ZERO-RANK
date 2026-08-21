@@ -519,6 +519,17 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "mastery chronology"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_rejects_zero_mastery_after_awakening(self) -> None:
+        for steps in (11, 13, 40):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=327)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["protagonist"]["progression"]["ability_mastery"] = 0
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "mastery chronology"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_requires_fixed_event_state_evidence(self) -> None:
         cases = (
             (10, "protagonist", "ability_mastery"),

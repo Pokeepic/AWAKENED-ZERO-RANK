@@ -204,7 +204,9 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             (clock_position < awakening_position and
              protagonist.ability_mastery != 0) or
             (clock_position == awakening_position and
-             protagonist.ability_mastery != 1)):
+             protagonist.ability_mastery != 1) or
+            (clock_position > awakening_position and
+             protagonist.ability_mastery == 0)):
         raise ValueError("Invalid save Awakening mastery chronology")
     if (
             clock_position ==

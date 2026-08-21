@@ -880,6 +880,9 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     ((value.clock.day < 3 ||
       (value.clock.day === 3 && ["Morning", "Afternoon"].includes(value.clock.slot))) &&
       protagonist.progression.ability_mastery !== 0) ||
+    ((value.clock.day > 3 ||
+      (value.clock.day === 3 && value.clock.slot === "Late Night")) &&
+      protagonist.progression.ability_mastery === 0) ||
     ![
       "rank_points", "fitness", "knowledge", "missions_attempted",
       "missions_completed",

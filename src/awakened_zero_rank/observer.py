@@ -491,7 +491,9 @@ def _validate_protagonist(
             (position < awakening_position and
              progression_values["ability_mastery"] != 0) or
             (position == awakening_position and
-             progression_values["ability_mastery"] != 1)):
+             progression_values["ability_mastery"] != 1) or
+            (position > awakening_position and
+             progression_values["ability_mastery"] == 0)):
         raise ValueError("Observer snapshot Awakening mastery chronology is invalid")
     if (
             any(
