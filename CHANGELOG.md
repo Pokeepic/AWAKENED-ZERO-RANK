@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.274.0 - Persistent recurring-character exchanges
+
+- Added distinct guarded and trusted dialogue for Aiko, Daichi, Mei, and Haruto across routine, portal, injury, and guild contexts.
+- Autonomous schedule encounters now include the character's line, Ren's response, and a named reaction instead of a generic one-sided aside.
+- These meetings enter the existing bounded dialogue ledger and survive save/load without adding actions or changing social rewards.
+- Added focused voice, deterministic exchange, bounded-history, and persistence coverage while leaving RL evidence unchanged.
+
 ## 0.273.0 - Non-blocking investigation consequences
 
 - Delayed portal consequences now resolve alongside Ren's selected or utility-chosen action instead of replacing it and consuming the time slot.

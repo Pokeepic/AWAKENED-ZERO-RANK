@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .models import DialogueExchange, Protagonist, Relationship
-from .content import NPCS
 
 
 @dataclass(frozen=True)
@@ -82,26 +81,100 @@ def resolve_aiko_dialogue(p: Protagonist, day: int) -> tuple[DialogueExchange, s
 
 def contextual_line(npc_name: str, context: str, relationship: Relationship) -> str:
     """Create controlled NPC wording from identity, situation, and relationship state."""
-    profile = NPCS[npc_name]
     trusted = relationship.trust >= 15
     lines = {
+        "Aiko Sato": {
+            "portal": (
+                "Tell me what happened, not what you think the report wants to hear.",
+                "Bring me the raw report, Ren. I trust what you notice before the forms reshape it."),
+            "injury": (
+                "Please sit down before you tell me this is nothing.",
+                "You do not need a polished report. Tell me where it hurts first."),
+            "routine": (
+                "You look like you have somewhere important to be.",
+                "I saved the quiet desk for you. The guild can wait five minutes."),
+        },
         "Daichi Mori": {
-            "portal": "Check your exit twice. I won't lose a rookie to curiosity.",
-            "injury": "Sit down. Pride is not field medicine.",
-            "guild": "Be early, carry water, and follow the retreat call.",
+            "portal": (
+                "Check your exit twice. I won't lose a rookie to curiosity.",
+                "Mark the exit you trust, Ren. I will build the patrol around your read."),
+            "injury": (
+                "Sit down. Pride is not field medicine.",
+                "You held the line. Now let someone else hold it while you recover."),
+            "guild": (
+                "Be early, carry water, and follow the retreat call.",
+                "Brief the rookies with me. They listen when survival advice has a face."),
+            "routine": (
+                "Keep your route deliberate, even when the city feels quiet.",
+                "Walk with me. Patrol is easier when neither of us has to explain the silence."),
         },
         "Mei Kuroda": {
-            "portal": ("That clue repeats across gates. Tell me exactly what you sensed."
-                       if trusted else "Describe the anomaly. Leave theories out of it."),
-            "injury": "Your wound pattern may tell us what crossed the threshold.",
-            "guild": "The guild records outcomes. I am interested in causes.",
+            "portal": (
+                "Describe the anomaly. Leave theories out of it.",
+                "That clue repeats across gates. Tell me exactly what you sensed."),
+            "injury": (
+                "Your wound pattern may tell us what crossed the threshold.",
+                "I want the evidence, but not at the cost of treating you like evidence."),
+            "guild": (
+                "The guild records outcomes. I am interested in causes.",
+                "Your field notes keep finding the questions their reports avoid."),
+            "routine": (
+                "Routine is only a pattern no one has questioned yet.",
+                "I found tea and a contradiction. You may choose which one we discuss first."),
         },
         "Haruto Ishikawa": {
-            "portal": "Bring back your gear intact and I'll call that a good investment.",
-            "injury": "Healing Gel is cheaper than another night in emergency care.",
-            "guild": "Guild badge gets you advice. Yen gets you equipment.",
+            "portal": (
+                "Bring back your gear intact and I'll call that a good investment.",
+                "Bring yourself back intact. I can replace everything else on the receipt."),
+            "injury": (
+                "Healing Gel is cheaper than another night in emergency care.",
+                "Sit behind the counter. Customers can survive five minutes without my charm."),
+            "guild": (
+                "Guild badge gets you advice. Yen gets you equipment.",
+                "Your credit is good here—not the money kind, so do not get excited."),
+            "routine": (
+                "Looking is free. Touching the expensive shelf is not.",
+                "I put aside the decent supplies before the guild buyers arrived."),
         },
     }
-    if npc_name == "Aiko Sato":
-        return "Tell me what happened, not what you think the report wants to hear."
-    return lines[npc_name].get(context, f"{profile.role}: stay aware of what changes around you.")
+    guarded, familiar = lines[npc_name].get(context, lines[npc_name]["routine"])
+    return familiar if trusted else guarded
+
+
+def resolve_contextual_encounter(
+        p: Protagonist, npc_name: str, context: str, day: int,
+        trust_change: int) -> DialogueExchange:
+    """Record a complete recurring-character exchange during Ren's routine."""
+    relationship = p.relationships[npc_name]
+    trusted = relationship.trust >= 15
+    npc_line = contextual_line(npc_name, context, relationship)
+    responses = {
+        "Aiko Sato": (
+            "I can give you the honest version.",
+            "Five minutes sounds good. Thank you, Aiko."),
+        "Daichi Mori": (
+            "Understood. I will keep the route clear.",
+            "Then I will take the outside line with you."),
+        "Mei Kuroda": (
+            "I will separate what I sensed from what I assumed.",
+            "Tea first. The contradiction will still be strange afterward."),
+        "Haruto Ishikawa": (
+            "I am only checking what I can afford.",
+            "You always hide concern inside a sales pitch."),
+    }
+    ren_line = responses[npc_name][1 if trusted else 0]
+    reactions = {
+        "Aiko Sato": ("attentive", "reassured"),
+        "Daichi Mori": ("assessing", "approving"),
+        "Mei Kuroda": ("reserved", "quietly amused"),
+        "Haruto Ishikawa": ("businesslike", "warmly amused"),
+    }
+    reaction = reactions[npc_name][1 if trusted else 0]
+    relationship.change(trust_change, 2)
+    relationship.last_reaction = reaction
+    exchange = DialogueExchange(
+        day, f"{context.title()} encounter", ren_line,
+        npc_name, npc_line, reaction)
+    p.dialogue_history.append(exchange)
+    del p.dialogue_history[:-20]
+    return exchange

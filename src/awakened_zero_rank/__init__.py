@@ -16,7 +16,7 @@ from .observer import (
 )
 from .simulation import Simulation
 
-__version__ = "0.273.0"
+__version__ = "0.274.0"
 
 __all__ = [
     "Simulation", "__version__", "compare_observer_site_data",

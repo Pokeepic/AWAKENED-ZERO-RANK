@@ -9,7 +9,10 @@ import unittest
 
 from awakened_zero_rank.actions import available_actions
 from awakened_zero_rank.journal import journal_entry
-from awakened_zero_rank.dialogue import choose_intention, contextual_line, resolve_aiko_dialogue
+from awakened_zero_rank.dialogue import (
+    choose_intention, contextual_line, resolve_aiko_dialogue,
+    resolve_contextual_encounter,
+)
 from awakened_zero_rank.models import DelayedConsequence, Relationship, TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
@@ -64,7 +67,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.273.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.274.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -517,6 +520,48 @@ class SimulationTests(unittest.TestCase):
         trusted = Relationship("Mei Kuroda", "independent portal researcher", trust=20)
         self.assertNotEqual(contextual_line("Mei Kuroda", "portal", guarded),
                             contextual_line("Mei Kuroda", "portal", trusted))
+
+    def test_every_recurring_character_has_guarded_and_trusted_routine_voice(self) -> None:
+        for name, profile in NPCS.items():
+            guarded = Relationship(name, profile.role, trust=2)
+            trusted = Relationship(name, profile.role, trust=20)
+            self.assertNotEqual(
+                contextual_line(name, "routine", guarded),
+                contextual_line(name, "routine", trusted))
+
+    def test_contextual_encounter_records_both_sides_and_reaction(self) -> None:
+        simulation = Simulation(seed=173)
+        p = simulation.state.protagonist
+        p.relationships["Daichi Mori"] = Relationship(
+            "Daichi Mori", NPCS["Daichi Mori"].role, trust=20)
+
+        exchange = resolve_contextual_encounter(
+            p, "Daichi Mori", "portal", day=12, trust_change=2)
+
+        self.assertEqual(exchange.npc_name, "Daichi Mori")
+        self.assertIn("outside line", exchange.ren_line)
+        self.assertEqual(exchange.reaction, "approving")
+        self.assertEqual(p.dialogue_history[-1], exchange)
+        self.assertEqual(p.relationships["Daichi Mori"].trust, 22)
+
+    def test_autonomous_schedule_encounter_enters_saved_dialogue_history(self) -> None:
+        simulation = Simulation(seed=179)
+        simulation.run(20)
+        p = simulation.state.protagonist
+        p.location = "Adachi Gate Zone"
+        simulation._update_npc_schedules()
+
+        outcome = simulation._scheduled_social_encounter("Guild patrol")
+
+        self.assertIn("Ren answered", outcome)
+        self.assertEqual(p.dialogue_history[-1].npc_name, "Daichi Mori")
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "recurring-dialogue.json"
+            save_simulation(simulation, path)
+            restored = load_simulation(path)
+        self.assertEqual(
+            restored.state.protagonist.dialogue_history,
+            p.dialogue_history)
 
     def test_gate_missions_discover_named_portals_and_clues(self) -> None:
         simulation = Simulation(seed=42)

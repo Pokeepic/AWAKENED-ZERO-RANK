@@ -3,7 +3,9 @@ from __future__ import annotations
 import random
 
 from .agent import UtilityAgent
-from .dialogue import contextual_line, resolve_aiko_dialogue
+from .dialogue import (
+    contextual_line, resolve_aiko_dialogue, resolve_contextual_encounter,
+)
 from .content import NPCS, PORTALS, STORY_ANCHORS, StoryAnchor, scheduled_location
 from .environment import SUMMER_WEATHER, summer_weather
 from .models import (DelayedConsequence, Event, Memory, PortalInvestigation,
@@ -359,13 +361,17 @@ class Simulation:
             if (relationship is None or location != p.location or
                     key in self.state.social_encounters_seen or action_name == "Rest"):
                 continue
-            context = "portal" if action_name in {"Gate mission", "Guild patrol"} else "routine"
-            line = contextual_line(name, context, relationship)
+            context = (
+                "injury" if p.health < 55 or p.injury_severity > 1 else
+                "portal" if action_name in {"Gate mission", "Guild patrol"} else
+                "routine")
             trust_change = 2 if p.mood in {"Hopeful", "Steady"} else 1
-            relationship.change(trust_change, 2)
+            exchange = resolve_contextual_encounter(
+                p, name, context, day, trust_change)
             self.state.social_encounters_seen.append(key)
-            return (f"At {location}, {name} chose to approach me: “{line}” "
-                    f"The brief exchange made us more familiar.")
+            return (f"At {location}, {name} chose to approach me: “{exchange.npc_line}” "
+                    f"Ren answered: “{exchange.ren_line}” {name} seemed "
+                    f"{exchange.reaction}; the exchange made them more familiar.")
         return ""
 
     def _record_portal_investigation(self, portal) -> tuple[PortalInvestigation, bool]:
