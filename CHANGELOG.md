@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.251.0 - Fixed-event equipment evidence
+
+- Browser, save, and Python observer validation now require an empty inventory and no equipped weapon or armor at the exact post-Awakening and post-registration boundaries.
+- This binds the hunter loadout to the authored Guild-shop unlock without changing valid decisions or schemas.
+- Added exact boundary and redigested-tamper coverage across all three validation surfaces.
+
 ## 0.250.0 - Fixed-event hunter record evidence
 
 - Browser, save, and Python observer validation now require zero mission attempts, completions, and rank points at the exact post-Awakening and post-registration boundaries.

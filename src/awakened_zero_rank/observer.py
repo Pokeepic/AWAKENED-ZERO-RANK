@@ -475,6 +475,12 @@ def _validate_protagonist(
     for item_name, quantity in inventory.items():
         if _integer(quantity, f"inventory {item_name}") < 1:
             raise ValueError("Observer snapshot inventory quantity is invalid")
+    if (
+            position in fixed_hunter_record_positions and
+            (inventory or equipment["weapon"] is not None or
+             equipment["armor"] is not None)):
+        raise ValueError(
+            "Observer snapshot fixed-event equipment evidence is invalid")
 
 
 def _validate_relationships(relationships: Any, day: int, slot: str) -> None:

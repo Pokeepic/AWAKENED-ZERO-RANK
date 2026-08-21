@@ -789,6 +789,11 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
     ) ||
     !LOCATIONS.has(protagonist.location as string) ||
     !isEquipment(protagonist.equipment) ||
+    ((((value.clock.day === 3 && value.clock.slot === "Evening") ||
+      (value.clock.day === 4 && value.clock.slot === "Afternoon"))) &&
+      ((protagonist.equipment as ObserverSnapshot["protagonist"]["equipment"]).weapon !== null ||
+       (protagonist.equipment as ObserverSnapshot["protagonist"]["equipment"]).armor !== null ||
+       Object.keys((protagonist.equipment as ObserverSnapshot["protagonist"]["equipment"]).inventory).length !== 0)) ||
     !isRecord(protagonist.resources) ||
     !hasExactKeys(protagonist.resources, [
       "energy", "health", "hunger", "money", "morale", "stress",
