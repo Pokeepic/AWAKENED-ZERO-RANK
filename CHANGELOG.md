@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.382.0 - Daily observer briefing
+
+- Added a compact Today at a Glance briefing for immediate pressure, fixed story horizon, seasonal horizon, and unresolved portal priority.
+- Derived every briefing statement from the already authenticated observer snapshot without adding controls, network calls, or a second source of simulation truth.
+- Prioritized rent arrears, health, energy, hunger, stress, and Gate alerts in a deterministic urgency order.
+- Kept the briefing responsive and visually subordinate to the chronicle itself.
+- Preserved simulator mechanics and the existing RL verdict without running a new experiment.
+
 ## 0.381.0 - Observer hierarchy cleanup
 
 - Reorganized the observer into four named chapters: Current Life, Progression, Story & People, and World Records.

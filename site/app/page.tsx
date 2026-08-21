@@ -10,6 +10,7 @@ import {
   PORTAL_PROFILE_CATALOG,
   RESOURCE_NAMES,
   SEASONAL_EVENT_CATALOG,
+  dailyBriefing,
   nextSeasonalEvent,
   verifyArtifacts,
   type ObserverSnapshot,
@@ -126,6 +127,7 @@ export default function Home() {
   const calendarYear = Math.floor((snapshot.clock.day - 1) / 365) + 1;
   const dayOfYear = ((snapshot.clock.day - 1) % 365) + 1;
   const nextSeasonal = nextSeasonalEvent(snapshot.clock.day);
+  const briefing = dailyBriefing(snapshot);
   const rentStatus = snapshot.economy.rent_arrears > 0
     ? `¥${snapshot.economy.rent_arrears.toLocaleString()} overdue`
     : snapshot.economy.rent_payments > 0
@@ -142,6 +144,7 @@ export default function Home() {
 
     <div className="grid">
       <div className="chapter-label" id="current-life"><span>01</span><b>CURRENT LIFE</b><small>Condition, choices, and conversations</small></div>
+      <section className="briefing" aria-labelledby="briefing-title"><h2 className="section-label" id="briefing-title">TODAY AT A GLANCE <span>AUTHENTICATED SUMMARY</span></h2><div className="briefing-grid">{briefing.map((item) => <article className={item.tone} key={item.label}><small>{item.label}</small><b>{item.value}</b><p>{item.detail}</p></article>)}</div></section>
       <section className="profile"><h2 className="section-label">CURRENT STATE <mark>RANK {p.hunter_rank}</mark></h2><h3>{p.name}</h3><p>{p.location} / {p.mood}</p><blockquote><small>ACTIVE INTENT</small><b>{p.current_goal}</b></blockquote>{RESOURCE_NAMES.map((k) => <div className="meter" key={k} role="progressbar" aria-label={k} aria-valuemin={0} aria-valuemax={100} aria-valuenow={p.resources[k]}><span>{k}<b>{p.resources[k]}</b></span><i><u style={{ width: `${p.resources[k]}%` }} /></i></div>)}<div className="money"><small>AVAILABLE</small><strong>JPY {p.resources.money.toLocaleString()}</strong></div></section>
 
       <section className="events"><h2 className="section-label">LATEST DECISIONS <span>{events.length} ENTRIES</span></h2>{events.length===0&&<p className="empty-state">Ren has not made a recorded decision yet.</p>}{events.map((event) => <article key={`${event.day}-${event.slot}-${event.action}`}><time>D{event.day} / {event.slot}</time><div><h3>{event.action}</h3><p>{event.outcome}</p><small>WHY / {event.reason}</small></div></article>)}</section>

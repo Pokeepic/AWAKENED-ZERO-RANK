@@ -156,6 +156,43 @@ export function nextSeasonalEvent(day: number) {
   };
   return { ...next.event, day: next.day, daysRemaining: next.day - day };
 }
+export type DailyBriefItem = {
+  label: string;
+  value: string;
+  detail: string;
+  tone: "urgent" | "watch" | "steady";
+};
+export function dailyBriefing(snapshot: ObserverSnapshot): readonly DailyBriefItem[] {
+  const resources = snapshot.protagonist.resources;
+  let pressure: DailyBriefItem;
+  if (snapshot.economy.rent_arrears > 0) {
+    pressure = { label: "Immediate pressure", value: "Rent arrears", detail: `¥${snapshot.economy.rent_arrears.toLocaleString()} remains overdue.`, tone: "urgent" };
+  } else if (resources.health < 60) {
+    pressure = { label: "Immediate pressure", value: "Recovery", detail: `Health is ${resources.health}/100.`, tone: "urgent" };
+  } else if (resources.energy < 35) {
+    pressure = { label: "Immediate pressure", value: "Low energy", detail: `Energy is ${resources.energy}/100.`, tone: "watch" };
+  } else if (resources.hunger > 65) {
+    pressure = { label: "Immediate pressure", value: "Hunger", detail: `Hunger is ${resources.hunger}/100.`, tone: "watch" };
+  } else if (resources.stress > 60) {
+    pressure = { label: "Immediate pressure", value: "High stress", detail: `Stress is ${resources.stress}/100.`, tone: "watch" };
+  } else if (snapshot.environment.gate_alert_level >= 2) {
+    pressure = { label: "Immediate pressure", value: "Gate alert", detail: `Tokyo alert level is ${snapshot.environment.gate_alert_level}.`, tone: "watch" };
+  } else {
+    pressure = { label: "Immediate pressure", value: "Routine stable", detail: snapshot.protagonist.current_goal, tone: "steady" };
+  }
+  const story = snapshot.story.next
+    ? { label: "Story horizon", value: snapshot.story.next.title, detail: `${snapshot.story.next.days_remaining} days until day ${snapshot.story.next.day}.`, tone: "steady" as const }
+    : { label: "Story horizon", value: snapshot.story.ending?.title ?? "Arc complete", detail: "The three-year chronicle has reached its ending.", tone: "steady" as const };
+  const seasonal = nextSeasonalEvent(snapshot.clock.day);
+  const seasonalItem = { label: "Seasonal horizon", value: seasonal.title, detail: `${seasonal.daysRemaining} days until day ${seasonal.day}.`, tone: "steady" as const };
+  const investigation = snapshot.portals.active_plan
+    ? snapshot.portals.investigations.find((item) => item.portal_name === snapshot.portals.active_plan)
+    : [...snapshot.portals.investigations].sort((left, right) => right.progress - left.progress)[0];
+  const portal = investigation
+    ? { label: "Portal priority", value: investigation.portal_name, detail: `${investigation.progress}% investigated / risk ${investigation.risk}.`, tone: investigation.risk >= 60 ? "watch" as const : "steady" as const }
+    : { label: "Portal priority", value: "No active investigation", detail: "No unresolved portal evidence is currently tracked.", tone: "steady" as const };
+  return [pressure, story, seasonalItem, portal];
+}
 export const EQUIPMENT_CATALOG: readonly EquipmentCatalogItem[] = [
   { bonus: 7, kind: "weapon", minimumRank: "F", name: "Field Knife", price: 2400 },
   { bonus: 5, kind: "armor", minimumRank: "F", name: "Padded Jacket", price: 3200 },
