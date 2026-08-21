@@ -333,6 +333,10 @@ function isEconomy(
     value.rent_cost === 8000 &&
     (value.rent_arrears as number) <= 8000 &&
     (value.rent_payments as number) <= 1 &&
+    !(
+      (day < 4 || (day === 4 && ["Morning", "Afternoon"].includes(slot))) &&
+      value.shop_visits !== 0
+    ) &&
     !(value.rent_payments === 1 && (value.rent_arrears as number) > 0) &&
     !(
       (day < 8 || (day === 8 && slot === "Morning")) &&

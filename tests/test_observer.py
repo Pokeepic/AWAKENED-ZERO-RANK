@@ -198,6 +198,17 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "predates"):
                     verify_observer_snapshot(premature)
 
+    def test_verifier_rejects_shop_visits_before_registration(self) -> None:
+        for steps in (0, 10, 13):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=307)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["economy"]["shop_visits"] = 1
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "shop chronology"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_resources(self) -> None:
         negative_money = observer_snapshot(Simulation(seed=251))
         negative_money["protagonist"]["resources"]["money"] = -1

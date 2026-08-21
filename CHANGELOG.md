@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.255.0 - Guild shop chronology
+
+- Browser, save, and Python observer validation now require zero hunter-shop visits through the exact post-registration boundary.
+- The shop ledger is now bound to the authored Guild registration unlock without changing valid decisions or schemas.
+- Added pre-Awakening, post-Awakening, and post-registration tamper coverage across all three validation surfaces.
+
 ## 0.254.0 - Fixed-event memory evidence
 
 - Browser, save, and Python observer validation now require the authored Awakening memory at both fixed lifecycle boundaries and the Guild registration memory after registration.

@@ -316,6 +316,11 @@ def _validate_economy(economy: Any, day: int, slot: str) -> None:
     if values["meal_cost"] not in {500, 600, 700, 800}:
         raise ValueError("Observer snapshot meal cost is invalid")
     if (
+            (day, _SLOTS.index(slot)) <=
+            (4, _SLOTS.index("Afternoon")) and
+            values["shop_visits"] != 0):
+        raise ValueError("Observer snapshot shop chronology is invalid")
+    if (
             values["rent_due_day"] != AUTHORED_RENT_DUE_DAY or
             values["rent_cost"] != AUTHORED_RENT_COST or
             values["rent_arrears"] > AUTHORED_RENT_COST or

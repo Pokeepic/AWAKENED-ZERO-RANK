@@ -288,6 +288,11 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     _require_integer_range("rent_payments", state.rent_payments, 0)
     _require_integer_range("shop_visits", state.shop_visits, 0)
     if (
+            clock_position <=
+            (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)) and
+            state.shop_visits != 0):
+        raise ValueError("Invalid save hunter shop chronology")
+    if (
             protagonist.rent_due_day != AUTHORED_RENT_DUE_DAY or
             protagonist.rent_cost != AUTHORED_RENT_COST or
             protagonist.rent_arrears > AUTHORED_RENT_COST or
