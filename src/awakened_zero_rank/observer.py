@@ -11,7 +11,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
 from .content import NPCS, PORTALS, STORY_ANCHORS
-from .environment import SUMMER_WEATHER
+from .environment import SEASON_WEATHER, season_for_day
 from .models import AUTHORED_RENT_COST, AUTHORED_RENT_DUE_DAY
 from .story import STORY_PROGRESS_SCHEMA_VERSION, story_progress
 from .world import (ITEMS, LOCATIONS, mission_rank_points_are_possible,
@@ -96,7 +96,8 @@ _EVENT_ANIMATION_CUES = {
     "Visit hunter shop": "shopping",
 }
 _WEATHER_TEMPERATURES = {
-    weather.name: weather.temperature_c for weather in SUMMER_WEATHER
+    season: {weather.name: weather.temperature_c for weather in profile}
+    for season, profile in SEASON_WEATHER.items()
 }
 
 
@@ -258,10 +259,15 @@ def _validate_environment(environment: Any, day: int, slot: str) -> None:
             (day, _SLOTS.index(slot)) ==
             (4, _SLOTS.index("Afternoon")) and alert != 2):
         raise ValueError("Observer snapshot Guild alert evidence is invalid")
+    season = environment["season"]
+    expected_seasons = {season_for_day(day)}
+    if slot == "Morning" and day > 1:
+        expected_seasons.add(season_for_day(day - 1))
     if (
-            environment["season"] != "Summer" or
-            weather not in _WEATHER_TEMPERATURES or
-            temperature != _WEATHER_TEMPERATURES[weather]):
+            season not in expected_seasons or
+            season not in _WEATHER_TEMPERATURES or
+            weather not in _WEATHER_TEMPERATURES[season] or
+            temperature != _WEATHER_TEMPERATURES[season][weather]):
         raise ValueError("Observer snapshot environment conditions are invalid")
 
 

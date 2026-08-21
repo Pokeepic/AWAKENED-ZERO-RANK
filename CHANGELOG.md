@@ -4,6 +4,16 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.370.0 - Four-season Tokyo calendar
+
+- Replaced the permanent Summer environment with a fixed, repeating 365-day Summer, Autumn, Winter, and Spring calendar.
+- Added five authored weather profiles per season, including mist, typhoons, snow, cold snaps, and blossom winds with bounded travel, energy, Gate, and shop effects.
+- Preserved the original Summer table and random thresholds so existing early seeded chronicles remain stable.
+- Added save and observer validation for canonical season, weather, temperature, and calendar combinations, including honest Morning boundary handling.
+- Added the current calendar year and day-of-year to the observer's world-status strip.
+- Verified eight fixed seeds across 1,460 steps each: all four seasons appeared, every timeline survived through day 366, none carried rent arrears, minimum health was 87, and all reached the first two fixed story anchors.
+- No RL training or verdict change was produced.
+
 ## 0.360.0 - Authored portal aftermaths
 
 - Gave all eight portal profiles distinct verified and incomplete delayed consequences instead of one generic guild-route result; mission clears now queue verified reports while retreats queue incomplete reports.

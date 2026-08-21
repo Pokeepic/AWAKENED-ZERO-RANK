@@ -42,6 +42,13 @@ def _redigest(snapshot: dict) -> None:
 
 
 class ObserverSnapshotTests(unittest.TestCase):
+    def test_long_chronicle_observer_accepts_canonical_spring_weather(self) -> None:
+        simulation = Simulation(seed=19)
+        simulation.run(1_100)
+        snapshot = observer_snapshot(simulation)
+        self.assertEqual(snapshot["environment"]["season"], "Spring")
+        self.assertEqual(verify_observer_snapshot(snapshot)["day"], 276)
+
     def test_empty_snapshot_is_json_ready_and_read_only(self) -> None:
         simulation = Simulation(seed=163)
         before = deepcopy(simulation.state)
@@ -771,6 +778,8 @@ class ObserverSnapshotTests(unittest.TestCase):
         simulation.state.calendar_events_seen.append(STORY_ANCHORS[0].key)
         simulation.state.story_outcomes[STORY_ANCHORS[0].key] = "resilient"
         authored = observer_snapshot(simulation)
+        authored["environment"].update(
+            {"season": "Winter", "weather": "Clear", "temperature_c": 9})
         authored["story"]["completed"][0]["outcome"] = "Forged outcome"
         _redigest(authored)
         with self.assertRaisesRegex(ValueError, "story chronology"):
@@ -785,6 +794,8 @@ class ObserverSnapshotTests(unittest.TestCase):
         simulation.state.story_outcomes.update(
             (anchor.key, "prepared") for anchor in STORY_ANCHORS)
         ending = observer_snapshot(simulation)
+        ending["environment"].update(
+            {"season": "Spring", "weather": "Clear", "temperature_c": 18})
         ending["story"]["ending"]["prepared_count"] -= 1
         _redigest(ending)
         with self.assertRaisesRegex(ValueError, "story ending"):

@@ -21,6 +21,16 @@ from awakened_zero_rank.story import story_progress
 
 
 class PersistenceSafetyTests(unittest.TestCase):
+    def test_save_rejects_impossible_season_weather_combination(self) -> None:
+        simulation = Simulation(seed=17)
+        simulation.run(365)
+        simulation.state.temperature_c += 1
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "weather.json"
+            with self.assertRaisesRegex(ValueError, "environment conditions"):
+                save_simulation(simulation, destination)
+            self.assertFalse(destination.exists())
+
     def test_rank_e_equipment_round_trips_through_save(self) -> None:
         simulation = Simulation(seed=42)
         simulation.run(300)

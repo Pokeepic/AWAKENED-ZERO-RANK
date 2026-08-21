@@ -121,6 +121,8 @@ export default function Home() {
   };
   const storyProgress = Math.round((snapshot.story.completed_count / snapshot.story.total_anchors) * 100);
   const currentSlot = SLOT_NUMBER[snapshot.clock.slot as keyof typeof SLOT_NUMBER];
+  const calendarYear = Math.floor((snapshot.clock.day - 1) / 365) + 1;
+  const dayOfYear = ((snapshot.clock.day - 1) % 365) + 1;
   const rentStatus = snapshot.economy.rent_arrears > 0
     ? `¥${snapshot.economy.rent_arrears.toLocaleString()} overdue`
     : snapshot.economy.rent_payments > 0
@@ -132,7 +134,7 @@ export default function Home() {
     {stale && <aside className="stale-notice" role="status">The live pair is temporarily unavailable. Every value below remains from the last authenticated chronicle.</aside>}
 
     <section className="hero" aria-labelledby="chronicle-title"><div><small>REN'S CHRONICLE / TOKYO, JAPAN</small><h1 id="chronicle-title">A life unfolding<br />without your hand.</h1><p>Rent is due. Gates are opening. Ren chooses what comes next.</p><span className="hero-state">{p.location} / {p.mood} / RANK {p.hunter_rank}</span></div><aside aria-label={`Day ${snapshot.clock.day}, ${snapshot.clock.slot}`}>DAY<strong>{String(snapshot.clock.day).padStart(3, "0")}</strong><em>{snapshot.clock.slot}</em></aside></section>
-    <nav aria-label="Current world status"><span>{snapshot.environment.weather} / {snapshot.environment.temperature_c} C</span><span>{snapshot.environment.season}</span><span>GATE ALERT {snapshot.environment.gate_alert_level}</span><span>SEED {snapshot.seed}</span></nav>
+    <nav aria-label="Current world status"><span>{snapshot.environment.weather} / {snapshot.environment.temperature_c} C</span><span>YEAR {calendarYear} / {snapshot.environment.season} D{dayOfYear}</span><span>GATE ALERT {snapshot.environment.gate_alert_level}</span><span>SEED {snapshot.seed}</span></nav>
 
     <div className="grid">
       <section className="profile"><h2 className="section-label">CURRENT STATE <mark>RANK {p.hunter_rank}</mark></h2><h3>{p.name}</h3><p>{p.location} / {p.mood}</p><blockquote><small>ACTIVE INTENT</small><b>{p.current_goal}</b></blockquote>{RESOURCE_NAMES.map((k) => <div className="meter" key={k} role="progressbar" aria-label={k} aria-valuemin={0} aria-valuemax={100} aria-valuenow={p.resources[k]}><span>{k}<b>{p.resources[k]}</b></span><i><u style={{ width: `${p.resources[k]}%` }} /></i></div>)}<div className="money"><small>AVAILABLE</small><strong>JPY {p.resources.money.toLocaleString()}</strong></div></section>

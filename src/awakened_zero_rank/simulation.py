@@ -7,7 +7,7 @@ from .dialogue import (
     contextual_line, resolve_aiko_dialogue, resolve_contextual_encounter,
 )
 from .content import NPCS, PORTALS, STORY_ANCHORS, StoryAnchor, available_portals, scheduled_location
-from .environment import SUMMER_WEATHER, summer_weather
+from .environment import season_for_day, seasonal_weather, weather_for
 from .models import (DelayedConsequence, Event, Memory, PortalInvestigation,
                      Relationship, TimeSlot, WorldState)
 from .world import ITEMS, gate_encounters_for_rank, travel_cost
@@ -133,13 +133,14 @@ class Simulation:
                      for item in self.state.portal_investigations.values()), default=0)
         self.state.objective_progress["portal_readiness"] = min(3, steps)
     def _weather(self):
-        return next(weather for weather in SUMMER_WEATHER if weather.name == self.state.weather)
+        return weather_for(self.state.season, self.state.weather)
 
     def _update_weather(self) -> None:
         clock = self.state.clock
         if self.state.weather_day == clock.day:
             return
-        weather = summer_weather(self.rng)
+        self.state.season = season_for_day(clock.day)
+        weather = seasonal_weather(clock.day, self.rng)
         self.state.weather = weather.name
         self.state.temperature_c = weather.temperature_c
         self.state.weather_day = clock.day

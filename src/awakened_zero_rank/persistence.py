@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
 from .content import NPCS, PORTALS, STORY_ANCHORS
+from .environment import season_for_day, weather_for
 from .models import (AUTHORED_RENT_COST, AUTHORED_RENT_DUE_DAY, Clock,
                      DelayedConsequence, DialogueExchange, Event, Memory,
                      PortalInvestigation, Protagonist, Relationship, TimeSlot,
@@ -174,6 +175,14 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
     state = simulation.state
     protagonist = state.protagonist
     _require_integer_range("clock.day", state.clock.day, 1)
+    _require_integer_range("weather_day", state.weather_day, 0, state.clock.day)
+    weather_season = season_for_day(state.weather_day or 1)
+    try:
+        weather = weather_for(state.season, state.weather)
+    except (KeyError, StopIteration) as error:
+        raise ValueError("Invalid save environment conditions") from error
+    if state.season != weather_season or state.temperature_c != weather.temperature_c:
+        raise ValueError("Invalid save environment conditions")
     if protagonist.location not in LOCATIONS:
         raise ValueError(
             f"Invalid save field protagonist.location: "

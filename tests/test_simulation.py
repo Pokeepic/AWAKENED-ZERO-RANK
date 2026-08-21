@@ -15,6 +15,7 @@ from awakened_zero_rank.dialogue import (
     resolve_contextual_encounter,
 )
 from awakened_zero_rank.models import DelayedConsequence, Relationship, TimeSlot
+from awakened_zero_rank.environment import SEASON_WEATHER, season_for_day
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS, gate_encounters_for_rank
@@ -68,7 +69,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.360.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.370.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -495,6 +496,36 @@ class SimulationTests(unittest.TestCase):
             save_simulation(first, path)
             restored = load_simulation(path)
         self.assertEqual(restored.state, first.state)
+
+    def test_seasons_follow_fixed_repeating_calendar_boundaries(self) -> None:
+        expected = {
+            1: "Summer", 91: "Summer", 92: "Autumn", 182: "Autumn",
+            183: "Winter", 273: "Winter", 274: "Spring", 365: "Spring",
+            366: "Summer", 457: "Autumn",
+        }
+        self.assertEqual({day: season_for_day(day) for day in expected}, expected)
+
+    def test_every_season_has_distinct_canonical_weather(self) -> None:
+        self.assertEqual(set(SEASON_WEATHER), {"Summer", "Autumn", "Winter", "Spring"})
+        self.assertTrue(all(len(profile) == 5 for profile in SEASON_WEATHER.values()))
+        self.assertEqual(
+            {weather.name for weather in SEASON_WEATHER["Winter"]},
+            {"Clear", "Cloudy", "Rain", "Snow", "Cold Snap"},
+        )
+
+    def test_simulation_crosses_all_seasons_deterministically(self) -> None:
+        first, second = Simulation(seed=211), Simulation(seed=211)
+        for day, season in ((92, "Autumn"), (183, "Winter"), (274, "Spring"), (366, "Summer")):
+            steps = (day - first.state.clock.day) * 4
+            first.run(steps)
+            second.run(steps)
+            first.step()
+            second.step()
+            self.assertEqual(first.state.season, season)
+            self.assertEqual(
+                (first.state.weather, first.state.temperature_c),
+                (second.state.weather, second.state.temperature_c),
+            )
 
     def test_severe_weather_changes_agent_preferences(self) -> None:
         simulation = Simulation(seed=2)

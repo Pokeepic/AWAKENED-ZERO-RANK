@@ -192,13 +192,20 @@ export const RESOURCE_NAMES: ResourceName[] = [
   "morale",
 ];
 const TIME_SLOTS = ["Morning", "Afternoon", "Evening", "Late Night"] as const;
-const SUMMER_TEMPERATURES: Record<string, number> = {
-  Clear: 29,
-  Cloudy: 27,
-  Rain: 25,
-  Heatwave: 36,
-  Thunderstorm: 26,
+export const SEASON_TEMPERATURES: Record<string, Record<string, number>> = {
+  Summer: { Clear: 29, Cloudy: 27, Rain: 25, Heatwave: 36, Thunderstorm: 26 },
+  Autumn: { Clear: 22, Cloudy: 19, Rain: 17, Mist: 16, Typhoon: 21 },
+  Winter: { Clear: 9, Cloudy: 6, Rain: 7, Snow: 2, "Cold Snap": -3 },
+  Spring: { Clear: 18, Cloudy: 16, Rain: 14, "Blossom Wind": 20, Thunderstorm: 17 },
 };
+
+export function seasonForDay(day: number): string {
+  const dayOfYear = ((Math.max(1, day) - 1) % 365) + 1;
+  if (dayOfYear <= 91) return "Summer";
+  if (dayOfYear <= 182) return "Autumn";
+  if (dayOfYear <= 273) return "Winter";
+  return "Spring";
+}
 const PORTAL_NAMES = new Set([
   "Flooded Service Tunnel",
   "Ashen Shopping Arcade",
@@ -361,16 +368,17 @@ function isEnvironment(
   day: number,
   slot: string,
 ): value is ObserverSnapshot["environment"] {
+  if (!isRecord(value) || !isString(value.season) || !isString(value.weather)) return false;
+  const expectedSeasons = new Set([seasonForDay(day)]);
+  if (slot === "Morning" && day > 1) expectedSeasons.add(seasonForDay(day - 1));
   return (
-    isRecord(value) &&
     hasExactKeys(value, ["gate_alert_level", "season", "temperature_c", "weather"]) &&
-    isString(value.weather) &&
-    value.season === "Summer" &&
+    expectedSeasons.has(value.season) &&
     isInteger(value.gate_alert_level) &&
     value.gate_alert_level <= 3 &&
     !(day === 4 && slot === "Afternoon" && value.gate_alert_level !== 2) &&
     Number.isSafeInteger(value.temperature_c) &&
-    SUMMER_TEMPERATURES[value.weather] === value.temperature_c
+    SEASON_TEMPERATURES[value.season]?.[value.weather] === value.temperature_c
   );
 }
 
