@@ -90,6 +90,9 @@ def contextual_line(npc_name: str, context: str, relationship: Relationship) -> 
             "injury": (
                 "Please sit down before you tell me this is nothing.",
                 "You do not need a polished report. Tell me where it hurts first."),
+            "guild": (
+                "The guild will ask for clean answers. Give me the true ones first.",
+                "Stand beside me at the desk, Ren. They listen differently when the record has a witness."),
             "routine": (
                 "You look like you have somewhere important to be.",
                 "I saved the quiet desk for you. The guild can wait five minutes."),
@@ -141,28 +144,81 @@ def contextual_line(npc_name: str, context: str, relationship: Relationship) -> 
     return familiar if trusted else guarded
 
 
+def contextual_response(
+        npc_name: str, context: str, relationship: Relationship) -> str:
+    """Give Ren an authored reply that matches the person, context, and trust."""
+    trusted = relationship.trust >= 15
+    responses = {
+        "Aiko Sato": {
+            "portal": (
+                "I will start with what Threat Sense noticed.",
+                "I brought the raw notes. We can keep the report honest together."),
+            "injury": (
+                "I can sit, but the report still needs filing.",
+                "It hurts more than I wanted to admit."),
+            "guild": (
+                "Then I will tell you before I tell the panel.",
+                "I would rather have you beside me than a perfect statement."),
+            "routine": (
+                "I can give you the honest version.",
+                "Five minutes sounds good. Thank you, Aiko."),
+        },
+        "Daichi Mori": {
+            "portal": (
+                "Understood. I will mark both exits.",
+                "Then I will take the outside line with you."),
+            "injury": (
+                "I can follow orders from a chair.",
+                "I held long enough. I can let the patrol carry me now."),
+            "guild": (
+                "I will be early and follow the retreat call.",
+                "I will brief them on the mistakes that nearly got me killed."),
+            "routine": (
+                "Understood. I will keep the route clear.",
+                "The silence is easier when we share the route."),
+        },
+        "Mei Kuroda": {
+            "portal": (
+                "I will separate what I sensed from what I assumed.",
+                "I marked the repeating clue before the gate could change it."),
+            "injury": (
+                "Treat the wound first. I can describe the pattern afterward.",
+                "Ask what you need, but remind me when I stop sounding human."),
+            "guild": (
+                "Then let us compare their outcome with the cause.",
+                "I kept the field notes they hoped no one would read."),
+            "routine": (
+                "I will hear the contradiction first.",
+                "Tea first. The contradiction will still be strange afterward."),
+        },
+        "Haruto Ishikawa": {
+            "portal": (
+                "I will try to return both myself and the equipment.",
+                "I know which part of that receipt matters to you."),
+            "injury": (
+                "Show me the gel before you show me the price.",
+                "Five minutes. Then you can pretend this is customer service."),
+            "guild": (
+                "I need advice more than another badge.",
+                "You always make trust sound like store credit."),
+            "routine": (
+                "I am only checking what I can afford.",
+                "You always hide concern inside a sales pitch."),
+        },
+    }
+    guarded, familiar = responses[npc_name].get(
+        context, responses[npc_name]["routine"])
+    return familiar if trusted else guarded
+
+
 def resolve_contextual_encounter(
         p: Protagonist, npc_name: str, context: str, day: int,
         trust_change: int) -> DialogueExchange:
     """Record a complete recurring-character exchange during Ren's routine."""
     relationship = p.relationships[npc_name]
-    trusted = relationship.trust >= 15
     npc_line = contextual_line(npc_name, context, relationship)
-    responses = {
-        "Aiko Sato": (
-            "I can give you the honest version.",
-            "Five minutes sounds good. Thank you, Aiko."),
-        "Daichi Mori": (
-            "Understood. I will keep the route clear.",
-            "Then I will take the outside line with you."),
-        "Mei Kuroda": (
-            "I will separate what I sensed from what I assumed.",
-            "Tea first. The contradiction will still be strange afterward."),
-        "Haruto Ishikawa": (
-            "I am only checking what I can afford.",
-            "You always hide concern inside a sales pitch."),
-    }
-    ren_line = responses[npc_name][1 if trusted else 0]
+    trusted = relationship.trust >= 15
+    ren_line = contextual_response(npc_name, context, relationship)
     reactions = {
         "Aiko Sato": ("attentive", "reassured"),
         "Daichi Mori": ("assessing", "approving"),

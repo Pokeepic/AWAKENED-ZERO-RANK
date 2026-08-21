@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.276.0 - Two-sided contextual character voice
+
+- Added Aiko's missing guarded and trusted Guild dialogue instead of falling back to routine wording.
+- Added context-aware guarded and trusted replies from Ren for all four recurring characters across routine, portal, injury, and Guild encounters.
+- Preserved encounter timing, relationship changes, bounded dialogue persistence, and the existing utility and RL policies.
+
 ## 0.275.0 - Authenticated conversation history
 
 - Advanced observer snapshots to schema 5 with a bounded, mutation-free projection of the six most recent complete recurring-character exchanges.
