@@ -211,21 +211,49 @@ def contextual_response(
     return familiar if trusted else guarded
 
 
+def contextual_reaction(
+        npc_name: str, context: str, relationship: Relationship) -> str:
+    """Describe the NPC's response with the same context and trust boundary."""
+    trusted = relationship.trust >= 15
+    reactions = {
+        "Aiko Sato": {
+            "portal": ("attentive", "steadied by his honesty"),
+            "injury": ("worried", "gently protective"),
+            "guild": ("professionally focused", "quietly resolute"),
+            "routine": ("welcoming", "reassured"),
+        },
+        "Daichi Mori": {
+            "portal": ("assessing", "approving"),
+            "injury": ("sternly concerned", "protective"),
+            "guild": ("disciplined", "proudly supportive"),
+            "routine": ("watchful", "companionable"),
+        },
+        "Mei Kuroda": {
+            "portal": ("analytical", "openly intrigued"),
+            "injury": ("clinically concerned", "carefully compassionate"),
+            "guild": ("skeptical", "conspiratorially focused"),
+            "routine": ("reserved", "quietly amused"),
+        },
+        "Haruto Ishikawa": {
+            "portal": ("calculating", "openly concerned"),
+            "injury": ("briskly worried", "fussingly protective"),
+            "guild": ("businesslike", "wryly loyal"),
+            "routine": ("salesmanlike", "warmly amused"),
+        },
+    }
+    guarded, familiar = reactions[npc_name].get(
+        context, reactions[npc_name]["routine"])
+    return familiar if trusted else guarded
+
+
 def resolve_contextual_encounter(
         p: Protagonist, npc_name: str, context: str, day: int,
         trust_change: int) -> DialogueExchange:
     """Record a complete recurring-character exchange during Ren's routine."""
     relationship = p.relationships[npc_name]
     npc_line = contextual_line(npc_name, context, relationship)
-    trusted = relationship.trust >= 15
     ren_line = contextual_response(npc_name, context, relationship)
-    reactions = {
-        "Aiko Sato": ("attentive", "reassured"),
-        "Daichi Mori": ("assessing", "approving"),
-        "Mei Kuroda": ("reserved", "quietly amused"),
-        "Haruto Ishikawa": ("businesslike", "warmly amused"),
-    }
-    reaction = reactions[npc_name][1 if trusted else 0]
+    reaction = contextual_reaction(npc_name, context, relationship)
     relationship.change(trust_change, 2)
     relationship.last_reaction = reaction
     exchange = DialogueExchange(

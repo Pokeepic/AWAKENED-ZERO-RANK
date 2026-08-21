@@ -10,7 +10,8 @@ import unittest
 from awakened_zero_rank.actions import available_actions
 from awakened_zero_rank.journal import journal_entry
 from awakened_zero_rank.dialogue import (
-    choose_intention, contextual_line, contextual_response, resolve_aiko_dialogue,
+    choose_intention, contextual_line, contextual_reaction, contextual_response,
+    resolve_aiko_dialogue,
     resolve_contextual_encounter,
 )
 from awakened_zero_rank.models import DelayedConsequence, Relationship, TimeSlot
@@ -67,7 +68,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.277.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.278.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -540,6 +541,20 @@ class SimulationTests(unittest.TestCase):
                 self.assertNotEqual(
                     contextual_response(name, context, guarded),
                     contextual_response(name, context, trusted))
+                self.assertNotEqual(
+                    contextual_reaction(name, context, guarded),
+                    contextual_reaction(name, context, trusted))
+
+    def test_recurring_characters_react_to_the_situation(self) -> None:
+        for name, profile in NPCS.items():
+            guarded = Relationship(name, profile.role, trust=2)
+            trusted = Relationship(name, profile.role, trust=20)
+            for relationship in (guarded, trusted):
+                reactions = {
+                    contextual_reaction(name, context, relationship)
+                    for context in ("routine", "portal", "injury", "guild")
+                }
+                self.assertGreaterEqual(len(reactions), 3)
 
     def test_aiko_guild_voice_does_not_fall_back_to_routine(self) -> None:
         relationship = Relationship(

@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.278.0 - Situational character reactions
+
+- Added guarded and trusted reactions for every recurring character across routine, portal, injury, and Guild encounters.
+- Replaced identity-only reaction labels with authored responses to the actual conversation situation.
+- Completed the bounded two-sided dialogue pass without changing encounter selection, social rewards, action timing, or policy behavior.
+
 ## 0.277.0 - Situational conversation routing
 
 - Made injury dialogue take priority when Ren is hurt, regardless of the action that produced the meeting.

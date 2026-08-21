@@ -94,7 +94,7 @@
       {
         "action": "Guild patrol",
         "day": 10,
-        "outcome": "Completed a guild perimeter patrol for ¥3,200; fare cost ¥280. At Tokyo Hunter Guild, Aiko Sato chose to approach me: “The guild will ask for clean answers. Give me the true ones first.” Ren answered: “Then I will tell you before I tell the panel.” Aiko Sato seemed attentive; the exchange made them more familiar.",
+        "outcome": "Completed a guild perimeter patrol for ¥3,200; fare cost ¥280. At Tokyo Hunter Guild, Aiko Sato chose to approach me: “The guild will ask for clean answers. Give me the true ones first.” Ren answered: “Then I will tell you before I tell the panel.” Aiko Sato seemed professionally focused; the exchange made them more familiar.",
         "reason": "safe hunter experience pays while readiness is 88/100 (utility 47.2)",
         "slot": "Afternoon"
       },
@@ -132,7 +132,7 @@
       "intention": "Guild encounter",
       "npc_line": "The guild will ask for clean answers. Give me the true ones first.",
       "npc_name": "Aiko Sato",
-      "reaction": "attentive",
+      "reaction": "professionally focused",
       "ren_line": "Then I will tell you before I tell the panel."
     }
   ],
@@ -153,9 +153,9 @@
   },
   "identity": {
     "algorithm": "sha256",
-    "digest": "7c444dd3b1386e7d5523a1243bdd190e950e2c32b5bb4e746ab7f1a86b428e4a"
+    "digest": "88d853833a504701a16515495fb686fc2d1ea5121d13e5cc1ee22505fc29bacd"
   },
-  "path": "C:\\Users\\user\\AppData\\Local\\Temp\\awakened-zero-rank-v0277-seed42-day11.json",
+  "path": "C:\\Users\\user\\AppData\\Local\\Temp\\awakened-zero-rank-v0278-seed42-day11.json",
   "portals": {
     "active_plan": null,
     "discovered": [
