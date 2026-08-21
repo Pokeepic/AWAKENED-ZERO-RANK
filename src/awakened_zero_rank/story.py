@@ -33,6 +33,14 @@ def _ending_summary(state: WorldState) -> dict[str, Any] | None:
         ending_id = "zero-rank-horizon"
         title = "The Zero-Rank Horizon"
         summary = "Ren's evidence and trusted circle changed what Tokyo valued in a hunter."
+    elif final_tier == "prepared":
+        ending_id = "open-corridor"
+        title = "The Open Corridor"
+        summary = "Ren ended the chronicle by keeping Tokyo connected to allies beyond Japan."
+    elif counts["isolated"] >= 3:
+        ending_id = "scarred-watch"
+        title = "The Scarred Watch"
+        summary = "Tokyo endured, and Ren's remaining circle kept watch over its unresolved wounds."
     else:
         ending_id = "quiet-guardian"
         title = "Tokyo's Quiet Guardian"

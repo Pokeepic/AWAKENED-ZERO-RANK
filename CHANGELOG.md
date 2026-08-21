@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.272.0 - Five evidence-derived endings
+
+- Added `The Open Corridor` for mixed histories that finish prepared and `The Scarred Watch` for heavily isolated histories that still finish resilient.
+- Preserved the existing unfinished, quiet-guardian, and zero-rank-horizon endings with explicit deterministic precedence.
+- Updated Python and browser authentication so ending titles, summaries, tier counts, and branch conditions must agree before the observer renders them.
+- Added focused simulator and website coverage without changing saves, fixed anchors, autonomous choices, or RL verdicts.
+
 ## 0.271.0 - Connected story arc
 
 - Deepened all six fixed story anchors with authored recurring-character scenes and portal-specific consequences without changing their dates or readiness thresholds.

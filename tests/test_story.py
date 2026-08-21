@@ -90,5 +90,35 @@ class StoryProgressTests(unittest.TestCase):
         self.assertEqual(ending["title"], "Legacy Ending Unavailable")
         self.assertEqual(ending["tier"], "legacy-unavailable")
 
+    def test_prepared_finish_with_mixed_history_opens_corridor(self) -> None:
+        state = Simulation(seed=151).state
+        state.clock.day = 1095
+        tiers = (
+            "isolated", "resilient", "isolated",
+            "resilient", "resilient", "prepared")
+        state.story_outcomes.update(
+            (anchor.key, tier) for anchor, tier in zip(STORY_ANCHORS, tiers))
+
+        ending = story_progress(state)["ending"]
+
+        self.assertEqual(ending["id"], "open-corridor")
+        self.assertEqual(ending["title"], "The Open Corridor")
+        self.assertEqual(ending["prepared_count"], 1)
+
+    def test_isolated_history_with_resilient_finish_keeps_scarred_watch(self) -> None:
+        state = Simulation(seed=157).state
+        state.clock.day = 1095
+        tiers = (
+            "isolated", "isolated", "prepared",
+            "isolated", "resilient", "resilient")
+        state.story_outcomes.update(
+            (anchor.key, tier) for anchor, tier in zip(STORY_ANCHORS, tiers))
+
+        ending = story_progress(state)["ending"]
+
+        self.assertEqual(ending["id"], "scarred-watch")
+        self.assertEqual(ending["title"], "The Scarred Watch")
+        self.assertEqual(ending["isolated_count"], 3)
+
 if __name__ == "__main__":
     unittest.main()

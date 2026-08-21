@@ -708,6 +708,22 @@ function isEndingConsistent(
         "Ren's evidence and trusted circle changed what Tokyo valued in a hunter."
     );
   }
+  if (finalTier === "prepared") {
+    return (
+      ending.id === "open-corridor" &&
+      ending.title === "The Open Corridor" &&
+      ending.summary ===
+        "Ren ended the chronicle by keeping Tokyo connected to allies beyond Japan."
+    );
+  }
+  if (isolatedCount >= 3) {
+    return (
+      ending.id === "scarred-watch" &&
+      ending.title === "The Scarred Watch" &&
+      ending.summary ===
+        "Tokyo endured, and Ren's remaining circle kept watch over its unresolved wounds."
+    );
+  }
   return (
     ending.id === "quiet-guardian" &&
     ending.title === "Tokyo's Quiet Guardian" &&
