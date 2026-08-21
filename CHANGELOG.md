@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.381.0 - Observer hierarchy cleanup
+
+- Reorganized the observer into four named chapters: Current Life, Progression, Story & People, and World Records.
+- Added keyboard-accessible section navigation for the long-form chronicle.
+- Reordered existing panels into complete twelve-column rows, removing the large dead spaces created by accumulated features.
+- Narrowed the reading width, introduced consistent panel separation, and improved mobile chapter spacing without hiding any simulation data.
+- Preserved the authenticated read-only behavior, simulator mechanics, and RL verdict.
+
 ## 0.380.0 - Recurring seasonal life
 
 - Added four authored annual moments across Summer, Autumn, Winter, and Spring: Tanabata, Tsukimi, a year-end ward patrol, and hanami.
