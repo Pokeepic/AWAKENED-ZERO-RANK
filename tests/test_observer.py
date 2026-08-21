@@ -508,6 +508,17 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "fixed-event location"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_rejects_mastery_before_awakening(self) -> None:
+        for steps in (0, 9):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=323)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["protagonist"]["progression"]["ability_mastery"] = 1
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "mastery chronology"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_requires_fixed_event_state_evidence(self) -> None:
         cases = (
             (10, "protagonist", "ability_mastery"),
@@ -523,7 +534,7 @@ class ObserverSnapshotTests(unittest.TestCase):
                     if section == "protagonist" else snapshot["environment"])
                 target[field] += 1
                 _redigest(snapshot)
-                with self.assertRaisesRegex(ValueError, "evidence"):
+                with self.assertRaisesRegex(ValueError, "evidence|chronology"):
                     verify_observer_snapshot(snapshot)
 
     def test_verifier_requires_empty_fixed_event_hunter_record(self) -> None:

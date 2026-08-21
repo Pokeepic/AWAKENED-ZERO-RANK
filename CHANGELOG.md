@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.259.0 - Awakening mastery chronology
+
+- Browser, save, and Python observer validation now require zero ability mastery before the assessment and exactly one at the post-Awakening boundary.
+- Mastery evidence is bound to the authored Awakening transition across the complete pre-assessment timeline.
+- Added pre-Awakening and exact-boundary tamper coverage across all three validation surfaces.
+
 ## 0.258.0 - Guild mission chronology
 
 - Browser, save, and Python observer validation now require zero rank points and mission counters through the exact post-registration boundary.

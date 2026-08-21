@@ -199,11 +199,13 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
             clock_position in fixed_locations and
             protagonist.location != fixed_locations[clock_position]):
         raise ValueError("Invalid save fixed-event location")
+    awakening_position = (3, tuple(TimeSlot).index(TimeSlot.EVENING))
     if (
-            clock_position ==
-            (3, tuple(TimeSlot).index(TimeSlot.EVENING)) and
-            protagonist.ability_mastery != 1):
-        raise ValueError("Invalid save Awakening mastery evidence")
+            (clock_position < awakening_position and
+             protagonist.ability_mastery != 0) or
+            (clock_position == awakening_position and
+             protagonist.ability_mastery != 1)):
+        raise ValueError("Invalid save Awakening mastery chronology")
     if (
             clock_position ==
             (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)) and

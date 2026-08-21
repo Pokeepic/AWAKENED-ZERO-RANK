@@ -486,10 +486,13 @@ def _validate_protagonist(
         name: _integer(value, f"progression {name}")
         for name, value in progression.items()
     }
+    awakening_position = (3, _SLOTS.index("Evening"))
     if (
-            position == (3, _SLOTS.index("Evening")) and
-            progression_values["ability_mastery"] != 1):
-        raise ValueError("Observer snapshot Awakening mastery evidence is invalid")
+            (position < awakening_position and
+             progression_values["ability_mastery"] != 0) or
+            (position == awakening_position and
+             progression_values["ability_mastery"] != 1)):
+        raise ValueError("Observer snapshot Awakening mastery chronology is invalid")
     if (
             any(
                 not 0 <= progression_values[name] <= 100

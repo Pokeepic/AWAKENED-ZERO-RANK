@@ -326,7 +326,7 @@ class PersistenceSafetyTests(unittest.TestCase):
         for steps, mutate, message in (
                 (10, lambda simulation: setattr(
                     simulation.state.protagonist, "ability_mastery", 2),
-                 "Awakening mastery evidence"),
+                 "Awakening mastery chronology"),
                 (13, lambda simulation: setattr(
                     simulation.state, "gate_alert_level", 1),
                  "Guild alert evidence")):
@@ -336,6 +336,17 @@ class PersistenceSafetyTests(unittest.TestCase):
                 mutate(simulation)
                 destination = Path(temporary_directory) / "timeline.json"
                 with self.assertRaisesRegex(ValueError, message):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
+    def test_ability_mastery_cannot_predate_awakening(self) -> None:
+        for steps in (0, 9):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=105)
+                simulation.run(steps)
+                simulation.state.protagonist.ability_mastery = 1
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "mastery chronology"):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
