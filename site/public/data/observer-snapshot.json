@@ -17,14 +17,14 @@
         "summary": "Guild registration: Aiko Sato issued an F-rank license; travel and filing cost ¥280."
       },
       {
-        "day": 7,
+        "day": 9,
         "importance": 7,
-        "summary": "Gate mission: Cleared Tunnel Slime Nest inside Frostbound Platform (ice; hazard: whiteout) in clear weather (roll 76 vs 50) for ¥5,400 and 10 rank points; gained 2 ability exposure; fare cost ¥240. Discovered Frostbound Platform: an arriving ghost train. Investigation reached 25%. Mei later reacted to the Frostbound Platform report: “Describe the anomaly. Leave theories out of it.”"
+        "summary": "Gate mission: Cleared Tunnel Slime Nest inside Sunken Courtyard (swamp; hazard: toxic spores) in cloudy weather (roll 98 vs 51) for ¥5,400 and 10 rank points; gained 2 ability exposure; fare cost ¥240. Discovered Sunken Courtyard: guild equipment in the reeds. Investigation reached 25%. Mei later reacted to the Sunken Courtyard report: “Describe the anomaly. Leave theories out of it.”"
       },
       {
-        "day": 7,
+        "day": 4,
         "importance": 7,
-        "summary": "Gate mission: Cleared Tunnel Slime Nest inside Ashen Shopping Arcade (urban ruin; hazard: cinder wind) in clear weather (roll 71 vs 49) for ¥5,400 and 10 rank points; gained 2 ability exposure; fare cost ¥0. Discovered Ashen Shopping Arcade: a working payphone. Investigation reached 25%. Mei later reacted to the Ashen Shopping Arcade report: “Describe the anomaly. Leave theories out of it.” Promoted to Rank E!"
+        "summary": "Gate mission: Cleared Goblin Scavenger Pack inside Glass Office Labyrinth (urban tower; hazard: shifting rooms) in clear weather (roll 82 vs 59) for ¥6,600 and 13 rank points; gained 2 ability exposure; fare cost ¥280. Discovered Glass Office Labyrinth: Ren's reflection moves late. Investigation reached 25%."
       }
     ],
     "recent_events": [
@@ -36,38 +36,38 @@
         "slot": "Morning"
       },
       {
-        "action": "Eat",
+        "action": "Part-time work",
         "day": 8,
-        "outcome": "Bought a filling konbini meal.",
-        "reason": "hunger is 51/100 (utility 93.7)",
+        "outcome": "Worked a konbini shift for ¥2,200; train fare cost ¥280.",
+        "reason": "¥6,880 is still needed for housing (utility 96.3)",
         "slot": "Afternoon"
       },
       {
-        "action": "Guild patrol",
+        "action": "Part-time work",
         "day": 8,
-        "outcome": "Completed a guild perimeter patrol for ¥3,200; fare cost ¥280.",
-        "reason": "safe hunter experience pays while readiness is 82/100 (utility 48.9)",
+        "outcome": "Worked a konbini shift for ¥2,200; train fare cost ¥0.",
+        "reason": "¥5,070 is still needed for housing (utility 75.8)",
         "slot": "Evening"
       },
       {
         "action": "Rest",
         "day": 8,
-        "outcome": "Returned home and rested; travel cost ¥280.",
-        "reason": "energy is 48/100 and stress is 13/100 (utility 111.0)",
+        "outcome": "Returned home and rested; travel cost ¥180.",
+        "reason": "energy is 48/100 and stress is 25/100 (utility 98.4)",
         "slot": "Late Night"
       },
       {
-        "action": "Investigation consequence",
+        "action": "Eat",
         "day": 9,
-        "outcome": "Evidence from Frostbound Platform was verified and changed the guild patrol route Mei Kuroda's trust rose; Daichi Mori's trust rose; Aiko Sato's trust rose.",
-        "reason": "an earlier portal decision finally affected other people (delayed event)",
+        "outcome": "Bought a filling konbini meal.",
+        "reason": "hunger is 40/100 (utility 72.6)",
         "slot": "Morning"
       },
       {
-        "action": "Investigation consequence",
+        "action": "Gate mission",
         "day": 9,
-        "outcome": "Evidence from Ashen Shopping Arcade was verified and changed the guild patrol route Mei Kuroda's trust rose; Daichi Mori's trust rose; Aiko Sato's trust rose.",
-        "reason": "an earlier portal decision finally affected other people (delayed event)",
+        "outcome": "Cleared Tunnel Slime Nest inside Sunken Courtyard (swamp; hazard: toxic spores) in cloudy weather (roll 98 vs 51) for ¥5,400 and 10 rank points; gained 2 ability exposure; fare cost ¥240. Discovered Sunken Courtyard: guild equipment in the reeds. Investigation reached 25%. Mei later reacted to the Sunken Courtyard report: “Describe the anomaly. Leave theories out of it.”",
+        "reason": "gate alert is 1/3, readiness is 88/100, and a plan is missing (utility 70.4)",
         "slot": "Afternoon"
       },
       {
@@ -78,38 +78,38 @@
         "slot": "Evening"
       },
       {
-        "action": "Eat",
+        "action": "Rest",
         "day": 9,
-        "outcome": "Bought a filling konbini meal.",
-        "reason": "hunger is 32/100 (utility 57.8)",
+        "outcome": "Returned home and rested; travel cost ¥240.",
+        "reason": "energy is 70/100 and stress is 17/100 (utility 68.8)",
         "slot": "Late Night"
       },
       {
-        "action": "Visit hunter shop",
+        "action": "Eat",
         "day": 10,
-        "outcome": "Bought Padded Jacket for ¥3,200 and equipped it when possible; fare cost ¥180.",
-        "reason": "equipment is Field Knife and no armor (utility 50.9)",
+        "outcome": "Bought a filling konbini meal.",
+        "reason": "hunger is 26/100 (utility 47.4)",
         "slot": "Morning"
       },
       {
         "action": "Guild patrol",
         "day": 10,
         "outcome": "Completed a guild perimeter patrol for ¥3,200; fare cost ¥280. At Tokyo Hunter Guild, Aiko Sato chose to approach me: “Tell me what happened, not what you think the report wants to hear.” The brief exchange made us more familiar.",
-        "reason": "safe hunter experience pays while readiness is 90/100 (utility 48.2)",
+        "reason": "safe hunter experience pays while readiness is 88/100 (utility 47.2)",
         "slot": "Afternoon"
       },
       {
         "action": "Guild patrol",
         "day": 10,
         "outcome": "Completed a guild perimeter patrol for ¥3,200; fare cost ¥0.",
-        "reason": "safe hunter experience pays while readiness is 85/100 (utility 48.1)",
+        "reason": "safe hunter experience pays while readiness is 83/100 (utility 48.9)",
         "slot": "Evening"
       },
       {
         "action": "Rest",
         "day": 10,
         "outcome": "Returned home and rested; travel cost ¥280.",
-        "reason": "energy is 44/100 and stress is 16/100 (utility 99.6)",
+        "reason": "energy is 46/100 and stress is 16/100 (utility 98.0)",
         "slot": "Late Night"
       }
     ]
@@ -128,46 +128,36 @@
     "wage_modifier": 100
   },
   "environment": {
-    "gate_alert_level": 1,
+    "gate_alert_level": 0,
     "season": "Summer",
     "temperature_c": 29,
     "weather": "Clear"
   },
   "identity": {
     "algorithm": "sha256",
-    "digest": "67c87cd168bc088fab00b5c1ef74a75969d3f64535d14137a070a964b9f29db0"
+    "digest": "6fea8b7eef3f028e1dc0efbd925308487ef20eb6798ec4e66c75112e3a5f4f2e"
   },
-  "path": "C:\\Users\\user\\AppData\\Local\\Temp\\azr-story-0cad087ed1a64e72b4b7f27772e10b5f\\ren.json",
+  "path": "C:\\Users\\user\\AppData\\Local\\Temp\\azr-consequence-e487a895e10f4f2a9d647b2a4ed37730\\ren.json",
   "portals": {
     "active_plan": null,
     "discovered": [
       "Glass Office Labyrinth",
-      "Frostbound Platform",
-      "Ashen Shopping Arcade"
+      "Sunken Courtyard"
     ],
     "investigations": [
       {
         "cooperating_npc": null,
         "joint_missions": 0,
-        "portal_name": "Ashen Shopping Arcade",
-        "preparation_bonus": 0,
-        "preparation_strategy": "Unprepared",
-        "progress": 25,
-        "risk": 5
-      },
-      {
-        "cooperating_npc": null,
-        "joint_missions": 0,
-        "portal_name": "Frostbound Platform",
-        "preparation_bonus": 0,
-        "preparation_strategy": "Unprepared",
-        "progress": 25,
-        "risk": 5
-      },
-      {
-        "cooperating_npc": null,
-        "joint_missions": 0,
         "portal_name": "Glass Office Labyrinth",
+        "preparation_bonus": 0,
+        "preparation_strategy": "Unprepared",
+        "progress": 25,
+        "risk": 5
+      },
+      {
+        "cooperating_npc": null,
+        "joint_missions": 0,
+        "portal_name": "Sunken Courtyard",
         "preparation_bonus": 0,
         "preparation_strategy": "Unprepared",
         "progress": 25,
@@ -177,7 +167,7 @@
   },
   "protagonist": {
     "ability": "Threat Sense",
-    "current_goal": "Build a stable life as a Rank E hunter",
+    "current_goal": "Survive gate work and reach Rank E",
     "equipment": {
       "armor": "Padded Jacket",
       "inventory": {
@@ -186,32 +176,32 @@
       },
       "weapon": "Field Knife"
     },
-    "hunter_rank": "E",
+    "hunter_rank": "F",
     "location": "Adachi Apartment",
     "mood": "Hopeful",
     "name": "Ren Takahashi",
     "progression": {
-      "ability_mastery": 16,
-      "combat_readiness": 88,
+      "ability_mastery": 11,
+      "combat_readiness": 86,
       "fitness": 4,
-      "knowledge": 9,
-      "missions_attempted": 3,
-      "missions_completed": 3,
-      "rank_points": 33
+      "knowledge": 7,
+      "missions_attempted": 2,
+      "missions_completed": 2,
+      "rank_points": 23
     },
     "resources": {
-      "energy": 86,
+      "energy": 88,
       "health": 100,
       "hunger": 44,
-      "money": 16440,
-      "morale": 86,
+      "money": 14100,
+      "morale": 92,
       "stress": 0
     }
   },
   "relationships": [
     {
-      "affection": 0,
-      "familiarity": 13,
+      "affection": 2,
+      "familiarity": 16,
       "loyalty": 4,
       "name": "Aiko Sato",
       "role": "F-rank guild clerk",
@@ -220,12 +210,12 @@
     },
     {
       "affection": 0,
-      "familiarity": 5,
+      "familiarity": 3,
       "loyalty": 2,
       "name": "Daichi Mori",
       "role": "Rank E patrol leader",
       "tension": 0,
-      "trust": 8
+      "trust": 4
     },
     {
       "affection": 0,
@@ -238,12 +228,12 @@
     },
     {
       "affection": 0,
-      "familiarity": 8,
-      "loyalty": 4,
+      "familiarity": 4,
+      "loyalty": 3,
       "name": "Mei Kuroda",
       "role": "independent portal researcher",
       "tension": 0,
-      "trust": 9
+      "trust": 3
     }
   ],
   "schema_version": 4,

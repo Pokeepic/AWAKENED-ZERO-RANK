@@ -34,6 +34,7 @@ class Simulation:
             self._update_goal()
             clock.advance()
             return special
+        background_consequence = self._resolve_due_consequence()
         if selected_action is None:
             action, reason = self.agent.choose(
                 protagonist, clock.slot, self.state.gate_alert_level, self.state.weather,
@@ -66,6 +67,8 @@ class Simulation:
                 social = self._scheduled_social_encounter(action.name)
                 if social:
                     outcome += f" {social}"
+        if background_consequence is not None:
+            outcome += f" Delayed consequence: {background_consequence}"
         if action.name == "Visit hunter shop":
             self.state.shop_visits += 1
         self._apply_passive_needs()
@@ -314,8 +317,14 @@ class Simulation:
             return Event(clock.day, clock.slot, "Rent deadline",
                          "the apartment payment was automatically due (world event)", outcome)
 
+        return None
+
+    def _resolve_due_consequence(self) -> str | None:
+        """Apply one due world consequence without consuming Ren's action slot."""
+        p = self.state.protagonist
         consequence = next((item for item in self.state.delayed_consequences
-                            if not item.resolved and item.due_day <= clock.day), None)
+                            if not item.resolved and
+                            item.due_day <= self.state.clock.day), None)
         if consequence is not None:
             index = self.state.delayed_consequences.index(consequence)
             self.state.delayed_consequences[index] = DelayedConsequence(
@@ -328,9 +337,9 @@ class Simulation:
                     trust_change = 2 if "verified" in consequence.description else -2
                     relationship.change(trust_change, 1)
                     reactions.append(f"{name}'s trust {'rose' if trust_change > 0 else 'fell'}")
-            return Event(clock.day, clock.slot, "Investigation consequence",
-                         "an earlier portal decision finally affected other people (delayed event)",
-                         f"{consequence.description} {'; '.join(reactions)}.")
+            reaction_text = (
+                f" {'; '.join(reactions)}." if reactions else ".")
+            return f"{consequence.description}{reaction_text}"
         return None
 
     def _update_npc_schedules(self) -> None:

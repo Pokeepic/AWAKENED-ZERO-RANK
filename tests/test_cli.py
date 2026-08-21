@@ -191,7 +191,9 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(summary["path"], str(path))
         self.assertEqual(summary["schema_version"], 4)
         self.assertEqual(summary["completed_count"], 1)
-        self.assertEqual(summary["completed"][0]["tier"], "resilient")
+        self.assertEqual(
+            summary["completed"][0]["tier"],
+            simulation.state.story_outcomes["arc_adachi_warning"])
         self.assertEqual(summary["next"]["key"], "arc_tokyo_fracture")
         self.assertFalse(summary["ending_reached"])
 

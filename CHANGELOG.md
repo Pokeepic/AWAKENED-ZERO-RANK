@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.273.0 - Non-blocking investigation consequences
+
+- Delayed portal consequences now resolve alongside Ren's selected or utility-chosen action instead of replacing it and consuming the time slot.
+- Relationship effects, resolution state, event chronology, and one-event-per-slot save integrity remain deterministic.
+- Learning transitions now retain the requested and resolved policy action when a consequence becomes due.
+- Added targeted timing, relationship, persistence, and learning-adapter coverage; historical `Investigation consequence` records remain readable.
+
 ## 0.272.0 - Five evidence-derived endings
 
 - Added `The Open Corridor` for mixed histories that finish prepared and `The Scarred Watch` for heavily isolated histories that still finish resilient.

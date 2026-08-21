@@ -10,7 +10,7 @@ import unittest
 from awakened_zero_rank.actions import available_actions
 from awakened_zero_rank.journal import journal_entry
 from awakened_zero_rank.dialogue import choose_intention, contextual_line, resolve_aiko_dialogue
-from awakened_zero_rank.models import Relationship, TimeSlot
+from awakened_zero_rank.models import DelayedConsequence, Relationship, TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
 from awakened_zero_rank.world import ITEMS
@@ -64,7 +64,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.272.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.273.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -555,9 +555,44 @@ class SimulationTests(unittest.TestCase):
         simulation = Simulation(seed=42)
         events = simulation.run(220)
         consequences = [event for event in events
-                        if event.action == "Investigation consequence"]
+                        if "Delayed consequence:" in event.outcome]
         self.assertTrue(consequences)
         self.assertTrue(any("trust" in event.outcome for event in consequences))
+
+    def test_investigation_consequence_does_not_consume_action_slot(self) -> None:
+        simulation = Simulation(seed=163)
+        p = simulation.state.protagonist
+        p.relationships["Aiko Sato"] = Relationship(
+            "Aiko Sato", NPCS["Aiko Sato"].role, trust=10)
+        simulation.state.delayed_consequences.append(DelayedConsequence(
+            due_day=1, source="Moonlit Cedar Path",
+            people=("Aiko Sato",),
+            description="Evidence was verified"))
+
+        event = simulation.step("Rest")
+
+        self.assertEqual(event.action, "Rest")
+        self.assertEqual(simulation.state.clock.slot, TimeSlot.AFTERNOON)
+        self.assertEqual(len(simulation.state.events), 1)
+        self.assertIn("Delayed consequence: Evidence was verified", event.outcome)
+        self.assertIn("Aiko Sato's trust rose", event.outcome)
+        self.assertEqual(p.relationships["Aiko Sato"].trust, 12)
+        self.assertTrue(simulation.state.delayed_consequences[0].resolved)
+
+    def test_learning_action_executes_when_consequence_is_due(self) -> None:
+        environment = LearningEnvironment(seed=167)
+        environment.simulation.state.delayed_consequences.append(
+            DelayedConsequence(
+                due_day=1, source="Sunken Courtyard", people=(),
+                description="An incomplete report reached the guild"))
+
+        transition = environment.step("Rest")
+
+        self.assertEqual(transition.action, "Rest")
+        self.assertEqual(transition.resolved_action, "Rest")
+        self.assertIn("Delayed consequence:", transition.event_outcome)
+        self.assertEqual(
+            environment.simulation.state.clock.slot, TimeSlot.AFTERNOON)
 
     def test_schedule_overlap_can_create_autonomous_social_encounter(self) -> None:
         simulation = Simulation(seed=42)
