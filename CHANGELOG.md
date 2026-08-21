@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.279.0 - Bounded field supplies
+
+- Capped planned hunter-shop stock at two Healing Gels and two Energy Drinks after Ren obtains starter weapon and armor.
+- Fully stocked visits now browse safely and pay only travel fare instead of accumulating unbounded consumables.
+- Preserved item prices, mission preparation effects, equipment bonuses, utility scoring, and save compatibility.
+
 ## 0.278.0 - Situational character reactions
 
 - Added guarded and trusted reactions for every recurring character across routine, portal, injury, and Guild encounters.

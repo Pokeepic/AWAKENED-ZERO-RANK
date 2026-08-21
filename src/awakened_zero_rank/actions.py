@@ -72,13 +72,16 @@ def _prepare_placeholder(_: Protagonist) -> str:
 
 def _shop(p: Protagonist) -> str:
     fare = _travel(p, "Kita-Senju Hunter Supply")
-    priorities = (
+    priority = (
         "Field Knife" if p.equipped_weapon is None else
         "Padded Jacket" if p.equipped_armor is None else
         "Healing Gel" if p.item_count("Healing Gel") < 2 else
-        "Energy Drink"
+        "Energy Drink" if p.item_count("Energy Drink") < 2 else
+        None
     )
-    item = ITEMS[priorities]
+    if priority is None:
+        return f"Browsed hunter supplies but already carried the planned field stock; fare cost ¥{fare:,}."
+    item = ITEMS[priority]
     if p.money < item.price:
         return f"Browsed hunter supplies but could not afford {item.name}; fare cost ¥{fare:,}."
     p.money -= item.price

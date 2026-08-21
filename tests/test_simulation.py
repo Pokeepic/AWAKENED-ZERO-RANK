@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from awakened_zero_rank.actions import available_actions
+from awakened_zero_rank.actions import _shop, available_actions
 from awakened_zero_rank.journal import journal_entry
 from awakened_zero_rank.dialogue import (
     choose_intention, contextual_line, contextual_reaction, contextual_response,
@@ -68,7 +68,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.278.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.279.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -171,6 +171,23 @@ class SimulationTests(unittest.TestCase):
         self.assertGreater(simulation.state.shop_visits, 0)
         self.assertIsNotNone(p.equipped_weapon)
         self.assertIn(p.equipped_weapon, ITEMS)
+
+    def test_shop_stops_buying_consumables_at_field_stock_limit(self) -> None:
+        simulation = Simulation(seed=43)
+        p = simulation.state.protagonist
+        p.money = 20_000
+        p.equipped_weapon = "Field Knife"
+        p.equipped_armor = "Padded Jacket"
+        p.add_item("Healing Gel", 2)
+        p.add_item("Energy Drink", 2)
+        expected_money = p.money - 180
+
+        outcome = _shop(p)
+
+        self.assertIn("already carried the planned field stock", outcome)
+        self.assertEqual(p.money, expected_money)
+        self.assertEqual(p.item_count("Healing Gel"), 2)
+        self.assertEqual(p.item_count("Energy Drink"), 2)
 
     def test_equipment_increases_combat_readiness(self) -> None:
         simulation = Simulation(seed=1)
