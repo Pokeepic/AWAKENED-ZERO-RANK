@@ -35,6 +35,7 @@ class GateEncounter:
     reward: int
     rank_points: int
     damage_bonus: int = 0
+    minimum_rank: str = "F"
 
 
 LOCATIONS = {
@@ -84,7 +85,17 @@ GATE_ENCOUNTERS = (
     GateEncounter("Tunnel Slime Nest", 42, 5_400, 10),
     GateEncounter("Goblin Scavenger Pack", 49, 6_600, 13, 3),
     GateEncounter("Armored Fang Boar", 57, 8_200, 17, 7),
+    GateEncounter("Echo Wraith Corridor", 64, 10_500, 17, 9, "E"),
+    GateEncounter("Rift Hound Matriarch", 72, 13_800, 17, 12, "D"),
+    GateEncounter("Mirror Oni Vanguard", 82, 18_000, 17, 16, "C"),
 )
+
+
+def gate_encounters_for_rank(rank: str) -> tuple[GateEncounter, ...]:
+    """Return the authored encounter ladder legally available to a hunter."""
+    effective_rank = "F" if rank == "Unranked" else rank
+    return tuple(encounter for encounter in GATE_ENCOUNTERS
+                 if rank_meets_requirement(effective_rank, encounter.minimum_rank))
 MISSION_RANK_POINT_AWARDS = (10, 13, 17)
 
 

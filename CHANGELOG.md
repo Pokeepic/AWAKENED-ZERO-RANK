@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.330.0 - Rank-scaled Gate missions
+
+- Expanded the Gate encounter catalog from three starter threats to six authored F-through-C mission bands.
+- Added the Echo Wraith Corridor, Rift Hound Matriarch, and Mirror Oni Vanguard with rising difficulty, damage pressure, and rewards.
+- Made mission selection deterministic and rank-aware while retaining Gate-alert influence and the legacy starter fallback.
+- Added a read-only Gate Threat Ladder to the observer with live locked/open status derived from Ren's verified rank.
+- Verified 12 fixed seeds for 240 steps: 345 of 346 missions cleared, all timelines survived, none carried rent arrears, and minimum health was 87.
+- No RL training or verdict change was produced.
+
 ## 0.320.0 - Complete equipment ladder
 
 - Added the Rank C Riftglass Katana and Aegis Longcoat as the final authored equipment tier.

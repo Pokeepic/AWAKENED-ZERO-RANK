@@ -145,6 +145,15 @@ export const EQUIPMENT_CATALOG: readonly EquipmentCatalogItem[] = [
   { bonus: 20, kind: "armor", minimumRank: "C", name: "Aegis Longcoat", price: 28500 },
 ] as const;
 
+export const GATE_ENCOUNTER_CATALOG = [
+  { difficulty: 42, minimumRank: "F", name: "Tunnel Slime Nest", reward: 5400 },
+  { difficulty: 49, minimumRank: "F", name: "Goblin Scavenger Pack", reward: 6600 },
+  { difficulty: 57, minimumRank: "F", name: "Armored Fang Boar", reward: 8200 },
+  { difficulty: 64, minimumRank: "E", name: "Echo Wraith Corridor", reward: 10500 },
+  { difficulty: 72, minimumRank: "D", name: "Rift Hound Matriarch", reward: 13800 },
+  { difficulty: 82, minimumRank: "C", name: "Mirror Oni Vanguard", reward: 18000 },
+] as const;
+
 export type PresentationContract = {
   animation_cues: string[];
   comparison_schema_version: number;

@@ -10,7 +10,7 @@ from .content import NPCS, PORTALS, STORY_ANCHORS, StoryAnchor, scheduled_locati
 from .environment import SUMMER_WEATHER, summer_weather
 from .models import (DelayedConsequence, Event, Memory, PortalInvestigation,
                      Relationship, TimeSlot, WorldState)
-from .world import GATE_ENCOUNTERS, ITEMS, travel_cost
+from .world import ITEMS, gate_encounters_for_rank, travel_cost
 
 
 RANK_THRESHOLDS = ((90, "C"), (60, "D"), (30, "E"))
@@ -443,8 +443,10 @@ class Simulation:
         p.location = "Adachi Gate Zone"
         p.missions_attempted += 1
         alert = self.state.gate_alert_level
-        maximum_index = min(len(GATE_ENCOUNTERS) - 1, max(0, alert - 1))
-        encounter = GATE_ENCOUNTERS[self.rng.randint(0, maximum_index)]
+        encounters = gate_encounters_for_rank(p.hunter_rank)
+        rank_bonus = {"Unranked": 0, "F": 0, "E": 1, "D": 2, "C": 3}[p.hunter_rank]
+        maximum_index = min(len(encounters) - 1, max(0, alert - 1) + rank_bonus)
+        encounter = encounters[self.rng.randint(0, maximum_index)]
         portal = (next(item for item in PORTALS if item.name == self.state.active_portal_plan)
                   if self.state.active_portal_plan else
                   PORTALS[self.rng.randrange(len(PORTALS))])

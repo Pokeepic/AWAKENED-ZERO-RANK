@@ -17,7 +17,7 @@ from awakened_zero_rank.dialogue import (
 from awakened_zero_rank.models import DelayedConsequence, Relationship, TimeSlot
 from awakened_zero_rank.persistence import load_simulation, save_simulation
 from awakened_zero_rank.simulation import Simulation
-from awakened_zero_rank.world import ITEMS
+from awakened_zero_rank.world import ITEMS, gate_encounters_for_rank
 from awakened_zero_rank.content import (
     NPCS, PORTALS, STORY_ANCHORS, dialogue_context_count, npc_context_count,
     portal_situation_count)
@@ -68,7 +68,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.320.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.330.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -342,6 +342,21 @@ class SimulationTests(unittest.TestCase):
         self.assertTrue(any(encounter in outcome for outcome in mission_logs for encounter in (
             "Tunnel Slime Nest", "Goblin Scavenger Pack", "Armored Fang Boar"
         )))
+
+    def test_gate_encounter_ladder_unlocks_one_rank_band_at_a_time(self) -> None:
+        expected = {
+            "F": ("Tunnel Slime Nest", "Goblin Scavenger Pack", "Armored Fang Boar"),
+            "E": ("Tunnel Slime Nest", "Goblin Scavenger Pack", "Armored Fang Boar",
+                  "Echo Wraith Corridor"),
+            "D": ("Tunnel Slime Nest", "Goblin Scavenger Pack", "Armored Fang Boar",
+                  "Echo Wraith Corridor", "Rift Hound Matriarch"),
+            "C": ("Tunnel Slime Nest", "Goblin Scavenger Pack", "Armored Fang Boar",
+                  "Echo Wraith Corridor", "Rift Hound Matriarch", "Mirror Oni Vanguard"),
+        }
+        for rank, names in expected.items():
+            self.assertEqual(tuple(item.name for item in gate_encounters_for_rank(rank)), names)
+        self.assertEqual(gate_encounters_for_rank("Unranked"),
+                         gate_encounters_for_rank("F"))
 
     def test_consumables_are_used_and_removed_safely(self) -> None:
         simulation = Simulation(seed=4)
