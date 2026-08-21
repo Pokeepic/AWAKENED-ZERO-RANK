@@ -90,10 +90,13 @@ def _shop_priority(p: Protagonist, available_money: int | None = None) -> str | 
     upgrades = (
         ("Reinforced Machete", p.equipped_weapon),
         ("Gateweave Vest", p.equipped_armor),
+        ("Mana-edge Saber", p.equipped_weapon),
+        ("Barrier Coat", p.equipped_armor),
     )
     for name, equipped in upgrades:
         item = ITEMS[name]
-        if (equipped != name and p.rent_arrears == 0 and
+        equipped_bonus = ITEMS[equipped].combat_bonus if equipped else -1
+        if (item.combat_bonus > equipped_bonus and p.rent_arrears == 0 and
                 rank_meets_requirement(p.hunter_rank, item.minimum_rank) and
                 affordable(name, reserve_rent=True)):
             return name
@@ -122,6 +125,10 @@ def _shop_score(p: Protagonist, slot: TimeSlot, alert: int) -> float:
         purchase_value = 62
     elif priority == "Gateweave Vest":
         purchase_value = 56
+    elif priority == "Mana-edge Saber":
+        purchase_value = 58
+    elif priority == "Barrier Coat":
+        purchase_value = 52
     return purchase_value + (8 if slot in (TimeSlot.MORNING, TimeSlot.AFTERNOON) else -25) - alert * 5
 
 

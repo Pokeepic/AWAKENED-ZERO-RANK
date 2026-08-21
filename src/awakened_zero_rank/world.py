@@ -59,6 +59,12 @@ ITEMS = {
     "Gateweave Vest": Item(
         "Gateweave Vest", "armor", 8_400, 9,
         "Layered Rank E protection against claws and mana debris.", "E"),
+    "Mana-edge Saber": Item(
+        "Mana-edge Saber", "weapon", 14_800, 16,
+        "A regulated Rank D blade with a stabilized mana channel.", "D"),
+    "Barrier Coat": Item(
+        "Barrier Coat", "armor", 16_600, 14,
+        "Rank D protection woven around a replaceable barrier core.", "D"),
 }
 
 HUNTER_RANK_ORDER = {"Unranked": 0, "F": 1, "E": 2, "D": 3, "C": 4}

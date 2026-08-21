@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.310.0 - Rank D equipment tier
+
+- Added the Rank D Mana-edge Saber and Barrier Coat with stronger combat bonuses and higher reserve-safe prices.
+- Extended autonomous purchasing through starter, Rank E, and Rank D tiers in deterministic weapon/armor order.
+- Required every upgrade to improve the currently equipped combat bonus, preventing downgrades and tier loops.
+- Extended save, observer, browser, and visible-catalog compatibility for the new equipment.
+- Verified 12 fixed seeds for 160 steps: all eligible timelines acquired both Rank D upgrades, none carried rent arrears, minimum health was 87, and minimum cash was ¥85,580.
+- No RL training or verdict change was produced.
+
 ## 0.300.0 - Visible equipment progression
 
 - Added a dedicated responsive equipment-progression panel to the private observer.
