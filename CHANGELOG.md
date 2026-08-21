@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.270.0 - Production observer completion
+
+- Completed the read-only observer surface with authenticated decision reasons, economy, mission and equipment records, story history, relationship signals, portal investigation progress, and key memories.
+- Rebuilt the responsive layout for phone, tablet, desktop, print, increased contrast, and reduced motion while preserving the control-free product boundary.
+- Added visible stale-data context, fail-closed verification copy, story progress semantics, artifact integrity context, browser security headers, and explicit no-store delivery for live artifact paths.
+- Expanded the website suite from 66 to 70 tests; simulator behavior, save schemas, training evidence, and RL verdicts are unchanged.
+
 ## 0.269.0 - Portal preparation strategy integrity
 
 - Save validation now rejects portal investigations with a missing preparation strategy, matching observer artifact requirements.

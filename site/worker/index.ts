@@ -1,4 +1,4 @@
-/** Cloudflare Worker entry point for the vinext-starter template. */
+/** Cloudflare Worker entry point for the read-only production observer. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 
@@ -19,6 +19,18 @@ interface ExecutionContext {
   passThroughOnException(): void;
 }
 
+function secureResponse(response: Response, liveArtifact: boolean): Response {
+  const secured = new Response(response.body, response);
+  secured.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  secured.headers.set("Permissions-Policy", "camera=(), geolocation=(), microphone=()");
+  secured.headers.set("Referrer-Policy", "no-referrer");
+  secured.headers.set("X-Content-Type-Options", "nosniff");
+  if (liveArtifact) {
+    secured.headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+  }
+  return secured;
+}
+
 // Image security config. SVG sources with .svg extension auto-skip the
 // optimization endpoint on the client side (served directly, no proxy).
 // To route SVGs through the optimizer (with security headers), set
@@ -31,16 +43,18 @@ const worker = {
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
-      return handleImageOptimization(request, {
+      const response = await handleImageOptimization(request, {
         fetchAsset: (path) => env.ASSETS.fetch(new Request(new URL(path, request.url))),
         transformImage: async (body, { width, format, quality }) => {
           const result = await env.IMAGES.input(body).transform(width > 0 ? { width } : {}).output({ format, quality });
           return result.response();
         },
       }, allowedWidths);
+      return secureResponse(response, false);
     }
 
-    return handler.fetch(request, env, ctx);
+    const response = await handler.fetch(request, env, ctx);
+    return secureResponse(response, url.pathname.startsWith("/data/"));
   },
 };
 

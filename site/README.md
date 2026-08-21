@@ -2,6 +2,8 @@
 
 The production observer is a read-only window into Ren Takahashi's deterministic simulation. It renders authenticated static artifacts and never exposes controls that can alter Ren, the world, or simulation time.
 
+The completed observer surface presents current needs and intent, decision outcomes and reasons, hunter progression, equipment, finances, story history, relationships, portal investigations, and key memories from the same authenticated snapshot.
+
 ## Requirements
 
 - Node.js 22.13 or newer
@@ -36,6 +38,8 @@ Publication is atomic and non-overwriting. Prepare a fresh destination when repl
 - Simulation and story rules stay in the Python package.
 - Presentation code consumes the versioned observer contract instead of duplicating simulator rules.
 - Reduced-motion preferences and keyboard navigation must remain supported.
+- Responsive phone, tablet, desktop, print, and increased-contrast layouts are part of the production surface.
+- Live artifact responses must remain non-cacheable and every response retains the observer security headers.
 
 ## Project map
 
@@ -49,3 +53,5 @@ Publication is atomic and non-overwriting. Prepare a fresh destination when repl
 ## Deployment
 
 The observer is built with vinext for the managed Sites runtime. Deploy only a clean, tested commit whose packaged `dist/` output and source revision match. Production access remains private unless the owner explicitly approves a different access policy.
+
+The managed Sites version history is the rollback boundary. If a deployment fails verification, keep the last authenticated deployment live and publish a new tested version rather than editing production in place.
