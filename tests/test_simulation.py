@@ -67,7 +67,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.276.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.277.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -584,6 +584,30 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(
             restored.state.protagonist.dialogue_history,
             p.dialogue_history)
+
+    def test_social_context_routes_authored_situations(self) -> None:
+        simulation = Simulation(seed=181)
+        p = simulation.state.protagonist
+        p.location = "Adachi Gate Zone"
+        self.assertEqual(simulation._social_context("Gate mission"), "portal")
+        self.assertEqual(simulation._social_context("Guild patrol"), "guild")
+        self.assertEqual(simulation._social_context("Study"), "routine")
+        p.location = "Tokyo Hunter Guild"
+        self.assertEqual(simulation._social_context("Study"), "guild")
+        p.health = 40
+        self.assertEqual(simulation._social_context("Gate mission"), "injury")
+
+    def test_guild_patrol_uses_guild_specific_exchange(self) -> None:
+        simulation = Simulation(seed=191)
+        simulation.run(20)
+        p = simulation.state.protagonist
+        p.location = "Tokyo Hunter Guild"
+        simulation.state.npc_locations["Aiko Sato"] = p.location
+
+        outcome = simulation._scheduled_social_encounter("Guild patrol")
+
+        self.assertIn("clean answers", outcome)
+        self.assertEqual(p.dialogue_history[-1].intention, "Guild encounter")
 
     def test_gate_missions_discover_named_portals_and_clues(self) -> None:
         simulation = Simulation(seed=42)

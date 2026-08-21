@@ -361,10 +361,7 @@ class Simulation:
             if (relationship is None or location != p.location or
                     key in self.state.social_encounters_seen or action_name == "Rest"):
                 continue
-            context = (
-                "injury" if p.health < 55 or p.injury_severity > 1 else
-                "portal" if action_name in {"Gate mission", "Guild patrol"} else
-                "routine")
+            context = self._social_context(action_name)
             trust_change = 2 if p.mood in {"Hopeful", "Steady"} else 1
             exchange = resolve_contextual_encounter(
                 p, name, context, day, trust_change)
@@ -373,6 +370,17 @@ class Simulation:
                     f"Ren answered: “{exchange.ren_line}” {name} seemed "
                     f"{exchange.reaction}; the exchange made them more familiar.")
         return ""
+
+    def _social_context(self, action_name: str) -> str:
+        """Choose the authored conversation situation from Ren's lived state."""
+        p = self.state.protagonist
+        if p.health < 55 or p.injury_severity > 1:
+            return "injury"
+        if action_name == "Gate mission":
+            return "portal"
+        if action_name == "Guild patrol" or p.location == "Tokyo Hunter Guild":
+            return "guild"
+        return "routine"
 
     def _record_portal_investigation(self, portal) -> tuple[PortalInvestigation, bool]:
         investigation = self.state.portal_investigations.get(portal.name)

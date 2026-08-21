@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.277.0 - Situational conversation routing
+
+- Made injury dialogue take priority when Ren is hurt, regardless of the action that produced the meeting.
+- Routed Gate missions to portal dialogue and Guild patrols or Guild-location meetings to the authored Guild exchange instead of flattening both into portal talk.
+- Kept routine meetings as the fallback without changing encounter frequency, relationship rewards, or action timing.
+
 ## 0.276.0 - Two-sided contextual character voice
 
 - Added Aiko's missing guarded and trusted Guild dialogue instead of falling back to routine wording.
