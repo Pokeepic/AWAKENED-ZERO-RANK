@@ -68,7 +68,7 @@ class SimulationTests(unittest.TestCase):
         with redirect_stdout(output), self.assertRaises(SystemExit) as context:
             cli_main(("--version",))
         self.assertEqual(context.exception.code, 0)
-        self.assertTrue(output.getvalue().strip().endswith(" 0.350.0"))
+        self.assertTrue(output.getvalue().strip().endswith(" 0.360.0"))
 
     def test_four_actions_advance_exactly_one_day(self) -> None:
         simulation = Simulation(seed=1)
@@ -705,6 +705,14 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(len({portal.hazard for portal in PORTALS}), len(PORTALS))
         self.assertEqual(len({portal.clue for portal in PORTALS}), len(PORTALS))
         self.assertEqual(
+            len({portal.verified_consequence for portal in PORTALS}), len(PORTALS))
+        self.assertEqual(
+            len({portal.incomplete_consequence for portal in PORTALS}), len(PORTALS))
+        self.assertEqual(
+            {portal.consequence_focus for portal in PORTALS},
+            {"survival", "stability", "discovery", "relationships"},
+        )
+        self.assertEqual(
             {portal.name for portal in PORTALS[-2:]},
             {"Kawasaki Floodgate Labyrinth", "Chiba Glasshouse Breach"},
         )
@@ -719,6 +727,43 @@ class SimulationTests(unittest.TestCase):
             outcome = simulation._prepare_portal()
             prepared.update(portal.name for portal in PORTALS if portal.name in outcome)
         self.assertEqual(prepared, {portal.name for portal in PORTALS})
+
+    def test_verified_portal_aftermath_advances_its_world_focus(self) -> None:
+        simulation = Simulation(seed=181)
+        portal = PORTALS[-1]
+        before = simulation.state.objective_scores[portal.consequence_focus]
+        simulation._queue_portal_consequence(portal.name, verified=True)
+        simulation.state.clock.day += 2
+
+        outcome = simulation._resolve_due_consequence()
+
+        self.assertIn(portal.verified_consequence, outcome)
+        self.assertEqual(
+            simulation.state.objective_scores[portal.consequence_focus], before + 3)
+
+    def test_incomplete_portal_aftermath_harms_its_world_focus(self) -> None:
+        simulation = Simulation(seed=191)
+        portal = PORTALS[-2]
+        before = simulation.state.objective_scores[portal.consequence_focus]
+        simulation._queue_portal_consequence(portal.name, verified=False)
+        simulation.state.clock.day += 2
+
+        outcome = simulation._resolve_due_consequence()
+
+        self.assertIn(portal.incomplete_consequence, outcome)
+        self.assertEqual(
+            simulation.state.objective_scores[portal.consequence_focus], before - 2)
+
+    def test_mission_retreat_queues_an_incomplete_authored_aftermath(self) -> None:
+        simulation = Simulation(seed=5)
+        simulation.run(240)
+        incomplete = [
+            item for item in simulation.state.delayed_consequences
+            if "incomplete" in item.description
+        ]
+        self.assertEqual(len(incomplete), 1)
+        portal = next(item for item in PORTALS if item.name == incomplete[0].source)
+        self.assertIn(portal.incomplete_consequence, incomplete[0].description)
 
     def test_learning_observation_and_action_mask_are_stable(self) -> None:
         environment = LearningEnvironment(seed=5)

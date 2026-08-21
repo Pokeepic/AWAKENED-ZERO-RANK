@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.350.0` |
+| Release | `0.360.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 326 Python + 75 browser |
+| Automated tests | 329 Python + 75 browser |
 
 ## Why this project exists
 
@@ -41,7 +41,7 @@ The project follows six rules:
 
 - Day-three awakening, Rank F registration, Threat Sense mastery, and Echo Fragment growth.
 - Guild patrols, named Gate encounters, deterministic combat, injuries, rewards, and promotion.
-- Eight authored portal profiles with persistent discoveries, clues, risk, delayed consequences, and hazard-aware preparation.
+- Eight authored portal profiles with persistent discoveries, clues, risk, hazard-aware preparation, and distinct verified or incomplete delayed consequences.
 - Financial, medical, social, and mission-readiness goals that compete for Ren's time.
 
 ### Characters and narrative
@@ -235,7 +235,7 @@ Six fixed story anchors arrive at roughly six-month intervals from day 183 throu
 
 ### Story and content growth
 
-Expand the catalog through authored dialogue, recurring characters, portals, encounters, equipment, locations, and consequences. New content should deepen character identity and world continuity rather than only multiplying random combinations. All four recurring characters now have distinct guarded and trusted voices, matching context-aware replies from Ren, and situational reactions for routine, portal, injury, and guild encounters. Autonomous meetings route injury first, Gate missions to portal talk, Guild patrols and Guild meetings to Guild talk, and other overlaps to routine talk. They record the NPC line, Ren's reply, and the reaction in the same bounded dialogue history used by direct conversations. Hunter-shop planning equips the starter weapon and armor, maintains a maximum field stock of two Healing Gels and two Energy Drinks, unlocks the Reinforced Machete and Gateweave Vest at Rank E, and advances to the Mana-edge Saber and Barrier Coat at Rank D. Urgent supplies stay ahead of upgrades, while equipment purchases preserve the full rent reserve and stop during arrears. A strictly increasing combat-bonus rule prevents downgrades and tier loops. The utility score values the exact next purchase, so selection and execution cannot disagree. Delayed investigation consequences resolve as background effects alongside Ren's real decision, so they can change relationships and the world without consuming one of his four daily action slots.
+Expand the catalog through authored dialogue, recurring characters, portals, encounters, equipment, locations, and consequences. New content should deepen character identity and world continuity rather than only multiplying random combinations. All four recurring characters now have distinct guarded and trusted voices, matching context-aware replies from Ren, and situational reactions for routine, portal, injury, and guild encounters. Autonomous meetings route injury first, Gate missions to portal talk, Guild patrols and Guild meetings to Guild talk, and other overlaps to routine talk. They record the NPC line, Ren's reply, and the reaction in the same bounded dialogue history used by direct conversations. Hunter-shop planning equips the starter weapon and armor, maintains a maximum field stock of two Healing Gels and two Energy Drinks, unlocks the Reinforced Machete and Gateweave Vest at Rank E, and advances to the Mana-edge Saber and Barrier Coat at Rank D. Urgent supplies stay ahead of upgrades, while equipment purchases preserve the full rent reserve and stop during arrears. A strictly increasing combat-bonus rule prevents downgrades and tier loops. The utility score values the exact next purchase, so selection and execution cannot disagree. Delayed investigation consequences resolve as background effects alongside Ren's real decision, so they can change relationships and a portal-specific survival, stability, discovery, or relationship objective without consuming one of his four daily action slots.
 
 Deepen each anchor with recurring-character scenes, portal-specific consequences, international links, and more varied endings without turning the observer-only simulation into a scripted choice game.
 

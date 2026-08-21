@@ -162,14 +162,14 @@ export const FIELD_SUPPLY_CATALOG = [
 ] as const;
 
 export const PORTAL_PROFILE_CATALOG = [
-  { environment: "underground", hazard: "rising water", name: "Flooded Service Tunnel" },
-  { environment: "urban ruin", hazard: "cinder wind", name: "Ashen Shopping Arcade" },
-  { environment: "forest", hazard: "false trails", name: "Moonlit Cedar Path" },
-  { environment: "ice", hazard: "whiteout", name: "Frostbound Platform" },
-  { environment: "swamp", hazard: "toxic spores", name: "Sunken Courtyard" },
-  { environment: "urban tower", hazard: "shifting rooms", name: "Glass Office Labyrinth" },
-  { environment: "underground", hazard: "pressure surges", name: "Kawasaki Floodgate Labyrinth" },
-  { environment: "forest", hazard: "razor vines", name: "Chiba Glasshouse Breach" },
+  { aftermath: "Ward crews seal the overflow route.", environment: "underground", hazard: "rising water", name: "Flooded Service Tunnel" },
+  { aftermath: "The arcade closes before the cinder front.", environment: "urban ruin", hazard: "cinder wind", name: "Ashen Shopping Arcade" },
+  { aftermath: "Trail anchors restore an evacuation route.", environment: "forest", hazard: "false trails", name: "Moonlit Cedar Path" },
+  { aftermath: "Arrival intervals warn the platform patrol.", environment: "ice", hazard: "whiteout", name: "Frostbound Platform" },
+  { aftermath: "Spore samples trigger a respirator advisory.", environment: "swamp", hazard: "toxic spores", name: "Sunken Courtyard" },
+  { aftermath: "Room marks expose the mirror loop.", environment: "urban tower", hazard: "shifting rooms", name: "Glass Office Labyrinth" },
+  { aftermath: "Pressure data coordinates a floodgate evacuation.", environment: "underground", hazard: "pressure surges", name: "Kawasaki Floodgate Labyrinth" },
+  { aftermath: "Footprints reveal the living breach's migration.", environment: "forest", hazard: "razor vines", name: "Chiba Glasshouse Breach" },
 ] as const;
 
 export type PresentationContract = {

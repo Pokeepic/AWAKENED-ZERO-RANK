@@ -333,10 +333,15 @@ class Simulation:
                 consequence.due_day, consequence.source, consequence.people,
                 consequence.description, True)
             reactions = []
+            portal = next((item for item in PORTALS if item.name == consequence.source), None)
+            verified = "verified" in consequence.description
+            if portal is not None:
+                score_change = 3 if verified else -2
+                self.state.objective_scores[portal.consequence_focus] += score_change
             for name in consequence.people:
                 relationship = p.relationships.get(name)
                 if relationship is not None:
-                    trust_change = 2 if "verified" in consequence.description else -2
+                    trust_change = 2 if verified else -2
                     relationship.change(trust_change, 1)
                     reactions.append(f"{name}'s trust {'rose' if trust_change > 0 else 'fell'}")
             reaction_text = (
@@ -397,14 +402,15 @@ class Simulation:
         investigation.last_investigated_day = self.state.clock.day
         return investigation, created
 
-    def _queue_portal_consequence(self, portal_name: str, progress: int) -> None:
+    def _queue_portal_consequence(self, portal_name: str, verified: bool) -> None:
         if any(item.source == portal_name for item in self.state.delayed_consequences):
             return
         people = tuple(name for name in ("Mei Kuroda", "Daichi Mori", "Aiko Sato")
                        if name in self.state.protagonist.relationships)
-        description = (f"Evidence from {portal_name} was verified and changed the guild patrol route"
-                       if progress >= 25 else
-                       f"An incomplete report from {portal_name} sent a patrol toward uncertain ground")
+        portal = next(item for item in PORTALS if item.name == portal_name)
+        description = (f"Evidence from {portal_name} was verified: {portal.verified_consequence}"
+                       if verified else
+                       f"At {portal_name}, {portal.incomplete_consequence}")
         self.state.delayed_consequences.append(DelayedConsequence(
             self.state.clock.day + 2, portal_name, people, description))
 
@@ -526,7 +532,7 @@ class Simulation:
                 p.ability = "Threat Sense / Echo Fragment"
             clue = f" Discovered {portal.name}: {portal.clue}." if newly_discovered else ""
             social = self._portal_social_reaction(portal.name)
-            self._queue_portal_consequence(portal.name, investigation.progress)
+            self._queue_portal_consequence(portal.name, verified=True)
             return (f"Cleared {encounter.name} inside {portal.name} ({portal.environment}; "
                     f"hazard: {portal.hazard}) in {weather.name.lower()} weather "
                     f"(roll {roll} vs {difficulty}) for ¥{reward:,} "
@@ -542,7 +548,7 @@ class Simulation:
         self.state.objective_scores["survival"] -= 2
         clue = f" Discovered {portal.name}: {portal.clue}." if newly_discovered else ""
         social = self._portal_social_reaction(portal.name)
-        self._queue_portal_consequence(portal.name, investigation.progress)
+        self._queue_portal_consequence(portal.name, verified=False)
         return (f"Retreated from {encounter.name} inside {portal.name} ({portal.environment}; "
                 f"hazard: {portal.hazard}) in {weather.name.lower()} weather "
                 f"(roll {roll} vs {difficulty}); suffered "

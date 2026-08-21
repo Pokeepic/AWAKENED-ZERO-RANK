@@ -12,6 +12,9 @@ class PortalProfile:
     environment: str
     hazard: str
     clue: str
+    verified_consequence: str
+    incomplete_consequence: str
+    consequence_focus: str
 
 
 @dataclass(frozen=True)
@@ -53,14 +56,30 @@ TOKYO_LOCATIONS = (
 )
 
 PORTALS = (
-    PortalProfile("Flooded Service Tunnel", "underground", "rising water", "fresh claw marks"),
-    PortalProfile("Ashen Shopping Arcade", "urban ruin", "cinder wind", "a working payphone"),
-    PortalProfile("Moonlit Cedar Path", "forest", "false trails", "bells without a source"),
-    PortalProfile("Frostbound Platform", "ice", "whiteout", "an arriving ghost train"),
-    PortalProfile("Sunken Courtyard", "swamp", "toxic spores", "guild equipment in the reeds"),
-    PortalProfile("Glass Office Labyrinth", "urban tower", "shifting rooms", "Ren's reflection moves late"),
-    PortalProfile("Kawasaki Floodgate Labyrinth", "underground", "pressure surges", "saltwater flowing uphill"),
-    PortalProfile("Chiba Glasshouse Breach", "forest", "razor vines", "warm footprints beneath the frost"),
+    PortalProfile("Flooded Service Tunnel", "underground", "rising water", "fresh claw marks",
+                  "flood marks let ward crews seal the overflow route",
+                  "an incomplete flood map sent ward crews into rising water", "survival"),
+    PortalProfile("Ashen Shopping Arcade", "urban ruin", "cinder wind", "a working payphone",
+                  "wind readings closed the arcade before the cinder front",
+                  "an incomplete wind report left an unsafe storefront corridor open", "stability"),
+    PortalProfile("Moonlit Cedar Path", "forest", "false trails", "bells without a source",
+                  "trail anchors restored a civilian evacuation route",
+                  "an incomplete bell report split a search party across false trails", "relationships"),
+    PortalProfile("Frostbound Platform", "ice", "whiteout", "an arriving ghost train",
+                  "arrival intervals warned the platform patrol before the whiteout",
+                  "an incomplete timetable stranded a patrol beyond the frozen signal", "discovery"),
+    PortalProfile("Sunken Courtyard", "swamp", "toxic spores", "guild equipment in the reeds",
+                  "spore samples triggered a respirator advisory",
+                  "an incomplete sample exposed a recovery crew to toxic spores", "survival"),
+    PortalProfile("Glass Office Labyrinth", "urban tower", "shifting rooms", "Ren's reflection moves late",
+                  "room marks exposed the mirror loop before scouts entered",
+                  "an incomplete room map shifted exit markers behind the scouts", "discovery"),
+    PortalProfile("Kawasaki Floodgate Labyrinth", "underground", "pressure surges", "saltwater flowing uphill",
+                  "pressure data synchronized the Kawasaki floodgate evacuation",
+                  "an incomplete pressure warning triggered a closure on the wrong channel", "stability"),
+    PortalProfile("Chiba Glasshouse Breach", "forest", "razor vines", "warm footprints beneath the frost",
+                  "footprints revealed the living breach's migration path",
+                  "an incomplete footprint report led surveyors into the razor vines", "relationships"),
 )
 PORTAL_EXPANSION_DAY = 46
 

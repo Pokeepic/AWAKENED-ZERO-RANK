@@ -4,6 +4,16 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.360.0 - Authored portal aftermaths
+
+- Gave all eight portal profiles distinct verified and incomplete delayed consequences instead of one generic guild-route result; mission clears now queue verified reports while retreats queue incomplete reports.
+- Connected each resolved aftermath to one coherent world objective: survival, stability, discovery, or relationships.
+- Kept consequences in the background alongside Ren's autonomous action, preserving the four-slot daily horizon.
+- Expanded the Portal Atlas with a verified-effect description for documented locations while keeping unknown hazards and effects classified.
+- Added deterministic coverage for unique authored aftermaths and both positive and negative world-state effects.
+- Verified 12 fixed seeds for 240 steps: every timeline survived, none carried rent arrears, minimum health was 87, minimum cash was ¥162,600, and the one mission retreat produced one incomplete authored aftermath.
+- No RL training or verdict change was produced.
+
 ## 0.350.0 - Portal atlas expansion
 
 - Expanded the authored portal ecosystem from six to eight profiles with the Kawasaki Floodgate Labyrinth and Chiba Glasshouse Breach.
