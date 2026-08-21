@@ -189,6 +189,32 @@ def _validate_fixed_event_activity(
                      latest["outcome"]) is None)):
             raise ValueError(
                 "Observer snapshot fixed-event activity evidence is invalid")
+        awakening_memories = [
+            memory for memory in activity["key_memories"]
+            if memory == {
+                "day": 3,
+                "importance": 10,
+                "summary": (
+                    "Awakening assessment: Awakened at Rank F with "
+                    "Threat Sense."),
+            }
+        ]
+        if len(awakening_memories) != 1:
+            raise ValueError(
+                "Observer snapshot fixed-event memory evidence is invalid")
+        if current_position == (4, _SLOTS.index("Afternoon")):
+            registration_memories = [
+                memory for memory in activity["key_memories"]
+                if memory["day"] == 4 and memory["importance"] == 8 and
+                re.fullmatch(
+                    r"Guild registration: Aiko Sato issued an F-rank license; "
+                    r"travel and filing cost "
+                    r"¥(?:0|[1-9]\d{0,2}(?:,\d{3})*)\.",
+                    memory["summary"]) is not None
+            ]
+            if len(registration_memories) != 1:
+                raise ValueError(
+                    "Observer snapshot fixed-event memory evidence is invalid")
 
 
 def _validate_environment(environment: Any, day: int, slot: str) -> None:

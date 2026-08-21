@@ -448,10 +448,27 @@ function isActivity(
           latest.outcome,
         )
       : true;
+  const awakeningMemoryCount = memories.filter((memory) =>
+    memory.day === 3 && memory.importance === 10 &&
+    memory.summary ===
+      "Awakening assessment: Awakened at Rank F with Threat Sense."
+  ).length;
+  const registrationMemoryCount = memories.filter((memory) =>
+    memory.day === 4 && memory.importance === 8 &&
+    /^Guild registration: Aiko Sato issued an F-rank license; travel and filing cost ¥(?:0|[1-9]\d{0,2}(?:,\d{3})*)\.$/.test(
+      memory.summary,
+    )
+  ).length;
+  const fixedMemoryValid = currentPosition === awakeningPosition
+    ? awakeningMemoryCount === 1
+    : currentPosition === registrationPosition
+      ? awakeningMemoryCount === 1 && registrationMemoryCount === 1
+      : true;
   return (
     beforeCurrent &&
     memoriesCanonical &&
     fixedEventValid &&
+    fixedMemoryValid &&
     positions.every(
       (position, index) =>
         index === 0 ||

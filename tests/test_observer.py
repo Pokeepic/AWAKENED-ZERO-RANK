@@ -566,6 +566,19 @@ class ObserverSnapshotTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "activity evidence"):
                     verify_observer_snapshot(snapshot)
 
+    def test_verifier_requires_fixed_event_memory_evidence(self) -> None:
+        for steps, day in ((10, 3), (13, 4)):
+            with self.subTest(steps=steps):
+                simulation = Simulation(seed=332)
+                simulation.run(steps)
+                snapshot = observer_snapshot(simulation)
+                snapshot["activity"]["key_memories"] = [
+                    memory for memory in snapshot["activity"]["key_memories"]
+                    if memory["day"] != day]
+                _redigest(snapshot)
+                with self.assertRaisesRegex(ValueError, "memory evidence"):
+                    verify_observer_snapshot(snapshot)
+
     def test_verifier_rejects_redigested_invalid_equipment(self) -> None:
         weapon = observer_snapshot(Simulation(seed=313))
         weapon["protagonist"]["equipment"]["weapon"] = "Padded Jacket"

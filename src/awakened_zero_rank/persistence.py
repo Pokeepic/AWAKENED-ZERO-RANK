@@ -512,6 +512,29 @@ def _validate_simulation_state(simulation: "Simulation") -> None:
                     r"cost ¥(?:0|[1-9]\d{0,2}(?:,\d{3})*)\.",
                     latest.outcome) is None)):
             raise ValueError("Invalid save fixed-event activity evidence")
+        awakening_memories = [
+            memory for memory in protagonist.memories
+            if memory == Memory(
+                day=3,
+                summary=(
+                    "Awakening assessment: Awakened at Rank F with "
+                    "Threat Sense."),
+                importance=10)
+        ]
+        if len(awakening_memories) != 1:
+            raise ValueError("Invalid save fixed-event memory evidence")
+        if clock_position == (4, tuple(TimeSlot).index(TimeSlot.AFTERNOON)):
+            registration_memories = [
+                memory for memory in protagonist.memories
+                if memory.day == 4 and memory.importance == 8 and
+                re.fullmatch(
+                    r"Guild registration: Aiko Sato issued an F-rank license; "
+                    r"travel and filing cost "
+                    r"¥(?:0|[1-9]\d{0,2}(?:,\d{3})*)\.",
+                    memory.summary) is not None
+            ]
+            if len(registration_memories) != 1:
+                raise ValueError("Invalid save fixed-event memory evidence")
     if protagonist.current_goal != expected_goal:
         raise ValueError("Invalid save protagonist current goal")
 

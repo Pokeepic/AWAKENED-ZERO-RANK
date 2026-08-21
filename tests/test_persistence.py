@@ -390,6 +390,19 @@ class PersistenceSafetyTests(unittest.TestCase):
                     save_simulation(simulation, destination)
                 self.assertFalse(destination.exists())
 
+    def test_fixed_events_require_authored_memory_evidence(self) -> None:
+        for steps, day in ((10, 3), (13, 4)):
+            with self.subTest(steps=steps), TemporaryDirectory() as temporary_directory:
+                simulation = Simulation(seed=99)
+                simulation.run(steps)
+                simulation.state.protagonist.memories = [
+                    memory for memory in simulation.state.protagonist.memories
+                    if memory.day != day]
+                destination = Path(temporary_directory) / "timeline.json"
+                with self.assertRaisesRegex(ValueError, "memory evidence"):
+                    save_simulation(simulation, destination)
+                self.assertFalse(destination.exists())
+
     def test_hunter_rank_requires_matching_rank_points(self) -> None:
         simulation = Simulation(seed=72)
         simulation.state.protagonist.rank_points = 30

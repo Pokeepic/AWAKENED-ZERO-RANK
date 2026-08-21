@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.254.0 - Fixed-event memory evidence
+
+- Browser, save, and Python observer validation now require the authored Awakening memory at both fixed lifecycle boundaries and the Guild registration memory after registration.
+- Registration memory validation preserves deterministic fare variation while authenticating day, importance, and summary structure.
+- Added exact boundary and redigested-tamper coverage across all three validation surfaces. Valid decisions and schemas are unchanged.
+
 ## 0.253.0 - Fixed-event activity evidence
 
 - Browser, save, and Python observer validation now require the authored Awakening assessment or Guild registration as the latest event at each exact post-event boundary.
