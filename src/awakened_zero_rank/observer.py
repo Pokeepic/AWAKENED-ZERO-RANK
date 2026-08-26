@@ -10,7 +10,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
 
-from .content import NPCS, PORTALS, STORY_ANCHORS
+from .content import NPCS, PORTALS, STORY_ANCHORS, scheduled_location
 from .environment import SEASON_WEATHER, season_for_day
 from .models import AUTHORED_RENT_COST, AUTHORED_RENT_DUE_DAY
 from .story import STORY_PROGRESS_SCHEMA_VERSION, story_progress
@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from .simulation import Simulation
 
 
-OBSERVER_SNAPSHOT_SCHEMA_VERSION = 5
-OBSERVER_COMPARISON_SCHEMA_VERSION = 8
+OBSERVER_SNAPSHOT_SCHEMA_VERSION = 6
+OBSERVER_COMPARISON_SCHEMA_VERSION = 9
 OBSERVER_PRESENTATION_CONTRACT_SCHEMA_VERSION = 2
 OBSERVER_SITE_COMPARISON_ARTIFACT_SCHEMA_VERSION = 1
 RECENT_EVENT_LIMIT = 12
@@ -31,7 +31,7 @@ CONVERSATION_LIMIT = 6
 _SNAPSHOT_KEYS = {
     "activity", "clock", "conversations", "economy", "environment",
     "identity", "portals", "protagonist", "relationships", "schema_version",
-    "seed", "story",
+    "seed", "story", "whereabouts",
 }
 _SLOTS = ("Morning", "Afternoon", "Evening", "Late Night")
 _RESOURCE_KEYS = {"energy", "health", "hunger", "money", "morale", "stress"}
@@ -67,6 +67,7 @@ _MEMORY_KEYS = {"day", "importance", "summary"}
 _CONVERSATION_KEYS = {
     "day", "intention", "npc_line", "npc_name", "reaction", "ren_line",
 }
+_WHEREABOUT_KEYS = {"location", "name"}
 _ENVIRONMENT_KEYS = {"gate_alert_level", "season", "temperature_c", "weather"}
 _PORTAL_KEYS = {"active_plan", "discovered", "investigations"}
 _INVESTIGATION_KEYS = {
@@ -704,6 +705,25 @@ def _validate_conversations(conversations: Any, current_day: int) -> None:
         previous_day = day
 
 
+def _validate_whereabouts(
+        whereabouts: Any, relationships: Any, day: int, slot: str) -> None:
+    if not isinstance(whereabouts, list):
+        raise ValueError("Observer snapshot whereabouts are malformed")
+    expected_names = sorted(
+        relationship["name"] for relationship in relationships)
+    if len(whereabouts) != len(expected_names):
+        raise ValueError("Observer snapshot whereabouts are inconsistent")
+    for entry, name in zip(whereabouts, expected_names):
+        if (
+                not isinstance(entry, dict) or
+                set(entry) != _WHEREABOUT_KEYS or
+                entry != {
+                    "location": scheduled_location(name, slot, day),
+                    "name": name,
+                }):
+            raise ValueError("Observer snapshot whereabouts are inconsistent")
+
+
 def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     clock = snapshot["clock"]
     if not isinstance(clock, dict) or set(clock) != {"day", "slot"}:
@@ -717,6 +737,8 @@ def _validate_snapshot_semantics(snapshot: dict[str, Any]) -> int:
     _validate_environment(snapshot["environment"], day, clock["slot"])
     _validate_portals(snapshot["portals"], day, clock["slot"])
     _validate_relationships(snapshot["relationships"], day, clock["slot"])
+    _validate_whereabouts(
+        snapshot["whereabouts"], snapshot["relationships"], day, clock["slot"])
     _validate_story(snapshot["story"], day)
     _validate_protagonist(
         snapshot["protagonist"], day, clock["slot"],
@@ -1335,6 +1357,15 @@ def observer_snapshot(simulation: Simulation) -> dict[str, Any]:
         "schema_version": OBSERVER_SNAPSHOT_SCHEMA_VERSION,
         "seed": simulation.seed,
         "story": story_progress(state),
+        "whereabouts": [
+            {
+                "location": scheduled_location(
+                    relationship["name"], state.clock.slot.value,
+                    state.clock.day),
+                "name": relationship["name"],
+            }
+            for relationship in relationships
+        ],
     }
     snapshot["identity"] = {
         "algorithm": "sha256",

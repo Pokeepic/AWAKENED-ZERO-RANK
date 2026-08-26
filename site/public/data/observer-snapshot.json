@@ -153,9 +153,9 @@
   },
   "identity": {
     "algorithm": "sha256",
-    "digest": "88d853833a504701a16515495fb686fc2d1ea5121d13e5cc1ee22505fc29bacd"
+    "digest": "4878c2909d423e38e0cc295a1f764f0de83419d87a222999646574f601542b63"
   },
-  "path": "C:\\Users\\user\\AppData\\Local\\Temp\\awakened-zero-rank-v0278-seed42-day11.json",
+  "path": "C:\\Users\\user\\AppData\\Local\\Temp\\azr-0.390-save.json",
   "portals": {
     "active_plan": null,
     "discovered": [
@@ -254,7 +254,7 @@
       "trust": 3
     }
   ],
-  "schema_version": 5,
+  "schema_version": 6,
   "seed": 42,
   "story": {
     "completed": [],
@@ -269,5 +269,23 @@
     },
     "schema_version": 4,
     "total_anchors": 6
-  }
+  },
+  "whereabouts": [
+    {
+      "location": "Tokyo Hunter Guild",
+      "name": "Aiko Sato"
+    },
+    {
+      "location": "Adachi Gate Zone",
+      "name": "Daichi Mori"
+    },
+    {
+      "location": "Akihabara Market",
+      "name": "Haruto Ishikawa"
+    },
+    {
+      "location": "Ueno Library",
+      "name": "Mei Kuroda"
+    }
+  ]
 }

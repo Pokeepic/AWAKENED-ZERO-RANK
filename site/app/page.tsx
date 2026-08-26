@@ -128,6 +128,14 @@ export default function Home() {
   const dayOfYear = ((snapshot.clock.day - 1) % 365) + 1;
   const nextSeasonal = nextSeasonalEvent(snapshot.clock.day);
   const briefing = dailyBriefing(snapshot);
+  const cityLocations = Array.from(
+    snapshot.whereabouts.reduce((locations, person) => {
+      const names = locations.get(person.location) ?? [];
+      names.push(person.name);
+      locations.set(person.location, names);
+      return locations;
+    }, new Map<string, string[]>()).entries(),
+  ).sort(([left], [right]) => left.localeCompare(right));
   const rentStatus = snapshot.economy.rent_arrears > 0
     ? `¥${snapshot.economy.rent_arrears.toLocaleString()} overdue`
     : snapshot.economy.rent_payments > 0
@@ -168,6 +176,8 @@ export default function Home() {
       <section className="calendar"><h2 className="section-label">SEASONAL CALENDAR <span>REPEATS YEARLY</span></h2><div className="calendar-next"><small>NEXT MOMENT / DAY {nextSeasonal.day}</small><b>{nextSeasonal.title}</b><strong>{nextSeasonal.daysRemaining}<small>DAYS</small></strong></div><div className="calendar-grid">{SEASONAL_EVENT_CATALOG.map((event) => <article key={event.title} className={event.title === nextSeasonal.title ? "next" : undefined}><small>{event.season.toUpperCase()} / D{event.dayOfYear}</small><b>{event.title}</b><span>{event.place}</span></article>)}</div><p>These world events recur without giving the observer control. Ren's condition and known relationships shape who shares them.</p></section>
 
       <section className="people"><h2 className="section-label">PEOPLE IN ORBIT <span>{snapshot.relationships.length} KNOWN</span></h2>{snapshot.relationships.length===0&&<p className="empty-state">No trusted relationships have formed yet.</p>}{snapshot.relationships.map((relationship) => <article key={relationship.name}><i aria-hidden="true">{relationship.name.split(" ").map((part) => part[0]).join("")}</i><div><b>{relationship.name}</b><small>{relationship.role}</small></div><dl><div><dt>TRUST</dt><dd>{relationship.trust}</dd></div><div><dt>FAMILIAR</dt><dd>{relationship.familiarity}</dd></div><div><dt>LOYAL</dt><dd>{relationship.loyalty}</dd></div><div><dt>TENSION</dt><dd>{relationship.tension}</dd></div></dl></article>)}</section>
+
+      <section className="whereabouts"><h2 className="section-label">TOKYO TODAY <span>{snapshot.whereabouts.length + 1} LIVES LOCATED</span></h2><div className="city-board"><article className="ren-location"><small>REN / CURRENT</small><b>{p.location}</b><span>{p.name}</span></article>{cityLocations.map(([location, names]) => <article key={location}><small>KNOWN WHEREABOUTS</small><b>{location}</b><span>{names.join(" / ")}</span></article>)}</div></section>
 
       <div className="chapter-label" id="world-records"><span>04</span><b>WORLD RECORDS</b><small>Investigations, memories, and the portal atlas</small></div>
       <section className="portals"><h2 className="section-label">PORTAL LEDGER <span>{discovered.length} FOUND</span></h2>{discovered.length===0&&<p className="empty-state">No portals have been discovered yet.</p>}{discovered.map((name) => { const investigation = investigations.find((item) => item.portal_name === name); return <article className="portal" key={name}><div><b>{name}</b>{snapshot.portals.active_plan === name && <mark>ACTIVE PLAN</mark>}</div>{investigation ? <><span>{investigation.progress}% investigated / risk {investigation.risk}</span><i aria-hidden="true"><u style={{ width: `${investigation.progress}%` }} /></i><small>{investigation.preparation_strategy}{investigation.cooperating_npc ? ` / with ${investigation.cooperating_npc}` : ""}</small></> : <small>DISCOVERED / NOT YET INVESTIGATED</small>}</article>; })}</section>

@@ -56,11 +56,12 @@ class ObserverSnapshotTests(unittest.TestCase):
         snapshot = observer_snapshot(simulation)
 
         self.assertEqual(simulation.state, before)
-        self.assertEqual(snapshot["schema_version"], 5)
+        self.assertEqual(snapshot["schema_version"], 6)
         self.assertEqual(snapshot["seed"], 163)
         self.assertEqual(snapshot["clock"], {"day": 1, "slot": "Morning"})
         self.assertEqual(snapshot["protagonist"]["name"], "Ren Takahashi")
         self.assertEqual(snapshot["relationships"], [])
+        self.assertEqual(snapshot["whereabouts"], [])
         self.assertEqual(snapshot["conversations"], [])
         self.assertEqual(snapshot["activity"], {
             "key_memories": [],
@@ -68,6 +69,24 @@ class ObserverSnapshotTests(unittest.TestCase):
         })
         self.assertEqual(snapshot["story"]["schema_version"], 4)
         json.dumps(snapshot, sort_keys=True)
+
+    def test_whereabouts_are_known_schedule_consistent_and_authenticated(self) -> None:
+        simulation = Simulation(seed=42)
+        simulation.run(40)
+        snapshot = observer_snapshot(simulation)
+
+        self.assertEqual(snapshot["whereabouts"], [
+            {"location": "Tokyo Hunter Guild", "name": "Aiko Sato"},
+            {"location": "Adachi Gate Zone", "name": "Daichi Mori"},
+            {"location": "Akihabara Market", "name": "Haruto Ishikawa"},
+            {"location": "Ueno Library", "name": "Mei Kuroda"},
+        ])
+        verify_observer_snapshot(snapshot)
+
+        snapshot["whereabouts"][0]["location"] = "Home"
+        _redigest(snapshot)
+        with self.assertRaisesRegex(ValueError, "whereabouts"):
+            verify_observer_snapshot(snapshot)
 
     def test_activity_is_bounded_and_preserves_recent_order(self) -> None:
         simulation = Simulation(seed=179)
@@ -172,7 +191,7 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(summary, {
             "day": 1,
             "digest": snapshot["identity"]["digest"],
-            "schema_version": 5,
+            "schema_version": 6,
             "seed": 197,
             "status": "valid",
         })
@@ -847,8 +866,8 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertIsNot(first, second)
         self.assertEqual(first["contract_schema_version"], 2)
-        self.assertEqual(first["observer_schema_version"], 5)
-        self.assertEqual(first["comparison_schema_version"], 8)
+        self.assertEqual(first["observer_schema_version"], 6)
+        self.assertEqual(first["comparison_schema_version"], 9)
         self.assertTrue(first["read_only"])
         self.assertEqual(first["control_capabilities"], [])
         digest_payload = {
@@ -877,10 +896,10 @@ class ObserverSnapshotTests(unittest.TestCase):
 
         self.assertEqual(contract, before)
         self.assertEqual(summary, {
-            "comparison_schema_version": 8,
+            "comparison_schema_version": 9,
             "contract_schema_version": 2,
             "contract_sha256": contract["contract_sha256"],
-            "observer_schema_version": 5,
+            "observer_schema_version": 6,
             "status": "valid",
         })
 
@@ -958,8 +977,8 @@ class ObserverSnapshotTests(unittest.TestCase):
         self.assertIsNone(comparison["appended_event"])
         self.assertIsNone(comparison["animation_cue"])
         self.assertEqual(comparison["changed_sections"], [])
-        self.assertEqual(comparison["comparison_schema_version"], 8)
-        self.assertEqual(comparison["observer_schema_version"], 5)
+        self.assertEqual(comparison["comparison_schema_version"], 9)
+        self.assertEqual(comparison["observer_schema_version"], 6)
         self.assertEqual(comparison["left"]["digest"], comparison["right"]["digest"])
 
     def test_snapshot_comparison_reports_sorted_world_sections(self) -> None:
@@ -1162,7 +1181,7 @@ class ObserverSnapshotTests(unittest.TestCase):
                 "contract_sha256": observer_presentation_contract()[
                     "contract_sha256"],
                 "day": snapshot["clock"]["day"],
-                "observer_schema_version": 5,
+                "observer_schema_version": 6,
                 "seed": 487,
                 "snapshot_sha256": snapshot["identity"]["digest"],
                 "status": "valid",

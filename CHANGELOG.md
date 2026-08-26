@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.390.0 - Tokyo Today whereabouts
+
+- Advanced observer snapshots to schema 6 with authenticated, schedule-consistent whereabouts for every recurring character Ren currently knows.
+- Advanced observer comparisons to schema 9 so the new world projection participates in compatibility and change reporting.
+- Added a responsive Tokyo Today city board that locates Ren and groups known lives by their current authored locations.
+- Kept unknown characters private, rejected reordered, invented, stale, and re-digested whereabouts, and preserved the simulator as the sole source of truth.
+- Preserved simulation mechanics and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.382.0 - Daily observer briefing
 
 - Added a compact Today at a Glance briefing for immediate pressure, fixed story horizon, seasonal horizon, and unresolved portal priority.

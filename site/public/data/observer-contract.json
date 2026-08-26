@@ -19,11 +19,11 @@
     "treatment",
     "work"
   ],
-  "comparison_schema_version": 8,
+  "comparison_schema_version": 9,
   "contract_schema_version": 2,
-  "contract_sha256": "9b2e896b4157e351efd04671d6fdc5dbe9a579b4b3244e125bf80126946fc06e",
+  "contract_sha256": "45005f63ec7b5305a061148f56616c1426d1e765f1b5ad4b0187c0eea1959191",
   "control_capabilities": [],
-  "observer_schema_version": 5,
+  "observer_schema_version": 6,
   "read_only": true,
   "recent_activity_relations": [
     "append",

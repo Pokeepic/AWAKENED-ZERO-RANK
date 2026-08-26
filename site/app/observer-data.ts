@@ -35,6 +35,7 @@ export type Relationship = {
   tension: number;
   trust: number;
 };
+export type Whereabout = { location: string; name: string };
 export type PortalInvestigation = {
   cooperating_npc: string | null;
   joint_missions: number;
@@ -120,6 +121,7 @@ export type ObserverSnapshot = {
     next: { key: string; title: string; day: number; days_remaining: number } | null;
   };
   relationships: Relationship[];
+  whereabouts: Whereabout[];
   portals: {
     active_plan: string | null;
     discovered: string[];
@@ -342,6 +344,18 @@ const RELATIONSHIP_ROLES: Record<string, string> = {
   "Haruto Ishikawa": "hunter supply owner",
   "Mei Kuroda": "independent portal researcher",
 };
+const NPC_SCHEDULES: Record<string, Record<string, string>> = {
+  "Aiko Sato": { Morning: "Tokyo Hunter Guild", Afternoon: "Tokyo Hunter Guild", Evening: "Kita-Senju Station", "Late Night": "Home" },
+  "Daichi Mori": { Morning: "Adachi Gate Zone", Afternoon: "Tokyo Hunter Guild", Evening: "Arakawa Riverbank", "Late Night": "Home" },
+  "Haruto Ishikawa": { Morning: "Akihabara Market", Afternoon: "Akihabara Market", Evening: "Kita-Senju Station", "Late Night": "Home" },
+  "Mei Kuroda": { Morning: "Ueno Library", Afternoon: "Adachi Gate Zone", Evening: "Ueno Library", "Late Night": "Shinjuku Guild Annex" },
+};
+function scheduledLocation(name: string, slot: string, day: number): string | undefined {
+  if (day % 7 === 0 && ["Aiko Sato", "Haruto Ishikawa"].includes(name)) {
+    return "Asakusa Shrine District";
+  }
+  return NPC_SCHEDULES[name]?.[slot];
+}
 const LOCATIONS = new Set([
   "Adachi Apartment",
   "Kita-Senju",
@@ -711,6 +725,21 @@ function isRelationships(
   });
 }
 
+function isWhereabouts(
+  value: unknown,
+  relationships: Relationship[],
+  day: number,
+  slot: string,
+): value is Whereabout[] {
+  if (!Array.isArray(value) || value.length !== relationships.length) return false;
+  return value.every((item, index) =>
+    isRecord(item) &&
+    hasExactKeys(item, ["location", "name"]) &&
+    item.name === relationships[index].name &&
+    item.location === scheduledLocation(item.name as string, slot, day)
+  );
+}
+
 function isPortals(
   value: unknown,
   day: number,
@@ -951,7 +980,7 @@ export function isPresentationContract(
       "read_only", "recent_activity_relations", "update_modes",
     ]) &&
     hasExactStrings(value.animation_cues, ANIMATION_CUES) &&
-    value.comparison_schema_version === 8 &&
+    value.comparison_schema_version === 9 &&
     typeof value.contract_sha256 === "string" &&
     /^[0-9a-f]{64}$/.test(value.contract_sha256) &&
     isInteger(value.contract_schema_version, 1) &&
@@ -969,7 +998,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
   }
   const snapshotKeys = [
     "activity", "clock", "conversations", "economy", "environment", "identity",
-    "portals", "protagonist", "relationships", "schema_version", "seed", "story",
+    "portals", "protagonist", "relationships", "schema_version", "seed", "story", "whereabouts",
   ];
   const hasValidEnvelope =
     hasExactKeys(value, snapshotKeys) ||
@@ -977,7 +1006,7 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
       typeof value.path === "string");
   if (
     !hasValidEnvelope ||
-    value.schema_version !== 5 ||
+    value.schema_version !== 6 ||
     !Number.isSafeInteger(value.seed) ||
     !isIdentity(value.identity) ||
     !isRecord(value.clock) ||
@@ -1121,6 +1150,12 @@ export function isObserverSnapshot(value: unknown): value is ObserverSnapshot {
         !isStory(value.story, value.clock.day) ||
     !isRelationships(
       value.relationships,
+      value.clock.day as number,
+      value.clock.slot as string,
+    ) ||
+    !isWhereabouts(
+      value.whereabouts,
+      value.relationships as Relationship[],
       value.clock.day as number,
       value.clock.slot as string,
     ) ||
