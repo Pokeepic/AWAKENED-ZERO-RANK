@@ -8,6 +8,19 @@ import {
   verifyArtifacts,
 } from "../app/observer-data.ts";
 const root = new URL("../", import.meta.url);
+test("ships a local-only authenticated point-and-click prologue", async () => {
+  const [game, observer] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+  ]);
+  assert.match(game, /verifyArtifacts/);
+  assert.match(game, /HOTSPOTS\.map/);
+  assert.match(game, /clues\.length >= 2/);
+  assert.match(game, /LOCAL PLAY ONLY/);
+  assert.match(game, /simulator remains autonomous and unchanged/);
+  assert.doesNotMatch(game, /fetch\([^)]*method\s*:/);
+  assert.match(observer, /href="\/game"/);
+});
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],
   [365, "arc_tokyo_fracture", "The Tokyo Fracture"],

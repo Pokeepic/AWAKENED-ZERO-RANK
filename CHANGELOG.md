@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.510.0 - Playable point-and-click prologue
+
+- Added a separate `/game` route with an accessible inspect-two-then-suggest interaction loop.
+- Derives scene, resources, equipment, Gate status, and Ren's responses from the authenticated observer artifacts.
+- Keeps every player action local to the browser session and clearly preserves the autonomous simulator as canon.
+- Linked the prologue from the Observer while preserving its read-only controls and all existing behavior.
+- Deferred further RL work; the honest held-out verdict remains **baseline remains better** without running a new experiment.
+
 ## 0.500.0 - Four-slot latest-day chronicle
 
 - Reframed the latest retained activity as a Morning, Afternoon, Evening, and Late Night narrative strip.

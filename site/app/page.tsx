@@ -166,7 +166,7 @@ export default function Home() {
 
     <section className="hero" aria-labelledby="chronicle-title"><div><small>REN'S CHRONICLE / TOKYO, JAPAN</small><h1 id="chronicle-title">A life unfolding<br />without your hand.</h1><p>Rent is due. Gates are opening. Ren chooses what comes next.</p><span className="hero-state">{p.location} / {p.mood} / RANK {p.hunter_rank}</span></div><aside aria-label={`Day ${snapshot.clock.day}, ${snapshot.clock.slot}`}>DAY<strong>{String(snapshot.clock.day).padStart(3, "0")}</strong><em>{snapshot.clock.slot}</em></aside></section>
     <nav aria-label="Current world status"><span>{snapshot.environment.weather} / {snapshot.environment.temperature_c} C</span><span>YEAR {calendarYear} / {snapshot.environment.season} D{dayOfYear}</span><span>GATE ALERT {snapshot.environment.gate_alert_level}</span><span>SEED {snapshot.seed}</span></nav>
-    <nav className="section-nav" aria-label="Chronicle sections"><a href="#current-life">CURRENT LIFE</a><a href="#progression">PROGRESSION</a><a href="#story-world">STORY & PEOPLE</a><a href="#world-records">WORLD RECORDS</a></nav>
+    <nav className="section-nav" aria-label="Chronicle sections"><a className="game-entry" href="/game">PLAY PROLOGUE</a><a href="#current-life">CURRENT LIFE</a><a href="#progression">PROGRESSION</a><a href="#story-world">STORY & PEOPLE</a><a href="#world-records">WORLD RECORDS</a></nav>
 
     <div className="grid">
       <div className="chapter-label" id="current-life"><span>01</span><b>CURRENT LIFE</b><small>Condition, choices, and conversations</small></div>
