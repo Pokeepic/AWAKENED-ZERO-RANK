@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.410.0 - Authenticated current scene
+
+- Added a focused current-scene dossier connecting Ren's authenticated location to its authored purpose and ward.
+- Derived atmosphere, local known presence, and Gate pressure exclusively from the already verified snapshot.
+- Kept the presentation read-only and responsive, with no duplicated world state, controls, or additional network requests.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.400.0 - Read-only Tokyo atlas
 
 - Expanded Tokyo Today with a collapsible atlas of thirteen authored places spanning Ren's life and every recurring-character schedule.

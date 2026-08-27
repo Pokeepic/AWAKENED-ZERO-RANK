@@ -162,6 +162,34 @@ export const TOKYO_LOCATION_CATALOG: readonly TokyoLocationProfile[] = [
   { name: "Tokyo Hunter Guild", purpose: "Registration, patrols, and hunter work", ward: "Central Tokyo" },
   { name: "Ueno Library", purpose: "Study and Gate-safety research", ward: "Taito" },
 ] as const;
+export type CurrentScene = {
+  atmosphere: string;
+  place: TokyoLocationProfile;
+  presence: string;
+  pressure: string;
+};
+export function currentScene(snapshot: ObserverSnapshot): CurrentScene {
+  const place = TOKYO_LOCATION_CATALOG.find(({ name }) =>
+    name === snapshot.protagonist.location
+  )!;
+  const nearby = snapshot.whereabouts
+    .filter(({ location }) => location === place.name)
+    .map(({ name }) => name);
+  const pressure = [
+    "No active Gate pressure",
+    "Gate activity under watch",
+    "Elevated Gate pressure",
+    "Critical Gate pressure",
+  ][snapshot.environment.gate_alert_level];
+  return {
+    atmosphere: `${snapshot.clock.slot} / ${snapshot.environment.weather}, ${snapshot.environment.temperature_c} C`,
+    place,
+    presence: nearby.length > 0
+      ? `Nearby: ${nearby.join(" / ")}`
+      : "No known recurring character is nearby.",
+    pressure,
+  };
+}
 export const SEASONAL_EVENT_CATALOG: readonly SeasonalCalendarEvent[] = [
   { dayOfYear: 7, season: "Summer", title: "Tanabata evening", place: "Arakawa Riverbank" },
   { dayOfYear: 137, season: "Autumn", title: "Tsukimi river watch", place: "Arakawa Riverbank" },

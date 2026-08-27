@@ -986,6 +986,26 @@ test("provides a complete read-only Tokyo location atlas", async () => {
   assert.doesNotMatch(page, /onClick=/);
   assert.match(css, /\.city-index summary\{cursor:pointer/);
 });
+test("derives the current scene only from authenticated world fields", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  assert.deepEqual(data.currentScene(snapshot), {
+    atmosphere: "Morning / Clear, 29 C",
+    place: { name: "Adachi Apartment", purpose: "Ren's home and recovery base", ward: "Adachi" },
+    presence: "No known recurring character is nearby.",
+    pressure: "No active Gate pressure",
+  });
+  const shared = structuredClone(snapshot);
+  shared.whereabouts[0].location = shared.protagonist.location;
+  assert.equal(data.currentScene(shared).presence, "Nearby: Aiko Sato");
+  assert.match(page, /CURRENT SCENE/);
+  assert.match(page, /LOCAL PRESENCE/);
+  assert.match(css, /\.current-scene\{display:grid/);
+});
 test("requires canonical seasonal environment conditions", async () => {
   const data = await import("../app/observer-data.ts");
   const original = await readFile(

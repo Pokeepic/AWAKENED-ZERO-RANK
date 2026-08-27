@@ -11,6 +11,7 @@ import {
   RESOURCE_NAMES,
   SEASONAL_EVENT_CATALOG,
   TOKYO_LOCATION_CATALOG,
+  currentScene,
   dailyBriefing,
   nextSeasonalEvent,
   verifyArtifacts,
@@ -129,6 +130,7 @@ export default function Home() {
   const dayOfYear = ((snapshot.clock.day - 1) % 365) + 1;
   const nextSeasonal = nextSeasonalEvent(snapshot.clock.day);
   const briefing = dailyBriefing(snapshot);
+  const scene = currentScene(snapshot);
   const cityLocations = Array.from(
     snapshot.whereabouts.reduce((locations, person) => {
       const names = locations.get(person.location) ?? [];
@@ -178,7 +180,7 @@ export default function Home() {
 
       <section className="people"><h2 className="section-label">PEOPLE IN ORBIT <span>{snapshot.relationships.length} KNOWN</span></h2>{snapshot.relationships.length===0&&<p className="empty-state">No trusted relationships have formed yet.</p>}{snapshot.relationships.map((relationship) => <article key={relationship.name}><i aria-hidden="true">{relationship.name.split(" ").map((part) => part[0]).join("")}</i><div><b>{relationship.name}</b><small>{relationship.role}</small></div><dl><div><dt>TRUST</dt><dd>{relationship.trust}</dd></div><div><dt>FAMILIAR</dt><dd>{relationship.familiarity}</dd></div><div><dt>LOYAL</dt><dd>{relationship.loyalty}</dd></div><div><dt>TENSION</dt><dd>{relationship.tension}</dd></div></dl></article>)}</section>
 
-      <section className="whereabouts"><h2 className="section-label">TOKYO TODAY <span>{snapshot.whereabouts.length + 1} LIVES LOCATED</span></h2><div className="city-board"><article className="ren-location"><small>REN / CURRENT</small><b>{p.location}</b><span>{p.name}</span></article>{cityLocations.map(([location, names]) => <article key={location}><small>KNOWN WHEREABOUTS</small><b>{location}</b><span>{names.join(" / ")}</span></article>)}</div><details className="city-index"><summary>INSPECT {TOKYO_LOCATION_CATALOG.length} DOCUMENTED PLACES <span>READ ONLY</span></summary><div>{TOKYO_LOCATION_CATALOG.map((place) => { const names = cityLocations.find(([location]) => location === place.name)?.[1] ?? []; const renHere = p.location === place.name; return <article key={place.name} className={renHere || names.length > 0 ? "occupied" : undefined}><small>{place.ward.toUpperCase()}</small><b>{place.name}</b><p>{place.purpose}</p><span>{renHere ? `REN${names.length ? ` / ${names.join(" / ")}` : ""}` : names.length ? names.join(" / ") : "NO KNOWN PRESENCE"}</span></article>; })}</div></details></section>
+      <section className="whereabouts"><h2 className="section-label">TOKYO TODAY <span>{snapshot.whereabouts.length + 1} LIVES LOCATED</span></h2><article className="current-scene"><div><small>CURRENT SCENE / {scene.place.ward.toUpperCase()}</small><h3>{scene.place.name}</h3><p>{scene.place.purpose}</p></div><dl><div><dt>ATMOSPHERE</dt><dd>{scene.atmosphere}</dd></div><div><dt>LOCAL PRESENCE</dt><dd>{scene.presence}</dd></div><div><dt>PRESSURE</dt><dd>{scene.pressure}</dd></div></dl></article><div className="city-board"><article className="ren-location"><small>REN / CURRENT</small><b>{p.location}</b><span>{p.name}</span></article>{cityLocations.map(([location, names]) => <article key={location}><small>KNOWN WHEREABOUTS</small><b>{location}</b><span>{names.join(" / ")}</span></article>)}</div><details className="city-index"><summary>INSPECT {TOKYO_LOCATION_CATALOG.length} DOCUMENTED PLACES <span>READ ONLY</span></summary><div>{TOKYO_LOCATION_CATALOG.map((place) => { const names = cityLocations.find(([location]) => location === place.name)?.[1] ?? []; const renHere = p.location === place.name; return <article key={place.name} className={renHere || names.length > 0 ? "occupied" : undefined}><small>{place.ward.toUpperCase()}</small><b>{place.name}</b><p>{place.purpose}</p><span>{renHere ? `REN${names.length ? ` / ${names.join(" / ")}` : ""}` : names.length ? names.join(" / ") : "NO KNOWN PRESENCE"}</span></article>; })}</div></details></section>
 
       <div className="chapter-label" id="world-records"><span>04</span><b>WORLD RECORDS</b><small>Investigations, memories, and the portal atlas</small></div>
       <section className="portals"><h2 className="section-label">PORTAL LEDGER <span>{discovered.length} FOUND</span></h2>{discovered.length===0&&<p className="empty-state">No portals have been discovered yet.</p>}{discovered.map((name) => { const investigation = investigations.find((item) => item.portal_name === name); return <article className="portal" key={name}><div><b>{name}</b>{snapshot.portals.active_plan === name && <mark>ACTIVE PLAN</mark>}</div>{investigation ? <><span>{investigation.progress}% investigated / risk {investigation.risk}</span><i aria-hidden="true"><u style={{ width: `${investigation.progress}%` }} /></i><small>{investigation.preparation_strategy}{investigation.cooperating_npc ? ` / with ${investigation.cooperating_npc}` : ""}</small></> : <small>DISCOVERED / NOT YET INVESTIGATED</small>}</article>; })}</section>
