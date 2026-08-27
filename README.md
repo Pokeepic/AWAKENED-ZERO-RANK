@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.640.0` |
+| Release | `0.650.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 104 browser |
+| Automated tests | 339 Python + 105 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game

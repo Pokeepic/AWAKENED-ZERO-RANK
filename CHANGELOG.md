@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.650.0 - Campaign navigation
+
+- Added persistent Home, Tokyo, and Gate Cases navigation across the RPG.
+- Added versioned validation and automatic migration for device-local campaign saves.
+- Updated site metadata to accurately describe the separate Observer and RPG modes.
+
 ## 0.640.0 - Persistent campaign HUD
 
 - Added a shared RPG HUD across apartment, Tokyo, and Gate chapters.

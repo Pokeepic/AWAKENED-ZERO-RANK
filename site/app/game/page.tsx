@@ -144,8 +144,8 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.640</span></header>
-    <GameHud state={rpg} onNewGame={newGame} />
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.650</span></header>
+    <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
       <h1 id="game-title">A quiet room.<br />A life already moving.</h1>

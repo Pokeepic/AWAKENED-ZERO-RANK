@@ -179,6 +179,19 @@ test("renders a shared persistent RPG HUD with a safe new-game reset", async () 
   for (const page of [game, city, caseboard]) assert.match(page, /<GameHud/);
   assert.match(styles, /\.rpg-hud/);
 });
+test("links every RPG chapter and validates versioned local saves", async () => {
+  const [hud, state, layout] = await Promise.all([
+    readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/layout.tsx", root), "utf8"),
+  ]);
+  for (const route of ["/game", "/game/city", "/game/caseboard"]) assert.match(hud, new RegExp(`href="${route.replaceAll("/", "\\/")}"`));
+  assert.match(hud, /aria-current/);
+  assert.match(state, /saveVersion: 1/);
+  assert.match(state, /isRpgState/);
+  assert.match(state, /Number\.isSafeInteger/);
+  assert.match(layout, /separate time-management RPG/);
+});
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],
   [365, "arc_tokyo_fracture", "The Tokyo Fracture"],

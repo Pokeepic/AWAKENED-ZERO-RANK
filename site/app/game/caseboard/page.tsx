@@ -76,7 +76,7 @@ export default function CaseboardPage() {
 
   return <main id="chronicle" className="case-shell">
     <header className="game-header"><Link href="/game/city">← TOKYO BOARD</Link><b>AWAKENED <i>ZERO RANK</i></b><span>CHAPTER 03 / GATE CASEBOARD</span></header>
-    <GameHud state={rpg} />
+    <GameHud state={rpg} current="cases" />
     <section className="case-intro"><small>DAY {rpg.day} / {rpg.slot} / ENERGY {rpg.energy}</small><h1>Two Gates.<br />Ren chooses.</h1><p>Inspect every case, then take Ren's next action. Every decision spends one RPG time slot.</p></section>
 
     {cases.length === 0 ? <section className="case-empty"><small>NO DISCOVERED CASES</small><h2>The board is blank.</h2><p>Ren has no authenticated portal investigation yet. The game will not invent one.</p><Link href="/">RETURN TO CHRONICLE</Link></section> : <section className="caseboard" aria-label="Gate investigation caseboard">
