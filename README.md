@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.630.0` |
+| Release | `0.640.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 103 browser |
+| Automated tests | 339 Python + 104 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -25,7 +25,7 @@ The current game contains three connected, authenticated chapters:
 2. **Tokyo district maps** — move through Central Tokyo, the East Loop, and Adachi Fringe as Ren.
 3. **Adachi Gate field** — inspect illustrated case files and choose Ren's risk response.
 
-The game uses tiny transparent pixel chibi sprites, original district maps, location art, and illustrated Gate files inside an angular, dialogue-first interface. Its local save persists in the browser. Every committed action advances Morning → Afternoon → Evening → Late Night, updates Ren's RPG resources, and remains separate from the authenticated autonomous Observer save.
+The game uses tiny transparent pixel chibi sprites, original district maps, location art, and illustrated Gate files inside an angular, dialogue-first interface. A persistent HUD follows Ren across chapters, and New Game safely resets only the local RPG campaign. Every committed action advances Morning → Afternoon → Evening → Late Night, updates Ren's RPG resources, and remains separate from the authenticated autonomous Observer save.
 
 ## What the simulation models
 

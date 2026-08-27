@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import { verifyArtifacts, type ObserverSnapshot } from "../../observer-data";
 import { loadRpgState, takeRpgAction, type RpgState } from "../game-state";
+import { GameHud } from "../game-hud";
 
 const SPRITES: Record<string, string> = {
   "Aiko Sato": "/game/characters/aiko.png",
@@ -82,6 +83,7 @@ export default function CityRoutePage() {
 
   return <main id="chronicle" className="city-shell">
     <header className="game-header"><Link href="/game">← PROLOGUE</Link><b>AWAKENED <i>ZERO RANK</i></b><span>CHAPTER 02 / ROUTE BOARD</span></header>
+    <GameHud state={rpg} />
     <section className="city-intro"><small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small><h1>Choose where Ren<br />goes next.</h1><p>Explore the districts, inspect two signals, then travel. The trip spends one RPG time slot.</p></section>
     <nav className="district-switcher" aria-label="Tokyo districts">{DISTRICTS.map((item, index) => <button key={item.id} aria-pressed={districtId === item.id} onClick={() => { setDistrictId(item.id); setActive(null); }}><small>0{index + 1}</small><span>{item.label}</span><b>{item.locations.length} SIGNAL{item.locations.length === 1 ? "" : "S"}</b></button>)}</nav>
     <section className="route-board" aria-label="Tokyo route board">

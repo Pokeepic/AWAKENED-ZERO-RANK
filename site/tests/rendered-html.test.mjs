@@ -30,7 +30,7 @@ test("completes the prologue through explore act and result phases", async () =>
   assert.match(game, /ACT/);
   assert.match(game, /RESULT/);
   assert.match(game, /LOCAL NOTEBOOK/);
-  assert.match(game, /REPLAY THIS MORNING/);
+  assert.match(game, /RESET THIS SCENE/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
   assert.match(styles, /@keyframes ren-breathe/);
 });
@@ -161,6 +161,23 @@ test("ships illustrated Gate files and a four-slot local RPG save", async () => 
   assert.match(state, /Morning.*Afternoon.*Evening.*Late Night/);
   assert.match(state, /localStorage/);
   assert.match(state, /wraps \? 1 : 0/);
+});
+test("renders a shared persistent RPG HUD with a safe new-game reset", async () => {
+  const [hud, state, game, city, caseboard, styles] = await Promise.all([
+    readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(hud, /DAY \{state\.day\}/);
+  assert.match(hud, /HP \{state\.health\}/);
+  assert.match(state, /resetRpgState/);
+  assert.match(state, /localStorage\.removeItem/);
+  assert.match(game, /window\.confirm/);
+  for (const page of [game, city, caseboard]) assert.match(page, /<GameHud/);
+  assert.match(styles, /\.rpg-hud/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],

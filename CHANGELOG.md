@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.640.0 - Persistent campaign HUD
+
+- Added a shared RPG HUD across apartment, Tokyo, and Gate chapters.
+- Added a confirmed New Game flow that resets only the device-local RPG save.
+- Clarified scene resets and Observer navigation so they cannot be mistaken for time reversal.
+
 ## 0.630.0 - Ren-controlled RPG clock
 
 - Separated the web game from the autonomous Observer: the player now acts directly as Ren.

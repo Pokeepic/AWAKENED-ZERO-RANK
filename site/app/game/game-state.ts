@@ -41,6 +41,13 @@ export function saveRpgState(state: RpgState) {
   window.localStorage.setItem(RPG_SAVE_KEY, JSON.stringify(state));
 }
 
+export function resetRpgState(snapshot: ObserverSnapshot): RpgState {
+  window.localStorage.removeItem(RPG_SAVE_KEY);
+  const initial = newRpgState(snapshot);
+  saveRpgState(initial);
+  return initial;
+}
+
 export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location">>): RpgState {
   const index = RPG_SLOTS.indexOf(state.slot);
   const wraps = index === RPG_SLOTS.length - 1;

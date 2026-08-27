@@ -6,7 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observer-data";
-import { loadRpgState, takeRpgAction, type RpgState } from "./game-state";
+import { loadRpgState, resetRpgState, takeRpgAction, type RpgState } from "./game-state";
+import { GameHud } from "./game-hud";
 
 type Hotspot = {
   id: string;
@@ -116,6 +117,11 @@ export default function GamePage() {
     setSelectedSuggestion(null);
     setResponse(null);
   }
+  function newGame() {
+    if (!window.confirm("Start a new local RPG campaign? Your current RPG progress will be replaced.")) return;
+    setRpg(resetRpgState(snapshot!));
+    replay();
+  }
 
   function suggest(id: string) {
     setSelectedSuggestion(id);
@@ -138,7 +144,8 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.630</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.640</span></header>
+    <GameHud state={rpg} onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
       <h1 id="game-title">A quiet room.<br />A life already moving.</h1>
@@ -189,7 +196,7 @@ export default function GamePage() {
       <small>PROLOGUE COMPLETE / {selected.theme}</small>
       <h2 id="conclusion-title">Ren acted.<br />Time moved forward.</h2>
       <div><p><b>YOUR ACTION</b>{selected.label}</p><p><b>RPG CLOCK</b>Day {rpg.day}, {rpg.slot} — Energy {rpg.energy}, Health {rpg.health}</p></div>
-      <nav aria-label="Prologue completion actions"><Link className="primary" href="/game/city">CONTINUE TO TOKYO</Link><button onClick={replay}>REPLAY THIS MORNING</button><Link href="/">RETURN TO LIVE CHRONICLE</Link></nav>
+      <nav aria-label="Prologue completion actions"><Link className="primary" href="/game/city">CONTINUE TO TOKYO</Link><button onClick={replay}>RESET THIS SCENE</button><Link href="/">RETURN TO OBSERVER</Link></nav>
     </section>}
 
     <footer className="game-footer"><b>REN'S LOCAL RPG SAVE</b><p>You control Ren here. Actions advance the RPG clock; the separate Observer simulation remains unchanged.</p><span>{rpg.turns} TURNS / SEED {snapshot.seed}</span></footer>
