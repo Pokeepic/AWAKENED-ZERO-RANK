@@ -2,17 +2,17 @@
 
 [![CI](https://github.com/Pokeepic/AWAKENED-ZERO-RANK/actions/workflows/ci.yml/badge.svg)](https://github.com/Pokeepic/AWAKENED-ZERO-RANK/actions/workflows/ci.yml)
 
-A deterministic autonomous-life simulation and private point-and-click web game set in an awakened Tokyo.
+A deterministic autonomous-life simulation and a separate private time-management RPG set in an awakened Tokyo.
 
-Ren Takahashi starts poor, unranked, and unknown. He decides how to work, recover, train, build relationships, investigate Gates, and survive. The player observes his life, examines evidence, and may offer advice—but Ren keeps the final choice.
+The project has two distinct modes. In **Observer**, autonomous Ren decides how to live and survive. In **Game**, you play as Ren: your actions move a local four-slot calendar and change his RPG resources without rewriting the Observer timeline.
 
 | Status | Value |
 |---|---|
-| Release | `0.620.0` |
+| Release | `0.630.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 102 browser |
+| Automated tests | 339 Python + 103 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -21,11 +21,11 @@ Ren Takahashi starts poor, unranked, and unknown. He decides how to work, recove
 
 The current game contains three connected, authenticated chapters:
 
-1. **Apartment prologue** — explore Ren's pixel-art apartment, record clues, and offer one thought.
-2. **Tokyo district maps** — move between Central Tokyo, the East Loop, and Adachi Fringe to examine the cast at their current whereabouts.
-3. **Adachi field briefing** — inspect Gate signals inside the exclusion-zone scene and offer a risk recommendation.
+1. **Apartment prologue** — explore Ren's pixel-art apartment and take his next action.
+2. **Tokyo district maps** — move through Central Tokyo, the East Loop, and Adachi Fringe as Ren.
+3. **Adachi Gate field** — inspect illustrated case files and choose Ren's risk response.
 
-The game now uses tiny transparent pixel chibi sprites for Ren, Aiko, Daichi, Mei, and Haruto inside an angular, dialogue-first social-sim interface. Players can move between three original Tokyo district maps, where landmark sprites and characters appear only in their relevant district. Ren's apartment is a separate explorable pixel environment. Player interactions remain local to the browser session: map travel and inspection do not advance time, change the save, begin investigations, or override Ren's autonomous decisions.
+The game uses tiny transparent pixel chibi sprites, original district maps, location art, and illustrated Gate files inside an angular, dialogue-first interface. Its local save persists in the browser. Every committed action advances Morning → Afternoon → Evening → Late Night, updates Ren's RPG resources, and remains separate from the authenticated autonomous Observer save.
 
 ## What the simulation models
 
@@ -40,7 +40,7 @@ The game now uses tiny transparent pixel chibi sprites for Ren, Aiko, Daichi, Me
 Core principles:
 
 - Life comes before power progression.
-- Ren remains autonomous and every decision stays explainable.
+- Observer Ren remains autonomous; Game Ren is directly player-controlled.
 - Identical seeds and state produce identical futures.
 - Progression is earned through preparation and experience.
 - Learned policies stay offline until held-out evidence supports adoption.
@@ -82,7 +82,7 @@ Use `awakened-zero-rank --help` for snapshot, story, comparison, checkpoint, and
 | `src/awakened_zero_rank/learning.py` | Training, evaluation, and artifacts |
 | `src/awakened_zero_rank/persistence.py` | Verified save and load behavior |
 | `src/awakened_zero_rank/observer.py` | Mutation-free observer boundary |
-| `site/app` | Observer and point-and-click game routes |
+| `site/app` | Observer routes and the separate Ren-controlled RPG |
 | `tests` / `site/tests` | Python and browser regression suites |
 
 ## Learning and evaluation
@@ -111,10 +111,10 @@ npm run lint
 
 ## Roadmap
 
-- Expand the point-and-click chapters, separate location backdrops, chibi expressions, and dialogue presentation.
+- Expand the RPG chapters, location backdrops, chibi expressions, combat, and dialogue presentation.
 - Add more dialogue, characters, portals, equipment, and authored story variations.
 - Improve accessibility, controls, pacing, sound, and local save UX for the game layer.
-- Preserve the simulator as canon while evaluating player-directed outcomes separately.
+- Preserve the autonomous Observer while growing the player-directed RPG as a separate campaign.
 - Revisit advanced RL only after representation and held-out coverage improve.
 - Consider international travel and disaster arcs after Tokyo's core game is mature.
 

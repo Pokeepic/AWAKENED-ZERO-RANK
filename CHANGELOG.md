@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.630.0 - Ren-controlled RPG clock
+
+- Separated the web game from the autonomous Observer: the player now acts directly as Ren.
+- Added a persistent local RPG save with four daily slots, resource effects, and day rollover.
+- Made apartment, city travel, and Gate decisions advance RPG time without changing Observer data.
+- Added original pixel-art case illustrations for Glass Office Labyrinth and Sunken Courtyard.
+
 ## 0.620.0 - Adachi field briefing
 
 - Rebuilt the Gate caseboard around the existing Adachi Fringe pixel environment instead of a flat file grid.

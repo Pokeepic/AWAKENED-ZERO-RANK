@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observer-data";
+import { loadRpgState, takeRpgAction, type RpgState } from "./game-state";
 
 type Hotspot = {
   id: string;
@@ -59,17 +60,17 @@ function responseFor(snapshot: ObserverSnapshot, suggestion: string) {
   const p = snapshot.protagonist;
   if (suggestion === "gate") {
     return snapshot.portals.active_plan
-      ? `Ren studies ${snapshot.portals.active_plan}, then closes the notice. “The route is useful. The decision is still mine.”`
+      ? `Ren studies ${snapshot.portals.active_plan} and marks the safest approach. “Route checked. I know where to move next.”`
       : `Ren checks the empty notice board. “No assignment yet. I won't invent one just to feel busy.”`;
   }
   if (suggestion === "rent") {
     return snapshot.economy.rent_arrears > 0
-      ? `Ren counts the shortfall twice. “You're right about the danger. I'll decide how to answer it.”`
+      ? `Ren counts the shortfall twice. “The arrears come first. I need a paying shift.”`
       : `Ren leaves ¥${snapshot.economy.rent_cost.toLocaleString()} untouched. “Already protected. Some victories are deliberately boring.”`;
   }
   return p.resources.energy < 45 || p.resources.health < 70
-    ? `Ren feels the warning in his body and sits down. “Advice accepted. Survival comes before pride.”`
-    : `Ren rolls his shoulders, energy still at ${p.resources.energy}. “I hear you. I don't need the bed yet—but I won't waste the margin.”`;
+    ? `Ren feels the warning in his body and lies down. “Survival comes before pride.”`
+    : `Ren rests deliberately, energy at ${p.resources.energy}. “A clear head is worth the time.”`;
 }
 
 export default function GamePage() {
@@ -79,6 +80,7 @@ export default function GamePage() {
   const [activeClue, setActiveClue] = useState<string | null>(null);
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [response, setResponse] = useState<string | null>(null);
+  const [rpg, setRpg] = useState<RpgState | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -94,7 +96,7 @@ export default function GamePage() {
           await contractResponse.json(),
           await snapshotResponse.json(),
         );
-        if (!controller.signal.aborted) setSnapshot(verified.snapshot);
+        if (!controller.signal.aborted) { setSnapshot(verified.snapshot); setRpg(loadRpgState(verified.snapshot)); }
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) setFailed(true);
       }
@@ -117,11 +119,17 @@ export default function GamePage() {
 
   function suggest(id: string) {
     setSelectedSuggestion(id);
+    const next = id === "rest"
+      ? takeRpgAction(rpg!, "Rested at the apartment", { energy: rpg!.energy + 25, health: rpg!.health + 5, location: "Ren's Apartment" })
+      : id === "rent"
+        ? takeRpgAction(rpg!, "Protected the rent reserve", { energy: rpg!.energy - 3, location: "Ren's Apartment" })
+        : takeRpgAction(rpg!, "Prepared the Gate route", { energy: rpg!.energy - 8, location: "Ren's Apartment" });
+    setRpg(next);
     setResponse(responseFor(snapshot!, id));
   }
 
   if (failed) return <main id="chronicle" className="game-loading"><p>PROLOGUE OFFLINE</p><h1>The chronicle could not be verified.</h1><Link href="/">Return to Observer</Link></main>;
-  if (!snapshot) return <main id="chronicle" className="game-loading" aria-busy="true"><p>AUTHENTICATING SCENE</p><h1>Loading Ren's morning…</h1></main>;
+  if (!snapshot || !rpg) return <main id="chronicle" className="game-loading" aria-busy="true"><p>LOADING RPG SAVE</p><h1>Preparing Ren's day…</h1></main>;
 
   const scene = currentScene(snapshot);
   const active = HOTSPOTS.find((hotspot) => hotspot.id === activeClue);
@@ -130,15 +138,15 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>PLAYABLE PROLOGUE / v0.620</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.630</span></header>
     <section className="game-intro" aria-labelledby="game-title">
-      <small>DAY {snapshot.clock.day} / {snapshot.clock.slot} / {snapshot.protagonist.location}</small>
+      <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
       <h1 id="game-title">A quiet room.<br />A life already moving.</h1>
-      <p>Inspect the scene. You may offer one thought. Ren decides what it means.</p>
+      <p>You are Ren. Inspect the apartment, choose an action, and spend one time slot.</p>
       <ol className="game-phases" aria-label="Scene progress">
-        <li className={phase >= 1 ? "active" : ""}><b>01</b><span>OBSERVE</span></li>
-        <li className={phase >= 2 ? "active" : ""}><b>02</b><span>SUGGEST</span></li>
-        <li className={phase >= 3 ? "active" : ""}><b>03</b><span>LISTEN</span></li>
+        <li className={phase >= 1 ? "active" : ""}><b>01</b><span>EXPLORE</span></li>
+        <li className={phase >= 2 ? "active" : ""}><b>02</b><span>ACT</span></li>
+        <li className={phase >= 3 ? "active" : ""}><b>03</b><span>RESULT</span></li>
       </ol>
     </section>
 
@@ -158,10 +166,10 @@ export default function GamePage() {
 
       <aside className="game-panel" aria-live="polite">
         <div className="game-progress"><span>CLUES FOUND</span><b>{clues.length} / {HOTSPOTS.length}</b></div>
-        {!active && <div className="game-copy"><small>REN'S ROOM</small><h2>Look before you speak.</h2><p>Two observations are enough to form a suggestion. Nothing here changes the authenticated chronicle.</p></div>}
+        {!active && <div className="game-copy"><small>REN'S ROOM</small><h2>Decide how to spend the slot.</h2><p>Inspect two points, then act as Ren. This RPG campaign has its own local save, separate from the Observer.</p></div>}
         {active && <div className="game-copy"><small>OBSERVATION / {active.label}</small><h2>{active.label}</h2><p>{active.detail(snapshot)}</p></div>}
         <div className="suggestions">
-          <small>OFFER ONE THOUGHT</small>
+          <small>TAKE ONE ACTION</small>
           {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null} onClick={() => suggest(suggestion.id)}>{suggestion.label}</button>)}
           {!unlocked && <p>Inspect {2 - clues.length} more point{2 - clues.length === 1 ? "" : "s"} in the room.</p>}
         </div>
@@ -179,11 +187,11 @@ export default function GamePage() {
 
     {response && selected && <section className="scene-conclusion" aria-labelledby="conclusion-title">
       <small>PROLOGUE COMPLETE / {selected.theme}</small>
-      <h2 id="conclusion-title">You offered a thought.<br />Ren kept the choice.</h2>
-      <div><p><b>YOUR SUGGESTION</b>{selected.label}</p><p><b>CANON STATUS</b>Unchanged — the next autonomous turn remains Ren's.</p></div>
+      <h2 id="conclusion-title">Ren acted.<br />Time moved forward.</h2>
+      <div><p><b>YOUR ACTION</b>{selected.label}</p><p><b>RPG CLOCK</b>Day {rpg.day}, {rpg.slot} — Energy {rpg.energy}, Health {rpg.health}</p></div>
       <nav aria-label="Prologue completion actions"><Link className="primary" href="/game/city">CONTINUE TO TOKYO</Link><button onClick={replay}>REPLAY THIS MORNING</button><Link href="/">RETURN TO LIVE CHRONICLE</Link></nav>
     </section>}
 
-    <footer className="game-footer"><b>LOCAL PLAY ONLY</b><p>Your inspection and suggestion stay in this browser session. The simulator remains autonomous and unchanged.</p><span>AUTHENTICATED SNAPSHOT / SEED {snapshot.seed}</span></footer>
+    <footer className="game-footer"><b>REN'S LOCAL RPG SAVE</b><p>You control Ren here. Actions advance the RPG clock; the separate Observer simulation remains unchanged.</p><span>{rpg.turns} TURNS / SEED {snapshot.seed}</span></footer>
   </main>;
 }

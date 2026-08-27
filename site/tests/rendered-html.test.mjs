@@ -8,7 +8,7 @@ import {
   verifyArtifacts,
 } from "../app/observer-data.ts";
 const root = new URL("../", import.meta.url);
-test("ships a local-only authenticated point-and-click prologue", async () => {
+test("ships a separate Ren-controlled local RPG prologue", async () => {
   const [game, observer] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/page.tsx", root), "utf8"),
@@ -16,26 +16,25 @@ test("ships a local-only authenticated point-and-click prologue", async () => {
   assert.match(game, /verifyArtifacts/);
   assert.match(game, /HOTSPOTS\.map/);
   assert.match(game, /clues\.length >= 2/);
-  assert.match(game, /LOCAL PLAY ONLY/);
-  assert.match(game, /simulator remains autonomous and unchanged/);
+  assert.match(game, /loadRpgState/);
+  assert.match(game, /takeRpgAction/);
   assert.doesNotMatch(game, /fetch\([^)]*method\s*:/);
   assert.match(observer, /href="\/game"/);
 });
-test("completes the prologue through observe suggest and listen phases", async () => {
+test("completes the prologue through explore act and result phases", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(game, /OBSERVE/);
-  assert.match(game, /SUGGEST/);
-  assert.match(game, /LISTEN/);
+  assert.match(game, /EXPLORE/);
+  assert.match(game, /ACT/);
+  assert.match(game, /RESULT/);
   assert.match(game, /LOCAL NOTEBOOK/);
-  assert.match(game, /CANON STATUS/);
   assert.match(game, /REPLAY THIS MORNING/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
   assert.match(styles, /@keyframes ren-breathe/);
 });
-test("ships a second authenticated non-binding Tokyo route chapter", async () => {
+test("ships a Ren-controlled Tokyo route chapter that advances RPG time", async () => {
   const [prologue, city] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),
@@ -45,11 +44,11 @@ test("ships a second authenticated non-binding Tokyo route chapter", async () =>
   assert.match(city, /snapshot\.whereabouts\.map/);
   assert.match(city, /snapshot\.relationships\.find/);
   assert.match(city, /inspected\.length >= 2/);
-  assert.match(city, /CANON UNCHANGED/);
-  assert.match(city, /have not advanced/);
+  assert.match(city, /chooseRoute/);
+  assert.match(city, /TIME ADVANCED/);
   assert.doesNotMatch(city, /fetch\([^)]*method\s*:/);
 });
-test("ships an evidence-complete non-mutating Gate caseboard chapter", async () => {
+test("ships an evidence-complete Gate RPG chapter", async () => {
   const [city, caseboard] = await Promise.all([
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),
     readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
@@ -59,7 +58,8 @@ test("ships an evidence-complete non-mutating Gate caseboard chapter", async () 
   assert.match(caseboard, /snapshot\.portals\.investigations/);
   assert.match(caseboard, /opened\.length === cases\.length/);
   assert.match(caseboard, /The game will not invent one/);
-  assert.match(caseboard, /do not begin investigations, consume a time slot/);
+  assert.match(caseboard, /TAKE REN'S ACTION/);
+  assert.match(caseboard, /takeRpgAction/);
   assert.doesNotMatch(caseboard, /fetch\([^)]*method\s*:/);
 });
 test("renders separate accessible pixel sprites with a reusable apartment environment", async () => {
@@ -148,6 +148,19 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(caseboard, /case-node case-node-/);
   assert.match(styles, /\.case-zone \.case-node/);
   assert.match(styles, /\.case-ren/);
+});
+test("ships illustrated Gate files and a four-slot local RPG save", async () => {
+  const [caseboard, state] = await Promise.all([
+    readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+  ]);
+  await access(new URL("public/game/cases/glass-office-labyrinth.png", root));
+  await access(new URL("public/game/cases/sunken-courtyard.png", root));
+  assert.match(caseboard, /CASE_ART/);
+  assert.match(caseboard, /className="case-art"/);
+  assert.match(state, /Morning.*Afternoon.*Evening.*Late Night/);
+  assert.match(state, /localStorage/);
+  assert.match(state, /wraps \? 1 : 0/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],
