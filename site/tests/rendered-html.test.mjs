@@ -62,6 +62,24 @@ test("ships an evidence-complete Gate RPG chapter", async () => {
   assert.match(caseboard, /takeRpgAction/);
   assert.doesNotMatch(caseboard, /fetch\([^)]*method\s*:/);
 });
+test("ships a deterministic Gate battle that advances time only on resolution", async () => {
+  const [caseboard, field, hud, styles] = await Promise.all([
+    readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/field/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(caseboard, /href="\/game\/field"/);
+  assert.match(hud, />FIELD<\/button>/);
+  assert.match(field, /PRECISION STRIKE/);
+  assert.match(field, /BARRIER PULSE/);
+  assert.match(field, /TACTICAL RETREAT/);
+  assert.match(field, /No random rolls/);
+  assert.equal((field.match(/takeRpgAction\(/g) ?? []).length, 3);
+  assert.match(styles, /\.field-stage/);
+  assert.match(styles, /\.field-enemy/);
+  assert.doesNotMatch(field, /Math\.random/);
+});
 test("renders separate accessible pixel sprites with a reusable apartment environment", async () => {
   const [game, city, caseboard, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),

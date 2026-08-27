@@ -86,7 +86,7 @@ export default function CaseboardPage() {
       </aside>
     </section>}
 
-    {recommendation && <section className="case-verdict"><Image className="verdict-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><small>{recommendation.tone} / TIME ADVANCED</small><h2>Ren takes action.</h2><blockquote>{renResponse(snapshot, recommendation.id)}</blockquote><div><span>RPG CLOCK</span><b>DAY {rpg.day} / {rpg.slot}</b><span>STATUS</span><b>HP {rpg.health} / EN {rpg.energy}</b></div><nav><button onClick={replay}>REOPEN CASEBOARD</button><Link href="/game/city">RETURN TO TOKYO</Link></nav></section>}
+    {recommendation && <section className="case-verdict"><Image className="verdict-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><small>{recommendation.tone} / TIME ADVANCED</small><h2>Ren takes action.</h2><blockquote>{renResponse(snapshot, recommendation.id)}</blockquote><div><span>RPG CLOCK</span><b>DAY {rpg.day} / {rpg.slot}</b><span>STATUS</span><b>HP {rpg.health} / EN {rpg.energy}</b></div><nav><Link className="primary" href="/game/field">ENTER THE GATE</Link><button onClick={replay}>REOPEN CASEBOARD</button><Link href="/game/city">RETURN TO TOKYO</Link></nav></section>}
     <footer className="game-footer"><b>REN'S LOCAL RPG CAMPAIGN</b><p>Actions consume a time slot here. The autonomous Observer timeline remains separate.</p><span>{cases.length} AUTHENTICATED CASES</span></footer>
   </main>;
 }

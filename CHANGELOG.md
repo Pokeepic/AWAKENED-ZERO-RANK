@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.680.0 - First Contact
+
+- Added a fourth playable chapter with a deterministic fracture-sentinel encounter.
+- Added precision, barrier, guard, and safe-retreat tactics with explicit health, damage, and energy effects.
+- Tactical moves do not spend calendar slots; victory or retreat advances the RPG clock exactly once.
+- Connected the caseboard, field encounter, Tokyo map, shared HUD, journal, and local save into one campaign loop.
+
 ## 0.670.0 - Compact RPG workspace
 
 - Reworked the apartment into Scene and Notebook tabs instead of stacked sections.
