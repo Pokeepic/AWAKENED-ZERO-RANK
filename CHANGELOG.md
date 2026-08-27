@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.590.0 - Tokyo pixel diorama
+
+- Replaced the abstract route-board background with an original wide pixel-art Tokyo scene at dusk.
+- Added reusable transparent landmark sprites for the Hunter Guild, Adachi Gate Zone, Akihabara Market, and Ueno Library.
+- Layered each character over their current location marker and preserved readable keyboard, touch, and mobile presentation.
+
 ## 0.580.0 - Tokyo sprite map
 
 - Placed Ren and all four recurring contacts directly on the authenticated Tokyo route map.

@@ -8,11 +8,11 @@ Ren Takahashi starts poor, unranked, and unknown. He decides how to work, recove
 
 | Status | Value |
 |---|---|
-| Release | `0.580.0` |
+| Release | `0.590.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 98 browser |
+| Automated tests | 339 Python + 99 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -25,7 +25,7 @@ The current game contains three connected, authenticated chapters:
 2. **Tokyo sprite map** — examine the cast at their current whereabouts and suggest a destination.
 3. **Gate caseboard** — review portal evidence and offer a risk recommendation.
 
-The game now uses tiny transparent pixel chibi sprites for Ren, Aiko, Daichi, Mei, and Haruto inside an angular, dialogue-first social-sim interface. The Tokyo chapter places the cast directly on its route map and stages a small encounter when the player offers a destination. Locations remain separate presentation layers instead of being baked into character artwork. Player interactions remain local to the browser session: they do not advance time, change the save, begin investigations, or override Ren's autonomous decisions.
+The game now uses tiny transparent pixel chibi sprites for Ren, Aiko, Daichi, Mei, and Haruto inside an angular, dialogue-first social-sim interface. The Tokyo chapter places the cast and four original landmark sprites over a wide pixel-art Tokyo backdrop, then stages a small encounter when the player offers a destination. Locations remain separate reusable assets instead of being baked into character artwork. Player interactions remain local to the browser session: they do not advance time, change the save, begin investigations, or override Ren's autonomous decisions.
 
 ## What the simulation models
 

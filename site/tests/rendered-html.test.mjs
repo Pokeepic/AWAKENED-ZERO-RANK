@@ -92,6 +92,17 @@ test("places the pixel cast on the Tokyo map and encounter stage", async () => {
   assert.match(styles, /\.route-node img/);
   assert.match(styles, /\.route-encounter/);
 });
+test("renders Tokyo and four reusable pixel landmark assets", async () => {
+  const city = await readFile(new URL("app/game/city/page.tsx", root), "utf8");
+  await access(new URL("public/game/tokyo-dusk.png", root));
+  for (const name of ["hunter-guild", "gate-zone", "akihabara-market", "ueno-library"]) {
+    await access(new URL(`public/game/locations/${name}.png`, root));
+  }
+  assert.match(city, /const LANDMARKS/);
+  assert.match(city, /className="tokyo-map-bg"/);
+  assert.match(city, /className="landmark-sprite"/);
+  assert.match(city, /className="contact-sprite"/);
+});
 test("uses a separate location layer and dialogue-first social-sim framing", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
