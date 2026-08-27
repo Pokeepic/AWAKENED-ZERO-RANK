@@ -5,7 +5,7 @@ export const RPG_SLOTS = ["Morning", "Afternoon", "Evening", "Late Night"] as co
 export type RpgJournalEntry = { day: number; slot: (typeof RPG_SLOTS)[number]; action: string; location: string };
 
 export type RpgState = {
-  saveVersion: 3;
+  saveVersion: 4;
   day: number;
   slot: (typeof RPG_SLOTS)[number];
   health: number;
@@ -16,11 +16,12 @@ export type RpgState = {
   lastAction: string;
   journal: RpgJournalEntry[];
   bonds: Record<string, number>;
+  completedEvents: string[];
 };
 
 export function newRpgState(snapshot: ObserverSnapshot): RpgState {
   return {
-    saveVersion: 3,
+    saveVersion: 4,
     day: snapshot.clock.day,
     slot: RPG_SLOTS.includes(snapshot.clock.slot as RpgState["slot"]) ? snapshot.clock.slot as RpgState["slot"] : "Morning",
     health: snapshot.protagonist.resources.health,
@@ -31,6 +32,7 @@ export function newRpgState(snapshot: ObserverSnapshot): RpgState {
     lastAction: "Campaign started",
     journal: [],
     bonds: {},
+    completedEvents: [],
   };
 }
 
@@ -41,9 +43,10 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
       const candidate = JSON.parse(saved) as Partial<RpgState>;
       const migrated = {
         ...candidate,
-        saveVersion: 3 as const,
+        saveVersion: 4 as const,
         journal: Array.isArray(candidate.journal) ? candidate.journal : [],
         bonds: candidate.bonds && typeof candidate.bonds === "object" && !Array.isArray(candidate.bonds) ? candidate.bonds : {},
+        completedEvents: Array.isArray(candidate.completedEvents) ? candidate.completedEvents : [],
       };
       if (isRpgState(migrated)) { saveRpgState(migrated); return migrated; }
     }
@@ -54,7 +57,7 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
 }
 
 function isRpgState(value: Partial<RpgState>): value is RpgState {
-  return value.saveVersion === 3
+  return value.saveVersion === 4
     && Number.isSafeInteger(value.day) && value.day! > 0
     && RPG_SLOTS.includes(value.slot as RpgState["slot"])
     && [value.health, value.energy].every((item) => Number.isSafeInteger(item) && item! >= 0 && item! <= 100)
@@ -67,7 +70,10 @@ function isRpgState(value: Partial<RpgState>): value is RpgState {
       && RPG_SLOTS.includes(entry.slot) && typeof entry.action === "string" && entry.action.length > 0
       && typeof entry.location === "string" && entry.location.length > 0)
     && value.bonds !== null && typeof value.bonds === "object" && !Array.isArray(value.bonds)
-    && Object.entries(value.bonds).every(([name, level]) => name.length > 0 && Number.isSafeInteger(level) && level >= 0 && level <= 10);
+    && Object.entries(value.bonds).every(([name, level]) => name.length > 0 && Number.isSafeInteger(level) && level >= 0 && level <= 10)
+    && Array.isArray(value.completedEvents) && value.completedEvents.length <= 24
+    && new Set(value.completedEvents).size === value.completedEvents.length
+    && value.completedEvents.every((event) => typeof event === "string" && event.length > 0);
 }
 
 export function saveRpgState(state: RpgState) {
@@ -81,7 +87,7 @@ export function resetRpgState(snapshot: ObserverSnapshot): RpgState {
   return initial;
 }
 
-export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location" | "bonds">>): RpgState {
+export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location" | "bonds" | "completedEvents">>): RpgState {
   const index = RPG_SLOTS.indexOf(state.slot);
   const wraps = index === RPG_SLOTS.length - 1;
   const next = {

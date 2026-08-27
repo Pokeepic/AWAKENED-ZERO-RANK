@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.690.0` |
+| Release | `0.700.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 110 browser |
+| Automated tests | 339 Python + 111 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -27,7 +27,7 @@ The current game contains five connected, authenticated chapters:
 4. **First Contact** — fight a deterministic Gate sentinel with visible damage, energy costs, and a safe retreat.
 5. **After the Gate** — choose how Ren answers Aiko and build a persistent local RPG bond.
 
-The game uses tiny transparent pixel chibi sprites, original district maps, location art, illustrated Gate files, tactical combat, and persistent social choices inside an angular, dialogue-first interface. The apartment is a compact desktop workspace with Scene and Notebook tabs, while the campaign journal opens as a HUD drawer. Exploration decisions, resolved encounters, and dialogue commitments advance Morning → Afternoon → Evening → Late Night; individual combat moves do not consume calendar slots. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
+The game uses tiny transparent pixel chibi sprites, original district maps, location art, illustrated Gate files, tactical combat, and persistent social choices inside an angular, dialogue-first interface. Canon events play as mandatory dialogue beats with the active character sprite before choices unlock, and completed events cannot be replayed for duplicate rewards. Exploration decisions, resolved encounters, and dialogue commitments advance Morning → Afternoon → Evening → Late Night; individual combat moves do not consume calendar slots. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
 
 ## What the simulation models
 

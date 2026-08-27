@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.700.0 - Canon event staging
+
+- Reworked After the Gate into three mandatory story beats before its bond choice unlocks.
+- Staged the currently speaking character's pixel sprite beside every canon-event line.
+- Upgraded the local save to schema 4 with validated one-time event completion records.
+- Completed canon events now reopen as a summary and cannot grant duplicate bond or recovery rewards.
+
 ## 0.690.0 - After the Gate
 
 - Added a fifth playable chapter: a post-mission evening conversation with Aiko at Adachi Station.

@@ -212,7 +212,7 @@ test("links every RPG chapter and validates versioned local saves", async () => 
   ]);
   for (const route of ["/game", "/game/city", "/game/caseboard", "/game/field", "/game/evening"]) assert.match(hud, new RegExp(`location\\.assign\\("${route.replaceAll("/", "\\/")}"\\)`));
   assert.match(hud, /aria-current/);
-  assert.match(state, /saveVersion: 3/);
+  assert.match(state, /saveVersion: 4/);
   assert.match(state, /isRpgState/);
   assert.match(state, /Number\.isSafeInteger/);
   assert.match(layout, /separate time-management RPG/);
@@ -223,9 +223,10 @@ test("records a bounded persistent campaign journal and migrates older saves", a
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(state, /saveVersion: 3/);
+  assert.match(state, /saveVersion: 4/);
   assert.match(state, /Array\.isArray\(candidate\.journal\)/);
   assert.match(state, /candidate\.bonds/);
+  assert.match(state, /candidate\.completedEvents/);
   assert.match(state, /\.slice\(-12\)/);
   assert.match(hud, /CAMPAIGN JOURNAL/);
   assert.match(hud, /state\.journal/);
@@ -246,6 +247,21 @@ test("adds a post-Gate social chapter with local bond consequences", async () =>
   assert.match(state, /bonds: Record<string, number>/);
   assert.match(styles, /\.evening-stage/);
   assert.doesNotMatch(evening, /Math\.random/);
+});
+test("stages one-time canon beats with the speaking character sprite", async () => {
+  const [evening, state, styles] = await Promise.all([
+    readFile(new URL("app/game/evening/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(evening, /const STORY_BEATS/);
+  assert.match(evening, /CANON EVENT/);
+  assert.match(evening, /event-speaker-sprite/);
+  assert.match(evening, /completedEvents\.includes\(EVENT_ID\)/);
+  assert.match(state, /completedEvents: string\[\]/);
+  assert.match(state, /new Set\(value\.completedEvents\)/);
+  assert.match(styles, /\.canon-beat/);
+  assert.match(styles, /\.event-speaker-sprite/);
 });
 test("fits the apartment workspace into tabs without duplicate result sections", async () => {
   const [game, styles] = await Promise.all([
