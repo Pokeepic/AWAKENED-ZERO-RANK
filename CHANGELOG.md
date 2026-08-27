@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.540.0 - Authenticated Gate caseboard
+
+- Added a third playable chapter at `/game/caseboard`, linked from the Tokyo route result.
+- Requires every authenticated portal file to be opened before a risk recommendation can be offered.
+- Derives displayed risk, progress, preparation, cooperation, supplies, and Ren's response only from verified evidence.
+- Handles an empty portal ledger without inventing cases and keeps recommendations local, non-binding, and slot-free.
+- Preserved the **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.530.0 - Authenticated Tokyo route board
 
 - Added a second playable chapter at `/game/city`, connected directly to the apartment prologue.

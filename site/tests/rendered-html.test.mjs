@@ -49,6 +49,19 @@ test("ships a second authenticated non-binding Tokyo route chapter", async () =>
   assert.match(city, /have not advanced/);
   assert.doesNotMatch(city, /fetch\([^)]*method\s*:/);
 });
+test("ships an evidence-complete non-mutating Gate caseboard chapter", async () => {
+  const [city, caseboard] = await Promise.all([
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
+  ]);
+  assert.match(city, /href="\/game\/caseboard"/);
+  assert.match(caseboard, /verifyArtifacts/);
+  assert.match(caseboard, /snapshot\.portals\.investigations/);
+  assert.match(caseboard, /opened\.length === cases\.length/);
+  assert.match(caseboard, /The game will not invent one/);
+  assert.match(caseboard, /do not begin investigations, consume a time slot/);
+  assert.doesNotMatch(caseboard, /fetch\([^)]*method\s*:/);
+});
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],
   [365, "arc_tokyo_fracture", "The Tokyo Fracture"],
