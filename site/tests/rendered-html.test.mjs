@@ -811,7 +811,7 @@ test("explains valid empty chronicle collections", async () => {
   );
   assert.match(
     page,
-    /discovered\.length===0&&<p className="empty-state">No portals have been discovered yet\.<\/p>/,
+    /portalCases\.length===0&&<p className="empty-state">No portals have been discovered yet\.<\/p>/,
   );
   assert.match(page, /No defining memories have formed yet\./);
   assert.equal((page.match(/className="empty-state"/g) || []).length, 5);
@@ -826,7 +826,7 @@ test("renders the complete authenticated chronicle surface", async () => {
     "LIFE LEDGER",
     "THREE-YEAR ARC",
     "PEOPLE IN ORBIT",
-    "PORTAL LEDGER",
+    "PORTAL CASE FILES",
     "KEY MEMORIES",
   ]) {
     assert.match(page, new RegExp(heading));
@@ -847,6 +847,24 @@ test("renders the complete authenticated chronicle surface", async () => {
   }
   assert.match(page, /NO CONTROL CAPABILITIES/);
   assert.doesNotMatch(page, /<button|onClick=/);
+});
+test("joins authenticated portal evidence into read-only case files", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  const cases = data.portalCaseFiles(snapshot);
+  assert.equal(cases.length, snapshot.portals.discovered.length);
+  assert.deepEqual(cases.map(({ profile }) => profile.name), snapshot.portals.discovered);
+  assert.equal(cases.find(({ active }) => active)?.profile.name ?? null, snapshot.portals.active_plan);
+  const investigated = cases.find(({ investigation }) => investigation !== null);
+  assert.equal(investigated?.investigation?.portal_name, investigated?.profile.name);
+  assert.match(page, /PORTAL CASE FILES/);
+  assert.match(page, /VERIFIED EFFECT/);
+  assert.match(page, /collaboratorLocation/);
+  assert.match(css, /\.portal-case\.active/);
 });
 test("provides responsive contrast print and motion-safe presentation", async () => {
   const css = await readFile(new URL("app/globals.css", root), "utf8");

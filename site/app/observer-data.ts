@@ -311,6 +311,37 @@ export const PORTAL_PROFILE_CATALOG = [
   { aftermath: "Footprints reveal the living breach's migration.", environment: "forest", hazard: "razor vines", name: "Chiba Glasshouse Breach" },
 ] as const;
 
+export type PortalCaseFile = {
+  active: boolean;
+  collaborator: string | null;
+  collaboratorLocation: string | null;
+  investigation: PortalInvestigation | null;
+  profile: (typeof PORTAL_PROFILE_CATALOG)[number];
+  status: string;
+};
+
+export function portalCaseFiles(snapshot: ObserverSnapshot): PortalCaseFile[] {
+  return snapshot.portals.discovered.map((name) => {
+    const profile = PORTAL_PROFILE_CATALOG.find((item) => item.name === name)!;
+    const investigation = snapshot.portals.investigations.find(
+      (item) => item.portal_name === name,
+    ) ?? null;
+    const collaborator = investigation?.cooperating_npc ?? null;
+    const collaboratorLocation = collaborator
+      ? snapshot.whereabouts.find((person) => person.name === collaborator)?.location ?? null
+      : null;
+    const active = snapshot.portals.active_plan === name;
+    const status = active
+      ? "Active field plan"
+      : investigation?.progress === 100
+        ? "Investigation complete"
+        : investigation
+          ? "Evidence developing"
+          : "Uninvestigated discovery";
+    return { active, collaborator, collaboratorLocation, investigation, profile, status };
+  });
+}
+
 export type PresentationContract = {
   animation_cues: string[];
   comparison_schema_version: number;

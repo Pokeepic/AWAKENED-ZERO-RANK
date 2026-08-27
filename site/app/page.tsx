@@ -13,6 +13,7 @@ import {
   TOKYO_LOCATION_CATALOG,
   currentScene,
   peopleDossiers,
+  portalCaseFiles,
   storyTimeline,
   dailyBriefing,
   nextSeasonalEvent,
@@ -115,7 +116,6 @@ export default function Home() {
   const p = snapshot.protagonist;
   const events = [...snapshot.activity.recent_events].reverse().slice(0, 8);
   const discovered = snapshot.portals.discovered;
-  const investigations = snapshot.portals.investigations;
   const inventory = Object.entries(p.equipment.inventory);
   const rankOrder = { Unranked: 0, F: 1, E: 2, D: 3, C: 4 } as const;
   const currentRank = rankOrder[p.hunter_rank as keyof typeof rankOrder];
@@ -135,6 +135,7 @@ export default function Home() {
   const scene = currentScene(snapshot);
   const arcTimeline = storyTimeline(snapshot);
   const people = peopleDossiers(snapshot);
+  const portalCases = portalCaseFiles(snapshot);
   const cityLocations = Array.from(
     snapshot.whereabouts.reduce((locations, person) => {
       const names = locations.get(person.location) ?? [];
@@ -187,7 +188,7 @@ export default function Home() {
       <section className="whereabouts"><h2 className="section-label">TOKYO TODAY <span>{snapshot.whereabouts.length + 1} LIVES LOCATED</span></h2><article className="current-scene"><div><small>CURRENT SCENE / {scene.place.ward.toUpperCase()}</small><h3>{scene.place.name}</h3><p>{scene.place.purpose}</p></div><dl><div><dt>ATMOSPHERE</dt><dd>{scene.atmosphere}</dd></div><div><dt>LOCAL PRESENCE</dt><dd>{scene.presence}</dd></div><div><dt>PRESSURE</dt><dd>{scene.pressure}</dd></div></dl></article><div className="city-board"><article className="ren-location"><small>REN / CURRENT</small><b>{p.location}</b><span>{p.name}</span></article>{cityLocations.map(([location, names]) => <article key={location}><small>KNOWN WHEREABOUTS</small><b>{location}</b><span>{names.join(" / ")}</span></article>)}</div><details className="city-index"><summary>INSPECT {TOKYO_LOCATION_CATALOG.length} DOCUMENTED PLACES <span>READ ONLY</span></summary><div>{TOKYO_LOCATION_CATALOG.map((place) => { const names = cityLocations.find(([location]) => location === place.name)?.[1] ?? []; const renHere = p.location === place.name; return <article key={place.name} className={renHere || names.length > 0 ? "occupied" : undefined}><small>{place.ward.toUpperCase()}</small><b>{place.name}</b><p>{place.purpose}</p><span>{renHere ? `REN${names.length ? ` / ${names.join(" / ")}` : ""}` : names.length ? names.join(" / ") : "NO KNOWN PRESENCE"}</span></article>; })}</div></details></section>
 
       <div className="chapter-label" id="world-records"><span>04</span><b>WORLD RECORDS</b><small>Investigations, memories, and the portal atlas</small></div>
-      <section className="portals"><h2 className="section-label">PORTAL LEDGER <span>{discovered.length} FOUND</span></h2>{discovered.length===0&&<p className="empty-state">No portals have been discovered yet.</p>}{discovered.map((name) => { const investigation = investigations.find((item) => item.portal_name === name); return <article className="portal" key={name}><div><b>{name}</b>{snapshot.portals.active_plan === name && <mark>ACTIVE PLAN</mark>}</div>{investigation ? <><span>{investigation.progress}% investigated / risk {investigation.risk}</span><i aria-hidden="true"><u style={{ width: `${investigation.progress}%` }} /></i><small>{investigation.preparation_strategy}{investigation.cooperating_npc ? ` / with ${investigation.cooperating_npc}` : ""}</small></> : <small>DISCOVERED / NOT YET INVESTIGATED</small>}</article>; })}</section>
+      <section className="portals"><h2 className="section-label">PORTAL CASE FILES <span>{portalCases.length} OPENED</span></h2>{portalCases.length===0&&<p className="empty-state">No portals have been discovered yet.</p>}{portalCases.map(({ active, collaborator, collaboratorLocation, investigation, profile, status }) => <article className={`portal-case${active ? " active" : ""}`} key={profile.name}><header><div><small>{profile.environment.toUpperCase()} / {status.toUpperCase()}</small><b>{profile.name}</b></div>{active && <mark>ACTIVE PLAN</mark>}</header><dl><div><dt>HAZARD</dt><dd>{profile.hazard}</dd></div><div><dt>VERIFIED EFFECT</dt><dd>{profile.aftermath}</dd></div></dl>{investigation ? <><div className="case-progress"><span>INVESTIGATION {investigation.progress}%</span><span>RISK {investigation.risk}</span></div><i aria-hidden="true"><u style={{ width: `${investigation.progress}%` }} /></i><p>{investigation.preparation_strategy}</p><footer>{collaborator ? `COLLABORATOR / ${collaborator}${collaboratorLocation ? ` / ${collaboratorLocation}` : ""} / ${investigation.joint_missions} JOINT MISSIONS` : "NO COLLABORATOR RECORDED"}</footer></> : <p>Discovered, but no investigation plan has been recorded.</p>}</article>)}</section>
 
       <section className="atlas"><h2 className="section-label">PORTAL ATLAS <span>{discovered.length}/{PORTAL_PROFILE_CATALOG.length} DOCUMENTED</span></h2><div className="atlas-grid">{PORTAL_PROFILE_CATALOG.map((portal) => { const known = discovered.includes(portal.name); return <article key={portal.name} className={known ? "known" : "unknown"}><small>{portal.environment.toUpperCase()} / {known ? "DOCUMENTED" : "UNDISCOVERED"}</small><b>{portal.name}</b><span>{known ? `HAZARD / ${portal.hazard}` : "HAZARD / CLASSIFIED"}</span><p>{known ? `VERIFIED EFFECT / ${portal.aftermath}` : "EFFECT / CLASSIFIED"}</p></article>; })}</div></section>
 

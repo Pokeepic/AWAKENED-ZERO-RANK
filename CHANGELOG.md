@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.440.0 - Portal investigation case files
+
+- Joined every discovered portal with its authenticated hazard profile, verified aftermath, investigation progress, risk, and active-plan state.
+- Added collaborator context with the character's current known whereabouts and joint-mission count when evidence exists.
+- Replaced the compact portal ledger with responsive, read-only case files while preserving honest empty and uninvestigated states.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.430.0 - Recurring-character dossiers
 
 - Joined each authenticated relationship with its current known whereabouts and latest complete recorded exchange.
