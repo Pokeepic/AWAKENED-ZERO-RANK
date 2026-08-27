@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.490.0 - Gate operational readiness
+
+- Added a current Gate-readiness dossier grounded in registration, health, energy, field supplies, and the active portal plan.
+- Uses the simulator's existing health and energy penalty boundaries while keeping low-resource missions available rather than falsely declaring them impossible.
+- Moved the full rank-scaled threat ladder into the same accessible reference-shelf pattern used by other large catalogs.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.480.0 - Hunter promotion runway
 
 - Added an authenticated next-rank runway with remaining rank points and bounded promotion progress.

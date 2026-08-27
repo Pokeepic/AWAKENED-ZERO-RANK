@@ -12,6 +12,7 @@ import {
   SEASONAL_EVENT_CATALOG,
   TOKYO_LOCATION_CATALOG,
   currentScene,
+  gateReadiness,
   memoryArchive,
   peopleDossiers,
   portalCaseFiles,
@@ -142,6 +143,7 @@ export default function Home() {
   const memories = memoryArchive(snapshot);
   const rhythm = recentRhythm(snapshot);
   const rankRunway = rankForecast(snapshot);
+  const gateStatus = gateReadiness(snapshot);
   const cityLocations = Array.from(
     snapshot.whereabouts.reduce((locations, person) => {
       const names = locations.get(person.location) ?? [];
@@ -180,7 +182,7 @@ export default function Home() {
 
       <section className="gear"><h2 className="section-label">EQUIPMENT PROGRESSION <span>RENT RESERVE PROTECTED</span></h2><p className="gear-intro">The shop reveals what Ren can equip next without spending the ¥{snapshot.economy.rent_cost.toLocaleString()} held for rent.</p><details className="reference-shelf"><summary>INSPECT EQUIPMENT LADDER <span>{EQUIPMENT_CATALOG.length} ITEMS</span></summary><div className="gear-grid">{EQUIPMENT_CATALOG.map((item) => { const status = equipmentStatus(item); return <article key={item.name} className={status.startsWith("LOCKED") ? "locked" : ""}><header><small>RANK {item.minimumRank} / {item.kind.toUpperCase()}</small><b>{item.name}</b></header><dl><div><dt>COMBAT</dt><dd>+{item.bonus}</dd></div><div><dt>PRICE</dt><dd>¥{item.price.toLocaleString()}</dd></div></dl><strong>{status}</strong></article>; })}</div></details></section>
 
-      <section className="threats"><h2 className="section-label">GATE THREAT LADDER <span>RANK-SCALED MISSIONS</span></h2>{GATE_ENCOUNTER_CATALOG.map((encounter) => <div className="record-line" key={encounter.name}><span>RANK {encounter.minimumRank} / DIFFICULTY {encounter.difficulty}</span><b>{currentRank >= rankOrder[encounter.minimumRank] ? `${encounter.name} / ¥${encounter.reward.toLocaleString()}` : `LOCKED / ${encounter.name}`}</b></div>)}</section>
+      <section className="threats"><h2 className="section-label">GATE READINESS <span>{gateStatus.status.toUpperCase()}</span></h2><div className={`gate-readiness ${gateStatus.status.replace(" ", "-")}`}><div><small>HEALTH</small><b>{gateStatus.health}</b></div><div><small>ENERGY</small><b>{gateStatus.energy}</b></div><div><small>FIELD SUPPLIES</small><b>{gateStatus.supplyCount}</b></div><div><small>ACTIVE PLAN</small><b>{gateStatus.plan ?? "None"}</b></div></div><details className="reference-shelf"><summary>INSPECT GATE THREAT LADDER <span>RANK-SCALED MISSIONS / {GATE_ENCOUNTER_CATALOG.length}</span></summary>{GATE_ENCOUNTER_CATALOG.map((encounter) => <div className="record-line" key={encounter.name}><span>RANK {encounter.minimumRank} / DIFFICULTY {encounter.difficulty}</span><b>{currentRank >= rankOrder[encounter.minimumRank] ? `${encounter.name} / ¥${encounter.reward.toLocaleString()}` : `LOCKED / ${encounter.name}`}</b></div>)}</details></section>
 
       <section className="supplies"><h2 className="section-label">FIELD SUPPLIES <span>BOUNDED RESERVES</span></h2>{FIELD_SUPPLY_CATALOG.map((item) => { const count = p.equipment.inventory[item.name] ?? 0; const unlocked = currentRank >= rankOrder[item.minimumRank]; return <div className="record-line" key={item.name}><span>RANK {item.minimumRank} / {item.effect}</span><b>{unlocked ? `${item.name} / ${count} OF ${item.maximum} / ¥${item.price.toLocaleString()}` : `LOCKED / ${item.name}`}</b></div>; })}</section>
 

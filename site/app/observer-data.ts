@@ -310,6 +310,32 @@ export function rankForecast(snapshot: ObserverSnapshot): RankForecast {
   };
 }
 
+export type GateReadiness = {
+  energy: "ready" | "strained";
+  health: "ready" | "strained";
+  plan: string | null;
+  registered: boolean;
+  status: "unavailable" | "recover first" | "field ready";
+  supplyCount: number;
+};
+
+export function gateReadiness(snapshot: ObserverSnapshot): GateReadiness {
+  const { equipment, hunter_rank, resources } = snapshot.protagonist;
+  const registered = hunter_rank !== "Unranked";
+  const health = resources.health >= 45 ? "ready" : "strained";
+  const energy = resources.energy >= 40 ? "ready" : "strained";
+  const supplyCount = ["Healing Gel", "Energy Drink", "Trauma Foam", "Focus Ampoule"]
+    .reduce((total, name) => total + (equipment.inventory[name] ?? 0), 0);
+  return {
+    energy,
+    health,
+    plan: snapshot.portals.active_plan,
+    registered,
+    status: !registered ? "unavailable" : health === "strained" || energy === "strained" ? "recover first" : "field ready",
+    supplyCount,
+  };
+}
+
 export const GATE_ENCOUNTER_CATALOG = [
   { difficulty: 42, minimumRank: "F", name: "Tunnel Slime Nest", reward: 5400 },
   { difficulty: 49, minimumRank: "F", name: "Goblin Scavenger Pack", reward: 6600 },

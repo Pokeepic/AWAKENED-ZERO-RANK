@@ -904,7 +904,7 @@ test("keeps large reference catalogs behind accessible native disclosures", asyn
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.equal((page.match(/className="reference-shelf"/g) || []).length, 3);
+  assert.equal((page.match(/className="reference-shelf"/g) || []).length, 4);
   assert.match(page, /INSPECT EQUIPMENT LADDER/);
   assert.match(page, /INSPECT ANNUAL CALENDAR/);
   assert.match(page, /INSPECT COMPLETE PORTAL CATALOG/);
@@ -932,6 +932,28 @@ test("derives the next hunter promotion and equipment runway", async () => {
   assert.match(page, /NEXT PROMOTION/);
   assert.match(page, /Progress toward Rank/);
   assert.match(css, /\.rank-runway/);
+});
+test("explains current Gate readiness from authenticated field conditions", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  assert.deepEqual(data.gateReadiness(snapshot), {
+    energy: "ready",
+    health: "ready",
+    plan: null,
+    registered: true,
+    status: "field ready",
+    supplyCount: 0,
+  });
+  const strained = structuredClone(snapshot);
+  strained.protagonist.resources.energy = 39;
+  assert.equal(data.gateReadiness(strained).status, "recover first");
+  assert.match(page, /GATE READINESS/);
+  assert.match(page, /INSPECT GATE THREAT LADDER/);
+  assert.match(css, /\.gate-readiness\.recover-first/);
 });
 test("provides responsive contrast print and motion-safe presentation", async () => {
   const css = await readFile(new URL("app/globals.css", root), "utf8");
