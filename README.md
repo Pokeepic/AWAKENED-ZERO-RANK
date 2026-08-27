@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.520.0` |
+| Release | `0.530.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 339 Python + 93 browser |
+| Automated tests | 339 Python + 94 browser |
 
 ## Why this project exists
 
@@ -266,7 +266,7 @@ The website must remain a view of the deterministic simulator. Pause, speed, see
 
 ### Future game adaptation
 
-Version 0.520.0 develops the separate game adaptation into a complete observe-suggest-listen prologue loop. It authenticates the same published observer artifacts, lets the player inspect three evidence-grounded objects, records discoveries in a local notebook, unlocks one non-binding suggestion to Ren, and closes with an explicit canon-status report. All interaction is local to the browser session: it does not mutate the save, advance time, or override the autonomous simulator.
+Version 0.530.0 expands the game adaptation into two connected chapters. The apartment prologue retains its observe-suggest-listen loop and now leads into an authenticated Tokyo route board. The player can inspect current character whereabouts and relationship evidence before suggesting a destination; Ren's response reflects trust while the suggestion remains local and non-binding. Neither chapter mutates the save, advances time, or overrides the autonomous simulator.
 
 Future game releases can expand presentation, exploration, and player interaction. The simulator remains the canonical world model, while the game consumes stable story, save, and dashboard APIs instead of rewriting proven simulation rules.
 

@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.530.0 - Authenticated Tokyo route board
+
+- Added a second playable chapter at `/game/city`, connected directly to the apartment prologue.
+- Turns the exact current whereabouts and relationship ledgers into an inspect-two-then-suggest route board.
+- Gives Ren trust-aware responses without moving him, advancing time, or mutating the canonical save.
+- Added responsive, keyboard-accessible map markers, route choices, replay, and live-chronicle return actions.
+- Preserved the **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.520.0 - Complete prologue play loop
 
 - Added visible observe, suggest, and listen phases to clarify the point-and-click interaction model.

@@ -35,6 +35,20 @@ test("completes the prologue through observe suggest and listen phases", async (
   assert.match(styles, /prefers-reduced-motion:reduce/);
   assert.match(styles, /@keyframes ren-breathe/);
 });
+test("ships a second authenticated non-binding Tokyo route chapter", async () => {
+  const [prologue, city] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+  ]);
+  assert.match(prologue, /href="\/game\/city"/);
+  assert.match(city, /verifyArtifacts/);
+  assert.match(city, /snapshot\.whereabouts\.map/);
+  assert.match(city, /snapshot\.relationships\.find/);
+  assert.match(city, /inspected\.length >= 2/);
+  assert.match(city, /CANON UNCHANGED/);
+  assert.match(city, /have not advanced/);
+  assert.doesNotMatch(city, /fetch\([^)]*method\s*:/);
+});
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],
   [365, "arc_tokyo_fracture", "The Tokyo Fracture"],

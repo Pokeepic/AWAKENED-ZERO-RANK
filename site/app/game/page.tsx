@@ -179,7 +179,7 @@ export default function GamePage() {
       <small>PROLOGUE COMPLETE / {selected.theme}</small>
       <h2 id="conclusion-title">You offered a thought.<br />Ren kept the choice.</h2>
       <div><p><b>YOUR SUGGESTION</b>{selected.label}</p><p><b>CANON STATUS</b>Unchanged — the next autonomous turn remains Ren's.</p></div>
-      <nav aria-label="Prologue completion actions"><button onClick={replay}>REPLAY THIS MORNING</button><Link href="/">RETURN TO LIVE CHRONICLE</Link></nav>
+      <nav aria-label="Prologue completion actions"><Link className="primary" href="/game/city">CONTINUE TO TOKYO</Link><button onClick={replay}>REPLAY THIS MORNING</button><Link href="/">RETURN TO LIVE CHRONICLE</Link></nav>
     </section>}
 
     <footer className="game-footer"><b>LOCAL PLAY ONLY</b><p>Your inspection and suggestion stay in this browser session. The simulator remains autonomous and unchanged.</p><span>AUTHENTICATED SNAPSHOT / SEED {snapshot.seed}</span></footer>
