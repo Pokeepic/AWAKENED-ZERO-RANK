@@ -62,7 +62,7 @@ test("ships an evidence-complete non-mutating Gate caseboard chapter", async () 
   assert.match(caseboard, /do not begin investigations, consume a time slot/);
   assert.doesNotMatch(caseboard, /fetch\([^)]*method\s*:/);
 });
-test("renders separate accessible pixel sprites instead of a baked room image", async () => {
+test("renders separate accessible pixel sprites with a reusable apartment environment", async () => {
   const [game, city, caseboard, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),
@@ -78,7 +78,7 @@ test("renders separate accessible pixel sprites instead of a baked room image", 
   assert.match(game, /src="\/game\/characters\/ren\.png"/);
   assert.match(city, /SPRITES/);
   assert.match(caseboard, /src="\/game\/characters\/ren\.png"/);
-  assert.doesNotMatch(game, /ren-apartment\.png/);
+  assert.match(game, /ren-apartment\.png/);
 });
 test("places the pixel cast on the Tokyo map and encounter stage", async () => {
   const [city, styles] = await Promise.all([
@@ -118,10 +118,24 @@ test("uses a separate location layer and dialogue-first social-sim framing", asy
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(game, /persona-room/);
+  assert.match(game, /apartment-bg/);
   assert.match(game, /dialogue-box/);
   assert.match(styles, /chibi-idle/);
   assert.match(styles, /speaker-tag/);
+});
+test("moves between three district maps without mutating the chronicle", async () => {
+  const [city, styles] = await Promise.all([
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  for (const name of ["east-loop", "adachi-fringe"]) await access(new URL(`public/game/maps/${name}.png`, root));
+  await access(new URL("public/game/ren-apartment.png", root));
+  assert.match(city, /const DISTRICTS/);
+  assert.match(city, /className="district-switcher"/);
+  assert.match(city, /setDistrictId/);
+  assert.match(city, /visibleRoutes/);
+  assert.doesNotMatch(city, /fetch\([^)]*method\s*:/);
+  assert.match(styles, /\.district-switcher/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],

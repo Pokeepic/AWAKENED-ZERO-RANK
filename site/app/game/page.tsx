@@ -130,7 +130,7 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>PLAYABLE PROLOGUE / v0.600</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>PLAYABLE PROLOGUE / v0.610</span></header>
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {snapshot.clock.day} / {snapshot.clock.slot} / {snapshot.protagonist.location}</small>
       <h1 id="game-title">A quiet room.<br />A life already moving.</h1>
@@ -144,7 +144,8 @@ export default function GamePage() {
 
     <section className="game-board" aria-label="Point-and-click scene">
       <div className="game-room">
-        <div className="persona-room" aria-hidden="true"><i className="room-window" /><i className="room-bed" /><i className="room-desk" /><i className="room-notice" /></div>
+        <Image className="apartment-bg" src="/game/ren-apartment.png" alt="Pixel-art interior of Ren's apartment" fill sizes="(max-width: 800px) 90vw, 65vw" priority />
+        <div className="apartment-shade" aria-hidden="true" />
         <Image className="chibi-sprite ren-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} priority />
         {HOTSPOTS.map((hotspot, index) => <button
           key={hotspot.id}

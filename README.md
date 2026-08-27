@@ -8,11 +8,11 @@ Ren Takahashi starts poor, unranked, and unknown. He decides how to work, recove
 
 | Status | Value |
 |---|---|
-| Release | `0.600.0` |
+| Release | `0.610.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 100 browser |
+| Automated tests | 339 Python + 101 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -21,11 +21,11 @@ Ren Takahashi starts poor, unranked, and unknown. He decides how to work, recove
 
 The current game contains three connected, authenticated chapters:
 
-1. **Apartment prologue** — inspect Ren's room, record clues, and offer one thought.
-2. **Tokyo sprite map** — examine the cast at their current whereabouts and suggest a destination.
+1. **Apartment prologue** — explore Ren's pixel-art apartment, record clues, and offer one thought.
+2. **Tokyo district maps** — move between Central Tokyo, the East Loop, and Adachi Fringe to examine the cast at their current whereabouts.
 3. **Gate caseboard** — review portal evidence and offer a risk recommendation.
 
-The game now uses tiny transparent pixel chibi sprites for Ren, Aiko, Daichi, Mei, and Haruto inside an angular, dialogue-first social-sim interface. The Tokyo chapter embeds four original landmark sprites directly into a wide pixel-art city scene, with the cast standing beside their current locations instead of inside abstract route cards. Locations remain separate reusable assets instead of being baked into character artwork. Player interactions remain local to the browser session: they do not advance time, change the save, begin investigations, or override Ren's autonomous decisions.
+The game now uses tiny transparent pixel chibi sprites for Ren, Aiko, Daichi, Mei, and Haruto inside an angular, dialogue-first social-sim interface. Players can move between three original Tokyo district maps, where landmark sprites and characters appear only in their relevant district. Ren's apartment is a separate explorable pixel environment. Player interactions remain local to the browser session: map travel and inspection do not advance time, change the save, begin investigations, or override Ren's autonomous decisions.
 
 ## What the simulation models
 

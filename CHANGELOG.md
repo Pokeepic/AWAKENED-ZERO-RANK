@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.610.0 - Tokyo district travel
+
+- Added switchable Central Tokyo, East Loop, and Adachi Fringe maps with distinct original pixel-art environments.
+- Filtered authenticated landmarks and characters into their relevant districts while preserving a single non-canonical suggestion flow.
+- Replaced the abstract apartment construction with a dedicated explorable pixel-art interior for Ren.
+
 ## 0.600.0 - Embedded city landmarks
 
 - Removed the radar circles and floating rectangular route-card treatment from the Tokyo map.
