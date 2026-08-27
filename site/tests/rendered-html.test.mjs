@@ -210,9 +210,9 @@ test("links every RPG chapter and validates versioned local saves", async () => 
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/layout.tsx", root), "utf8"),
   ]);
-  for (const route of ["/game", "/game/city", "/game/caseboard"]) assert.match(hud, new RegExp(`location\\.assign\\("${route.replaceAll("/", "\\/")}"\\)`));
+  for (const route of ["/game", "/game/city", "/game/caseboard", "/game/field", "/game/evening"]) assert.match(hud, new RegExp(`location\\.assign\\("${route.replaceAll("/", "\\/")}"\\)`));
   assert.match(hud, /aria-current/);
-  assert.match(state, /saveVersion: 2/);
+  assert.match(state, /saveVersion: 3/);
   assert.match(state, /isRpgState/);
   assert.match(state, /Number\.isSafeInteger/);
   assert.match(layout, /separate time-management RPG/);
@@ -223,12 +223,29 @@ test("records a bounded persistent campaign journal and migrates older saves", a
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(state, /saveVersion: 2/);
+  assert.match(state, /saveVersion: 3/);
   assert.match(state, /Array\.isArray\(candidate\.journal\)/);
+  assert.match(state, /candidate\.bonds/);
   assert.match(state, /\.slice\(-12\)/);
   assert.match(hud, /CAMPAIGN JOURNAL/);
   assert.match(hud, /state\.journal/);
   assert.match(styles, /\.rpg-journal/);
+});
+test("adds a post-Gate social chapter with local bond consequences", async () => {
+  const [field, evening, state, styles] = await Promise.all([
+    readFile(new URL("app/game/field/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/evening/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(field, /href="\/game\/evening"/);
+  assert.match(evening, /Aiko Sato/);
+  assert.match(evening, /RESPONSES\.map/);
+  assert.match(evening, /takeRpgAction/);
+  assert.match(evening, /Observer trust remains/);
+  assert.match(state, /bonds: Record<string, number>/);
+  assert.match(styles, /\.evening-stage/);
+  assert.doesNotMatch(evening, /Math\.random/);
 });
 test("fits the apartment workspace into tabs without duplicate result sections", async () => {
   const [game, styles] = await Promise.all([

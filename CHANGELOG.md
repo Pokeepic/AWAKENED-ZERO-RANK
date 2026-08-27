@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.690.0 - After the Gate
+
+- Added a fifth playable chapter: a post-mission evening conversation with Aiko at Adachi Station.
+- Added three deterministic dialogue responses with distinct recovery and relationship outcomes.
+- Upgraded the local save to schema 3 with validated, bounded RPG bonds and automatic migration from older saves.
+- Kept Observer trust immutable and visibly separate from player-directed RPG bonds.
+
 ## 0.680.0 - First Contact
 
 - Added a fourth playable chapter with a deterministic fracture-sentinel encounter.
