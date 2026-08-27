@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.620.0 - Adachi field briefing
+
+- Rebuilt the Gate caseboard around the existing Adachi Fringe pixel environment instead of a flat file grid.
+- Positioned authenticated Gate files as interactive field signals and placed Ren inside the briefing scene.
+- Preserved evidence gating, unknown-data handling, replay, and non-canonical recommendation semantics.
+
 ## 0.610.0 - Tokyo district travel
 
 - Added switchable Central Tokyo, East Loop, and Adachi Fringe maps with distinct original pixel-art environments.

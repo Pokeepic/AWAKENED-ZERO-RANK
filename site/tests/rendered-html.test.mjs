@@ -137,6 +137,18 @@ test("moves between three district maps without mutating the chronicle", async (
   assert.doesNotMatch(city, /fetch\([^)]*method\s*:/);
   assert.match(styles, /\.district-switcher/);
 });
+test("stages authenticated Gate files inside the Adachi field scene", async () => {
+  const [caseboard, styles] = await Promise.all([
+    readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(caseboard, /case-files case-zone/);
+  assert.match(caseboard, /maps\/adachi-fringe\.png/);
+  assert.match(caseboard, /className="case-ren"/);
+  assert.match(caseboard, /case-node case-node-/);
+  assert.match(styles, /\.case-zone \.case-node/);
+  assert.match(styles, /\.case-ren/);
+});
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],
   [365, "arc_tokyo_fracture", "The Tokyo Fracture"],
