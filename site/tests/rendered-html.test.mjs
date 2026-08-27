@@ -62,16 +62,30 @@ test("ships an evidence-complete non-mutating Gate caseboard chapter", async () 
   assert.match(caseboard, /do not begin investigations, consume a time slot/);
   assert.doesNotMatch(caseboard, /fetch\([^)]*method\s*:/);
 });
-test("renders the apartment with an accessible original pixel-art scene", async () => {
+test("renders separate accessible chibi portraits instead of a baked room image", async () => {
+  const [game, city, caseboard] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
+  ]);
+  for (const name of ["ren", "aiko", "daichi", "mei", "haruto"]) {
+    await access(new URL(`public/game/characters/${name}.png`, root));
+  }
+  assert.match(game, /src="\/game\/characters\/ren\.png"/);
+  assert.match(game, /alt="Chibi portrait of Ren Takahashi"/);
+  assert.match(city, /PORTRAITS/);
+  assert.match(caseboard, /src="\/game\/characters\/ren\.png"/);
+  assert.doesNotMatch(game, /ren-apartment\.png/);
+});
+test("uses a separate location layer and dialogue-first social-sim framing", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  await access(new URL("public/game/ren-apartment.png", root));
-  assert.match(game, /src="\/game\/ren-apartment\.png"/);
-  assert.match(game, /alt="Pixel-art scene of Ren/);
-  assert.match(styles, /image-rendering:pixelated/);
-  assert.match(styles, /pixel-room-breathe/);
+  assert.match(game, /persona-room/);
+  assert.match(game, /dialogue-box/);
+  assert.match(styles, /chibi-idle/);
+  assert.match(styles, /speaker-tag/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],

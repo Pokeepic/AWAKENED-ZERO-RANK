@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.560.0 - Chibi dialogue cast
+
+- Replaced the full-room generated illustration with five individual transparent chibi portraits for Ren, Aiko, Daichi, Mei, and Haruto.
+- Rebuilt the apartment as a separate angular location layer so characters and places can change independently.
+- Added Ren's portrait to the prologue and Gate verdict, plus live contact portraits to the Tokyo route dossier.
+- Shifted dialogue presentation toward an original early-2000s urban social-sim language without copying existing characters or artwork.
+- Preserved the **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.550.0 - Pixel-art apartment scene
 
 - Replaced the prologue's abstract room silhouette with an original pixel-art Tokyo apartment and small Ren character.

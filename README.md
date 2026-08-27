@@ -8,11 +8,11 @@ Ren Takahashi starts poor, unranked, and unknown. He decides how to work, recove
 
 | Status | Value |
 |---|---|
-| Release | `0.550.0` |
+| Release | `0.560.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 96 browser |
+| Automated tests | 339 Python + 97 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -25,7 +25,7 @@ The current game contains three connected, authenticated chapters:
 2. **Tokyo route board** — examine current character whereabouts and suggest a destination.
 3. **Gate caseboard** — review portal evidence and offer a risk recommendation.
 
-The apartment now uses an original pixel-art Ren and Tokyo room scene. Player interactions remain local to the browser session. They do not advance time, change the save, begin investigations, or override Ren's autonomous decisions.
+The game now uses individual transparent chibi portraits for Ren, Aiko, Daichi, Mei, and Haruto inside an angular, dialogue-first social-sim interface. Locations remain separate presentation layers instead of being baked into character artwork. Player interactions remain local to the browser session: they do not advance time, change the save, begin investigations, or override Ren's autonomous decisions.
 
 ## What the simulation models
 
@@ -111,7 +111,7 @@ npm run lint
 
 ## Roadmap
 
-- Expand the point-and-click chapters, pixel environments, and small character sprites.
+- Expand the point-and-click chapters, separate location backdrops, chibi expressions, and dialogue presentation.
 - Add more dialogue, characters, portals, equipment, and authored story variations.
 - Improve accessibility, controls, pacing, sound, and local save UX for the game layer.
 - Preserve the simulator as canon while evaluating player-directed outcomes separately.

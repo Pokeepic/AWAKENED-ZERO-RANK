@@ -130,7 +130,7 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>PLAYABLE PROLOGUE / v0.520</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>PLAYABLE PROLOGUE / v0.560</span></header>
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {snapshot.clock.day} / {snapshot.clock.slot} / {snapshot.protagonist.location}</small>
       <h1 id="game-title">A quiet room.<br />A life already moving.</h1>
@@ -144,8 +144,8 @@ export default function GamePage() {
 
     <section className="game-board" aria-label="Point-and-click scene">
       <div className="game-room">
-        <Image className="pixel-room" src="/game/ren-apartment.png" alt="Pixel-art scene of Ren standing in his modest Tokyo apartment beside a field bag, rent envelope, and Gate notice" fill priority sizes="(max-width: 800px) 90vw, 65vw" />
-        <div className="pixel-shade" aria-hidden="true" />
+        <div className="persona-room" aria-hidden="true"><i className="room-window" /><i className="room-bed" /><i className="room-desk" /><i className="room-notice" /></div>
+        <Image className="chibi-sprite ren-chibi" src="/game/characters/ren.png" alt="Chibi portrait of Ren Takahashi" width={420} height={420} priority />
         {HOTSPOTS.map((hotspot, index) => <button
           key={hotspot.id}
           className={`hotspot hotspot-${index + 1} ${clues.includes(hotspot.id) ? "found" : ""}`}
@@ -164,7 +164,7 @@ export default function GamePage() {
           {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null} onClick={() => suggest(suggestion.id)}>{suggestion.label}</button>)}
           {!unlocked && <p>Inspect {2 - clues.length} more point{2 - clues.length === 1 ? "" : "s"} in the room.</p>}
         </div>
-        {response && <blockquote><small>REN'S RESPONSE</small><p>{response}</p></blockquote>}
+        {response && <blockquote className="dialogue-box"><span className="speaker-tag">REN</span><small>REN'S RESPONSE</small><p>{response}</p></blockquote>}
       </aside>
     </section>
 
