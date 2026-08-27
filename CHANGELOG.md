@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.710.0 - Visual-novel canon scenes
+
+- Rebuilt After the Gate as a full visual-novel composition instead of a distant map scene.
+- Added an original illustrated Adachi Station dusk background matching the authored location.
+- Added non-pixel full-body Ren and Aiko character cutouts while preserving chibi sprites for exploration.
+- The current speaker is staged at full prominence while the listening character visually recedes.
+
 ## 0.700.0 - Canon event staging
 
 - Reworked After the Gate into three mandatory story beats before its bond choice unlocks.
