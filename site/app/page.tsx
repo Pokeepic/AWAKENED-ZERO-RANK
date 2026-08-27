@@ -12,6 +12,7 @@ import {
   SEASONAL_EVENT_CATALOG,
   TOKYO_LOCATION_CATALOG,
   currentScene,
+  storyTimeline,
   dailyBriefing,
   nextSeasonalEvent,
   verifyArtifacts,
@@ -131,6 +132,7 @@ export default function Home() {
   const nextSeasonal = nextSeasonalEvent(snapshot.clock.day);
   const briefing = dailyBriefing(snapshot);
   const scene = currentScene(snapshot);
+  const arcTimeline = storyTimeline(snapshot);
   const cityLocations = Array.from(
     snapshot.whereabouts.reduce((locations, person) => {
       const names = locations.get(person.location) ?? [];
@@ -174,7 +176,7 @@ export default function Home() {
       <section className="economy"><h2 className="section-label">LIFE LEDGER <span>JPY</span></h2><strong className="ledger-balance">¥{p.resources.money.toLocaleString()}</strong><div className="record-line"><span>RENT / DAY {snapshot.economy.rent_due_day}</span><b>{rentStatus}</b></div><div className="record-line"><span>RENT COST</span><b>¥{snapshot.economy.rent_cost.toLocaleString()}</b></div><div className="record-line"><span>MEAL COST</span><b>¥{snapshot.economy.meal_cost.toLocaleString()}</b></div><div className="record-line"><span>SHOP VISITS</span><b>{snapshot.economy.shop_visits}</b></div></section>
 
       <div className="chapter-label" id="story-world"><span>03</span><b>STORY & PEOPLE</b><small>Long arcs, annual moments, and relationships</small></div>
-      <section className="story"><h2 className="section-label">THREE-YEAR ARC <span>{snapshot.story.completed_count}/{snapshot.story.total_anchors}</span></h2><div className="arc-meter" role="progressbar" aria-label="Story arc progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={storyProgress}><i style={{ width: `${storyProgress}%` }} /></div>{snapshot.story.next ? <><h3>{snapshot.story.next.title}</h3><p>Fixed story anchor arrives on day {snapshot.story.next.day}.</p><strong>{snapshot.story.next.days_remaining}<small>DAYS REMAINING</small></strong></> : <><h3>{snapshot.story.ending?.title || "Ending reached"}</h3><p>{snapshot.story.ending?.summary || "Ren's three-year chronicle is complete."}</p><strong>ARC<small>COMPLETE</small></strong></>}{snapshot.story.completed.length > 0 && <ol className="completed-arcs">{snapshot.story.completed.map((arc) => <li key={arc.key}><time>DAY {arc.day}</time><div><b>{arc.title}</b><p>{arc.scene}</p><p>{arc.outcome}</p>{arc.international_link && <small>WORLD LINK / {arc.international_link}</small>}</div><small>{arc.tier}</small></li>)}</ol>}</section>
+      <section className="story"><h2 className="section-label">THREE-YEAR ARC <span>{snapshot.story.completed_count}/{snapshot.story.total_anchors}</span></h2><div className="arc-meter" role="progressbar" aria-label="Story arc progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={storyProgress}><i style={{ width: `${storyProgress}%` }} /></div>{snapshot.story.next ? <><h3>{snapshot.story.next.title}</h3><p>Fixed story anchor arrives on day {snapshot.story.next.day}.</p><strong>{snapshot.story.next.days_remaining}<small>DAYS REMAINING</small></strong></> : <><h3>{snapshot.story.ending?.title || "Ending reached"}</h3><p>{snapshot.story.ending?.summary || "Ren's three-year chronicle is complete."}</p><strong>ARC<small>COMPLETE</small></strong></>}<details className="arc-timeline"><summary>VIEW THREE-YEAR TIMELINE <span>SPOILER-LIGHT</span></summary><ol>{arcTimeline.map((anchor, index) => <li className={anchor.status} key={anchor.day}><i>{String(index + 1).padStart(2, "0")}</i><div><small>DAY {anchor.day} / {anchor.status.toUpperCase()}</small><b>{anchor.title}</b></div><span>{anchor.status === "completed" ? "ARCHIVED" : `${anchor.daysRemaining} DAYS`}</span></li>)}</ol></details>{snapshot.story.completed.length > 0 && <ol className="completed-arcs">{snapshot.story.completed.map((arc) => <li key={arc.key}><time>DAY {arc.day}</time><div><b>{arc.title}</b><p>{arc.scene}</p><p>{arc.outcome}</p>{arc.international_link && <small>WORLD LINK / {arc.international_link}</small>}</div><small>{arc.tier}</small></li>)}</ol>}</section>
 
       <section className="calendar"><h2 className="section-label">SEASONAL CALENDAR <span>REPEATS YEARLY</span></h2><div className="calendar-next"><small>NEXT MOMENT / DAY {nextSeasonal.day}</small><b>{nextSeasonal.title}</b><strong>{nextSeasonal.daysRemaining}<small>DAYS</small></strong></div><div className="calendar-grid">{SEASONAL_EVENT_CATALOG.map((event) => <article key={event.title} className={event.title === nextSeasonal.title ? "next" : undefined}><small>{event.season.toUpperCase()} / D{event.dayOfYear}</small><b>{event.title}</b><span>{event.place}</span></article>)}</div><p>These world events recur without giving the observer control. Ren's condition and known relationships shape who shares them.</p></section>
 

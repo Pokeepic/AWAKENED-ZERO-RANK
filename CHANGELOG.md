@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.420.0 - Three-year arc timeline
+
+- Added a collapsible six-anchor timeline for the fixed three-year story structure.
+- Distinguishes completed, next, and locked chapters while hiding unreached titles behind spoiler-light placeholders.
+- Derives every status and countdown from the authenticated story projection and current clock.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.410.0 - Authenticated current scene
 
 - Added a focused current-scene dossier connecting Ren's authenticated location to its authored purpose and ward.

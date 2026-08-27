@@ -777,6 +777,21 @@ test("validates and renders the completed three-year arc", async () => {
   assert.match(page, /className="completed-arcs"/);
   assert.doesNotMatch(page, /next\?\.day|next\?\.days_remaining/);
 });
+test("renders a spoiler-light authenticated three-year timeline", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  const timeline = data.storyTimeline(snapshot);
+  assert.equal(timeline.length, 6);
+  assert.deepEqual(timeline[0], { day: 183, daysRemaining: 172, status: "next", title: "The Adachi Warning" });
+  assert.deepEqual(timeline.slice(1).map(({ status, title }) => [status, title]), Array(5).fill(["locked", "Unrevealed chapter"]));
+  assert.match(page, /VIEW THREE-YEAR TIMELINE/);
+  assert.match(page, /SPOILER-LIGHT/);
+  assert.match(css, /\.arc-timeline li\.locked\{opacity:/);
+});
 test("explains valid empty chronicle collections", async () => {
   const [page, css] = await Promise.all([
     readFile(new URL("app/page.tsx", root), "utf8"),
