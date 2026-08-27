@@ -103,6 +103,16 @@ test("renders Tokyo and four reusable pixel landmark assets", async () => {
   assert.match(city, /className="landmark-sprite"/);
   assert.match(city, /className="contact-sprite"/);
 });
+test("embeds landmarks in the city without radar-circle chrome", async () => {
+  const [city, styles] = await Promise.all([
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(city, /route-map city-diorama/);
+  assert.doesNotMatch(city, /map-ring/);
+  assert.match(styles, /\.city-diorama \.route-art \.landmark-sprite/);
+  assert.match(styles, /\.city-diorama \.route-label/);
+});
 test("uses a separate location layer and dialogue-first social-sim framing", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),

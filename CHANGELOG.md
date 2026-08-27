@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.600.0 - Embedded city landmarks
+
+- Removed the radar circles and floating rectangular route-card treatment from the Tokyo map.
+- Enlarged and positioned each landmark directly inside the city scene, with its current character standing beside it.
+- Reduced interface chrome to compact location labels, inspected badges, and accessible focus highlights.
+
 ## 0.590.0 - Tokyo pixel diorama
 
 - Replaced the abstract route-board background with an original wide pixel-art Tokyo scene at dusk.

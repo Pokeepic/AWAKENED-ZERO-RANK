@@ -130,7 +130,7 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>PLAYABLE PROLOGUE / v0.590</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>PLAYABLE PROLOGUE / v0.600</span></header>
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {snapshot.clock.day} / {snapshot.clock.slot} / {snapshot.protagonist.location}</small>
       <h1 id="game-title">A quiet room.<br />A life already moving.</h1>
