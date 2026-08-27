@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.500.0 - Four-slot latest-day chronicle
+
+- Reframed the latest retained activity as a Morning, Afternoon, Evening, and Late Night narrative strip.
+- Preserves multiple authenticated records in the same slot and labels slots without retained activity honestly.
+- Moved the detailed recent decision reasons and outcomes into an accessible disclosure ledger, reducing default density without losing evidence.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.490.0 - Gate operational readiness
 
 - Added a current Gate-readiness dossier grounded in registration, health, energy, field supplies, and the active portal plan.

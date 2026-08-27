@@ -17,6 +17,7 @@ import {
   peopleDossiers,
   portalCaseFiles,
   recentRhythm,
+  recentDayTimeline,
   rankForecast,
   storyTimeline,
   dailyBriefing,
@@ -144,6 +145,7 @@ export default function Home() {
   const rhythm = recentRhythm(snapshot);
   const rankRunway = rankForecast(snapshot);
   const gateStatus = gateReadiness(snapshot);
+  const recentDay = recentDayTimeline(snapshot);
   const cityLocations = Array.from(
     snapshot.whereabouts.reduce((locations, person) => {
       const names = locations.get(person.location) ?? [];
@@ -171,7 +173,7 @@ export default function Home() {
       <section className="briefing" aria-labelledby="briefing-title"><h2 className="section-label" id="briefing-title">TODAY AT A GLANCE <span>AUTHENTICATED SUMMARY</span></h2><div className="briefing-grid">{briefing.map((item) => <article className={item.tone} key={item.label}><small>{item.label}</small><b>{item.value}</b><p>{item.detail}</p></article>)}</div></section>
       <section className="profile"><h2 className="section-label">CURRENT STATE <mark>RANK {p.hunter_rank}</mark></h2><h3>{p.name}</h3><p>{p.location} / {p.mood}</p><blockquote><small>ACTIVE INTENT</small><b>{p.current_goal}</b></blockquote>{RESOURCE_NAMES.map((k) => <div className="meter" key={k} role="progressbar" aria-label={k} aria-valuemin={0} aria-valuemax={100} aria-valuenow={p.resources[k]}><span>{k}<b>{p.resources[k]}</b></span><i><u style={{ width: `${p.resources[k]}%` }} /></i></div>)}<div className="money"><small>AVAILABLE</small><strong>JPY {p.resources.money.toLocaleString()}</strong></div></section>
 
-      <section className="events"><h2 className="section-label">LATEST DECISIONS <span>{events.length} ENTRIES</span></h2>{events.length===0&&<p className="empty-state">Ren has not made a recorded decision yet.</p>}{events.map((event) => <article key={`${event.day}-${event.slot}-${event.action}`}><time>D{event.day} / {event.slot}</time><div><h3>{event.action}</h3><p>{event.outcome}</p><small>WHY / {event.reason}</small></div></article>)}</section>
+      <section className="events"><h2 className="section-label">LATEST DAY <span>{recentDay.day === null ? "NO RECORD" : `DAY ${recentDay.day}`}</span></h2>{events.length===0&&<p className="empty-state">Ren has not made a recorded decision yet.</p>}{recentDay.day !== null && <><div className="day-strip">{recentDay.slots.map(({ events: slotEvents, slot }) => <article key={slot} className={slotEvents.length ? undefined : "quiet"}><time>{slot}</time>{slotEvents.length ? slotEvents.map((event) => <div key={`${event.day}-${event.slot}-${event.action}`}><b>{event.action}</b><p>{event.outcome}</p></div>) : <small>NO RETAINED ACTIVITY</small>}</article>)}</div><details className="reference-shelf decision-ledger"><summary>INSPECT DECISION LEDGER <span>{events.length} RECENT ENTRIES</span></summary>{events.map((event) => <article key={`${event.day}-${event.slot}-${event.action}`}><time>D{event.day} / {event.slot}</time><div><h3>{event.action}</h3><p>{event.outcome}</p><small>WHY / {event.reason}</small></div></article>)}</details></>}</section>
 
       <section className="rhythm"><h2 className="section-label">RECENT RHYTHM <span>AUTHENTICATED ACTIVITY</span></h2>{rhythm.total === 0 ? <p className="empty-state">No recent activity is available to summarize.</p> : <><div className="rhythm-lead"><small>DOMINANT ACTIVITY</small><strong>{rhythm.dominantAction}</strong><p>{rhythm.total} records across {rhythm.activeDays} active days, with {rhythm.variety} distinct activities.</p></div><ol>{rhythm.entries.map((entry) => <li key={entry.action}><span>{entry.action}</span><i aria-hidden="true"><u style={{ width: `${(entry.count / rhythm.total) * 100}%` }} /></i><b>{entry.count}</b></li>)}</ol></>}</section>
 

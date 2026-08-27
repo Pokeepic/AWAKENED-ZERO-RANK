@@ -336,6 +336,24 @@ export function gateReadiness(snapshot: ObserverSnapshot): GateReadiness {
   };
 }
 
+export type RecentDayTimeline = {
+  day: number | null;
+  slots: { events: ActivityEvent[]; slot: string }[];
+};
+
+export function recentDayTimeline(snapshot: ObserverSnapshot): RecentDayTimeline {
+  const day = snapshot.activity.recent_events.length
+    ? Math.max(...snapshot.activity.recent_events.map((event) => event.day))
+    : null;
+  const slots = ["Morning", "Afternoon", "Evening", "Late Night"].map((slot) => ({
+    events: day === null ? [] : snapshot.activity.recent_events.filter(
+      (event) => event.day === day && event.slot === slot,
+    ),
+    slot,
+  }));
+  return { day, slots };
+}
+
 export const GATE_ENCOUNTER_CATALOG = [
   { difficulty: 42, minimumRank: "F", name: "Tunnel Slime Nest", reward: 5400 },
   { difficulty: 49, minimumRank: "F", name: "Goblin Scavenger Pack", reward: 6600 },

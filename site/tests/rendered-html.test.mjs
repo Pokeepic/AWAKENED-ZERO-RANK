@@ -820,7 +820,7 @@ test("explains valid empty chronicle collections", async () => {
 test("renders the complete authenticated chronicle surface", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
   for (const heading of [
-    "LATEST DECISIONS",
+    "LATEST DAY",
     "RECENT CONVERSATIONS",
     "HUNTER RECORD",
     "LIFE LEDGER",
@@ -904,7 +904,7 @@ test("keeps large reference catalogs behind accessible native disclosures", asyn
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.equal((page.match(/className="reference-shelf"/g) || []).length, 4);
+  assert.equal((page.match(/className="reference-shelf/g) || []).length, 5);
   assert.match(page, /INSPECT EQUIPMENT LADDER/);
   assert.match(page, /INSPECT ANNUAL CALENDAR/);
   assert.match(page, /INSPECT COMPLETE PORTAL CATALOG/);
@@ -954,6 +954,21 @@ test("explains current Gate readiness from authenticated field conditions", asyn
   assert.match(page, /GATE READINESS/);
   assert.match(page, /INSPECT GATE THREAT LADDER/);
   assert.match(css, /\.gate-readiness\.recover-first/);
+});
+test("renders the latest retained day as a four-slot narrative strip", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  const timeline = data.recentDayTimeline(snapshot);
+  assert.equal(timeline.day, 10);
+  assert.deepEqual(timeline.slots.map(({ slot }) => slot), ["Morning", "Afternoon", "Evening", "Late Night"]);
+  assert.deepEqual(timeline.slots.map(({ events }) => events.map(({ action }) => action)), [["Eat"], ["Guild patrol"], ["Guild patrol"], ["Rest"]]);
+  assert.match(page, /className="day-strip"/);
+  assert.match(page, /INSPECT DECISION LEDGER/);
+  assert.match(css, /\.events \.day-strip/);
 });
 test("provides responsive contrast print and motion-safe presentation", async () => {
   const css = await readFile(new URL("app/globals.css", root), "utf8");
