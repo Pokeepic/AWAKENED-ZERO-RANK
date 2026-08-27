@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.660.0 - Campaign journal
+
+- Added a persistent twelve-entry journal recording each action's day, slot, and location.
+- Upgraded local saves to schema version 2 with automatic version-1 migration.
+- Added an accessible, responsive journal disclosure beneath the shared RPG HUD.
+
 ## 0.650.0 - Campaign navigation
 
 - Added persistent Home, Tokyo, and Gate Cases navigation across the RPG.

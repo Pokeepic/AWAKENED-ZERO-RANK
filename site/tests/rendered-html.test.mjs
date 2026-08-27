@@ -187,10 +187,23 @@ test("links every RPG chapter and validates versioned local saves", async () => 
   ]);
   for (const route of ["/game", "/game/city", "/game/caseboard"]) assert.match(hud, new RegExp(`href="${route.replaceAll("/", "\\/")}"`));
   assert.match(hud, /aria-current/);
-  assert.match(state, /saveVersion: 1/);
+  assert.match(state, /saveVersion: 2/);
   assert.match(state, /isRpgState/);
   assert.match(state, /Number\.isSafeInteger/);
   assert.match(layout, /separate time-management RPG/);
+});
+test("records a bounded persistent campaign journal and migrates older saves", async () => {
+  const [hud, state, styles] = await Promise.all([
+    readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /saveVersion: 2/);
+  assert.match(state, /Array\.isArray\(candidate\.journal\)/);
+  assert.match(state, /\.slice\(-12\)/);
+  assert.match(hud, /CAMPAIGN JOURNAL/);
+  assert.match(hud, /state\.journal/);
+  assert.match(styles, /\.rpg-journal/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],

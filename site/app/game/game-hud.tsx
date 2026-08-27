@@ -14,5 +14,8 @@ export function GameHud({ state, current, onNewGame }: { state: RpgState; curren
     <div><small>CONDITION</small><b>HP {state.health}</b><span>EN {state.energy}</span></div>
     <div><small>FUNDS</small><b>¥{state.money.toLocaleString()}</b><span>{state.lastAction}</span></div>
     {onNewGame && <button onClick={onNewGame}>NEW GAME</button>}
-  </section></>;
+  </section><details className="rpg-journal">
+    <summary>CAMPAIGN JOURNAL <span>{state.journal.length} / 12</span></summary>
+    {state.journal.length === 0 ? <p>No actions recorded yet. Ren&apos;s first committed choice will appear here.</p> : <ol>{[...state.journal].reverse().map((entry, index) => <li key={`${entry.day}-${entry.slot}-${index}`}><b>DAY {entry.day} / {entry.slot}</b><span>{entry.action}</span><small>{entry.location}</small></li>)}</ol>}
+  </details></>;
 }
