@@ -15,6 +15,7 @@ import {
   memoryArchive,
   peopleDossiers,
   portalCaseFiles,
+  recentRhythm,
   storyTimeline,
   dailyBriefing,
   nextSeasonalEvent,
@@ -138,6 +139,7 @@ export default function Home() {
   const people = peopleDossiers(snapshot);
   const portalCases = portalCaseFiles(snapshot);
   const memories = memoryArchive(snapshot);
+  const rhythm = recentRhythm(snapshot);
   const cityLocations = Array.from(
     snapshot.whereabouts.reduce((locations, person) => {
       const names = locations.get(person.location) ?? [];
@@ -166,6 +168,8 @@ export default function Home() {
       <section className="profile"><h2 className="section-label">CURRENT STATE <mark>RANK {p.hunter_rank}</mark></h2><h3>{p.name}</h3><p>{p.location} / {p.mood}</p><blockquote><small>ACTIVE INTENT</small><b>{p.current_goal}</b></blockquote>{RESOURCE_NAMES.map((k) => <div className="meter" key={k} role="progressbar" aria-label={k} aria-valuemin={0} aria-valuemax={100} aria-valuenow={p.resources[k]}><span>{k}<b>{p.resources[k]}</b></span><i><u style={{ width: `${p.resources[k]}%` }} /></i></div>)}<div className="money"><small>AVAILABLE</small><strong>JPY {p.resources.money.toLocaleString()}</strong></div></section>
 
       <section className="events"><h2 className="section-label">LATEST DECISIONS <span>{events.length} ENTRIES</span></h2>{events.length===0&&<p className="empty-state">Ren has not made a recorded decision yet.</p>}{events.map((event) => <article key={`${event.day}-${event.slot}-${event.action}`}><time>D{event.day} / {event.slot}</time><div><h3>{event.action}</h3><p>{event.outcome}</p><small>WHY / {event.reason}</small></div></article>)}</section>
+
+      <section className="rhythm"><h2 className="section-label">RECENT RHYTHM <span>AUTHENTICATED ACTIVITY</span></h2>{rhythm.total === 0 ? <p className="empty-state">No recent activity is available to summarize.</p> : <><div className="rhythm-lead"><small>DOMINANT ACTIVITY</small><strong>{rhythm.dominantAction}</strong><p>{rhythm.total} records across {rhythm.activeDays} active days, with {rhythm.variety} distinct activities.</p></div><ol>{rhythm.entries.map((entry) => <li key={entry.action}><span>{entry.action}</span><i aria-hidden="true"><u style={{ width: `${(entry.count / rhythm.total) * 100}%` }} /></i><b>{entry.count}</b></li>)}</ol></>}</section>
 
       <section className="conversations"><h2 className="section-label">RECENT CONVERSATIONS <span>{snapshot.conversations.length} RETAINED</span></h2>{snapshot.conversations.length===0?<p className="empty-state">No recurring conversation has been recorded yet.</p>:snapshot.conversations.map((conversation)=><article key={`${conversation.day}-${conversation.npc_name}-${conversation.intention}`}><header><time>DAY {conversation.day}</time><b>{conversation.npc_name}</b><small>{conversation.reaction}</small></header><blockquote><p>“{conversation.npc_line}”</p><footer>REN / “{conversation.ren_line}”</footer></blockquote></article>)}</section>
 

@@ -8,12 +8,12 @@ Ren Takahashi begins poor, unranked, and unknown. He decides how to work, recove
 
 | Project status | Current value |
 |---|---|
-| Release | `0.450.0` |
+| Release | `0.460.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | Tabular RL verdict | **Baseline remains better** |
 | Corrected ensemble verdict | **Inconclusive** |
-| Automated tests | 339 Python + 86 browser |
+| Automated tests | 339 Python + 87 browser |
 
 ## Why this project exists
 
@@ -258,7 +258,7 @@ Version 0.229.0 validates complete authenticated portal investigations, includin
 
 Version 0.260.0 completes the ability-mastery lifecycle by preventing awakened timelines from reverting mastery to zero. Version 0.261.0 authenticates fixed-event memory presence across their complete lifecycles. Version 0.262.0 brings save-event clock validation into parity with observer snapshots. Version 0.263.0 requires saved event positions to be strictly chronological. Version 0.264.0 requires complete action, reason, and outcome text in every saved event. Version 0.265.0 prevents blank memory summaries from entering saved chronicles. Version 0.266.0 requires complete text in every dialogue exchange. Version 0.267.0 requires saved dialogue history to remain chronological. Version 0.268.0 requires complete source and description text for delayed consequences. Version 0.269.0 requires every saved portal investigation to name its preparation strategy. Version 0.270.0 completes the production observer surface and its responsive, accessibility, integrity, and delivery hardening. Version 0.271.0 deepens the fixed arc with recurring-character scenes, portal consequences, international continuity, and authenticated observer rendering. Version 0.272.0 expands the evidence-derived ending catalogue from three to five named outcomes. Version 0.273.0 prevents delayed investigation consequences from consuming autonomous action slots. Version 0.274.0 turns autonomous recurring-character meetings into complete, persistent exchanges. Version 0.275.0 authenticates and renders the six most recent complete conversations as a read-only observer section. Version 0.276.0 gives every recurring character a complete two-sided voice across routine, portal, injury, and Guild encounters. Version 0.277.0 routes autonomous meetings into injury, portal, Guild, or routine dialogue from Ren's actual situation. Version 0.278.0 completes the contextual dialogue pass with situation- and trust-aware character reactions. Version 0.279.0 bounds planned field supplies and prevents surplus shop accumulation. Version 0.280.0 unifies shop scoring with the exact next field-stock purchase. Version 0.290.0 adds the first rank-gated equipment progression tier with rent-safe autonomous purchasing and authenticated persistence. Version 0.300.0 makes the full equipment ladder visible on the private observer with live rank, ownership, affordability, and rent-reserve status. Version 0.310.0 adds the Rank D equipment tier and strictly monotonic autonomous upgrades.
 
-The production observer now covers time, weather, Ren's condition and intent, explained decisions, finances, inventory, hunter progression, story history, a spoiler-light six-anchor timeline, joined recurring-character dossiers, current whereabouts, an authenticated current-scene dossier, a collapsible thirteen-place Tokyo atlas, joined portal case files, a continuity-focused memory archive, and artifact identity. The scene and atlas form a read-only foundation for the future point-and-click presentation direction; lightweight sprite animation remains optional rather than a requirement for the completed observer.
+The production observer now covers time, weather, Ren's condition and intent, explained decisions, a recent activity rhythm, finances, inventory, hunter progression, story history, a spoiler-light six-anchor timeline, joined recurring-character dossiers, current whereabouts, an authenticated current-scene dossier, a collapsible thirteen-place Tokyo atlas, joined portal case files, a continuity-focused memory archive, and artifact identity. The scene and atlas form a read-only foundation for the future point-and-click presentation direction; lightweight sprite animation remains optional rather than a requirement for the completed observer.
 
 The observer is a real managed website rather than a local-only developer demo. It includes responsive phone, tablet, and desktop layouts, reduced-motion and increased-contrast support, secure read-only data delivery, visible freshness and failure states, and managed version rollback. Access remains deliberately private; a future public launch is an access-policy decision, not unfinished web development.
 

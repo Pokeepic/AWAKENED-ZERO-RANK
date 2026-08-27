@@ -539,7 +539,7 @@ test("signals only verified digest changes with reduced-motion-safe cleanup", as
 
 test("uses semantic section headings and accessible condition meters", async () => {
   const page = await readFile(new URL("app/page.tsx", root), "utf8");
-  assert.equal((page.match(/className="section-label"/g) || []).length, 16);
+  assert.equal((page.match(/className="section-label"/g) || []).length, 17);
   assert.doesNotMatch(page, /<label|<\/label>/);
   assert.match(page, /<nav aria-label="Current world status">/);
   assert.match(page, /role="status" aria-live="polite" aria-atomic="true"/);
@@ -814,7 +814,7 @@ test("explains valid empty chronicle collections", async () => {
     /portalCases\.length===0&&<p className="empty-state">No portals have been discovered yet\.<\/p>/,
   );
   assert.match(page, /No defining memories have formed yet\./);
-  assert.equal((page.match(/className="empty-state"/g) || []).length, 5);
+  assert.equal((page.match(/className="empty-state"/g) || []).length, 6);
   assert.match(css, /\.empty-state\{margin:0;padding:18px 0/);
 });
 test("renders the complete authenticated chronicle surface", async () => {
@@ -881,6 +881,23 @@ test("presents authenticated key memories as a continuity archive", async () => 
   assert.match(page, /CONTINUITY ARCHIVE/);
   assert.match(page, /memory\.ageDays/);
   assert.match(css, /\.memories li\.formative>i/);
+});
+test("summarizes recent authenticated activity without parsing reasons", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  const rhythm = data.recentRhythm(snapshot);
+  assert.equal(rhythm.total, snapshot.activity.recent_events.length);
+  assert.equal(rhythm.dominantAction, "Rest");
+  assert.equal(rhythm.entries[0].count, 3);
+  assert.equal(rhythm.activeDays, 3);
+  assert.equal(rhythm.variety, 7);
+  assert.match(page, /RECENT RHYTHM/);
+  assert.doesNotMatch(data.recentRhythm.toString(), /reason|outcome/);
+  assert.match(css, /\.rhythm-lead/);
 });
 test("provides responsive contrast print and motion-safe presentation", async () => {
   const css = await readFile(new URL("app/globals.css", root), "utf8");

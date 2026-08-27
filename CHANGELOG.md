@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.460.0 - Recent activity rhythm
+
+- Added a compact authenticated activity dossier with dominant activity, record count, active-day coverage, and behavioral variety.
+- Added a frequency ledger for every retained activity without interpreting reason or outcome prose.
+- Kept world events inside the honest recent-record summary rather than mislabeling every entry as a deliberate choice.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.450.0 - Continuity memory archive
 
 - Reworked authenticated key memories into a numbered continuity archive with visible age and impact.

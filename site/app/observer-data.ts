@@ -359,6 +359,32 @@ export function memoryArchive(snapshot: ObserverSnapshot): MemoryArchiveEntry[] 
   }));
 }
 
+export type RecentRhythm = {
+  activeDays: number;
+  dominantAction: string | null;
+  entries: { action: string; count: number }[];
+  total: number;
+  variety: number;
+};
+
+export function recentRhythm(snapshot: ObserverSnapshot): RecentRhythm {
+  const counts = new Map<string, number>();
+  const days = new Set<number>();
+  for (const event of snapshot.activity.recent_events) {
+    counts.set(event.action, (counts.get(event.action) ?? 0) + 1);
+    days.add(event.day);
+  }
+  const entries = Array.from(counts, ([action, count]) => ({ action, count }))
+    .sort((left, right) => right.count - left.count || left.action.localeCompare(right.action));
+  return {
+    activeDays: days.size,
+    dominantAction: entries[0]?.action ?? null,
+    entries,
+    total: snapshot.activity.recent_events.length,
+    variety: entries.length,
+  };
+}
+
 export type PresentationContract = {
   animation_cues: string[];
   comparison_schema_version: number;
