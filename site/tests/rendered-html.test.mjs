@@ -76,9 +76,21 @@ test("renders separate accessible pixel sprites instead of a baked room image", 
   assert.match(styles, /\.ren-chibi\{width:96px;height:96px/);
   assert.match(game, /alt="Pixel sprite of Ren Takahashi"/);
   assert.match(game, /src="\/game\/characters\/ren\.png"/);
-  assert.match(city, /PORTRAITS/);
+  assert.match(city, /SPRITES/);
   assert.match(caseboard, /src="\/game\/characters\/ren\.png"/);
   assert.doesNotMatch(game, /ren-apartment\.png/);
+});
+test("places the pixel cast on the Tokyo map and encounter stage", async () => {
+  const [city, styles] = await Promise.all([
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(city, /const SPRITES/);
+  assert.match(city, /className="map-origin"/);
+  assert.match(city, /SPRITES\[route\.name\]/);
+  assert.match(city, /className="route-encounter"/);
+  assert.match(styles, /\.route-node img/);
+  assert.match(styles, /\.route-encounter/);
 });
 test("uses a separate location layer and dialogue-first social-sim framing", async () => {
   const [game, styles] = await Promise.all([

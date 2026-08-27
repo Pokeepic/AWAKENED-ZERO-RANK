@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.580.0 - Tokyo sprite map
+
+- Placed Ren and all four recurring contacts directly on the authenticated Tokyo route map.
+- Added a compact two-sprite encounter vignette after a route suggestion while keeping the result explicitly non-canonical.
+- Improved small-screen sprite-map spacing and corrected the playable prologue's displayed version.
+
 ## 0.570.0 - Tiny pixel overworld cast
 
 - Replaced the large chibi portraits with five transparent, hard-pixel overworld sprites for Ren, Aiko, Daichi, Mei, and Haruto.
