@@ -30,7 +30,7 @@ test("completes the prologue through explore act and result phases", async () =>
   assert.match(game, /ACT/);
   assert.match(game, /RESULT/);
   assert.match(game, /LOCAL NOTEBOOK/);
-  assert.match(game, /RESET THIS SCENE/);
+  assert.match(game, /RESET SCENE/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
   assert.match(styles, /@keyframes ren-breathe/);
 });
@@ -211,6 +211,19 @@ test("records a bounded persistent campaign journal and migrates older saves", a
   assert.match(hud, /CAMPAIGN JOURNAL/);
   assert.match(hud, /state\.journal/);
   assert.match(styles, /\.rpg-journal/);
+});
+test("fits the apartment workspace into tabs without duplicate result sections", async () => {
+  const [game, styles] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(game, /workspace-tabs/);
+  assert.match(game, /"scene" \| "notebook"/);
+  assert.match(game, /view === "scene"/);
+  assert.match(game, /view === "notebook"/);
+  assert.doesNotMatch(game, /scene-conclusion/);
+  assert.match(styles, /height:100dvh/);
+  assert.match(styles, /\.workspace-tabs/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],

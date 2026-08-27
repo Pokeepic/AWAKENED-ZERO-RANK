@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.670.0 - Compact RPG workspace
+
+- Reworked the apartment into Scene and Notebook tabs instead of stacked sections.
+- Kept action outcomes and continuation controls inside the scene panel.
+- Added a desktop viewport layout with an overlay journal; mobile retains natural scrolling.
+
 ## 0.661.0 - Game loading hotfix
 
 - Fixed the apartment scene caption rendering a structured location record as a React child.
