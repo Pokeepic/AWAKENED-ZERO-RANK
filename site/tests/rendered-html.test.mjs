@@ -123,6 +123,13 @@ test("uses a separate location layer and dialogue-first social-sim framing", asy
   assert.match(styles, /chibi-idle/);
   assert.match(styles, /speaker-tag/);
 });
+test("renders the current scene profile as text instead of a React object", async () => {
+  const game = await readFile(new URL("app/game/page.tsx", root), "utf8");
+  assert.match(game, /scene\.place\.name/);
+  assert.match(game, /scene\.atmosphere/);
+  assert.doesNotMatch(game, /\{scene\.place\}\s*\//);
+  assert.doesNotMatch(game, /scene\.weather/);
+});
 test("moves between three district maps without mutating the chronicle", async () => {
   const [city, styles] = await Promise.all([
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),
@@ -185,7 +192,7 @@ test("links every RPG chapter and validates versioned local saves", async () => 
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/layout.tsx", root), "utf8"),
   ]);
-  for (const route of ["/game", "/game/city", "/game/caseboard"]) assert.match(hud, new RegExp(`href="${route.replaceAll("/", "\\/")}"`));
+  for (const route of ["/game", "/game/city", "/game/caseboard"]) assert.match(hud, new RegExp(`location\\.assign\\("${route.replaceAll("/", "\\/")}"\\)`));
   assert.match(hud, /aria-current/);
   assert.match(state, /saveVersion: 2/);
   assert.match(state, /isRpgState/);

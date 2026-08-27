@@ -144,7 +144,7 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.660</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.661</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
@@ -168,7 +168,7 @@ export default function GamePage() {
           onClick={() => inspect(hotspot)}
           aria-pressed={activeClue === hotspot.id}
         ><i aria-hidden="true" /><span>{hotspot.label}</span></button>)}
-        <p className="scene-caption">{scene.place} / {scene.weather} / {scene.presence}</p>
+        <p className="scene-caption">{scene.place.name} / {scene.atmosphere} / {scene.presence}</p>
       </div>
 
       <aside className="game-panel" aria-live="polite">

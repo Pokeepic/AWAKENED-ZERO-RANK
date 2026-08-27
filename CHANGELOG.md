@@ -4,6 +4,11 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.661.0 - Game loading hotfix
+
+- Fixed the apartment scene caption rendering a structured location record as a React child.
+- Added regression coverage for textual scene profile rendering.
+
 ## 0.660.0 - Campaign journal
 
 - Added a persistent twelve-entry journal recording each action's day, slot, and location.
