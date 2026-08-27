@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.470.0 - Compact reference shelves
+
+- Kept immediate equipment, seasonal, and portal status visible while moving their complete catalogs into native disclosure shelves.
+- Reduced the default page length without deleting authenticated information or adding client-side control state.
+- Preserved keyboard, touch, screen-reader, print, and no-JavaScript disclosure behavior through semantic `details` and `summary` elements.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.460.0 - Recent activity rhythm
 
 - Added a compact authenticated activity dossier with dominant activity, record count, active-day coverage, and behavioral variety.

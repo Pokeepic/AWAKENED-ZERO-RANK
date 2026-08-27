@@ -899,6 +899,19 @@ test("summarizes recent authenticated activity without parsing reasons", async (
   assert.doesNotMatch(data.recentRhythm.toString(), /reason|outcome/);
   assert.match(css, /\.rhythm-lead/);
 });
+test("keeps large reference catalogs behind accessible native disclosures", async () => {
+  const [page, css] = await Promise.all([
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.equal((page.match(/className="reference-shelf"/g) || []).length, 3);
+  assert.match(page, /INSPECT EQUIPMENT LADDER/);
+  assert.match(page, /INSPECT ANNUAL CALENDAR/);
+  assert.match(page, /INSPECT COMPLETE PORTAL CATALOG/);
+  assert.doesNotMatch(page, /<details[^>]*open/);
+  assert.match(css, /\.reference-shelf summary/);
+  assert.match(css, /\.reference-shelf\[open\]/);
+});
 test("provides responsive contrast print and motion-safe presentation", async () => {
   const css = await readFile(new URL("app/globals.css", root), "utf8");
   assert.match(css, /@media\(max-width:1050px\)/);
