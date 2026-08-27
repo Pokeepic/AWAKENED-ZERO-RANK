@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.550.0 - Pixel-art apartment scene
+
+- Replaced the prologue's abstract room silhouette with an original pixel-art Tokyo apartment and small Ren character.
+- Aligned the field bag, rent envelope, and Gate notice interactions with visible scene objects.
+- Added descriptive alternative text, responsive cropping, crisp pixel rendering, and reduced-motion-safe ambient lighting.
+- Rebuilt the README as a concise product overview with the game first, focused setup, architecture, evidence, tests, and roadmap sections.
+- Preserved the **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.540.0 - Authenticated Gate caseboard
 
 - Added a third playable chapter at `/game/caseboard`, linked from the Tokyo route result.

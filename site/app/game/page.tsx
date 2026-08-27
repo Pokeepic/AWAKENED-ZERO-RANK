@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observer-data";
 
@@ -143,8 +144,8 @@ export default function GamePage() {
 
     <section className="game-board" aria-label="Point-and-click scene">
       <div className="game-room">
-        <div className="room-light" aria-hidden="true" />
-        <div className="ren-silhouette" aria-hidden="true"><i /><span /></div>
+        <Image className="pixel-room" src="/game/ren-apartment.png" alt="Pixel-art scene of Ren standing in his modest Tokyo apartment beside a field bag, rent envelope, and Gate notice" fill priority sizes="(max-width: 800px) 90vw, 65vw" />
+        <div className="pixel-shade" aria-hidden="true" />
         {HOTSPOTS.map((hotspot, index) => <button
           key={hotspot.id}
           className={`hotspot hotspot-${index + 1} ${clues.includes(hotspot.id) ? "found" : ""}`}

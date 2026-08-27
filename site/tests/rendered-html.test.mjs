@@ -62,6 +62,17 @@ test("ships an evidence-complete non-mutating Gate caseboard chapter", async () 
   assert.match(caseboard, /do not begin investigations, consume a time slot/);
   assert.doesNotMatch(caseboard, /fetch\([^)]*method\s*:/);
 });
+test("renders the apartment with an accessible original pixel-art scene", async () => {
+  const [game, styles] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  await access(new URL("public/game/ren-apartment.png", root));
+  assert.match(game, /src="\/game\/ren-apartment\.png"/);
+  assert.match(game, /alt="Pixel-art scene of Ren/);
+  assert.match(styles, /image-rendering:pixelated/);
+  assert.match(styles, /pixel-room-breathe/);
+});
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],
   [365, "arc_tokyo_fracture", "The Tokyo Fracture"],
