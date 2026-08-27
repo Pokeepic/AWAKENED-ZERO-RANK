@@ -16,6 +16,7 @@ import {
   peopleDossiers,
   portalCaseFiles,
   recentRhythm,
+  rankForecast,
   storyTimeline,
   dailyBriefing,
   nextSeasonalEvent,
@@ -140,6 +141,7 @@ export default function Home() {
   const portalCases = portalCaseFiles(snapshot);
   const memories = memoryArchive(snapshot);
   const rhythm = recentRhythm(snapshot);
+  const rankRunway = rankForecast(snapshot);
   const cityLocations = Array.from(
     snapshot.whereabouts.reduce((locations, person) => {
       const names = locations.get(person.location) ?? [];
@@ -174,7 +176,7 @@ export default function Home() {
       <section className="conversations"><h2 className="section-label">RECENT CONVERSATIONS <span>{snapshot.conversations.length} RETAINED</span></h2>{snapshot.conversations.length===0?<p className="empty-state">No recurring conversation has been recorded yet.</p>:snapshot.conversations.map((conversation)=><article key={`${conversation.day}-${conversation.npc_name}-${conversation.intention}`}><header><time>DAY {conversation.day}</time><b>{conversation.npc_name}</b><small>{conversation.reaction}</small></header><blockquote><p>“{conversation.npc_line}”</p><footer>REN / “{conversation.ren_line}”</footer></blockquote></article>)}</section>
 
       <div className="chapter-label" id="progression"><span>02</span><b>PROGRESSION</b><small>Hunter growth, equipment, and economy</small></div>
-      <section className="hunter"><h2 className="section-label">HUNTER RECORD <span>{p.ability}</span></h2><div className="stats"><Metric name="Readiness" value={p.progression.combat_readiness} /><Metric name="Rank points" value={p.progression.rank_points} /><Metric name="Mastery" value={p.progression.ability_mastery} /><Metric name="Knowledge" value={p.progression.knowledge} /></div><div className="record-line"><span>MISSIONS</span><b>{p.progression.missions_completed} / {p.progression.missions_attempted} CLEARED</b></div><div className="record-line"><span>WEAPON</span><b>{p.equipment.weapon ?? "None"}</b></div><div className="record-line"><span>ARMOR</span><b>{p.equipment.armor ?? "None"}</b></div><div className="inventory" aria-label="Inventory">{inventory.length === 0 ? <small>NO CARRIED EQUIPMENT</small> : inventory.map(([name, quantity]) => <span key={name}>{name}<b>x{quantity}</b></span>)}</div></section>
+      <section className="hunter"><h2 className="section-label">HUNTER RECORD <span>{p.ability}</span></h2><div className="stats"><Metric name="Readiness" value={p.progression.combat_readiness} /><Metric name="Rank points" value={p.progression.rank_points} /><Metric name="Mastery" value={p.progression.ability_mastery} /><Metric name="Knowledge" value={p.progression.knowledge} /></div>{rankRunway.nextRank ? <div className="rank-runway"><header><small>NEXT PROMOTION / RANK {rankRunway.nextRank}</small><b>{rankRunway.pointsRemaining} RP REMAIN</b></header><div role="progressbar" aria-label={`Progress toward Rank ${rankRunway.nextRank}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={rankRunway.progressPercent}><i style={{ width: `${rankRunway.progressPercent}%` }} /></div><p>{rankRunway.unlocks.length ? `NEXT EQUIPMENT / ${rankRunway.unlocks.join(" / ")}` : "No equipment unlock is tied to this promotion."}</p></div> : <div className="rank-runway complete"><small>{p.hunter_rank === "C" ? "CURRENT RANK CEILING REACHED" : "PROMOTION RUNWAY BEGINS AFTER AWAKENING"}</small></div>}<div className="record-line"><span>MISSIONS</span><b>{p.progression.missions_completed} / {p.progression.missions_attempted} CLEARED</b></div><div className="record-line"><span>WEAPON</span><b>{p.equipment.weapon ?? "None"}</b></div><div className="record-line"><span>ARMOR</span><b>{p.equipment.armor ?? "None"}</b></div><div className="inventory" aria-label="Inventory">{inventory.length === 0 ? <small>NO CARRIED EQUIPMENT</small> : inventory.map(([name, quantity]) => <span key={name}>{name}<b>x{quantity}</b></span>)}</div></section>
 
       <section className="gear"><h2 className="section-label">EQUIPMENT PROGRESSION <span>RENT RESERVE PROTECTED</span></h2><p className="gear-intro">The shop reveals what Ren can equip next without spending the ¥{snapshot.economy.rent_cost.toLocaleString()} held for rent.</p><details className="reference-shelf"><summary>INSPECT EQUIPMENT LADDER <span>{EQUIPMENT_CATALOG.length} ITEMS</span></summary><div className="gear-grid">{EQUIPMENT_CATALOG.map((item) => { const status = equipmentStatus(item); return <article key={item.name} className={status.startsWith("LOCKED") ? "locked" : ""}><header><small>RANK {item.minimumRank} / {item.kind.toUpperCase()}</small><b>{item.name}</b></header><dl><div><dt>COMBAT</dt><dd>+{item.bonus}</dd></div><div><dt>PRICE</dt><dd>¥{item.price.toLocaleString()}</dd></div></dl><strong>{status}</strong></article>; })}</div></details></section>
 

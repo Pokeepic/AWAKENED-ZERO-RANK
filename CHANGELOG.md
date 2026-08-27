@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.480.0 - Hunter promotion runway
+
+- Added an authenticated next-rank runway with remaining rank points and bounded promotion progress.
+- Joined the next promotion to its exact equipment unlocks while leaving the complete catalog in its compact reference shelf.
+- Handles pre-Awakening and current Rank C ceilings explicitly without inventing a future tier.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.470.0 - Compact reference shelves
 
 - Kept immediate equipment, seasonal, and portal status visible while moving their complete catalogs into native disclosure shelves.

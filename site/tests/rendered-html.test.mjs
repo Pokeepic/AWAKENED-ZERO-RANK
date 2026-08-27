@@ -912,6 +912,27 @@ test("keeps large reference catalogs behind accessible native disclosures", asyn
   assert.match(css, /\.reference-shelf summary/);
   assert.match(css, /\.reference-shelf\[open\]/);
 });
+test("derives the next hunter promotion and equipment runway", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  assert.deepEqual(data.rankForecast(snapshot), {
+    nextRank: "E",
+    pointsRemaining: 7,
+    progressPercent: 77,
+    unlocks: ["Reinforced Machete", "Gateweave Vest"],
+  });
+  const ceiling = structuredClone(snapshot);
+  ceiling.protagonist.hunter_rank = "C";
+  ceiling.protagonist.progression.rank_points = 90;
+  assert.equal(data.rankForecast(ceiling).nextRank, null);
+  assert.match(page, /NEXT PROMOTION/);
+  assert.match(page, /Progress toward Rank/);
+  assert.match(css, /\.rank-runway/);
+});
 test("provides responsive contrast print and motion-safe presentation", async () => {
   const css = await readFile(new URL("app/globals.css", root), "utf8");
   assert.match(css, /@media\(max-width:1050px\)/);

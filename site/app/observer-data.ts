@@ -284,6 +284,32 @@ export const EQUIPMENT_CATALOG: readonly EquipmentCatalogItem[] = [
   { bonus: 20, kind: "armor", minimumRank: "C", name: "Aegis Longcoat", price: 28500 },
 ] as const;
 
+export type RankForecast = {
+  nextRank: "E" | "D" | "C" | null;
+  pointsRemaining: number;
+  progressPercent: number;
+  unlocks: string[];
+};
+
+export function rankForecast(snapshot: ObserverSnapshot): RankForecast {
+  const rank = snapshot.protagonist.hunter_rank;
+  const points = snapshot.protagonist.progression.rank_points;
+  const target = rank === "F"
+    ? { floor: 0, points: 30, rank: "E" as const }
+    : rank === "E"
+      ? { floor: 30, points: 60, rank: "D" as const }
+      : rank === "D"
+        ? { floor: 60, points: 90, rank: "C" as const }
+        : null;
+  if (!target) return { nextRank: null, pointsRemaining: 0, progressPercent: 100, unlocks: [] };
+  return {
+    nextRank: target.rank,
+    pointsRemaining: Math.max(0, target.points - points),
+    progressPercent: Math.round(((points - target.floor) / (target.points - target.floor)) * 100),
+    unlocks: EQUIPMENT_CATALOG.filter((item) => item.minimumRank === target.rank).map((item) => item.name),
+  };
+}
+
 export const GATE_ENCOUNTER_CATALOG = [
   { difficulty: 42, minimumRank: "F", name: "Tunnel Slime Nest", reward: 5400 },
   { difficulty: 49, minimumRank: "F", name: "Goblin Scavenger Pack", reward: 6600 },
