@@ -62,17 +62,20 @@ test("ships an evidence-complete non-mutating Gate caseboard chapter", async () 
   assert.match(caseboard, /do not begin investigations, consume a time slot/);
   assert.doesNotMatch(caseboard, /fetch\([^)]*method\s*:/);
 });
-test("renders separate accessible chibi portraits instead of a baked room image", async () => {
-  const [game, city, caseboard] = await Promise.all([
+test("renders separate accessible pixel sprites instead of a baked room image", async () => {
+  const [game, city, caseboard, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),
     readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
   ]);
   for (const name of ["ren", "aiko", "daichi", "mei", "haruto"]) {
     await access(new URL(`public/game/characters/${name}.png`, root));
   }
+  assert.match(styles, /image-rendering:pixelated/);
+  assert.match(styles, /\.ren-chibi\{width:96px;height:96px/);
+  assert.match(game, /alt="Pixel sprite of Ren Takahashi"/);
   assert.match(game, /src="\/game\/characters\/ren\.png"/);
-  assert.match(game, /alt="Chibi portrait of Ren Takahashi"/);
   assert.match(city, /PORTRAITS/);
   assert.match(caseboard, /src="\/game\/characters\/ren\.png"/);
   assert.doesNotMatch(game, /ren-apartment\.png/);

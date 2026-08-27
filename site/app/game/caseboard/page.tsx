@@ -70,7 +70,7 @@ export default function CaseboardPage() {
       </aside>
     </section>}
 
-    {recommendation && <section className="case-verdict"><Image className="verdict-chibi" src="/game/characters/ren.png" alt="Chibi portrait of Ren Takahashi" width={260} height={260} /><small>{recommendation.tone} / ADVISORY ONLY</small><h2>Ren reads the margin note.</h2><blockquote>{renResponse(snapshot, recommendation.id)}</blockquote><div><span>ACTIVE PLAN</span><b>{snapshot.portals.active_plan ?? "NONE"}</b><span>CANON STATUS</span><b>UNCHANGED</b></div><nav><button onClick={replay}>REOPEN CASEBOARD</button><Link href="/">WATCH REN'S NEXT MOVE</Link></nav></section>}
+    {recommendation && <section className="case-verdict"><Image className="verdict-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><small>{recommendation.tone} / ADVISORY ONLY</small><h2>Ren reads the margin note.</h2><blockquote>{renResponse(snapshot, recommendation.id)}</blockquote><div><span>ACTIVE PLAN</span><b>{snapshot.portals.active_plan ?? "NONE"}</b><span>CANON STATUS</span><b>UNCHANGED</b></div><nav><button onClick={replay}>REOPEN CASEBOARD</button><Link href="/">WATCH REN'S NEXT MOVE</Link></nav></section>}
     <footer className="game-footer"><b>LOCAL CASE SESSION</b><p>Recommendations do not begin investigations, consume a time slot, or modify Gate plans.</p><span>{cases.length} AUTHENTICATED CASES</span></footer>
   </main>;
 }

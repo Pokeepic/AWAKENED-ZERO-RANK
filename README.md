@@ -8,7 +8,7 @@ Ren Takahashi starts poor, unranked, and unknown. He decides how to work, recove
 
 | Status | Value |
 |---|---|
-| Release | `0.560.0` |
+| Release | `0.570.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -25,7 +25,7 @@ The current game contains three connected, authenticated chapters:
 2. **Tokyo route board** — examine current character whereabouts and suggest a destination.
 3. **Gate caseboard** — review portal evidence and offer a risk recommendation.
 
-The game now uses individual transparent chibi portraits for Ren, Aiko, Daichi, Mei, and Haruto inside an angular, dialogue-first social-sim interface. Locations remain separate presentation layers instead of being baked into character artwork. Player interactions remain local to the browser session: they do not advance time, change the save, begin investigations, or override Ren's autonomous decisions.
+The game now uses tiny transparent pixel chibi sprites for Ren, Aiko, Daichi, Mei, and Haruto inside an angular, dialogue-first social-sim interface. They render at overworld scale with crisp pixel edges; locations remain separate presentation layers instead of being baked into character artwork. Player interactions remain local to the browser session: they do not advance time, change the save, begin investigations, or override Ren's autonomous decisions.
 
 ## What the simulation models
 

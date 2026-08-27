@@ -4,6 +4,11 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.570.0 - Tiny pixel overworld cast
+
+- Replaced the large chibi portraits with five transparent, hard-pixel overworld sprites for Ren, Aiko, Daichi, Mei, and Haruto.
+- Reduced character presentation to 80–96 pixels, added crisp pixel rendering, and tightened the dialogue, route, and verdict layouts around the smaller cast.
+
 ## 0.560.0 - Chibi dialogue cast
 
 - Replaced the full-room generated illustration with five individual transparent chibi portraits for Ren, Aiko, Daichi, Mei, and Haruto.

@@ -145,7 +145,7 @@ export default function GamePage() {
     <section className="game-board" aria-label="Point-and-click scene">
       <div className="game-room">
         <div className="persona-room" aria-hidden="true"><i className="room-window" /><i className="room-bed" /><i className="room-desk" /><i className="room-notice" /></div>
-        <Image className="chibi-sprite ren-chibi" src="/game/characters/ren.png" alt="Chibi portrait of Ren Takahashi" width={420} height={420} priority />
+        <Image className="chibi-sprite ren-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} priority />
         {HOTSPOTS.map((hotspot, index) => <button
           key={hotspot.id}
           className={`hotspot hotspot-${index + 1} ${clues.includes(hotspot.id) ? "found" : ""}`}
