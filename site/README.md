@@ -2,7 +2,7 @@
 
 The production observer is a read-only window into Ren Takahashi's deterministic simulation. It renders authenticated static artifacts and never exposes controls that can alter Ren, the world, or simulation time.
 
-The completed observer surface presents current needs and intent, decision outcomes and reasons, hunter progression, equipment, finances, story history, relationships, portal investigations, and key memories from the same authenticated snapshot.
+The completed observer surface presents current needs and intent, decision outcomes and reasons, hunter progression, equipment, finances, story history, relationships, current whereabouts, a collapsible read-only Tokyo atlas, portal investigations, and key memories from the same authenticated snapshot.
 
 ## Requirements
 

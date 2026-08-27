@@ -142,6 +142,26 @@ export type SeasonalCalendarEvent = {
   title: string;
   place: string;
 };
+export type TokyoLocationProfile = {
+  name: string;
+  purpose: string;
+  ward: string;
+};
+export const TOKYO_LOCATION_CATALOG: readonly TokyoLocationProfile[] = [
+  { name: "Adachi Apartment", purpose: "Ren's home and recovery base", ward: "Adachi" },
+  { name: "Adachi Gate Zone", purpose: "Regulated low-rank Gate perimeter", ward: "Adachi" },
+  { name: "Akihabara Market", purpose: "Independent equipment and electronics market", ward: "Chiyoda" },
+  { name: "Arakawa Riverbank", purpose: "Training ground and neighborhood gathering place", ward: "Adachi" },
+  { name: "Asakusa Shrine District", purpose: "Weekly community and seasonal gathering place", ward: "Taito" },
+  { name: "Home", purpose: "A recurring character's private residence", ward: "Private" },
+  { name: "Kita-Senju", purpose: "Konbini work and everyday errands", ward: "Adachi" },
+  { name: "Kita-Senju Hunter Supply", purpose: "Budget equipment and field supplies", ward: "Adachi" },
+  { name: "Kita-Senju Station", purpose: "Rail interchange and evening meeting point", ward: "Adachi" },
+  { name: "Shinjuku Guild Annex", purpose: "Portal research and specialist records", ward: "Shinjuku" },
+  { name: "Tokyo Awakening Bureau", purpose: "Mandatory awakening assessment office", ward: "Central Tokyo" },
+  { name: "Tokyo Hunter Guild", purpose: "Registration, patrols, and hunter work", ward: "Central Tokyo" },
+  { name: "Ueno Library", purpose: "Study and Gate-safety research", ward: "Taito" },
+] as const;
 export const SEASONAL_EVENT_CATALOG: readonly SeasonalCalendarEvent[] = [
   { dayOfYear: 7, season: "Summer", title: "Tanabata evening", place: "Arakawa Riverbank" },
   { dayOfYear: 137, season: "Autumn", title: "Tsukimi river watch", place: "Arakawa Riverbank" },

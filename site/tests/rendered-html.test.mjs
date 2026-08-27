@@ -969,6 +969,23 @@ test("authenticates and renders schedule-consistent known whereabouts", async ()
   assert.match(page, /TOKYO TODAY/);
   assert.match(page, /KNOWN WHEREABOUTS/);
 });
+test("provides a complete read-only Tokyo location atlas", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  const names = data.TOKYO_LOCATION_CATALOG.map(({ name }) => name);
+  assert.equal(names.length, 13);
+  assert.equal(new Set(names).size, names.length);
+  assert.ok(names.includes(snapshot.protagonist.location));
+  assert.ok(snapshot.whereabouts.every(({ location }) => names.includes(location)));
+  assert.match(page, /INSPECT \{TOKYO_LOCATION_CATALOG\.length\} DOCUMENTED PLACES/);
+  assert.match(page, /NO KNOWN PRESENCE/);
+  assert.doesNotMatch(page, /onClick=/);
+  assert.match(css, /\.city-index summary\{cursor:pointer/);
+});
 test("requires canonical seasonal environment conditions", async () => {
   const data = await import("../app/observer-data.ts");
   const original = await readFile(

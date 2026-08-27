@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.400.0 - Read-only Tokyo atlas
+
+- Expanded Tokyo Today with a collapsible atlas of thirteen authored places spanning Ren's life and every recurring-character schedule.
+- Added concise ward and purpose context while highlighting only Ren and currently known character presence.
+- Used native disclosure controls for keyboard, touch, and screen-reader accessibility without introducing simulation controls or client-side world state.
+- Kept the long page compact by leaving the atlas closed until the observer chooses to inspect it.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.390.0 - Tokyo Today whereabouts
 
 - Advanced observer snapshots to schema 6 with authenticated, schedule-consistent whereabouts for every recurring character Ren currently knows.
