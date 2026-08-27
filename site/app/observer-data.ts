@@ -342,6 +342,23 @@ export function portalCaseFiles(snapshot: ObserverSnapshot): PortalCaseFile[] {
   });
 }
 
+export type MemoryArchiveEntry = KeyMemory & {
+  ageDays: number;
+  band: "formative" | "defining" | "retained";
+};
+
+export function memoryArchive(snapshot: ObserverSnapshot): MemoryArchiveEntry[] {
+  return snapshot.activity.key_memories.map((memory) => ({
+    ...memory,
+    ageDays: snapshot.clock.day - memory.day,
+    band: memory.importance >= 9
+      ? "formative"
+      : memory.importance >= 7
+        ? "defining"
+        : "retained",
+  }));
+}
+
 export type PresentationContract = {
   animation_cues: string[];
   comparison_schema_version: number;

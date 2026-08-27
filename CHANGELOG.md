@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.450.0 - Continuity memory archive
+
+- Reworked authenticated key memories into a numbered continuity archive with visible age and impact.
+- Added conservative formative, defining, and retained bands based only on authenticated importance values.
+- Preserved the canonical memory order and original prose without inferring characters, portals, or story meaning from text.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.440.0 - Portal investigation case files
 
 - Joined every discovered portal with its authenticated hazard profile, verified aftermath, investigation progress, risk, and active-plan state.

@@ -866,6 +866,22 @@ test("joins authenticated portal evidence into read-only case files", async () =
   assert.match(page, /collaboratorLocation/);
   assert.match(css, /\.portal-case\.active/);
 });
+test("presents authenticated key memories as a continuity archive", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  const archive = data.memoryArchive(snapshot);
+  assert.equal(archive.length, snapshot.activity.key_memories.length);
+  assert.deepEqual(archive.map(({ importance }) => importance), snapshot.activity.key_memories.map(({ importance }) => importance));
+  assert.deepEqual(archive.map(({ band }) => band), ["formative", "defining", "defining", "defining", "defining"]);
+  assert.equal(archive[0].ageDays, snapshot.clock.day - archive[0].day);
+  assert.match(page, /CONTINUITY ARCHIVE/);
+  assert.match(page, /memory\.ageDays/);
+  assert.match(css, /\.memories li\.formative>i/);
+});
 test("provides responsive contrast print and motion-safe presentation", async () => {
   const css = await readFile(new URL("app/globals.css", root), "utf8");
   assert.match(css, /@media\(max-width:1050px\)/);

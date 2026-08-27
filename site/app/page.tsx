@@ -12,6 +12,7 @@ import {
   SEASONAL_EVENT_CATALOG,
   TOKYO_LOCATION_CATALOG,
   currentScene,
+  memoryArchive,
   peopleDossiers,
   portalCaseFiles,
   storyTimeline,
@@ -136,6 +137,7 @@ export default function Home() {
   const arcTimeline = storyTimeline(snapshot);
   const people = peopleDossiers(snapshot);
   const portalCases = portalCaseFiles(snapshot);
+  const memories = memoryArchive(snapshot);
   const cityLocations = Array.from(
     snapshot.whereabouts.reduce((locations, person) => {
       const names = locations.get(person.location) ?? [];
@@ -192,7 +194,7 @@ export default function Home() {
 
       <section className="atlas"><h2 className="section-label">PORTAL ATLAS <span>{discovered.length}/{PORTAL_PROFILE_CATALOG.length} DOCUMENTED</span></h2><div className="atlas-grid">{PORTAL_PROFILE_CATALOG.map((portal) => { const known = discovered.includes(portal.name); return <article key={portal.name} className={known ? "known" : "unknown"}><small>{portal.environment.toUpperCase()} / {known ? "DOCUMENTED" : "UNDISCOVERED"}</small><b>{portal.name}</b><span>{known ? `HAZARD / ${portal.hazard}` : "HAZARD / CLASSIFIED"}</span><p>{known ? `VERIFIED EFFECT / ${portal.aftermath}` : "EFFECT / CLASSIFIED"}</p></article>; })}</div></section>
 
-      <section className="memories"><h2 className="section-label">KEY MEMORIES <span>{snapshot.activity.key_memories.length} RETAINED</span></h2>{snapshot.activity.key_memories.length === 0 ? <p className="empty-state">No defining memories have formed yet.</p> : <ol>{snapshot.activity.key_memories.map((memory) => <li key={`${memory.day}-${memory.summary}`}><time>DAY {memory.day} / IMPACT {memory.importance}</time><p>{memory.summary}</p></li>)}</ol>}</section>
+      <section className="memories"><h2 className="section-label">CONTINUITY ARCHIVE <span>{memories.length} KEY MEMORIES</span></h2>{memories.length === 0 ? <p className="empty-state">No defining memories have formed yet.</p> : <ol>{memories.map((memory, index) => <li className={memory.band} key={`${memory.day}-${memory.summary}`}><i aria-hidden="true">{String(index + 1).padStart(2, "0")}</i><div><time>DAY {memory.day} / {memory.ageDays === 0 ? "TODAY" : `${memory.ageDays} DAYS AGO`}</time><p>{memory.summary}</p></div><span>IMPACT {memory.importance}<small>{memory.band}</small></span></li>)}</ol>}</section>
     </div>
 
     <section className="integrity" aria-label="Observer integrity"><div><small>WORLD POSITION</small><b>DAY {snapshot.clock.day} / SLOT {currentSlot + 1} OF 4</b></div><code>SNAPSHOT / {snapshot.identity.digest.slice(0, 16)}...<br />CONTRACT / {contract.contract_sha256.slice(0, 16)}...</code><small>AUTHENTICATED STATIC ARTIFACTS / NO CONTROL CAPABILITIES</small></section>
