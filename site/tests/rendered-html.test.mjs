@@ -21,6 +21,20 @@ test("ships a local-only authenticated point-and-click prologue", async () => {
   assert.doesNotMatch(game, /fetch\([^)]*method\s*:/);
   assert.match(observer, /href="\/game"/);
 });
+test("completes the prologue through observe suggest and listen phases", async () => {
+  const [game, styles] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(game, /OBSERVE/);
+  assert.match(game, /SUGGEST/);
+  assert.match(game, /LISTEN/);
+  assert.match(game, /LOCAL NOTEBOOK/);
+  assert.match(game, /CANON STATUS/);
+  assert.match(game, /REPLAY THIS MORNING/);
+  assert.match(styles, /prefers-reduced-motion:reduce/);
+  assert.match(styles, /@keyframes ren-breathe/);
+});
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],
   [365, "arc_tokyo_fracture", "The Tokyo Fracture"],

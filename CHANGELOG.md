@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.520.0 - Complete prologue play loop
+
+- Added visible observe, suggest, and listen phases to clarify the point-and-click interaction model.
+- Added a local evidence notebook that reveals only inspected, authenticated scene details.
+- Added a dedicated scene conclusion with the chosen suggestion, thematic reading, replay, and return-to-chronicle actions.
+- Added subtle ambient room motion with the existing reduced-motion safeguard.
+- Preserved browser-local interaction, autonomous canon, and the **baseline remains better** RL verdict without a new experiment.
+
 ## 0.510.0 - Playable point-and-click prologue
 
 - Added a separate `/game` route with an accessible inspect-two-then-suggest interaction loop.

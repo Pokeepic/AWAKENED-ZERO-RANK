@@ -9,6 +9,7 @@ import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observe
 type Hotspot = {
   id: string;
   label: string;
+  cue: string;
   detail: (snapshot: ObserverSnapshot) => string;
 };
 
@@ -16,6 +17,7 @@ const HOTSPOTS: Hotspot[] = [
   {
     id: "field-bag",
     label: "FIELD BAG",
+    cue: "Preparedness",
     detail: (snapshot) => {
       const carried = Object.entries(snapshot.protagonist.equipment.inventory)
         .map(([name, count]) => `${name} x${count}`)
@@ -28,6 +30,7 @@ const HOTSPOTS: Hotspot[] = [
   {
     id: "rent-envelope",
     label: "RENT ENVELOPE",
+    cue: "Stability",
     detail: (snapshot) => {
       const reserve = snapshot.protagonist.resources.money - snapshot.economy.rent_cost;
       return snapshot.economy.rent_arrears > 0
@@ -38,6 +41,7 @@ const HOTSPOTS: Hotspot[] = [
   {
     id: "gate-notice",
     label: "GATE NOTICE",
+    cue: "Risk",
     detail: (snapshot) => snapshot.portals.active_plan
       ? `A route is already marked: ${snapshot.portals.active_plan}. The city alert level is ${snapshot.environment.gate_alert_level}.`
       : `No active Gate plan is pinned. The city alert level is ${snapshot.environment.gate_alert_level}.`,
@@ -45,9 +49,9 @@ const HOTSPOTS: Hotspot[] = [
 ];
 
 const SUGGESTIONS = [
-  { id: "gate", label: "Check the Gate plan" },
-  { id: "rent", label: "Protect tomorrow's rent" },
-  { id: "rest", label: "Recover before moving" },
+  { id: "gate", label: "Check the Gate plan", theme: "COURAGE" },
+  { id: "rent", label: "Protect tomorrow's rent", theme: "CAUTION" },
+  { id: "rest", label: "Recover before moving", theme: "CARE" },
 ] as const;
 
 function responseFor(snapshot: ObserverSnapshot, suggestion: string) {
@@ -72,6 +76,7 @@ export default function GamePage() {
   const [failed, setFailed] = useState(false);
   const [clues, setClues] = useState<string[]>([]);
   const [activeClue, setActiveClue] = useState<string | null>(null);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [response, setResponse] = useState<string | null>(null);
 
   useEffect(() => {
@@ -105,7 +110,13 @@ export default function GamePage() {
   function replay() {
     setClues([]);
     setActiveClue(null);
+    setSelectedSuggestion(null);
     setResponse(null);
+  }
+
+  function suggest(id: string) {
+    setSelectedSuggestion(id);
+    setResponse(responseFor(snapshot!, id));
   }
 
   if (failed) return <main id="chronicle" className="game-loading"><p>PROLOGUE OFFLINE</p><h1>The chronicle could not be verified.</h1><Link href="/">Return to Observer</Link></main>;
@@ -113,14 +124,21 @@ export default function GamePage() {
 
   const scene = currentScene(snapshot);
   const active = HOTSPOTS.find((hotspot) => hotspot.id === activeClue);
+  const selected = SUGGESTIONS.find((suggestion) => suggestion.id === selectedSuggestion);
   const unlocked = clues.length >= 2;
+  const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>PLAYABLE PROLOGUE / v0.510</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>PLAYABLE PROLOGUE / v0.520</span></header>
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {snapshot.clock.day} / {snapshot.clock.slot} / {snapshot.protagonist.location}</small>
       <h1 id="game-title">A quiet room.<br />A life already moving.</h1>
       <p>Inspect the scene. You may offer one thought. Ren decides what it means.</p>
+      <ol className="game-phases" aria-label="Scene progress">
+        <li className={phase >= 1 ? "active" : ""}><b>01</b><span>OBSERVE</span></li>
+        <li className={phase >= 2 ? "active" : ""}><b>02</b><span>SUGGEST</span></li>
+        <li className={phase >= 3 ? "active" : ""}><b>03</b><span>LISTEN</span></li>
+      </ol>
     </section>
 
     <section className="game-board" aria-label="Point-and-click scene">
@@ -142,12 +160,27 @@ export default function GamePage() {
         {active && <div className="game-copy"><small>OBSERVATION / {active.label}</small><h2>{active.label}</h2><p>{active.detail(snapshot)}</p></div>}
         <div className="suggestions">
           <small>OFFER ONE THOUGHT</small>
-          {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null} onClick={() => setResponse(responseFor(snapshot, suggestion.id))}>{suggestion.label}</button>)}
+          {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null} onClick={() => suggest(suggestion.id)}>{suggestion.label}</button>)}
           {!unlocked && <p>Inspect {2 - clues.length} more point{2 - clues.length === 1 ? "" : "s"} in the room.</p>}
         </div>
-        {response && <blockquote><small>REN'S RESPONSE</small><p>{response}</p><button onClick={replay}>REPLAY SCENE</button></blockquote>}
+        {response && <blockquote><small>REN'S RESPONSE</small><p>{response}</p></blockquote>}
       </aside>
     </section>
+
+    <section className="evidence-notebook" aria-labelledby="notebook-title">
+      <header><small>LOCAL NOTEBOOK</small><h2 id="notebook-title">What you noticed</h2><p>Evidence is revealed only after inspection and is cleared when the scene is replayed.</p></header>
+      <ol>{HOTSPOTS.map((hotspot, index) => {
+        const found = clues.includes(hotspot.id);
+        return <li key={hotspot.id} className={found ? "found" : undefined}><b>{String(index + 1).padStart(2, "0")}</b><div><small>{hotspot.cue}</small><span>{found ? hotspot.label : "UNEXAMINED"}</span>{found && <p>{hotspot.detail(snapshot)}</p>}</div></li>;
+      })}</ol>
+    </section>
+
+    {response && selected && <section className="scene-conclusion" aria-labelledby="conclusion-title">
+      <small>PROLOGUE COMPLETE / {selected.theme}</small>
+      <h2 id="conclusion-title">You offered a thought.<br />Ren kept the choice.</h2>
+      <div><p><b>YOUR SUGGESTION</b>{selected.label}</p><p><b>CANON STATUS</b>Unchanged — the next autonomous turn remains Ren's.</p></div>
+      <nav aria-label="Prologue completion actions"><button onClick={replay}>REPLAY THIS MORNING</button><Link href="/">RETURN TO LIVE CHRONICLE</Link></nav>
+    </section>}
 
     <footer className="game-footer"><b>LOCAL PLAY ONLY</b><p>Your inspection and suggestion stay in this browser session. The simulator remains autonomous and unchanged.</p><span>AUTHENTICATED SNAPSHOT / SEED {snapshot.seed}</span></footer>
   </main>;
