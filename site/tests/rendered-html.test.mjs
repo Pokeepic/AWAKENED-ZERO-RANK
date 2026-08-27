@@ -807,7 +807,7 @@ test("explains valid empty chronicle collections", async () => {
   );
   assert.match(
     page,
-    /relationships\.length===0&&<p className="empty-state">No trusted relationships have formed yet\.<\/p>/,
+    /people\.length===0&&<p className="empty-state">No trusted relationships have formed yet\.<\/p>/,
   );
   assert.match(
     page,
@@ -983,6 +983,23 @@ test("authenticates and renders schedule-consistent known whereabouts", async ()
   assert.equal(isObserverSnapshot(unknown), false);
   assert.match(page, /TOKYO TODAY/);
   assert.match(page, /KNOWN WHEREABOUTS/);
+});
+test("joins authenticated relationships whereabouts and latest exchanges", async () => {
+  const [data, page, css, snapshot] = await Promise.all([
+    import("../app/observer-data.ts"),
+    readFile(new URL("app/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+  ]);
+  const dossiers = data.peopleDossiers(snapshot);
+  assert.deepEqual(dossiers.map(({ relationship }) => relationship.name), snapshot.relationships.map(({ name }) => name));
+  assert.equal(dossiers[0].location, "Tokyo Hunter Guild");
+  assert.equal(dossiers[0].signal, "Growing familiarity");
+  assert.equal(dossiers[0].lastConversation.day, 10);
+  assert.equal(dossiers[1].lastConversation, null);
+  assert.match(page, /LAST EXCHANGE/);
+  assert.match(page, /No complete exchange recorded yet/);
+  assert.match(css, /\.last-contact\{padding-left:/);
 });
 test("provides a complete read-only Tokyo location atlas", async () => {
   const [data, page, css, snapshot] = await Promise.all([

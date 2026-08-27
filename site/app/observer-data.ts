@@ -190,6 +190,36 @@ export function currentScene(snapshot: ObserverSnapshot): CurrentScene {
     pressure,
   };
 }
+export type PersonDossier = {
+  lastConversation: Conversation | null;
+  location: string;
+  relationship: Relationship;
+  signal: string;
+};
+export function peopleDossiers(snapshot: ObserverSnapshot): PersonDossier[] {
+  return snapshot.relationships.map((relationship) => {
+    const lastConversation = [...snapshot.conversations]
+      .reverse()
+      .find(({ npc_name }) => npc_name === relationship.name) ?? null;
+    const signal = relationship.tension >= 35
+      ? "Tension rising"
+      : relationship.loyalty >= 50
+        ? "Loyal bond"
+        : relationship.trust >= 25
+          ? "Trusted bond"
+          : relationship.familiarity >= 15
+            ? "Growing familiarity"
+            : "New connection";
+    return {
+      lastConversation,
+      location: snapshot.whereabouts.find(({ name }) =>
+        name === relationship.name
+      )!.location,
+      relationship,
+      signal,
+    };
+  });
+}
 export const SEASONAL_EVENT_CATALOG: readonly SeasonalCalendarEvent[] = [
   { dayOfYear: 7, season: "Summer", title: "Tanabata evening", place: "Arakawa Riverbank" },
   { dayOfYear: 137, season: "Autumn", title: "Tsukimi river watch", place: "Arakawa Riverbank" },

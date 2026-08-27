@@ -12,6 +12,7 @@ import {
   SEASONAL_EVENT_CATALOG,
   TOKYO_LOCATION_CATALOG,
   currentScene,
+  peopleDossiers,
   storyTimeline,
   dailyBriefing,
   nextSeasonalEvent,
@@ -133,6 +134,7 @@ export default function Home() {
   const briefing = dailyBriefing(snapshot);
   const scene = currentScene(snapshot);
   const arcTimeline = storyTimeline(snapshot);
+  const people = peopleDossiers(snapshot);
   const cityLocations = Array.from(
     snapshot.whereabouts.reduce((locations, person) => {
       const names = locations.get(person.location) ?? [];
@@ -180,7 +182,7 @@ export default function Home() {
 
       <section className="calendar"><h2 className="section-label">SEASONAL CALENDAR <span>REPEATS YEARLY</span></h2><div className="calendar-next"><small>NEXT MOMENT / DAY {nextSeasonal.day}</small><b>{nextSeasonal.title}</b><strong>{nextSeasonal.daysRemaining}<small>DAYS</small></strong></div><div className="calendar-grid">{SEASONAL_EVENT_CATALOG.map((event) => <article key={event.title} className={event.title === nextSeasonal.title ? "next" : undefined}><small>{event.season.toUpperCase()} / D{event.dayOfYear}</small><b>{event.title}</b><span>{event.place}</span></article>)}</div><p>These world events recur without giving the observer control. Ren's condition and known relationships shape who shares them.</p></section>
 
-      <section className="people"><h2 className="section-label">PEOPLE IN ORBIT <span>{snapshot.relationships.length} KNOWN</span></h2>{snapshot.relationships.length===0&&<p className="empty-state">No trusted relationships have formed yet.</p>}{snapshot.relationships.map((relationship) => <article key={relationship.name}><i aria-hidden="true">{relationship.name.split(" ").map((part) => part[0]).join("")}</i><div><b>{relationship.name}</b><small>{relationship.role}</small></div><dl><div><dt>TRUST</dt><dd>{relationship.trust}</dd></div><div><dt>FAMILIAR</dt><dd>{relationship.familiarity}</dd></div><div><dt>LOYAL</dt><dd>{relationship.loyalty}</dd></div><div><dt>TENSION</dt><dd>{relationship.tension}</dd></div></dl></article>)}</section>
+      <section className="people"><h2 className="section-label">PEOPLE IN ORBIT <span>{people.length} KNOWN</span></h2>{people.length===0&&<p className="empty-state">No trusted relationships have formed yet.</p>}{people.map(({ relationship, location, signal, lastConversation }) => <article key={relationship.name}><i aria-hidden="true">{relationship.name.split(" ").map((part) => part[0]).join("")}</i><div className="person-name"><b>{relationship.name}</b><small>{relationship.role}</small><span>{location} / {signal}</span></div><div className="last-contact">{lastConversation ? <><small>LAST EXCHANGE / DAY {lastConversation.day} / {lastConversation.reaction}</small><p>“{lastConversation.npc_line}”</p></> : <><small>LAST EXCHANGE</small><p>No complete exchange recorded yet.</p></>}</div><dl><div><dt>TRUST</dt><dd>{relationship.trust}</dd></div><div><dt>FAMILIAR</dt><dd>{relationship.familiarity}</dd></div><div><dt>LOYAL</dt><dd>{relationship.loyalty}</dd></div><div><dt>TENSION</dt><dd>{relationship.tension}</dd></div></dl></article>)}</section>
 
       <section className="whereabouts"><h2 className="section-label">TOKYO TODAY <span>{snapshot.whereabouts.length + 1} LIVES LOCATED</span></h2><article className="current-scene"><div><small>CURRENT SCENE / {scene.place.ward.toUpperCase()}</small><h3>{scene.place.name}</h3><p>{scene.place.purpose}</p></div><dl><div><dt>ATMOSPHERE</dt><dd>{scene.atmosphere}</dd></div><div><dt>LOCAL PRESENCE</dt><dd>{scene.presence}</dd></div><div><dt>PRESSURE</dt><dd>{scene.pressure}</dd></div></dl></article><div className="city-board"><article className="ren-location"><small>REN / CURRENT</small><b>{p.location}</b><span>{p.name}</span></article>{cityLocations.map(([location, names]) => <article key={location}><small>KNOWN WHEREABOUTS</small><b>{location}</b><span>{names.join(" / ")}</span></article>)}</div><details className="city-index"><summary>INSPECT {TOKYO_LOCATION_CATALOG.length} DOCUMENTED PLACES <span>READ ONLY</span></summary><div>{TOKYO_LOCATION_CATALOG.map((place) => { const names = cityLocations.find(([location]) => location === place.name)?.[1] ?? []; const renHere = p.location === place.name; return <article key={place.name} className={renHere || names.length > 0 ? "occupied" : undefined}><small>{place.ward.toUpperCase()}</small><b>{place.name}</b><p>{place.purpose}</p><span>{renHere ? `REN${names.length ? ` / ${names.join(" / ")}` : ""}` : names.length ? names.join(" / ") : "NO KNOWN PRESENCE"}</span></article>; })}</div></details></section>
 

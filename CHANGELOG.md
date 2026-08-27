@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.430.0 - Recurring-character dossiers
+
+- Joined each authenticated relationship with its current known whereabouts and latest complete recorded exchange.
+- Added conservative bond signals derived from existing trust, familiarity, loyalty, and tension values.
+- Reworked People in Orbit into responsive cast dossiers while preserving all original relationship metrics and valid empty states.
+- Preserved simulation mechanics, observer schemas, and the honest **baseline remains better** RL verdict without running a new experiment.
+
 ## 0.420.0 - Three-year arc timeline
 
 - Added a collapsible six-anchor timeline for the fixed three-year story structure.
