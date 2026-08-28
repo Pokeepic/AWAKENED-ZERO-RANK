@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.960.0 - First arc evidence objective
+
+- Made the riskier Gate investigation secure the first arc's required evidence while retaining its higher health and energy cost.
+- Added live evidence status to the current arc deadline strip so the player can see whether the objective is still missing.
+- Recorded the planned cutscene moments at irreversible story transitions without adding presentation before their triggers are playable.
+
 ## 0.950.0 - Earnable skill mastery
 
 - Added explicit zero-to-100 mastery values for Residual Read and the later Vector Step awakening.

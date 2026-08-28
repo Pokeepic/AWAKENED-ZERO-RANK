@@ -42,6 +42,8 @@ export function GameHud({ state, current, onNewGame }: { state: RpgState; curren
   };
 
   const arc = currentCampaignArc(state.day);
+  const arcEvidence = { "worthless-awakening": "arc-i-evidence", "adachi-countdown": "arc-ii-evidence", "false-orders": "arc-iii-evidence", "black-gate": "black-gate-temporal-residue" }[arc.id];
+  const evidenceSecured = state.completedEvents.includes(arcEvidence) || state.legacyClues.includes(arcEvidence);
   const timelineLabel = ["", "FIRST TIMELINE", "SECOND TIMELINE", "FINAL TIMELINE"][state.timeline];
   const finalConditions = state.status === "year-ending" ? transmigrationConditions(state) : [];
 
@@ -51,7 +53,7 @@ export function GameHud({ state, current, onNewGame }: { state: RpgState; curren
     <div><small>CONDITION</small><b>HP {state.health} · EN {state.energy}</b><span>RR {state.skillMastery["Residual Read"] ?? 0}%{state.skillMastery["Vector Step"] !== undefined ? ` · VS ${state.skillMastery["Vector Step"]}%` : ""}</span></div>
     <div><small>FUNDS</small><b>¥{state.money.toLocaleString()}</b><span>{state.lastAction}</span></div>
     {onNewGame && <button onClick={() => setConfirmingReset(true)} aria-haspopup="dialog">NEW GAME</button>}
-  </section><section className="campaign-deadline" aria-label="Current story deadline"><span>ARC {arc.id === "worthless-awakening" ? "I" : arc.id === "adachi-countdown" ? "II" : arc.id === "false-orders" ? "III" : "IV"}</span><b>{arc.title}</b><small>DEADLINE · DAY {arc.deadline} · {Math.max(0, arc.deadline - state.day)} DAYS REMAIN</small></section><details className="rpg-journal">
+  </section><section className={`campaign-deadline ${evidenceSecured ? "secured" : "pending"}`} aria-label="Current story deadline"><span>ARC {arc.id === "worthless-awakening" ? "I" : arc.id === "adachi-countdown" ? "II" : arc.id === "false-orders" ? "III" : "IV"}</span><b>{arc.title}</b><small>DAY {arc.deadline} · {Math.max(0, arc.deadline - state.day)} DAYS · EVIDENCE {evidenceSecured ? "SECURED" : "MISSING"}</small></section><details className="rpg-journal">
     <summary>CAMPAIGN JOURNAL <span>LOCAL SAVE · {state.journal.length} / 12</span></summary>
     <div className="save-status"><b>AUTOSAVE ACTIVE</b><span>DAY {state.day} · {state.slot} · {state.location}</span><small>Every committed action is saved on this device.</small></div>
     {state.journal.length === 0 ? <p>No actions recorded yet. Ren&apos;s first committed choice will appear here.</p> : <ol>{[...state.journal].reverse().map((entry, index) => <li key={`${entry.day}-${entry.slot}-${index}`}><b>DAY {entry.day} / {entry.slot}</b><span>{entry.action}</span><small>{entry.location}</small></li>)}</ol>}

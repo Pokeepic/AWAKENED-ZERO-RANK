@@ -56,3 +56,7 @@ The final year opens the widest set of people, places, overseas routes, and lott
 - **Zero Rank:** Ren survives with a trusted network; the skill dismissed as worthless connects the evidence and people required to end the Black Gate without erasing the lives built across the three years.
 
 The campaign's dramatic progression is: **the first year teaches Ren what will happen; the second teaches him what he can change; the third asks what he is willing to lose.**
+
+## Cutscene roadmap
+
+Authored cutscenes belong at irreversible transitions rather than routine travel: the initial awakening, each arc deadline, ordinary death, the Black Gate reveal, successful transmigration, the second awakening, and each final ending. They should use the established visual-novel character art and location backgrounds, with bespoke animation added only after the underlying trigger and consequence are playable.

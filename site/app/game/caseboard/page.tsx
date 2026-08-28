@@ -63,7 +63,7 @@ export default function CaseboardPage() {
     setRecommendation(item);
     const residual = rpg!.skillMastery["Residual Read"] ?? 0;
     const effects = item.id === "prepare" ? { energy: rpg!.energy - 8, location: "Adachi Gate Zone", skillMastery: { ...rpg!.skillMastery, "Residual Read": Math.min(100, residual + 4) } }
-      : item.id === "investigate" ? { energy: rpg!.energy - 12, health: rpg!.health - 2, location: "Adachi Gate Zone", skillMastery: { ...rpg!.skillMastery, "Residual Read": Math.min(100, residual + 8) } }
+      : item.id === "investigate" ? { energy: rpg!.energy - 12, health: rpg!.health - 2, location: "Adachi Gate Zone", skillMastery: { ...rpg!.skillMastery, "Residual Read": Math.min(100, residual + 8) }, completedEvents: [...new Set([...rpg!.completedEvents, "arc-i-evidence"])] }
       : { energy: rpg!.energy - 3, location: "Ren's Apartment" };
     setRpg(takeRpgAction(rpg!, item.label, effects));
   }

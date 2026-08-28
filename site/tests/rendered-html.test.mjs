@@ -311,6 +311,8 @@ test("models a lethal one-year campaign with conditional final-day transmigratio
   assert.match(state, /state\.skillMastery\["Vector Step"\] === 100/);
   assert.match(hud, /RR \{state\.skillMastery/);
   assert.match(field, /Residual Read.*\+ 12/s);
+  assert.match(hud, /EVIDENCE.*SECURED/);
+  assert.match(hud, /arc-i-evidence/);
   for (const requirement of ["skillMastery", "Black Gate Core", "read-the-collapsing-gate", "busan-signal-decoded"]) assert.match(state, new RegExp(requirement));
   assert.match(hud, /FIRST TIMELINE/);
   assert.match(hud, /RUN TERMINATED/);
