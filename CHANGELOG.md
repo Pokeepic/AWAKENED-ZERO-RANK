@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.750.0 - Natural canon-event flow
+
+- Removed the standalone Story tab and chapter index from the Ren RPG.
+- Made the Aiko scene trigger automatically after the first Gate resolves and consume the remainder of that day.
+- Made Daichi's debrief trigger naturally when Ren later travels to the Hunter Guild, consuming one time slot.
+- Centralized deterministic, one-time story criteria in the local save layer without changing the autonomous Observer timeline.
+
 ## 0.740.0 - Canon story index
 
 - Added a dedicated Story hub for completed, available, and locked canon events.

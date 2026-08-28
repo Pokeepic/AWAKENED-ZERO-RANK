@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.740.0` |
+| Release | `0.750.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -30,7 +30,7 @@ The current game contains six connected, authenticated chapters:
 
 Exploration uses tiny transparent pixel chibi sprites, while canon and bond scenes switch into a visual-novel presentation with full-size illustrated characters and location-specific backgrounds. After the Gate at Adachi Station now leads into Daichi's patrol debrief inside the Tokyo Hunter Guild. Dialogue advances by click, Enter, or Space, numbered choices support keys 1–3, and an expandable history preserves each scene's lines. Canon events unlock in sequence and cannot be replayed for duplicate rewards. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
 
-The **Story** tab opens a central canon-event index showing completed, available, and locked chapters, current local bond levels, and the next authenticated future story anchor without pretending unfinished chapters are playable.
+Canon scenes now flow out of normal RPG play instead of a chapter menu. Resolving the first Gate automatically triggers Aiko's station scene and consumes the rest of that day; later, traveling to the Hunter Guild after that scene automatically triggers Daichi's one-slot debrief. Each event remains one-time and criteria-driven.
 
 ## What the simulation models
 

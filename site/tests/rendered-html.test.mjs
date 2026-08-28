@@ -185,7 +185,7 @@ test("ships illustrated Gate files and a four-slot local RPG save", async () => 
   assert.match(caseboard, /className="case-art"/);
   assert.match(state, /Morning.*Afternoon.*Evening.*Late Night/);
   assert.match(state, /localStorage/);
-  assert.match(state, /wraps \? 1 : 0/);
+  assert.match(state, /Math\.floor\(elapsed \/ RPG_SLOTS\.length\)/);
 });
 test("renders a shared persistent RPG HUD with a safe new-game reset", async () => {
   const [hud, state, game, city, caseboard, styles] = await Promise.all([
@@ -210,8 +210,9 @@ test("links every RPG chapter and validates versioned local saves", async () => 
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/layout.tsx", root), "utf8"),
   ]);
-  for (const route of ["/game", "/game/city", "/game/caseboard", "/game/field", "/game/story"]) assert.match(hud, new RegExp(`location\\.assign\\("${route.replaceAll("/", "\\/")}"\\)`));
+  for (const route of ["/game", "/game/city", "/game/caseboard", "/game/field"]) assert.match(hud, new RegExp(`location\\.assign\\("${route.replaceAll("/", "\\/")}"\\)`));
   assert.match(hud, /aria-current/);
+  assert.doesNotMatch(hud, /STORY/);
   assert.match(state, /saveVersion: 4/);
   assert.match(state, /isRpgState/);
   assert.match(state, /Number\.isSafeInteger/);
@@ -239,7 +240,7 @@ test("adds a post-Gate social chapter with local bond consequences", async () =>
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(field, /href="\/game\/evening"/);
+  assert.match(field, /A canon event has triggered/);
   assert.match(evening, /Aiko Sato/);
   assert.match(evening, /RESPONSES\.map/);
   assert.match(evening, /takeRpgAction/);
@@ -290,7 +291,7 @@ test("continues canon progression into an authenticated Daichi guild debrief", a
     readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(evening, /href="\/game\/debrief"/);
+  assert.doesNotMatch(evening, /href="\/game\/debrief"/);
   assert.match(debrief, /const PREREQUISITE = "after-the-gate-aiko"/);
   assert.match(debrief, /guild-debrief-daichi/);
   assert.match(debrief, /Daichi Mori/);
@@ -301,22 +302,27 @@ test("continues canon progression into an authenticated Daichi guild debrief", a
   assert.match(styles, /\.vn-character\.daichi/);
   for (const asset of ["hunter-guild-briefing", "daichi-full"]) await access(new URL(`public/game/visual-novel/${asset}.png`, root));
 });
-test("indexes completed available and locked canon events in one story hub", async () => {
-  const [story, hud, styles] = await Promise.all([
-    readFile(new URL("app/game/story/page.tsx", root), "utf8"),
+test("triggers canon events from play criteria and charges their time cost", async () => {
+  const [state, field, city, evening, debrief, hud] = await Promise.all([
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/game/field/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/evening/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/debrief/page.tsx", root), "utf8"),
     readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
-    readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(hud, /location\.assign\("\/game\/story"\)/);
-  assert.match(story, /const EVENTS/);
-  assert.match(story, /after-the-gate-aiko/);
-  assert.match(story, /guild-debrief-daichi/);
-  assert.match(story, /COMPLETE/);
-  assert.match(story, /AVAILABLE/);
-  assert.match(story, /LOCKED/);
-  assert.match(story, /snapshot\.story\.next/);
-  assert.doesNotMatch(story, /takeRpgAction/);
-  assert.match(styles, /\.story-event-grid/);
+  assert.match(state, /pendingStoryRoute/);
+  assert.match(state, /survivedFirstGate/);
+  assert.match(state, /state\.location === "Tokyo Hunter Guild"/);
+  assert.match(state, /remainingDaySlots/);
+  assert.match(hud, /useEffect/);
+  assert.match(hud, /pendingStoryRoute\(state\)/);
+  assert.match(field, /Aiko is waiting/);
+  assert.match(city, /Traveled to/);
+  assert.match(evening, /remainingDaySlots\(rpg\)/);
+  assert.match(evening, /consumes the rest of Ren/);
+  assert.match(debrief, /consumes one time slot/);
+  assert.doesNotMatch(hud, /\/game\/story/);
 });
 test("fits the apartment workspace into tabs without duplicate result sections", async () => {
   const [game, styles] = await Promise.all([

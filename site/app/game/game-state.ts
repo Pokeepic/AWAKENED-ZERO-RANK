@@ -87,14 +87,32 @@ export function resetRpgState(snapshot: ObserverSnapshot): RpgState {
   return initial;
 }
 
-export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location" | "bonds" | "completedEvents">>): RpgState {
+export function pendingStoryRoute(state: RpgState): string | null {
+  const survivedFirstGate = state.journal.some((entry) => [
+    "Cleared the fracture sentinel",
+    "Retreated from the fracture sentinel",
+    "Withdrew from the fracture sentinel",
+  ].includes(entry.action));
+  if (survivedFirstGate && !state.completedEvents.includes("after-the-gate-aiko")) return "/game/evening";
+  if (state.completedEvents.includes("after-the-gate-aiko")
+    && !state.completedEvents.includes("guild-debrief-daichi")
+    && state.location === "Tokyo Hunter Guild") return "/game/debrief";
+  return null;
+}
+
+export function remainingDaySlots(state: RpgState): number {
+  return RPG_SLOTS.length - RPG_SLOTS.indexOf(state.slot);
+}
+
+export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location" | "bonds" | "completedEvents">>, timeSlots = 1): RpgState {
+  const slots = Math.max(1, Math.min(RPG_SLOTS.length, Math.trunc(timeSlots)));
   const index = RPG_SLOTS.indexOf(state.slot);
-  const wraps = index === RPG_SLOTS.length - 1;
+  const elapsed = index + slots;
   const next = {
     ...state,
     ...effects,
-    day: state.day + (wraps ? 1 : 0),
-    slot: RPG_SLOTS[(index + 1) % RPG_SLOTS.length],
+    day: state.day + Math.floor(elapsed / RPG_SLOTS.length),
+    slot: RPG_SLOTS[elapsed % RPG_SLOTS.length],
     turns: state.turns + 1,
     lastAction: action,
     journal: [...state.journal, { day: state.day, slot: state.slot, action, location: effects.location ?? state.location }].slice(-12),

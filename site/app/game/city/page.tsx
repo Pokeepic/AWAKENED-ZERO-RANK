@@ -69,7 +69,8 @@ export default function CityRoutePage() {
   function reset() { setInspected([]); setActive(null); setChoice(null); }
   function chooseRoute(name: string, location: string) {
     setChoice({ name, location });
-    setRpg(takeRpgAction(rpg!, `Traveled to ${location}`, { location, energy: rpg!.energy - 6 }));
+    const next = takeRpgAction(rpg!, `Traveled to ${location}`, { location, energy: rpg!.energy - 6 });
+    setRpg(next);
   }
 
   if (failed) return <main id="chronicle" className="game-loading"><p>ROUTE BOARD OFFLINE</p><h1>The chronicle could not be verified.</h1><Link href="/game">Return to prologue</Link></main>;

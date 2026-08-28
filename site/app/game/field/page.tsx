@@ -48,10 +48,12 @@ export default function FieldPage() {
     const health = Math.max(0, rpg.health - (enemyHp === 0 ? 0 : move.retaliation));
     const energy = Math.max(0, rpg.energy - move.cost);
     if (enemyHp === 0) {
-      setRpg(takeRpgAction({ ...rpg, health, energy }, "Cleared the fracture sentinel", { health, energy, money: rpg.money + 1800, location: "Glass Office Labyrinth" }));
+      const next = takeRpgAction({ ...rpg, health, energy }, "Cleared the fracture sentinel", { health, energy, money: rpg.money + 1800, location: "Glass Office Labyrinth" });
+      setRpg(next);
       setBattle((current) => ({ ...current, enemyHp, log: [...current.log, move.note, "The sentinel collapses. The corridor stabilizes."], resolved: "victory" }));
     } else if (health === 0) {
-      setRpg(takeRpgAction({ ...rpg, health: 20, energy }, "Retreated from the fracture sentinel", { health: 20, energy, location: "Adachi Gate Zone" }));
+      const next = takeRpgAction({ ...rpg, health: 20, energy }, "Retreated from the fracture sentinel", { health: 20, energy, location: "Adachi Gate Zone" });
+      setRpg(next);
       setBattle((current) => ({ ...current, enemyHp, log: [...current.log, move.note, "Ren breaks contact before the Gate can close behind him."], resolved: "retreat" }));
     } else {
       setRpg({ ...rpg, health, energy });
@@ -61,7 +63,8 @@ export default function FieldPage() {
 
   function retreat() {
     if (!rpg || battle.resolved) return;
-    setRpg(takeRpgAction(rpg, "Withdrew from the fracture sentinel", { energy: Math.max(0, rpg.energy - 2), location: "Adachi Gate Zone" }));
+    const next = takeRpgAction(rpg, "Withdrew from the fracture sentinel", { energy: Math.max(0, rpg.energy - 2), location: "Adachi Gate Zone" });
+    setRpg(next);
     setBattle((current) => ({ ...current, log: [...current.log, "Ren marks the pattern and withdraws before the corridor seals."], resolved: "retreat" }));
   }
 
@@ -75,7 +78,7 @@ export default function FieldPage() {
     <section className="field-intro"><small>{caseFile?.portal_name ?? "VERIFIED GATE"} / RISK {caseFile?.risk ?? "UNKNOWN"}</small><h1>Hold the line.</h1><p>Battle moves are tactical turns. The RPG clock advances once when Ren wins or retreats.</p></section>
     <section className="field-stage" aria-label="Gate battle">
       <div className="field-arena"><Image src="/game/maps/adachi-fringe.png" alt="Pixel-art Gate exclusion zone" fill sizes="(max-width: 800px) 100vw, 70vw" priority /><div className="field-shade" /><span className="field-ren"><Image src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><b>REN</b></span><span className="field-enemy" aria-label="Fracture sentinel"><i /><i /><i /><b>FRACTURE SENTINEL</b></span></div>
-      <aside className="battle-panel" aria-live="polite"><div className="battle-bars"><span>REN / HP {rpg.health}</span><meter min="0" max="100" value={rpg.health} /><span>SENTINEL / HP {battle.enemyHp}</span><meter min="0" max="60" value={battle.enemyHp} /></div><small>ROUND {battle.round}</small><p>{battle.log.at(-1)}</p>{!battle.resolved ? <div className="battle-actions">{Object.entries(MOVES).map(([id, move]) => <button key={id} disabled={rpg.energy < move.cost} onClick={() => act(id as MoveId)}><b>{move.label}</b><span>{move.damage} DMG / {move.cost} EN</span></button>)}<button className="retreat" onClick={retreat}><b>TACTICAL RETREAT</b><span>2 EN / SAFE EXIT</span></button></div> : <div className={`battle-result ${battle.resolved}`}><small>{battle.resolved === "victory" ? "GATE SECURED" : "TACTICAL RETREAT"}</small><h2>{battle.resolved === "victory" ? "+¥1,800 / TIME ADVANCED" : "REN SURVIVED / TIME ADVANCED"}</h2><nav><Link className="primary" href="/game/evening">CONTINUE TO EVENING</Link><Link href="/game/caseboard">REVIEW CASEBOARD</Link><Link href="/game/city">RETURN TO TOKYO</Link></nav></div>}</aside>
+      <aside className="battle-panel" aria-live="polite"><div className="battle-bars"><span>REN / HP {rpg.health}</span><meter min="0" max="100" value={rpg.health} /><span>SENTINEL / HP {battle.enemyHp}</span><meter min="0" max="60" value={battle.enemyHp} /></div><small>ROUND {battle.round}</small><p>{battle.log.at(-1)}</p>{!battle.resolved ? <div className="battle-actions">{Object.entries(MOVES).map(([id, move]) => <button key={id} disabled={rpg.energy < move.cost} onClick={() => act(id as MoveId)}><b>{move.label}</b><span>{move.damage} DMG / {move.cost} EN</span></button>)}<button className="retreat" onClick={retreat}><b>TACTICAL RETREAT</b><span>2 EN / SAFE EXIT</span></button></div> : <div className={`battle-result ${battle.resolved}`}><small>{battle.resolved === "victory" ? "GATE SECURED" : "TACTICAL RETREAT"}</small><h2>{battle.resolved === "victory" ? "+¥1,800 / TIME ADVANCED" : "REN SURVIVED / TIME ADVANCED"}</h2><p>A canon event has triggered. Aiko is waiting at Adachi Station…</p></div>}</aside>
     </section>
     <footer className="game-footer"><b>DETERMINISTIC FIELD ENCOUNTER</b><p>No random rolls. Every move shows its exact cost and effect.</p><span>ENERGY {rpg.energy}</span></footer>
   </main>;
