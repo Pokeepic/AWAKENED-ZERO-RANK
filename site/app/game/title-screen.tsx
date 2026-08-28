@@ -7,13 +7,14 @@ import Link from "next/link";
 import { loadGamePreferences, saveGamePreferences, type GamePreferences } from "./game-preferences";
 import type { RpgState } from "./game-state";
 
-export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState; onContinue: () => void; onNewGame: () => void }) {
+export function TitleScreen({ state, onContinue, onNewGame, onRetry }: { state: RpgState; onContinue: () => void; onNewGame: () => void; onRetry: () => void }) {
   const [panel, setPanel] = useState<"menu" | "settings" | "new-game">("menu");
   const [preferences, setPreferences] = useState<GamePreferences>(() => loadGamePreferences());
   const audioRef = useRef<HTMLAudioElement>(null);
   const menuRef = useRef<HTMLElement>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const hasProgress = state.turns > 0 || state.completedEvents.length > 0;
+  const runEnded = state.status === "game-over";
 
   const updatePreferences = (next: GamePreferences) => {
     setPreferences(next);
@@ -76,6 +77,10 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
     requestAnimationFrame(fade);
   };
 
+  const continueOrRetry = () => {
+    leaveTitle(runEnded ? onRetry : onContinue);
+  };
+
   useEffect(() => {
     const menu = menuRef.current;
     if (!menu) return;
@@ -120,7 +125,7 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
     <div className="title-city-flicker" aria-hidden="true" />
     <div className="title-curtain-shadow" aria-hidden="true" />
     <div className="title-shade" aria-hidden="true" />
-    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.920</span></header>
+    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.930</span></header>
     <section className="title-lockup" aria-labelledby="title-heading">
       <small>REN&apos;S APARTMENT / ADACHI / 02:13</small>
       <h1 id="title-heading"><span>AWAKENED</span>ZERO RANK</h1>
@@ -128,7 +133,7 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
     </section>
     <section ref={menuRef} className="title-menu" aria-label={panel === "menu" ? "Main menu" : panel === "settings" ? "Settings" : "New game confirmation"}>
       {panel === "menu" && <>
-        <button className="primary" onClick={() => leaveTitle(onContinue)}><b>{hasProgress ? "CONTINUE" : "START GAME"}</b><span>Day {state.day} · {state.slot} · {state.location}</span></button>
+        <button className="primary" onClick={continueOrRetry}><b>{runEnded ? `RETRY RUN ${state.attempt + 1}` : hasProgress ? "CONTINUE" : "START GAME"}</b><span>{runEnded ? `Timeline ${state.timeline} · no transmigration` : `Day ${state.day} · ${state.slot} · ${state.location}`}</span></button>
         <button onClick={() => setPanel("new-game")}><b>NEW GAME</b><span>Begin again from the authenticated world seed</span></button>
         <button onClick={() => setPanel("settings")}><b>SETTINGS</b><span>Motion and dialogue readability</span></button>
         <Link href="/"><b>OBSERVER</b><span>Open Ren&apos;s autonomous chronicle</span></Link>

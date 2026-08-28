@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observer-data";
-import { loadRpgState, resetRpgState, takeRpgAction, type RpgState } from "./game-state";
+import { loadRpgState, resetRpgState, restartRpgRun, takeRpgAction, type RpgState } from "./game-state";
 import { GameHud } from "./game-hud";
 import { applyGamePreferences, loadGamePreferences, RPG_SESSION_KEY } from "./game-preferences";
 import { TitleScreen } from "./title-screen";
@@ -141,6 +141,12 @@ export default function GamePage() {
     enterCampaign();
   }
 
+  function retryFromTitle() {
+    setRpg(restartRpgRun(rpg!));
+    replay();
+    enterCampaign();
+  }
+
   function suggest(id: string) {
     setSelectedSuggestion(id);
     const next = id === "rest"
@@ -154,7 +160,7 @@ export default function GamePage() {
 
   if (failed) return <main id="chronicle" className="game-loading"><p>PROLOGUE OFFLINE</p><h1>The chronicle could not be verified.</h1><Link href="/">Return to Observer</Link></main>;
   if (!snapshot || !rpg || showTitle === null) return <main id="chronicle" className="game-loading" aria-busy="true"><p>LOADING RPG SAVE</p><h1>Preparing Ren's day…</h1></main>;
-  if (showTitle) return <TitleScreen state={rpg} onContinue={enterCampaign} onNewGame={startFromTitle} />;
+  if (showTitle) return <TitleScreen state={rpg} onContinue={enterCampaign} onNewGame={startFromTitle} onRetry={retryFromTitle} />;
 
   const scene = currentScene(snapshot);
   const active = HOTSPOTS.find((hotspot) => hotspot.id === activeClue);
@@ -163,7 +169,7 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.920</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.930</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>

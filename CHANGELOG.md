@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.930.0 - Honest run retries
+
+- Added same-timeline retries after an ordinary death, incrementing the run attempt without granting transmigration or advancing the timeline.
+- Reset run-bound days, resources, bonds, journal entries, and completed events while preserving only earned timeline-level skills, legacy clues, and lottery tickets.
+- Made the title screen identify a terminated save and offer the next run instead of presenting it as a normal Continue state.
+
 ## 0.920.0 - Doomed-year campaign foundation
 
 - Reframed the RPG as three possible one-year timelines with explicit run attempts, a 365-day limit, retained skills, legacy clues, and lottery-ticket state.

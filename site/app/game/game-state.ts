@@ -13,7 +13,7 @@ export type CampaignStatus = "active" | "game-over" | "year-ending";
 export type RpgJournalEntry = { day: number; slot: (typeof RPG_SLOTS)[number]; action: string; location: string };
 
 export type RpgState = {
-  saveVersion: 5;
+  saveVersion: 6;
   timeline: Timeline;
   attempt: number;
   status: CampaignStatus;
@@ -21,6 +21,7 @@ export type RpgState = {
   legacyClues: string[];
   lotteryTickets: number;
   transmigrationEligible: boolean;
+  runStart: { health: number; energy: number; money: number; location: string };
   day: number;
   slot: (typeof RPG_SLOTS)[number];
   health: number;
@@ -36,7 +37,7 @@ export type RpgState = {
 
 export function newRpgState(snapshot: ObserverSnapshot): RpgState {
   return {
-    saveVersion: 5,
+    saveVersion: 6,
     timeline: 1,
     attempt: 1,
     status: "active",
@@ -44,6 +45,12 @@ export function newRpgState(snapshot: ObserverSnapshot): RpgState {
     legacyClues: [],
     lotteryTickets: 0,
     transmigrationEligible: false,
+    runStart: {
+      health: snapshot.protagonist.resources.health,
+      energy: snapshot.protagonist.resources.energy,
+      money: snapshot.protagonist.resources.money,
+      location: snapshot.protagonist.location,
+    },
     day: 1,
     slot: "Morning",
     health: snapshot.protagonist.resources.health,
@@ -65,7 +72,7 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
       const candidate = JSON.parse(saved) as Partial<RpgState>;
       const migrated = {
         ...candidate,
-        saveVersion: 5 as const,
+        saveVersion: 6 as const,
         timeline: candidate.timeline ?? 1,
         attempt: candidate.attempt ?? 1,
         status: candidate.status ?? (candidate.health === 0 ? "game-over" : "active"),
@@ -73,6 +80,12 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
         legacyClues: Array.isArray(candidate.legacyClues) ? candidate.legacyClues : [],
         lotteryTickets: candidate.lotteryTickets ?? 0,
         transmigrationEligible: candidate.transmigrationEligible ?? false,
+        runStart: candidate.runStart ?? {
+          health: snapshot.protagonist.resources.health,
+          energy: snapshot.protagonist.resources.energy,
+          money: snapshot.protagonist.resources.money,
+          location: snapshot.protagonist.location,
+        },
         journal: Array.isArray(candidate.journal) ? candidate.journal : [],
         bonds: candidate.bonds && typeof candidate.bonds === "object" && !Array.isArray(candidate.bonds) ? candidate.bonds : {},
         completedEvents: Array.isArray(candidate.completedEvents) ? candidate.completedEvents : [],
@@ -86,7 +99,7 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
 }
 
 function isRpgState(value: Partial<RpgState>): value is RpgState {
-  return value.saveVersion === 5
+  return value.saveVersion === 6
     && [1, 2, 3].includes(value.timeline as number)
     && Number.isSafeInteger(value.attempt) && value.attempt! > 0
     && ["active", "game-over", "year-ending"].includes(value.status as string)
@@ -96,6 +109,10 @@ function isRpgState(value: Partial<RpgState>): value is RpgState {
     && value.legacyClues.every((clue) => typeof clue === "string" && clue.length > 0)
     && Number.isSafeInteger(value.lotteryTickets) && value.lotteryTickets! >= 0
     && typeof value.transmigrationEligible === "boolean"
+    && value.runStart !== undefined
+    && [value.runStart.health, value.runStart.energy].every((item) => Number.isSafeInteger(item) && item >= 0 && item <= 100)
+    && Number.isSafeInteger(value.runStart.money) && value.runStart.money >= 0
+    && typeof value.runStart.location === "string" && value.runStart.location.length > 0
     && Number.isSafeInteger(value.day) && value.day! > 0
     && RPG_SLOTS.includes(value.slot as RpgState["slot"])
     && [value.health, value.energy].every((item) => Number.isSafeInteger(item) && item! >= 0 && item! <= 100)
@@ -123,6 +140,28 @@ export function resetRpgState(snapshot: ObserverSnapshot): RpgState {
   const initial = newRpgState(snapshot);
   saveRpgState(initial);
   return initial;
+}
+
+export function restartRpgRun(state: RpgState): RpgState {
+  const retry: RpgState = {
+    ...state,
+    attempt: state.attempt + 1,
+    status: "active",
+    transmigrationEligible: false,
+    day: 1,
+    slot: "Morning",
+    health: state.runStart.health,
+    energy: state.runStart.energy,
+    money: state.runStart.money,
+    location: state.runStart.location,
+    turns: 0,
+    lastAction: `Timeline ${state.timeline}, run ${state.attempt + 1} started`,
+    journal: [],
+    bonds: {},
+    completedEvents: [],
+  };
+  saveRpgState(retry);
+  return retry;
 }
 
 export function pendingStoryRoute(state: RpgState): string | null {

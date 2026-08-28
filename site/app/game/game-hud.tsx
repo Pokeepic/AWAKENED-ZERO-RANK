@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { currentCampaignArc, pendingStoryRoute, type RpgState } from "./game-state";
+import { currentCampaignArc, pendingStoryRoute, restartRpgRun, type RpgState } from "./game-state";
 import { applyGamePreferences, loadGamePreferences } from "./game-preferences";
 
 export function GameHud({ state, current, onNewGame }: { state: RpgState; current: "home" | "city" | "cases" | "field" | "evening" | "debrief"; onNewGame?: () => void }) {
@@ -31,6 +31,11 @@ export function GameHud({ state, current, onNewGame }: { state: RpgState; curren
     onNewGame?.();
   };
 
+  const retryRun = () => {
+    restartRpgRun(state);
+    window.location.assign("/game");
+  };
+
   const arc = currentCampaignArc(state.day);
   const timelineLabel = ["", "FIRST TIMELINE", "SECOND TIMELINE", "FINAL TIMELINE"][state.timeline];
 
@@ -44,5 +49,5 @@ export function GameHud({ state, current, onNewGame }: { state: RpgState; curren
     <summary>CAMPAIGN JOURNAL <span>LOCAL SAVE · {state.journal.length} / 12</span></summary>
     <div className="save-status"><b>AUTOSAVE ACTIVE</b><span>DAY {state.day} · {state.slot} · {state.location}</span><small>Every committed action is saved on this device.</small></div>
     {state.journal.length === 0 ? <p>No actions recorded yet. Ren&apos;s first committed choice will appear here.</p> : <ol>{[...state.journal].reverse().map((entry, index) => <li key={`${entry.day}-${entry.slot}-${index}`}><b>DAY {entry.day} / {entry.slot}</b><span>{entry.action}</span><small>{entry.location}</small></li>)}</ol>}
-  </details>{state.status === "game-over" && <div className="reset-shade"><section className="reset-dialog game-over" role="alertdialog" aria-modal="true" aria-labelledby="game-over-title"><small>RUN TERMINATED</small><h2 id="game-over-title">Ren died.</h2><p>Death before Day 365 does not trigger transmigration. This run is over.</p><dl><div><dt>TIMELINE</dt><dd>{state.timeline} / 3</dd></div><div><dt>REACHED</dt><dd>Day {state.day}</dd></div></dl><a href="/game">RETURN TO TITLE</a></section></div>}{confirmingReset && <div className="reset-shade" role="presentation"><section className="reset-dialog" role="alertdialog" aria-modal="true" aria-labelledby="reset-title" aria-describedby="reset-copy"><small>LOCAL CAMPAIGN</small><h2 id="reset-title">Begin Ren&apos;s story again?</h2><p id="reset-copy">This replaces the RPG save on this device. The authenticated Observer timeline is never changed.</p><dl><div><dt>CURRENT SAVE</dt><dd>Day {state.day}, {state.slot}</dd></div><div><dt>RECORDED ACTIONS</dt><dd>{state.turns}</dd></div></dl><nav><button ref={cancelReset} onClick={() => setConfirmingReset(false)}>KEEP CURRENT SAVE</button><button className="danger" onClick={resetCampaign}>START NEW GAME</button></nav><small>PRESS ESCAPE TO CANCEL</small></section></div>}</>;
+  </details>{state.status === "game-over" && <div className="reset-shade"><section className="reset-dialog game-over" role="alertdialog" aria-modal="true" aria-labelledby="game-over-title"><small>RUN TERMINATED</small><h2 id="game-over-title">Ren died.</h2><p>Death before Day 365 does not trigger transmigration. This run is over.</p><dl><div><dt>TIMELINE</dt><dd>{state.timeline} / 3</dd></div><div><dt>REACHED</dt><dd>Day {state.day}</dd></div></dl><button className="retry" onClick={retryRun}>RETRY TIMELINE · RUN {state.attempt + 1}</button></section></div>}{confirmingReset && <div className="reset-shade" role="presentation"><section className="reset-dialog" role="alertdialog" aria-modal="true" aria-labelledby="reset-title" aria-describedby="reset-copy"><small>LOCAL CAMPAIGN</small><h2 id="reset-title">Begin Ren&apos;s story again?</h2><p id="reset-copy">This replaces the RPG save on this device. The authenticated Observer timeline is never changed.</p><dl><div><dt>CURRENT SAVE</dt><dd>Day {state.day}, {state.slot}</dd></div><div><dt>RECORDED ACTIONS</dt><dd>{state.turns}</dd></div></dl><nav><button ref={cancelReset} onClick={() => setConfirmingReset(false)}>KEEP CURRENT SAVE</button><button className="danger" onClick={resetCampaign}>START NEW GAME</button></nav><small>PRESS ESCAPE TO CANCEL</small></section></div>}</>;
 }
