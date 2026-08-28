@@ -46,6 +46,9 @@ test("opens the RPG through a persistent title menu without interrupting return 
   assert.match(title, /rain-title-loop\.mp3/);
   assert.match(title, /title-audio-toggle/);
   assert.match(preferences, /ambience/);
+  assert.match(preferences, /ambienceVolume/);
+  assert.match(title, /visibilitychange/);
+  assert.match(title, /leaveTitle/);
   await access(new URL("public/game/audio/rain-title-loop.mp3", root));
   assert.doesNotMatch(title, /title-ren/);
   await access(new URL("public/game/ren-apartment-window-title-v1.png", root));

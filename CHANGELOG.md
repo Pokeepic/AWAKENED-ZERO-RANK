@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.890.0 - Ambience lifecycle polish
+
+- Added soft rain fade-in after the first permitted interaction and a short fade-out when Continue or New Game leaves the title.
+- Pauses title ambience while the browser tab is hidden and resumes with a fresh fade instead of continuing unseen.
+- Added persistent Low and Normal ambience levels alongside the existing on/off control.
+
 ## 0.880.0 - Title rain ambience
 
 - Added the supplied 15-second rain recording as a lightweight looping title-screen ambience track.

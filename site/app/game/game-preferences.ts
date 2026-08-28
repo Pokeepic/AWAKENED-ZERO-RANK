@@ -5,9 +5,10 @@ export type GamePreferences = {
   motion: "full" | "reduced";
   textSize: "normal" | "large";
   ambience: "on" | "off";
+  ambienceVolume: "low" | "normal";
 };
 
-export const DEFAULT_GAME_PREFERENCES: GamePreferences = { motion: "full", textSize: "normal", ambience: "on" };
+export const DEFAULT_GAME_PREFERENCES: GamePreferences = { motion: "full", textSize: "normal", ambience: "on", ambienceVolume: "normal" };
 
 export function loadGamePreferences(): GamePreferences {
   try {
@@ -16,6 +17,7 @@ export function loadGamePreferences(): GamePreferences {
       motion: candidate?.motion === "reduced" ? "reduced" : "full",
       textSize: candidate?.textSize === "large" ? "large" : "normal",
       ambience: candidate?.ambience === "off" ? "off" : "on",
+      ambienceVolume: candidate?.ambienceVolume === "low" ? "low" : "normal",
     };
   } catch {
     return DEFAULT_GAME_PREFERENCES;
