@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.850.0` |
+| Release | `0.860.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -19,7 +19,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 [Open AWAKENED: ZERO RANK](https://awakened-zero-rank-observer.pokeepic.chatgpt.site/game)
 
-The game now opens on a restrained cinematic title screen set inside Ren's apartment. Two depths of irregular rain cross the balcony glass while individual droplets bead, catch the city light, and occasionally drag into slow trails down the window. Distant apartments flicker almost imperceptibly and the curtain responds with a small delayed sway. Continue previews the current device-local save; New Game is protected; settings persist reduced motion and larger game text across routes.
+The game now opens on a restrained cinematic title screen set inside Ren's apartment. Rain and individual droplets are masked to the two balcony-glass panes, accounting for desktop and mobile artwork cropping so weather never crosses Ren's floor, curtains, or furniture. Distant apartments flicker almost imperceptibly and the curtain responds with a small delayed sway. Continue previews the current device-local save; New Game is protected; settings persist reduced motion and larger game text across routes.
 
 The current game contains six connected, authenticated chapters:
 

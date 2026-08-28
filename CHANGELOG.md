@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.860.0 - Weather-plane correction
+
+- Corrected the rain effect after the viewport-positioned mask allowed weather to cross the apartment interior.
+- Tightened the desktop weather plane to the actual glazing and cut the center mullion out of the mask.
+- Added a separate mobile crop mask so cover-sized artwork keeps rain on the visible pane across narrow screens.
+
 ## 0.850.0 - Rain on glass
 
 - Added individually timed window droplets with tiny refracted highlights, slow merges, and occasional gravity-driven trails.
