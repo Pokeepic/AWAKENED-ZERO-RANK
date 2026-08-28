@@ -8,26 +8,27 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.720.0` |
+| Release | `0.730.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 112 browser |
+| Automated tests | 339 Python + 113 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
 
 [Open AWAKENED: ZERO RANK](https://awakened-zero-rank-observer.pokeepic.chatgpt.site/game)
 
-The current game contains five connected, authenticated chapters:
+The current game contains six connected, authenticated chapters:
 
 1. **Apartment prologue** — explore Ren's pixel-art apartment and take his next action.
 2. **Tokyo district maps** — move through Central Tokyo, the East Loop, and Adachi Fringe as Ren.
 3. **Adachi Gate field** — inspect illustrated case files and choose Ren's risk response.
 4. **First Contact** — fight a deterministic Gate sentinel with visible damage, energy costs, and a safe retreat.
 5. **After the Gate** — choose how Ren answers Aiko and build a persistent local RPG bond.
+6. **The Patrol Record** — debrief the mission with Daichi and decide whether the Guild receives rank or truth.
 
-Exploration uses tiny transparent pixel chibi sprites, while canon and bond scenes switch into a visual-novel presentation with full-size illustrated characters and location-specific backgrounds. After the Gate takes place inside an illustrated Adachi Station concourse; the active speaker moves forward while the listener recedes. Dialogue advances by click, Enter, or Space, numbered choices support keys 1–3, and an expandable history preserves the current scene's lines. Completed events cannot be replayed for duplicate rewards. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
+Exploration uses tiny transparent pixel chibi sprites, while canon and bond scenes switch into a visual-novel presentation with full-size illustrated characters and location-specific backgrounds. After the Gate at Adachi Station now leads into Daichi's patrol debrief inside the Tokyo Hunter Guild. Dialogue advances by click, Enter, or Space, numbered choices support keys 1–3, and an expandable history preserves each scene's lines. Canon events unlock in sequence and cannot be replayed for duplicate rewards. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
 
 ## What the simulation models
 

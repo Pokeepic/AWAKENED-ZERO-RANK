@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.730.0 - The Patrol Record
+
+- Added a sixth playable chapter: a one-time visual-novel debrief with Daichi Mori.
+- Added an original Tokyo Hunter Guild briefing-room background and full-body Daichi character cutout.
+- Locked the debrief behind completion of After the Gate and connected both fresh and revisited Aiko outcomes to it.
+- Added three patrol-record choices with distinct energy and persistent Daichi bond outcomes while Observer trust remains unchanged.
+
 ## 0.720.0 - Visual-novel controls
 
 - Added Enter and Space progression for mandatory story beats and number-key selection for dialogue choices.

@@ -283,6 +283,24 @@ test("supports keyboard-driven visual-novel pacing and dialogue history", async 
   assert.match(styles, /\.vn-history/);
   assert.match(styles, /\.vn-progress/);
 });
+test("continues canon progression into an authenticated Daichi guild debrief", async () => {
+  const [evening, debrief, hud, styles] = await Promise.all([
+    readFile(new URL("app/game/evening/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/debrief/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(evening, /href="\/game\/debrief"/);
+  assert.match(debrief, /const PREREQUISITE = "after-the-gate-aiko"/);
+  assert.match(debrief, /guild-debrief-daichi/);
+  assert.match(debrief, /Daichi Mori/);
+  assert.match(debrief, /takeRpgAction/);
+  assert.match(debrief, /hunter-guild-briefing\.png/);
+  assert.match(debrief, /daichi-full\.png/);
+  assert.match(hud, /"debrief"/);
+  assert.match(styles, /\.vn-character\.daichi/);
+  for (const asset of ["hunter-guild-briefing", "daichi-full"]) await access(new URL(`public/game/visual-novel/${asset}.png`, root));
+});
 test("fits the apartment workspace into tabs without duplicate result sections", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
