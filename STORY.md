@@ -60,3 +60,25 @@ The campaign's dramatic progression is: **the first year teaches Ren what will h
 ## Cutscene roadmap
 
 Authored cutscenes belong at irreversible transitions rather than routine travel: the initial awakening, each arc deadline, ordinary death, the Black Gate reveal, successful transmigration, the second awakening, and each final ending. They should use the established visual-novel character art and location backgrounds, with bespoke animation added only after the underlying trigger and consequence are playable.
+
+### Cutscene visual contract
+
+- Every major scene receives a purpose-made 16:9 illustrated background for its actual location and time of day. Gameplay screenshots, enlarged pixel maps, and generic abstract backdrops are not acceptable substitutes.
+- Speaking characters use clean full or three-quarter-body illustrations with consistent faces, clothing, proportions, and transparent edges across scenes. Pixel chibi sprites remain exclusive to exploration and field navigation.
+- Motion stays restrained and authored: slow camera push or lateral drift, layered rain or dust, practical light flicker, foreground parallax, brief character entrances, subtle breathing, and controlled impact shake.
+- Cutscenes must retain readable dialogue, keyboard/touch advancement, a history log, reduced-motion behavior, and a skip option after the scene has been viewed once.
+- Death scenes avoid gore spectacle. Their image should communicate the failed location, the lost objective, and the absence of a residual path.
+- Transmigration scenes visually reuse matching Day 365 and Day 1 compositions so the reset is understood through framing before exposition explains it.
+- Generated art must be inspected for inconsistent anatomy, invented text, costume drift, and mismatched character identity before it enters the game. Unusable generations are rejected rather than hidden behind effects.
+
+### Required illustrated scenes
+
+1. **Worthless Awakening:** clinical Bureau assessment room, fluorescent morning light, Ren isolated beneath a Zero-Rank result display.
+2. **Arc I deadline:** Adachi evacuation route under the first synchronized pulse.
+3. **Arc II deadline:** a district-wide breach seen from street level among civilians and patrol barriers.
+4. **Arc III deadline:** the Guild operations room splitting over contradictory orders.
+5. **Black Gate reveal:** Tokyo skyline folding toward the Gate on Day 365.
+6. **Run Terminated:** location-aware defeat composition with no transmigration imagery.
+7. **Residual Path:** Ren reading the core while fragments of Day 1 appear inside it.
+8. **Second Awakening:** Vector Step manifesting as a precise displacement rather than a generic power aura.
+9. **Final endings:** separate compositions for Ashes Again, Tokyo Survives, The Lone Hunter, Open Future, and Zero Rank.
