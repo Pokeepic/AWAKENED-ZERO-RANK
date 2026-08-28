@@ -108,3 +108,31 @@ footer{padding:38px 5vw;background:var(--ink);color:var(--paper);display:flex;ju
 @media(max-width:760px){.title-ren{right:-36%;height:82%;bottom:3%;opacity:.68}.title-shade{background:linear-gradient(rgba(5,8,13,.68),rgba(5,8,13,.88) 44%,#05080d)}.title-lockup{left:1.4rem;right:1.4rem;top:14%;width:auto}.title-lockup h1{font-size:clamp(4rem,19vw,6.2rem)}.title-menu{left:1.4rem;right:1.4rem;bottom:7%;width:auto}.title-screen>header{left:1.4rem;right:1.4rem}.title-screen>header span{display:none}.title-screen>footer{left:1.4rem;right:1.4rem}.title-screen>footer span:last-child{display:none}}
 .title-screen .title-bg{object-position:center;filter:brightness(.8) saturate(.8)}.title-screen .title-shade{background:linear-gradient(90deg,rgba(3,6,11,.96) 0,rgba(3,6,11,.82) 31%,rgba(3,6,11,.3) 53%,rgba(3,6,11,.08) 74%),linear-gradient(transparent 60%,rgba(3,6,11,.82))}.title-screen .title-lockup{top:15%;width:min(600px,48vw)}.title-screen .title-lockup h1{margin:1rem 0 0;font-family:var(--display);font-size:clamp(3.8rem,6.8vw,7.2rem);font-weight:400;line-height:.76;letter-spacing:-.065em}.title-screen .title-lockup h1 span{display:block;margin-bottom:.3rem;color:var(--signal);font-family:var(--mono);font-size:.16em;font-weight:900;line-height:1;letter-spacing:.22em}.title-screen .title-lockup p{font-size:.64rem;letter-spacing:.34em}
 @media(max-width:760px){.title-screen .title-bg{object-position:64% center}.title-screen .title-shade{background:linear-gradient(rgba(5,8,13,.42),rgba(5,8,13,.78) 42%,#05080d 72%)}.title-screen .title-lockup{top:13%;width:auto}.title-screen .title-lockup h1{font-size:clamp(3.5rem,18vw,5.8rem)}}
+
+/* v0.830 — a quiet apartment-window title, animated with light rather than spectacle. */
+.title-screen .title-bg{object-position:center;filter:brightness(.72) saturate(.72) contrast(1.04);transform:scale(1.015);animation:title-room-drift 18s ease-in-out infinite alternate}
+.title-window-light,.title-window-rain,.title-curtain-shadow{position:absolute;inset:0;pointer-events:none}
+.title-window-light{z-index:1;background:radial-gradient(ellipse 34% 58% at 62% 51%,rgba(100,151,190,.14),transparent 70%),radial-gradient(ellipse 22% 24% at 68% 78%,rgba(207,125,72,.09),transparent 72%);mix-blend-mode:screen;animation:title-light-breathe 7s ease-in-out infinite}
+.title-window-rain{z-index:1;inset:8% 24% 19% 42%;opacity:.16;background:repeating-linear-gradient(102deg,transparent 0 17px,rgba(190,216,233,.6) 18px,transparent 20px 39px);mask-image:linear-gradient(90deg,transparent,#000 9% 90%,transparent);animation:title-rain-fall 1.9s linear infinite}
+.title-curtain-shadow{z-index:2;background:linear-gradient(82deg,transparent 51%,rgba(2,4,7,.17) 57%,transparent 64%);transform-origin:50% 0;animation:title-curtain-sway 9s ease-in-out infinite alternate}
+.title-screen .title-shade{z-index:2;background:linear-gradient(90deg,rgba(2,5,9,.91) 0,rgba(2,5,9,.68) 30%,rgba(2,5,9,.08) 55%,rgba(2,5,9,.16) 75%,rgba(2,5,9,.56)),linear-gradient(180deg,rgba(2,5,9,.2),transparent 40%,rgba(2,5,9,.76) 100%)}
+.title-screen .title-lockup{left:6vw;top:19%;width:min(480px,42vw)}
+.title-screen .title-lockup small{color:#9da8ad;font-size:.54rem;letter-spacing:.2em}
+.title-screen .title-lockup h1{margin:1.15rem 0 0;font-size:clamp(3.2rem,5.5vw,6rem);line-height:.78;letter-spacing:-.055em}
+.title-screen .title-lockup h1 span{margin-bottom:.5rem;color:#d5d7d4;font-size:.14em;letter-spacing:.38em}
+.title-screen .title-lockup p{margin-top:1.2rem;color:#849096;font-size:.53rem;font-weight:600;letter-spacing:.26em}
+.title-screen .title-menu{left:6vw;bottom:9%;width:min(360px,36vw);gap:.15rem}
+.title-screen .title-menu>a,.title-screen .title-menu>button{position:relative;padding:.62rem .8rem .62rem 1.2rem;border:0;border-left:1px solid rgba(255,255,255,.18);background:rgba(3,7,11,.28);backdrop-filter:blur(3px);transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.title-screen .title-menu>a::before,.title-screen .title-menu>button::before{content:"";position:absolute;left:-1px;top:50%;width:2px;height:0;background:#c9d6dc;transition:height .18s ease,top .18s ease}
+.title-screen .title-menu>a:hover,.title-screen .title-menu>a:focus-visible,.title-screen .title-menu>button:hover,.title-screen .title-menu>button:focus-visible{border-color:#c9d6dc;background:rgba(8,13,18,.72);outline:0;transform:translateX(3px)}
+.title-screen .title-menu>a:hover::before,.title-screen .title-menu>a:focus-visible::before,.title-screen .title-menu>button:hover::before,.title-screen .title-menu>button:focus-visible::before{top:18%;height:64%}
+.title-screen .title-menu .primary{border-color:#c7d2d6;background:rgba(13,19,23,.66);color:#f0ece3}
+.title-screen .title-menu .primary::before{top:18%;height:64%;background:#c7d2d6}
+.title-screen .title-menu .primary span{color:#8f9ba0}
+.title-screen .title-menu b{font-size:.62rem;letter-spacing:.18em}
+.title-screen .title-menu span{font-size:.51rem;color:#78858b}
+@keyframes title-room-drift{from{transform:scale(1.015) translate3d(0,0,0)}to{transform:scale(1.035) translate3d(-.25%,.15%,0)}}
+@keyframes title-light-breathe{0%,100%{opacity:.58}45%{opacity:1}52%{opacity:.78}62%{opacity:.94}}
+@keyframes title-rain-fall{from{background-position:0 -70px}to{background-position:-15px 90px}}
+@keyframes title-curtain-sway{from{transform:skewX(-.3deg) translateX(-.25%);opacity:.62}to{transform:skewX(.45deg) translateX(.35%);opacity:.92}}
+@media(max-width:760px){.title-screen .title-bg{object-position:60% center}.title-window-rain{inset:9% 5% 31% 30%}.title-screen .title-shade{background:linear-gradient(180deg,rgba(2,5,9,.35),rgba(2,5,9,.5) 35%,rgba(2,5,9,.92) 70%)}.title-screen .title-lockup{left:1.4rem;right:1.4rem;top:14%;width:auto}.title-screen .title-lockup h1{font-size:clamp(3rem,15vw,5rem)}.title-screen .title-menu{left:1.4rem;right:1.4rem;bottom:7%;width:auto}.title-screen .title-menu>a,.title-screen .title-menu>button{background:rgba(3,7,11,.62)}}

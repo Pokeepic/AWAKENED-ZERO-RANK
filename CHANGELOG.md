@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.830.0 - The apartment window
+
+- Replaced the character-poster title art with a quiet, empty view from inside Ren's apartment on a rainy Adachi night.
+- Added restrained light breathing, rain movement, and curtain-shadow animation while preserving the reduced-motion setting.
+- Simplified the title hierarchy and menu treatment so the atmosphere, save state, and choices read without oversized promotional chrome.
+- Kept the prior battle artwork as project history while moving the live title screen to the new environment-led direction.
+
 ## 0.820.0 - Battle key art title
 
 - Replaced the relaxed pasted-on Ren portrait with original widescreen title artwork of Ren in a grounded fighting stance above rain-dark Adachi.

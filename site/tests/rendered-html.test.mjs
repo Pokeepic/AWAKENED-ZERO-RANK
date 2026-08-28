@@ -36,9 +36,11 @@ test("opens the RPG through a persistent title menu without interrupting return 
   assert.match(title, /SETTINGS/);
   assert.match(title, /OBSERVER/);
   assert.match(title, /REPLACE SAVE & START/);
-  assert.match(title, /ren-title-battle-v1\.png/);
+  assert.match(title, /ren-apartment-window-title-v1\.png/);
+  assert.match(title, /title-window-light/);
+  assert.match(title, /title-window-rain/);
   assert.doesNotMatch(title, /title-ren/);
-  await access(new URL("public/game/ren-title-battle-v1.png", root));
+  await access(new URL("public/game/ren-apartment-window-title-v1.png", root));
   assert.match(preferences, /RPG_PREFERENCES_KEY/);
   assert.match(preferences, /gameMotion/);
   assert.match(styles, /\.title-screen/);
