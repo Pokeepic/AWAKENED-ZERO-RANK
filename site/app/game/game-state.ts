@@ -231,6 +231,8 @@ export function transmigrateRpgState(state: RpgState): RpgState {
 
 export function pendingStoryRoute(state: RpgState): string | null {
   if (state.status !== "active") return null;
+  if (state.timeline === 1 && state.day === 1 && state.turns === 0
+    && !state.completedEvents.includes("worthless-awakening-intro")) return "/game/awakening";
   const survivedFirstGate = state.journal.some((entry) => [
     "Cleared the fracture sentinel",
     "Retreated from the fracture sentinel",

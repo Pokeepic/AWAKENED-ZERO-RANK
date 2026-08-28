@@ -21,6 +21,25 @@ test("ships a separate Ren-controlled local RPG prologue", async () => {
   assert.doesNotMatch(game, /fetch\([^)]*method\s*:/);
   assert.match(observer, /href="\/game"/);
 });
+test("opens a one-time shot-directed Day One awakening cinematic", async () => {
+  const [awakening, state, styles] = await Promise.all([
+    readFile(new URL("app/game/awakening/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(awakening, /SHOT_MANIFEST/);
+  assert.match(awakening, /worthless-awakening-intro/);
+  assert.match(awakening, /awakening-bureau-establishing-v1\.png/);
+  assert.match(awakening, /ren-full\.png/);
+  assert.match(awakening, /saveRpgState/);
+  assert.match(awakening, /Enter/);
+  assert.match(awakening, /Escape/);
+  assert.match(state, /return "\/game\/awakening"/);
+  assert.match(styles, /\.awakening-cutscene/);
+  assert.match(styles, /awakening-scan/);
+  assert.match(styles, /data-game-motion="reduced".*awakening-cutscene/);
+  await access(new URL("public/game/cutscenes/awakening-bureau-establishing-v1.png", root));
+});
 test("opens the RPG through a persistent title menu without interrupting return travel", async () => {
   const [game, title, preferences, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),

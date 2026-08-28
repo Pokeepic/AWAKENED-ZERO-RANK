@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.970.0 - Day One awakening cinematic
+
+- Added the first real-time, shot-directed game cutscene using a purpose-made 16:9 Tokyo Awakening Bureau background and layered Ren character art.
+- Triggered the assessment automatically at the start of a fresh first-timeline run, with no separate story menu and no consumed time slot.
+- Added click, Enter, Space, and skip controls, reduced-motion support, responsive cinematic framing, and one-time save completion.
+- Revealed Residual Read and the Zero-Rank verdict through playable pacing before returning control to Ren's apartment.
+
 ## 0.960.0 - First arc evidence objective
 
 - Made the riskier Gate investigation secure the first arc's required evidence while retaining its higher health and energy cost.

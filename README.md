@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.960.0` |
+| Release | `0.970.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 115 browser |
+| Automated tests | 339 Python + 117 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -23,14 +23,15 @@ The game now opens on a restrained cinematic title screen set inside Ren's apart
 
 The RPG is being rebuilt around three possible one-year timelines. Ordinary death is a real Game Over; retrying begins a new run of the same timeline and grants no transmigration benefit. On Day 365, an explicit ledger checks survival, mastery, evidence, bonds, health, location, and the final choice before a residual path can open. The first timeline begins with Ren's mocked Zero-Rank skill, Residual Read, and four unequal arc deadlines at Days 45, 120, 240, and 365.
 
-The current playable opening contains six connected, authenticated chapters:
+The current playable opening contains seven connected, authenticated chapters:
 
-1. **Apartment prologue** — explore Ren's pixel-art apartment and take his next action.
-2. **Tokyo district maps** — move through Central Tokyo, the East Loop, and Adachi Fringe as Ren.
-3. **Adachi Gate field** — inspect illustrated case files and choose Ren's risk response.
-4. **First Contact** — fight a deterministic Gate sentinel with visible damage, energy costs, and a safe retreat.
-5. **After the Gate** — choose how Ren answers Aiko and build a persistent local RPG bond.
-6. **The Patrol Record** — debrief the mission with Daichi and decide whether the Guild receives rank or truth.
+1. **Worthless Awakening** — begin a new game with a shot-directed Bureau assessment cinematic and receive Residual Read at Rank Zero.
+2. **Apartment prologue** — explore Ren's pixel-art apartment and take his next action.
+3. **Tokyo district maps** — move through Central Tokyo, the East Loop, and Adachi Fringe as Ren.
+4. **Adachi Gate field** — inspect illustrated case files and choose Ren's risk response.
+5. **First Contact** — fight a deterministic Gate sentinel with visible damage, energy costs, and a safe retreat.
+6. **After the Gate** — choose how Ren answers Aiko and build a persistent local RPG bond.
+7. **The Patrol Record** — debrief the mission with Daichi and decide whether the Guild receives rank or truth.
 
 Exploration uses tiny transparent pixel chibi sprites, while canon and bond scenes switch into a visual-novel presentation with full-size illustrated characters and location-specific backgrounds. After the Gate at Adachi Station now leads into Daichi's patrol debrief inside the Tokyo Hunter Guild. Dialogue advances by click, Enter, or Space, numbered choices support keys 1–3, and an expandable history preserves each scene's lines. Canon events unlock in sequence and cannot be replayed for duplicate rewards. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
 
