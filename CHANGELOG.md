@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.920.0 - Doomed-year campaign foundation
+
+- Reframed the RPG as three possible one-year timelines with explicit run attempts, a 365-day limit, retained skills, legacy clues, and lottery-ticket state.
+- Added four unequal first-year story deadlines: Worthless Awakening on Day 45, Adachi Countdown on Day 120, Tokyo's False Orders on Day 240, and the Black Gate on Day 365.
+- Made zero health a true Game Over rather than an automatic rescue; ordinary death cannot trigger transmigration.
+- Reserved transmigration for the final-day resolution and added a visible timeline, run, arc, and deadline display to the campaign HUD.
+
 ## 0.910.0 - Title selection feedback
 
 - Added a compact game-style control legend for selection, confirmation, and contextual back navigation.

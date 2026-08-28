@@ -15,7 +15,7 @@ const MOVES = {
 } as const;
 
 type MoveId = keyof typeof MOVES;
-type Battle = { enemyHp: number; round: number; log: string[]; resolved: "victory" | "retreat" | null };
+type Battle = { enemyHp: number; round: number; log: string[]; resolved: "victory" | "retreat" | "death" | null };
 
 export default function FieldPage() {
   const [snapshot, setSnapshot] = useState<ObserverSnapshot | null>(null);
@@ -52,9 +52,9 @@ export default function FieldPage() {
       setRpg(next);
       setBattle((current) => ({ ...current, enemyHp, log: [...current.log, move.note, "The sentinel collapses. The corridor stabilizes."], resolved: "victory" }));
     } else if (health === 0) {
-      const next = takeRpgAction({ ...rpg, health: 20, energy }, "Retreated from the fracture sentinel", { health: 20, energy, location: "Adachi Gate Zone" });
+      const next = takeRpgAction({ ...rpg, health, energy }, "Fell to the fracture sentinel", { health, energy, location: "Glass Office Labyrinth" });
       setRpg(next);
-      setBattle((current) => ({ ...current, enemyHp, log: [...current.log, move.note, "Ren breaks contact before the Gate can close behind him."], resolved: "retreat" }));
+      setBattle((current) => ({ ...current, enemyHp, log: [...current.log, move.note, "The corridor closes. No residual path answers Ren."], resolved: "death" }));
     } else {
       setRpg({ ...rpg, health, energy });
       setBattle((current) => ({ enemyHp, round: current.round + 1, log: [...current.log, move.note].slice(-4), resolved: null }));
@@ -78,7 +78,7 @@ export default function FieldPage() {
     <section className="field-intro"><small>{caseFile?.portal_name ?? "VERIFIED GATE"} / RISK {caseFile?.risk ?? "UNKNOWN"}</small><h1>Hold the line.</h1><p>Battle moves are tactical turns. The RPG clock advances once when Ren wins or retreats.</p></section>
     <section className="field-stage" aria-label="Gate battle">
       <div className="field-arena"><Image src="/game/maps/adachi-fringe.png" alt="Pixel-art Gate exclusion zone" fill sizes="(max-width: 800px) 100vw, 70vw" priority /><div className="field-shade" /><span className="field-ren"><Image src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><b>REN</b></span><span className="field-enemy" aria-label="Fracture sentinel"><i /><i /><i /><b>FRACTURE SENTINEL</b></span></div>
-      <aside className="battle-panel" aria-live="polite"><div className="battle-bars"><span>REN / HP {rpg.health}</span><meter min="0" max="100" value={rpg.health} /><span>SENTINEL / HP {battle.enemyHp}</span><meter min="0" max="60" value={battle.enemyHp} /></div><small>ROUND {battle.round}</small><p>{battle.log.at(-1)}</p>{!battle.resolved ? <div className="battle-actions">{Object.entries(MOVES).map(([id, move]) => <button key={id} disabled={rpg.energy < move.cost} onClick={() => act(id as MoveId)}><b>{move.label}</b><span>{move.damage} DMG / {move.cost} EN</span></button>)}<button className="retreat" onClick={retreat}><b>TACTICAL RETREAT</b><span>2 EN / SAFE EXIT</span></button></div> : <div className={`battle-result ${battle.resolved}`}><small>{battle.resolved === "victory" ? "GATE SECURED" : "TACTICAL RETREAT"}</small><h2>{battle.resolved === "victory" ? "+¥1,800 / TIME ADVANCED" : "REN SURVIVED / TIME ADVANCED"}</h2><p>A canon event has triggered. Aiko is waiting at Adachi Station…</p></div>}</aside>
+      <aside className="battle-panel" aria-live="polite"><div className="battle-bars"><span>REN / HP {rpg.health}</span><meter min="0" max="100" value={rpg.health} /><span>SENTINEL / HP {battle.enemyHp}</span><meter min="0" max="60" value={battle.enemyHp} /></div><small>ROUND {battle.round}</small><p>{battle.log.at(-1)}</p>{!battle.resolved ? <div className="battle-actions">{Object.entries(MOVES).map(([id, move]) => <button key={id} disabled={rpg.energy < move.cost} onClick={() => act(id as MoveId)}><b>{move.label}</b><span>{move.damage} DMG / {move.cost} EN</span></button>)}<button className="retreat" onClick={retreat}><b>TACTICAL RETREAT</b><span>2 EN / SAFE EXIT</span></button></div> : <div className={`battle-result ${battle.resolved}`}><small>{battle.resolved === "victory" ? "GATE SECURED" : battle.resolved === "death" ? "RUN TERMINATED" : "TACTICAL RETREAT"}</small><h2>{battle.resolved === "victory" ? "+¥1,800 / TIME ADVANCED" : battle.resolved === "death" ? "GAME OVER" : "REN SURVIVED / TIME ADVANCED"}</h2><p>{battle.resolved === "death" ? "Only the final day can open a path to transmigration." : "A canon event has triggered. Aiko is waiting at Adachi Station…"}</p></div>}</aside>
     </section>
     <footer className="game-footer"><b>DETERMINISTIC FIELD ENCOUNTER</b><p>No random rolls. Every move shows its exact cost and effect.</p><span>ENERGY {rpg.energy}</span></footer>
   </main>;

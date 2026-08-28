@@ -259,7 +259,7 @@ test("keeps story routing automatic and validates versioned local saves", async 
   assert.match(hud, /pendingStoryRoute/);
   assert.doesNotMatch(hud, /aria-current/);
   assert.doesNotMatch(hud, /STORY/);
-  assert.match(state, /saveVersion: 4/);
+  assert.match(state, /saveVersion: 5/);
   assert.match(state, /isRpgState/);
   assert.match(state, /Number\.isSafeInteger/);
   assert.match(layout, /separate time-management RPG/);
@@ -270,7 +270,7 @@ test("records a bounded persistent campaign journal and migrates older saves", a
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(state, /saveVersion: 4/);
+  assert.match(state, /saveVersion: 5/);
   assert.match(state, /Array\.isArray\(candidate\.journal\)/);
   assert.match(state, /candidate\.bonds/);
   assert.match(state, /candidate\.completedEvents/);
@@ -283,6 +283,30 @@ test("records a bounded persistent campaign journal and migrates older saves", a
   assert.match(hud, /state\.journal/);
   assert.match(styles, /\.rpg-journal/);
   assert.match(styles, /\.reset-dialog/);
+});
+test("models a lethal one-year campaign with conditional final-day transmigration", async () => {
+  const [state, hud, field, story, styles] = await Promise.all([
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
+    readFile(new URL("app/game/field/page.tsx", root), "utf8"),
+    readFile(new URL("../STORY.md", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /CAMPAIGN_ARCS/);
+  for (const deadline of [45, 120, 240, 365]) assert.match(state, new RegExp(`deadline: ${deadline}`));
+  assert.match(state, /timeline: Timeline/);
+  assert.match(state, /transmigrationEligible/);
+  assert.match(state, /next\.health === 0.*game-over/s);
+  assert.match(state, /state\.day === 365.*year-ending/s);
+  assert.match(hud, /FIRST TIMELINE/);
+  assert.match(hud, /RUN TERMINATED/);
+  assert.match(field, /Fell to the fracture sentinel/);
+  assert.doesNotMatch(field, /health: 20.*Retreated from the fracture sentinel/);
+  assert.match(story, /Death before the final day is Game Over/);
+  assert.match(story, /Residual Read/);
+  assert.match(story, /Vector Step/);
+  assert.match(styles, /\.campaign-deadline/);
+  assert.match(styles, /\.reset-dialog\.game-over/);
 });
 test("adds a post-Gate social chapter with local bond consequences", async () => {
   const [field, evening, state, styles] = await Promise.all([

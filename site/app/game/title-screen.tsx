@@ -120,7 +120,7 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
     <div className="title-city-flicker" aria-hidden="true" />
     <div className="title-curtain-shadow" aria-hidden="true" />
     <div className="title-shade" aria-hidden="true" />
-    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.910</span></header>
+    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.920</span></header>
     <section className="title-lockup" aria-labelledby="title-heading">
       <small>REN&apos;S APARTMENT / ADACHI / 02:13</small>
       <h1 id="title-heading"><span>AWAKENED</span>ZERO RANK</h1>
