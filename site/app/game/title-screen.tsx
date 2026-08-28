@@ -18,14 +18,13 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
   };
 
   return <main className="title-screen">
-    <Image className="title-bg" src="/game/tokyo-dusk.png" alt="Tokyo skyline at dusk beneath a distant Gate" fill sizes="100vw" priority />
+    <Image className="title-bg" src="/game/ren-title-battle-v1.png" alt="Ren Takahashi bracing for combat above rain-dark Tokyo" fill sizes="100vw" priority />
     <div className="title-shade" aria-hidden="true" />
-    <Image className="title-ren" src="/game/visual-novel/ren-full.png" alt="Ren Takahashi" width={1024} height={1536} priority />
-    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.810</span></header>
+    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.820</span></header>
     <section className="title-lockup" aria-labelledby="title-heading">
-      <small>THREE YEARS. ONE ORDINARY LIFE. TOO MANY GATES.</small>
-      <h1 id="title-heading"><span>AWAKENED:</span> ZERO RANK</h1>
-      <p>REN&apos;S CHRONICLE</p>
+      <small>REN TAKAHASHI / ADACHI, TOKYO</small>
+      <h1 id="title-heading"><span>AWAKENED:</span>ZERO RANK</h1>
+      <p>A LIFE BETWEEN GATES</p>
     </section>
     <section className="title-menu" aria-label={panel === "menu" ? "Main menu" : panel === "settings" ? "Settings" : "New game confirmation"}>
       {panel === "menu" && <>

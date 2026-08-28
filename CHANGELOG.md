@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.820.0 - Battle key art title
+
+- Replaced the relaxed pasted-on Ren portrait with original widescreen title artwork of Ren in a grounded fighting stance above rain-dark Adachi.
+- Integrated Ren, the city, wet-road reflections, and restrained Gate lighting into one cohesive hand-drawn composition instead of layering a generic character cutout over a separate backdrop.
+- Rebalanced the title lockup and left-side gradient for a stronger readable game identity and quieter menu space.
+- Kept the generated artwork free of embedded text, UI, watermarks, weapons, and recognizable footwear branding.
+
 ## 0.810.0 - RPG title screen
 
 - Added a full-screen RPG title experience with Continue, New Game, Settings, and Observer choices.
