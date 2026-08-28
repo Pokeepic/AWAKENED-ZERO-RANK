@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.870.0 - Rain collision pass
+
+- Added staggered rain impacts along the exterior window sill, synchronized loosely with the falling weather layers.
+- Each impact compresses, forms a small crown, throws two side beads, and fades without crossing into the apartment.
+- Varied impact position, scale, and timing to avoid a mechanical repeating row while preserving reduced-motion support.
+
 ## 0.860.0 - Weather-plane correction
 
 - Corrected the rain effect after the viewport-positioned mask allowed weather to cross the apartment interior.
