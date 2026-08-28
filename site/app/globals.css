@@ -178,3 +178,6 @@ footer{padding:38px 5vw;background:var(--ink);color:var(--paper);display:flex;ju
 @keyframes title-impact-right{0%,82%{opacity:0;transform:translate(0,0)}86%{opacity:.55;transform:translate(6px,-3px)}94%,100%{opacity:0;transform:translate(10px,3px)}}
 .title-rain-impacts i::before,.title-rain-impacts i::after{animation-duration:inherit;animation-delay:inherit;animation-timing-function:ease-out;animation-iteration-count:infinite}.title-rain-impacts i::before{animation-name:title-impact-left}.title-rain-impacts i::after{animation-name:title-impact-right}
 @media(max-width:760px){.title-rain-impacts{left:4%;right:0;top:68.5%;mask-image:linear-gradient(90deg,#000 0 91%,transparent 99%)}}
+
+.title-audio-toggle{position:absolute;z-index:5;right:5vw;bottom:56px;border:0;background:transparent;color:#8e9aa0;padding:.45rem 0;cursor:pointer;font:700 .52rem var(--mono);letter-spacing:.15em}.title-audio-toggle span{display:inline-block;min-width:2.3rem;color:#c8d7de}.title-audio-toggle:hover,.title-audio-toggle:focus-visible{color:#fff;outline:1px solid rgba(255,255,255,.5);outline-offset:6px}.title-audio-toggle[aria-pressed="true"] span{animation:title-audio-pulse 2.4s ease-in-out infinite}@keyframes title-audio-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+@media(max-width:760px){.title-audio-toggle{right:1.4rem;bottom:50px}}

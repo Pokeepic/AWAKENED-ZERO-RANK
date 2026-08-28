@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.880.0 - Title rain ambience
+
+- Added the supplied 15-second rain recording as a lightweight looping title-screen ambience track.
+- Starts sound only after a player interaction to comply with browser autoplay rules and keeps playback at a restrained volume.
+- Added an always-visible rain toggle plus a persistent Rain Ambience setting; leaving the title screen stops playback cleanly.
+
 ## 0.870.0 - Rain collision pass
 
 - Added staggered rain impacts along the exterior window sill, synchronized loosely with the falling weather layers.

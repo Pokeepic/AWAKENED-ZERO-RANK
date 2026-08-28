@@ -4,9 +4,10 @@ export const RPG_PREFERENCES_KEY = "awakened-zero-rank:rpg-preferences-v1";
 export type GamePreferences = {
   motion: "full" | "reduced";
   textSize: "normal" | "large";
+  ambience: "on" | "off";
 };
 
-export const DEFAULT_GAME_PREFERENCES: GamePreferences = { motion: "full", textSize: "normal" };
+export const DEFAULT_GAME_PREFERENCES: GamePreferences = { motion: "full", textSize: "normal", ambience: "on" };
 
 export function loadGamePreferences(): GamePreferences {
   try {
@@ -14,6 +15,7 @@ export function loadGamePreferences(): GamePreferences {
     return {
       motion: candidate?.motion === "reduced" ? "reduced" : "full",
       textSize: candidate?.textSize === "large" ? "large" : "normal",
+      ambience: candidate?.ambience === "off" ? "off" : "on",
     };
   } catch {
     return DEFAULT_GAME_PREFERENCES;
