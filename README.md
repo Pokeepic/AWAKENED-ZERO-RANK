@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.890.0` |
+| Release | `0.900.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -19,7 +19,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 [Open AWAKENED: ZERO RANK](https://awakened-zero-rank-observer.pokeepic.chatgpt.site/game)
 
-The game now opens on a restrained cinematic title screen set inside Ren's apartment. Rain ambience fades in after browser-approved interaction, pauses while the tab is hidden, resumes softly, and fades out before play begins. The title and persistent settings provide Off, Low, and Normal listening choices. Continue previews the current device-local save; New Game is protected.
+The game now opens on a restrained cinematic title screen set inside Ren's apartment. It supports mouse, touch, and game-style keyboard navigation: focus begins on Continue, Up/Down moves through choices, Enter activates, Escape backs out, and M toggles rain audio. Ambience fades around play and tab visibility while persistent settings retain sound, motion, and text choices.
 
 The current game contains six connected, authenticated chapters:
 

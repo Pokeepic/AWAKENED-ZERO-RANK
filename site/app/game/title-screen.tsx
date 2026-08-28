@@ -11,6 +11,7 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
   const [panel, setPanel] = useState<"menu" | "settings" | "new-game">("menu");
   const [preferences, setPreferences] = useState<GamePreferences>(() => loadGamePreferences());
   const audioRef = useRef<HTMLAudioElement>(null);
+  const menuRef = useRef<HTMLElement>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const hasProgress = state.turns > 0 || state.completedEvents.length > 0;
 
@@ -75,6 +76,35 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
     requestAnimationFrame(fade);
   };
 
+  useEffect(() => {
+    const menu = menuRef.current;
+    if (!menu) return;
+    const focusables = () => Array.from(menu.querySelectorAll<HTMLElement>("button:not([disabled]),a[href]"));
+    const firstFrame = requestAnimationFrame(() => focusables()[0]?.focus());
+    const handleMenuKeys = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === "m") {
+        event.preventDefault();
+        const next = { ...preferences, ambience: preferences.ambience === "on" ? "off" as const : "on" as const };
+        updatePreferences(next);
+        if (next.ambience === "on") void audioRef.current?.play(); else audioRef.current?.pause();
+        return;
+      }
+      if (event.key === "Escape" && panel !== "menu") {
+        event.preventDefault();
+        setPanel("menu");
+        return;
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      event.preventDefault();
+      const items = focusables();
+      const active = items.indexOf(document.activeElement as HTMLElement);
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      items[(active + direction + items.length) % items.length]?.focus();
+    };
+    window.addEventListener("keydown", handleMenuKeys);
+    return () => { cancelAnimationFrame(firstFrame); window.removeEventListener("keydown", handleMenuKeys); };
+  }, [panel, preferences]);
+
   return <main className="title-screen">
     {/* Ambient weather contains no spoken content that requires captions. */}
     {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
@@ -90,13 +120,13 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
     <div className="title-city-flicker" aria-hidden="true" />
     <div className="title-curtain-shadow" aria-hidden="true" />
     <div className="title-shade" aria-hidden="true" />
-    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.890</span></header>
+    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.900</span></header>
     <section className="title-lockup" aria-labelledby="title-heading">
       <small>REN&apos;S APARTMENT / ADACHI / 02:13</small>
       <h1 id="title-heading"><span>AWAKENED</span>ZERO RANK</h1>
       <p>THE RAIN HASN&apos;T STOPPED</p>
     </section>
-    <section className="title-menu" aria-label={panel === "menu" ? "Main menu" : panel === "settings" ? "Settings" : "New game confirmation"}>
+    <section ref={menuRef} className="title-menu" aria-label={panel === "menu" ? "Main menu" : panel === "settings" ? "Settings" : "New game confirmation"}>
       {panel === "menu" && <>
         <button className="primary" onClick={() => leaveTitle(onContinue)}><b>{hasProgress ? "CONTINUE" : "START GAME"}</b><span>Day {state.day} · {state.slot} · {state.location}</span></button>
         <button onClick={() => setPanel("new-game")}><b>NEW GAME</b><span>Begin again from the authenticated world seed</span></button>
@@ -119,7 +149,7 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
         <button className="back" onClick={() => setPanel("menu")}>← KEEP CURRENT SAVE</button>
       </div>}
     </section>
-    <button className="title-audio-toggle" type="button" aria-pressed={preferences.ambience === "on"} onClick={toggleAmbience}><span aria-hidden="true">{preferences.ambience === "on" ? "◖))" : "◖×"}</span> RAIN {preferences.ambience === "on" ? audioPlaying ? "PLAYING" : "READY" : "OFF"}</button>
+    <button className="title-audio-toggle" type="button" aria-pressed={preferences.ambience === "on"} onClick={toggleAmbience}><kbd>M</kbd><span aria-hidden="true">{preferences.ambience === "on" ? "◖))" : "◖×"}</span> RAIN {preferences.ambience === "on" ? audioPlaying ? "PLAYING" : "READY" : "OFF"}</button>
     <footer><span>LOCAL SAVE / OWNER-ONLY SITE</span><span>© AWAKENED: ZERO RANK</span></footer>
   </main>;
 }

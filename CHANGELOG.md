@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.900.0 - Game-menu controls
+
+- Added game-style keyboard navigation to the title screen with initial Continue focus and wrapping Up/Down movement.
+- Added Escape-to-back for Settings and New Game without weakening the protected restart confirmation.
+- Added an M shortcut and visible key hint for persistent rain-audio toggling while retaining mouse and touch behavior.
+
 ## 0.890.0 - Ambience lifecycle polish
 
 - Added soft rain fade-in after the first permitted interaction and a short fade-out when Continue or New Game leaves the title.
