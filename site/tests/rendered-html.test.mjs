@@ -331,11 +331,14 @@ test("uses an in-world apartment exit without interface tabs", async () => {
     readFile(new URL("app/game/door.module.css", root), "utf8"),
   ]);
   assert.match(game, /doorStyles\.apartmentDoor/);
+  assert.match(game, /doorStyles\.renPlacement/);
+  assert.match(game, /doorStyles\.fieldBag/);
   assert.match(game, /href="\/game\/city"/);
   assert.doesNotMatch(game, /workspace-tabs/);
   assert.doesNotMatch(game, /"scene" \| "notebook"/);
   assert.doesNotMatch(game, /scene-conclusion/);
   assert.match(styles, /\.apartmentDoor/);
+  assert.match(styles, /\.renPlacement/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],

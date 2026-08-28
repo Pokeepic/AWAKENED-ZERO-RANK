@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.770.0 - Apartment composition fix
+
+- Moved the apartment exit hotspot from the bed to the illustrated entry door.
+- Repositioned Ren into the open floor so his sprite no longer collides visually with the desk.
+- Aligned the field bag, rent envelope, and Gate notice prompts with their corresponding room objects.
+- Kept the existing pixel assets after confirming the problem was composition rather than sprite quality.
+
 ## 0.760.0 - In-world navigation
 
 - Removed the persistent RPG destination bar from every playable scene.

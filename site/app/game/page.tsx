@@ -145,7 +145,7 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.760</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.770</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
@@ -162,11 +162,11 @@ export default function GamePage() {
       <div className="game-room">
         <Image className="apartment-bg" src="/game/ren-apartment.png" alt="Pixel-art interior of Ren's apartment" fill sizes="(max-width: 800px) 90vw, 65vw" priority />
         <div className="apartment-shade" aria-hidden="true" />
-        <Image className="chibi-sprite ren-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} priority />
+        <Image className={`chibi-sprite ren-chibi ${doorStyles.renPlacement}`} src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} priority />
         <Link className={doorStyles.apartmentDoor} href="/game/city" aria-label="Leave Ren's apartment for Tokyo"><i aria-hidden="true" /><span>LEAVE APARTMENT</span></Link>
         {HOTSPOTS.map((hotspot, index) => <button
           key={hotspot.id}
-          className={`hotspot hotspot-${index + 1} ${clues.includes(hotspot.id) ? "found" : ""}`}
+          className={`hotspot hotspot-${index + 1} ${[doorStyles.fieldBag, doorStyles.rentEnvelope, doorStyles.gateNotice][index]} ${clues.includes(hotspot.id) ? "found" : ""}`}
           onClick={() => inspect(hotspot)}
           aria-pressed={activeClue === hotspot.id}
         ><i aria-hidden="true" /><span>{hotspot.label}</span></button>)}

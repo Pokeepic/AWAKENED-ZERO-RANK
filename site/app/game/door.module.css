@@ -1,10 +1,10 @@
 .apartmentDoor {
   position: absolute;
   z-index: 4;
-  right: 4%;
-  top: 17%;
-  width: 18%;
-  height: 48%;
+  left: 20%;
+  top: 1%;
+  width: 15%;
+  height: 47%;
   display: flex;
   align-items: end;
   justify-content: center;
@@ -12,6 +12,30 @@
   color: #fff;
   text-decoration: none;
   outline: 0;
+}
+
+.renPlacement {
+  left: 56%;
+  right: auto;
+  bottom: 12%;
+}
+
+.fieldBag {
+  left: 32%;
+  right: auto;
+  top: 42%;
+  bottom: auto;
+}
+
+.rentEnvelope {
+  right: 11%;
+  bottom: 14%;
+}
+
+.gateNotice {
+  left: 13%;
+  right: auto;
+  top: 18%;
 }
 
 .apartmentDoor i {
@@ -47,9 +71,14 @@
 
 @media (max-width: 800px) {
   .apartmentDoor {
-    right: 2%;
-    top: 15%;
-    width: 25%;
-    height: 50%;
+    left: 19%;
+    top: 1%;
+    width: 17%;
+    height: 47%;
+  }
+
+  .renPlacement {
+    left: 55%;
+    right: auto;
   }
 }
