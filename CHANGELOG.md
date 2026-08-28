@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.720.0 - Visual-novel controls
+
+- Added Enter and Space progression for mandatory story beats and number-key selection for dialogue choices.
+- Added a visible event-progress rail and shortcut hints without hiding touch controls.
+- Added an expandable, bounded dialogue log for the current canon scene.
+- Preserved one-time event completion, local bond rewards, and responsive character staging.
+
 ## 0.710.0 - Visual-novel canon scenes
 
 - Rebuilt After the Gate as a full visual-novel composition instead of a distant map scene.

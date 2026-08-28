@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.710.0` |
+| Release | `0.720.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 111 browser |
+| Automated tests | 339 Python + 112 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -27,7 +27,7 @@ The current game contains five connected, authenticated chapters:
 4. **First Contact** — fight a deterministic Gate sentinel with visible damage, energy costs, and a safe retreat.
 5. **After the Gate** — choose how Ren answers Aiko and build a persistent local RPG bond.
 
-Exploration uses tiny transparent pixel chibi sprites, while canon and bond scenes switch into a visual-novel presentation with full-size illustrated characters and location-specific backgrounds. After the Gate now takes place inside an illustrated Adachi Station concourse; the active speaker moves forward while the listening character recedes. Completed events cannot be replayed for duplicate rewards. Exploration decisions, resolved encounters, and dialogue commitments advance Morning → Afternoon → Evening → Late Night; individual combat moves do not consume calendar slots. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
+Exploration uses tiny transparent pixel chibi sprites, while canon and bond scenes switch into a visual-novel presentation with full-size illustrated characters and location-specific backgrounds. After the Gate takes place inside an illustrated Adachi Station concourse; the active speaker moves forward while the listener recedes. Dialogue advances by click, Enter, or Space, numbered choices support keys 1–3, and an expandable history preserves the current scene's lines. Completed events cannot be replayed for duplicate rewards. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
 
 ## What the simulation models
 

@@ -269,6 +269,20 @@ test("stages one-time canon beats as a full visual-novel scene", async () => {
   assert.match(styles, /\.vn-character\.listening/);
   for (const asset of ["adachi-station-dusk", "ren-full", "aiko-full"]) await access(new URL(`public/game/visual-novel/${asset}.png`, root));
 });
+test("supports keyboard-driven visual-novel pacing and dialogue history", async () => {
+  const [evening, styles] = await Promise.all([
+    readFile(new URL("app/game/evening/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(evening, /window\.addEventListener\("keydown"/);
+  assert.match(evening, /event\.key === "Enter"/);
+  assert.match(evening, /event\.key === " "/);
+  assert.match(evening, /Digit\[1-3\]/);
+  assert.match(evening, /DIALOGUE LOG/);
+  assert.match(evening, /className="vn-progress"/);
+  assert.match(styles, /\.vn-history/);
+  assert.match(styles, /\.vn-progress/);
+});
 test("fits the apartment workspace into tabs without duplicate result sections", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
