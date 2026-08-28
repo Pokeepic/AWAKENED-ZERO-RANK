@@ -14,16 +14,29 @@
   outline: 0;
 }
 
-.renPortrait {
-  position: absolute;
-  z-index: 2;
-  left: 48%;
-  bottom: -3%;
-  width: auto;
-  height: 68%;
+.resultPortrait {
+  float: right;
+  width: 72px;
+  height: 108px;
+  margin: -.55rem 0 .6rem 1rem;
   object-fit: contain;
   object-position: bottom;
-  filter: drop-shadow(0 12px 8px rgba(0, 0, 0, .62));
+  filter: drop-shadow(0 7px 5px rgba(0, 0, 0, .58));
+}
+
+.apartmentPanel :global(.game-copy) {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 1.35rem 0 .75rem;
+}
+
+.apartmentPanel :global(.game-copy p) {
+  margin-bottom: 0;
+}
+
+.apartmentPanel :global(.suggestions) {
+  margin-top: 1rem;
+  flex: 0 0 auto;
 }
 
 .fieldBag {
@@ -83,8 +96,8 @@
     height: 47%;
   }
 
-  .renPortrait {
-    left: 43%;
-    height: 62%;
+  .resultPortrait {
+    width: 62px;
+    height: 93px;
   }
 }

@@ -80,7 +80,7 @@ test("ships a deterministic Gate battle that advances time only on resolution", 
   assert.match(styles, /\.field-enemy/);
   assert.doesNotMatch(field, /Math\.random/);
 });
-test("uses an illustrated apartment Ren and pixel sprites for outside scenes", async () => {
+test("uses first-person apartment framing and pixel sprites for outside scenes", async () => {
   const [game, city, caseboard, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),
@@ -91,8 +91,8 @@ test("uses an illustrated apartment Ren and pixel sprites for outside scenes", a
     await access(new URL(`public/game/characters/${name}.png`, root));
   }
   assert.match(styles, /image-rendering:pixelated/);
-  assert.match(game, /alt="Full-body illustration of Ren Takahashi"/);
-  assert.match(game, /src="\/game\/visual-novel\/ren-full\.png"/);
+  assert.match(game, /alt="Portrait of Ren Takahashi"/);
+  assert.doesNotMatch(game, /alt="Full-body illustration of Ren Takahashi"/);
   assert.match(city, /SPRITES/);
   assert.match(caseboard, /src="\/game\/characters\/ren\.png"/);
   assert.match(game, /ren-apartment\.png/);
@@ -330,7 +330,8 @@ test("uses an in-world apartment exit without interface tabs", async () => {
     readFile(new URL("app/game/door.module.css", root), "utf8"),
   ]);
   assert.match(game, /doorStyles\.apartmentDoor/);
-  assert.match(game, /doorStyles\.renPortrait/);
+  assert.match(game, /doorStyles\.resultPortrait/);
+  assert.match(game, /doorStyles\.apartmentPanel/);
   assert.match(game, /visual-novel\/ren-full\.png/);
   assert.match(game, /doorStyles\.fieldBag/);
   assert.match(game, /href="\/game\/city"/);
@@ -338,7 +339,8 @@ test("uses an in-world apartment exit without interface tabs", async () => {
   assert.doesNotMatch(game, /"scene" \| "notebook"/);
   assert.doesNotMatch(game, /scene-conclusion/);
   assert.match(styles, /\.apartmentDoor/);
-  assert.match(styles, /\.renPortrait/);
+  assert.match(styles, /\.resultPortrait/);
+  assert.match(styles, /\.apartmentPanel/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],

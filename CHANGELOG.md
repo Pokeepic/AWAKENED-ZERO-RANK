@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.790.0 - First-person apartment
+
+- Removed Ren's full-body sprite from the apartment room and adopted a first-person point-and-click viewpoint.
+- Reused the illustrated Ren art as a compact action-result portrait instead of placing it over the environment.
+- Fixed the apartment side panel so descriptive copy and action controls no longer overlap at shorter desktop heights.
+- Kept pixel Ren exclusively in outdoor, travel, and field contexts.
+
 ## 0.780.0 - Contextual Ren sprite
 
 - Replaced Ren's apartment chibi with his existing full-body illustrated sprite.

@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.780.0` |
+| Release | `0.790.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -36,7 +36,7 @@ The RPG no longer uses a persistent destination bar or apartment workspace tabs.
 
 Apartment interactions are aligned to the illustrated room: the exit sits on the actual entry door, Ren stands in the open floor, and clue prompts sit beside their matching furniture or object.
 
-Ren's apartment uses his full-body illustrated sprite for close character presentation. Small pixel sprites are reserved for outdoor maps, travel, and field scenes where their scale matches the environment.
+Ren's apartment is framed as a first-person point-and-click scene, so Ren does not stand inside his own viewpoint. His illustrated portrait appears only when he speaks after an action, while small pixel sprites remain reserved for outdoor maps, travel, and field scenes.
 
 ## What the simulation models
 

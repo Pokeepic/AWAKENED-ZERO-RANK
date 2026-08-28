@@ -145,11 +145,11 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.780</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.790</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
-      <h1 id="game-title">A quiet room.<br />A life already moving.</h1>
+      <h1 id="game-title">A quiet room.<span>A life already moving.</span></h1>
       <p>You are Ren. Inspect the apartment, choose an action, and spend one time slot.</p>
       <ol className="game-phases" aria-label="Scene progress">
         <li className={phase >= 1 ? "active" : ""}><b>01</b><span>EXPLORE</span></li>
@@ -162,7 +162,6 @@ export default function GamePage() {
       <div className="game-room">
         <Image className="apartment-bg" src="/game/ren-apartment.png" alt="Pixel-art interior of Ren's apartment" fill sizes="(max-width: 800px) 90vw, 65vw" priority />
         <div className="apartment-shade" aria-hidden="true" />
-        <Image className={doorStyles.renPortrait} src="/game/visual-novel/ren-full.png" alt="Full-body illustration of Ren Takahashi" width={1024} height={1536} priority />
         <Link className={doorStyles.apartmentDoor} href="/game/city" aria-label="Leave Ren's apartment for Tokyo"><i aria-hidden="true" /><span>LEAVE APARTMENT</span></Link>
         {HOTSPOTS.map((hotspot, index) => <button
           key={hotspot.id}
@@ -173,7 +172,7 @@ export default function GamePage() {
         <p className="scene-caption">{scene.place.name} / {scene.atmosphere} / {scene.presence}</p>
       </div>
 
-      <aside className="game-panel" aria-live="polite">
+      <aside className={`game-panel ${doorStyles.apartmentPanel}`} aria-live="polite">
         <div className="game-progress"><span>CLUES FOUND</span><b>{clues.length} / {HOTSPOTS.length}</b></div>
         {!active && <div className="game-copy"><small>REN'S ROOM</small><h2>Decide how to spend the slot.</h2><p>Inspect two points, then act as Ren. This RPG campaign has its own local save, separate from the Observer.</p></div>}
         {active && <div className="game-copy"><small>OBSERVATION / {active.label}</small><h2>{active.label}</h2><p>{active.detail(snapshot)}</p></div>}
@@ -182,7 +181,7 @@ export default function GamePage() {
           {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null} onClick={() => suggest(suggestion.id)}>{suggestion.label}</button>)}
           {!unlocked && <p>Inspect {2 - clues.length} more point{2 - clues.length === 1 ? "" : "s"} in the room.</p>}
         </div>
-        {response && selected && <blockquote className="dialogue-box"><span className="speaker-tag">REN</span><small>ACTION COMPLETE / {selected.theme}</small><p>{response}</p><nav className="panel-actions" aria-label="Continue campaign"><Link href="/game/city">GO TO TOKYO</Link><button onClick={replay}>RESET SCENE</button></nav></blockquote>}
+        {response && selected && <blockquote className="dialogue-box"><Image className={doorStyles.resultPortrait} src="/game/visual-novel/ren-full.png" alt="Portrait of Ren Takahashi" width={1024} height={1536} /><span className="speaker-tag">REN</span><small>ACTION COMPLETE / {selected.theme}</small><p>{response}</p><nav className="panel-actions" aria-label="Continue campaign"><Link href="/game/city">GO TO TOKYO</Link><button onClick={replay}>RESET SCENE</button></nav></blockquote>}
       </aside>
     </section>
 
