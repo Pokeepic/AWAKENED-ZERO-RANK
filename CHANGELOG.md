@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.780.0 - Contextual Ren sprite
+
+- Replaced Ren's apartment chibi with his existing full-body illustrated sprite.
+- Scaled and grounded the portrait inside the room rather than presenting it as a visual-novel cut-in.
+- Reserved Ren's small pixel sprite for outdoor maps, travel encounters, and Gate field scenes.
+
 ## 0.770.0 - Apartment composition fix
 
 - Moved the apartment exit hotspot from the bed to the illustrated entry door.

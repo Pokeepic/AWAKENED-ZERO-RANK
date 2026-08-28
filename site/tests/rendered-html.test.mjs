@@ -80,7 +80,7 @@ test("ships a deterministic Gate battle that advances time only on resolution", 
   assert.match(styles, /\.field-enemy/);
   assert.doesNotMatch(field, /Math\.random/);
 });
-test("renders separate accessible pixel sprites with a reusable apartment environment", async () => {
+test("uses an illustrated apartment Ren and pixel sprites for outside scenes", async () => {
   const [game, city, caseboard, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),
@@ -91,9 +91,8 @@ test("renders separate accessible pixel sprites with a reusable apartment enviro
     await access(new URL(`public/game/characters/${name}.png`, root));
   }
   assert.match(styles, /image-rendering:pixelated/);
-  assert.match(styles, /\.ren-chibi\{width:96px;height:96px/);
-  assert.match(game, /alt="Pixel sprite of Ren Takahashi"/);
-  assert.match(game, /src="\/game\/characters\/ren\.png"/);
+  assert.match(game, /alt="Full-body illustration of Ren Takahashi"/);
+  assert.match(game, /src="\/game\/visual-novel\/ren-full\.png"/);
   assert.match(city, /SPRITES/);
   assert.match(caseboard, /src="\/game\/characters\/ren\.png"/);
   assert.match(game, /ren-apartment\.png/);
@@ -331,14 +330,15 @@ test("uses an in-world apartment exit without interface tabs", async () => {
     readFile(new URL("app/game/door.module.css", root), "utf8"),
   ]);
   assert.match(game, /doorStyles\.apartmentDoor/);
-  assert.match(game, /doorStyles\.renPlacement/);
+  assert.match(game, /doorStyles\.renPortrait/);
+  assert.match(game, /visual-novel\/ren-full\.png/);
   assert.match(game, /doorStyles\.fieldBag/);
   assert.match(game, /href="\/game\/city"/);
   assert.doesNotMatch(game, /workspace-tabs/);
   assert.doesNotMatch(game, /"scene" \| "notebook"/);
   assert.doesNotMatch(game, /scene-conclusion/);
   assert.match(styles, /\.apartmentDoor/);
-  assert.match(styles, /\.renPlacement/);
+  assert.match(styles, /\.renPortrait/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],

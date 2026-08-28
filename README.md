@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.770.0` |
+| Release | `0.780.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -35,6 +35,8 @@ Canon scenes now flow out of normal RPG play instead of a chapter menu. Resolvin
 The RPG no longer uses a persistent destination bar or apartment workspace tabs. Ren leaves home by clicking the apartment door, then navigates through locations and scene exits inside the world.
 
 Apartment interactions are aligned to the illustrated room: the exit sits on the actual entry door, Ren stands in the open floor, and clue prompts sit beside their matching furniture or object.
+
+Ren's apartment uses his full-body illustrated sprite for close character presentation. Small pixel sprites are reserved for outdoor maps, travel, and field scenes where their scale matches the environment.
 
 ## What the simulation models
 
