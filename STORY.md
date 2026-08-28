@@ -44,7 +44,7 @@ Ren retains selected legacy knowledge and awakens **Vector Step**, a respectable
 
 ## Timeline III — The Last Year
 
-The final year opens the widest set of people, places, overseas routes, and lottery outcomes. Some characters experience déjà vu around Ren. There is no further transmigration: Day 365 must permanently resolve the Black Gate, and ordinary death remains final.
+The second and last transmigration triggers Ren's third awakening: **Causal Sever**. Residual Read sees a causal chain, Vector Step moves between its links, and Causal Sever can break one chosen link so its consequence never arrives. It is powerful but tightly limited and begins at zero mastery. The final year opens the widest set of people, places, overseas routes, and lottery outcomes. Some characters experience déjà vu around Ren. There is no further transmigration: Day 365 must permanently resolve the Black Gate, and ordinary death remains final.
 
 ## End states
 

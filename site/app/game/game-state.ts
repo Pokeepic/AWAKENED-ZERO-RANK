@@ -79,11 +79,16 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
         timeline: candidate.timeline ?? 1,
         attempt: candidate.attempt ?? 1,
         status: candidate.status ?? (candidate.health === 0 ? "game-over" : "active"),
-        skills: Array.isArray(candidate.skills) ? candidate.skills : ["Residual Read"],
-        skillMastery: candidate.skillMastery ?? {
-          "Residual Read": candidate.skills?.includes("Residual Read: Mastered") ? 100 : 0,
-          ...(candidate.skills?.some((skill) => skill.startsWith("Vector Step")) ? { "Vector Step": candidate.skills.includes("Vector Step: Mastered") ? 100 : 0 } : {}),
-        },
+        skills: Array.isArray(candidate.skills)
+          ? [...new Set([...candidate.skills, ...((candidate.timeline ?? 1) === 3 ? ["Causal Sever"] : [])])]
+          : ["Residual Read"],
+        skillMastery: candidate.skillMastery
+          ? { ...candidate.skillMastery, ...((candidate.timeline ?? 1) === 3 && candidate.skillMastery["Causal Sever"] === undefined ? { "Causal Sever": 0 } : {}) }
+          : {
+            "Residual Read": candidate.skills?.includes("Residual Read: Mastered") ? 100 : 0,
+            ...(candidate.skills?.some((skill) => skill.startsWith("Vector Step")) ? { "Vector Step": candidate.skills.includes("Vector Step: Mastered") ? 100 : 0 } : {}),
+            ...((candidate.timeline ?? 1) === 3 ? { "Causal Sever": 0 } : {}),
+          },
         legacyClues: Array.isArray(candidate.legacyClues) ? candidate.legacyClues : [],
         lotteryTickets: candidate.lotteryTickets ?? 0,
         transmigrationEligible: candidate.transmigrationEligible ?? false,
@@ -110,7 +115,7 @@ function isRpgState(value: Partial<RpgState>): value is RpgState {
     && [1, 2, 3].includes(value.timeline as number)
     && Number.isSafeInteger(value.attempt) && value.attempt! > 0
     && ["active", "game-over", "year-ending"].includes(value.status as string)
-    && Array.isArray(value.skills) && value.skills.length >= 1 && value.skills.length <= 2
+    && Array.isArray(value.skills) && value.skills.length >= 1 && value.skills.length <= 3
     && value.skills.every((skill) => typeof skill === "string" && skill.length > 0)
     && value.skillMastery !== null && typeof value.skillMastery === "object" && !Array.isArray(value.skillMastery)
     && Object.entries(value.skillMastery).every(([skill, mastery]) => value.skills?.includes(skill) && Number.isSafeInteger(mastery) && mastery >= 0 && mastery <= 100)
@@ -158,7 +163,7 @@ export function restartRpgRun(state: RpgState): RpgState {
     status: "active",
     skillMastery: state.timeline === 1 ? { "Residual Read": 0 }
       : state.timeline === 2 ? { "Residual Read": 100, "Vector Step": 0 }
-      : { "Residual Read": 100, "Vector Step": 100 },
+      : { "Residual Read": 100, "Vector Step": 100, "Causal Sever": 0 },
     transmigrationEligible: false,
     day: 1,
     slot: "Morning",
@@ -208,8 +213,8 @@ export function transmigrateRpgState(state: RpgState): RpgState {
     timeline,
     attempt: 1,
     status: "active",
-    skills: timeline >= 2 ? ["Residual Read", "Vector Step"] : state.skills,
-    skillMastery: timeline === 2 ? { "Residual Read": 100, "Vector Step": 0 } : { "Residual Read": 100, "Vector Step": 100 },
+    skills: timeline === 2 ? ["Residual Read", "Vector Step"] : ["Residual Read", "Vector Step", "Causal Sever"],
+    skillMastery: timeline === 2 ? { "Residual Read": 100, "Vector Step": 0 } : { "Residual Read": 100, "Vector Step": 100, "Causal Sever": 0 },
     legacyClues: [...new Set([...state.legacyClues, "black-gate-temporal-residue"])].slice(-12),
     lotteryTickets: state.lotteryTickets + state.timeline,
     transmigrationEligible: false,
@@ -233,6 +238,8 @@ export function pendingStoryRoute(state: RpgState): string | null {
   if (state.status !== "active") return null;
   if (state.timeline === 1 && state.day === 1 && state.turns === 0
     && !state.completedEvents.includes("worthless-awakening-intro")) return "/game/awakening";
+  if (state.timeline === 3 && state.day === 1 && state.turns === 0
+    && !state.completedEvents.includes("third-awakening-intro")) return "/game/awakening/final";
   if (state.timeline === 1 && state.day >= 45 && state.day <= 120
     && !state.completedEvents.includes("arc-i-deadline-resolved")) return "/game/deadline/arc-one";
   const survivedFirstGate = state.journal.some((entry) => [

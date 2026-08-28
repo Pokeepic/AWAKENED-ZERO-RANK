@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.990.0 - Third awakening
+
+- Made the second transmigration grant Ren a third skill, Causal Sever, alongside mastered Residual Read and Vector Step.
+- Added an automatic final-timeline Day 1 reassessment cutscene that explains the three-skill causal progression and the absence of a fourth chance.
+- Started Causal Sever at zero mastery, exposed it in the campaign HUD, and reset its run-bound mastery honestly after final-timeline death.
+- Migrated existing third-timeline local saves to the three-skill model without discarding their campaign progress.
+
 ## 0.980.0 - Arc I deadline resolution
 
 - Added the automatic Day 45 synchronized-pulse event at Adachi Evacuation Route C with purpose-made cinematic artwork.

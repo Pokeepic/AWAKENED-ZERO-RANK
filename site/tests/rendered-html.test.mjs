@@ -59,6 +59,25 @@ test("resolves the first arc deadline through evidence and mastery consequences"
   assert.match(styles, /data-game-motion="reduced".*deadline-cutscene/);
   await access(new URL("public/game/cutscenes/adachi-day45-pulse-v1.png", root));
 });
+test("grants and stages a third awakening after the second transmigration", async () => {
+  const [awakening, state, hud, story, styles] = await Promise.all([
+    readFile(new URL("app/game/awakening/final/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
+    readFile(new URL("../STORY.md", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /\["Residual Read", "Vector Step", "Causal Sever"\]/);
+  assert.match(state, /"Causal Sever": 0/);
+  assert.match(state, /return "\/game\/awakening\/final"/);
+  assert.match(awakening, /FINAL_AWAKENING_SHOTS/);
+  assert.match(awakening, /third-awakening-intro/);
+  assert.match(awakening, /THIRD AWAKENING CONFIRMED/);
+  assert.match(hud, /Causal Sever.*CS/);
+  assert.match(story, /second and last transmigration triggers Ren's third awakening/);
+  assert.match(styles, /\.final-awakening/);
+  assert.match(styles, /causal-sever-flash/);
+});
 test("opens the RPG through a persistent title menu without interrupting return travel", async () => {
   const [game, title, preferences, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
