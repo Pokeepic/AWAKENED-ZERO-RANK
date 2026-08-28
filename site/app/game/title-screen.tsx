@@ -120,7 +120,7 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
     <div className="title-city-flicker" aria-hidden="true" />
     <div className="title-curtain-shadow" aria-hidden="true" />
     <div className="title-shade" aria-hidden="true" />
-    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.900</span></header>
+    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.910</span></header>
     <section className="title-lockup" aria-labelledby="title-heading">
       <small>REN&apos;S APARTMENT / ADACHI / 02:13</small>
       <h1 id="title-heading"><span>AWAKENED</span>ZERO RANK</h1>
@@ -149,6 +149,11 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
         <button className="back" onClick={() => setPanel("menu")}>← KEEP CURRENT SAVE</button>
       </div>}
     </section>
+    <aside className="title-controls" aria-label="Title menu controls">
+      <span><kbd>↑</kbd><kbd>↓</kbd> SELECT</span>
+      <span><kbd>ENTER</kbd> CONFIRM</span>
+      {panel !== "menu" && <span><kbd>ESC</kbd> BACK</span>}
+    </aside>
     <button className="title-audio-toggle" type="button" aria-pressed={preferences.ambience === "on"} onClick={toggleAmbience}><kbd>M</kbd><span aria-hidden="true">{preferences.ambience === "on" ? "◖))" : "◖×"}</span> RAIN {preferences.ambience === "on" ? audioPlaying ? "PLAYING" : "READY" : "OFF"}</button>
     <footer><span>LOCAL SAVE / OWNER-ONLY SITE</span><span>© AWAKENED: ZERO RANK</span></footer>
   </main>;

@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.910.0 - Title selection feedback
+
+- Added a compact game-style control legend for selection, confirmation, and contextual back navigation.
+- Strengthened keyboard focus with a restrained selection marker and light bloom that stays consistent with the rain-soaked title direction.
+- Preserved reduced-motion behavior and condensed the control legend for narrow screens.
+
 ## 0.900.0 - Game-menu controls
 
 - Added game-style keyboard navigation to the title screen with initial Continue focus and wrapping Up/Down movement.

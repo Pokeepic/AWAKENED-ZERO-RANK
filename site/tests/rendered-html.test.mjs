@@ -53,6 +53,9 @@ test("opens the RPG through a persistent title menu without interrupting return 
   assert.match(title, /ArrowUp/);
   assert.match(title, /event\.key\.toLowerCase\(\) === "m"/);
   assert.match(title, /menuRef/);
+  assert.match(title, /title-controls/);
+  assert.match(title, /ENTER<\/kbd> CONFIRM/);
+  assert.match(title, /panel !== "menu".*ESC/s);
   await access(new URL("public/game/audio/rain-title-loop.mp3", root));
   assert.doesNotMatch(title, /title-ren/);
   await access(new URL("public/game/ren-apartment-window-title-v1.png", root));
@@ -61,6 +64,7 @@ test("opens the RPG through a persistent title menu without interrupting return 
   assert.match(styles, /\.title-screen/);
   assert.match(styles, /data-game-motion/);
   assert.match(styles, /data-game-text/);
+  assert.match(styles, /title-selection-breathe/);
 });
 test("completes the prologue through explore act and result phases", async () => {
   const [game, styles] = await Promise.all([
