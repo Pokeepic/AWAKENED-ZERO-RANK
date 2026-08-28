@@ -48,7 +48,8 @@ export default function FieldPage() {
     const health = Math.max(0, rpg.health - (enemyHp === 0 ? 0 : move.retaliation));
     const energy = Math.max(0, rpg.energy - move.cost);
     if (enemyHp === 0) {
-      const next = takeRpgAction({ ...rpg, health, energy }, "Cleared the fracture sentinel", { health, energy, money: rpg.money + 1800, location: "Glass Office Labyrinth" });
+      const skillMastery = { ...rpg.skillMastery, "Residual Read": Math.min(100, (rpg.skillMastery["Residual Read"] ?? 0) + 12) };
+      const next = takeRpgAction({ ...rpg, health, energy }, "Cleared the fracture sentinel", { health, energy, money: rpg.money + 1800, location: "Glass Office Labyrinth", skillMastery });
       setRpg(next);
       setBattle((current) => ({ ...current, enemyHp, log: [...current.log, move.note, "The sentinel collapses. The corridor stabilizes."], resolved: "victory" }));
     } else if (health === 0) {
@@ -63,7 +64,8 @@ export default function FieldPage() {
 
   function retreat() {
     if (!rpg || battle.resolved) return;
-    const next = takeRpgAction(rpg, "Withdrew from the fracture sentinel", { energy: Math.max(0, rpg.energy - 2), location: "Adachi Gate Zone" });
+    const skillMastery = { ...rpg.skillMastery, "Residual Read": Math.min(100, (rpg.skillMastery["Residual Read"] ?? 0) + 5) };
+    const next = takeRpgAction(rpg, "Withdrew from the fracture sentinel", { energy: Math.max(0, rpg.energy - 2), location: "Adachi Gate Zone", skillMastery });
     setRpg(next);
     setBattle((current) => ({ ...current, log: [...current.log, "Ren marks the pattern and withdraws before the corridor seals."], resolved: "retreat" }));
   }

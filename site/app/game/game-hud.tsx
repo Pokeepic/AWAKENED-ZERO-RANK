@@ -48,7 +48,7 @@ export function GameHud({ state, current, onNewGame }: { state: RpgState; curren
   return <><section className="rpg-hud" aria-label="Ren RPG status">
     <div><small>{timelineLabel} · RUN {state.attempt}</small><b>DAY {state.day} / 365</b><span>{state.slot}</span></div>
     <div><small>LOCATION</small><b>{state.location}</b><span>{state.turns} ACTION{state.turns === 1 ? "" : "S"}</span></div>
-    <div><small>CONDITION</small><b>HP {state.health}</b><span>EN {state.energy}</span></div>
+    <div><small>CONDITION</small><b>HP {state.health} · EN {state.energy}</b><span>RR {state.skillMastery["Residual Read"] ?? 0}%{state.skillMastery["Vector Step"] !== undefined ? ` · VS ${state.skillMastery["Vector Step"]}%` : ""}</span></div>
     <div><small>FUNDS</small><b>¥{state.money.toLocaleString()}</b><span>{state.lastAction}</span></div>
     {onNewGame && <button onClick={() => setConfirmingReset(true)} aria-haspopup="dialog">NEW GAME</button>}
   </section><section className="campaign-deadline" aria-label="Current story deadline"><span>ARC {arc.id === "worthless-awakening" ? "I" : arc.id === "adachi-countdown" ? "II" : arc.id === "false-orders" ? "III" : "IV"}</span><b>{arc.title}</b><small>DEADLINE · DAY {arc.deadline} · {Math.max(0, arc.deadline - state.day)} DAYS REMAIN</small></section><details className="rpg-journal">

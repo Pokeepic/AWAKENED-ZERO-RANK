@@ -14,11 +14,12 @@ export type TransmigrationCondition = { id: string; label: string; met: boolean 
 export type RpgJournalEntry = { day: number; slot: (typeof RPG_SLOTS)[number]; action: string; location: string };
 
 export type RpgState = {
-  saveVersion: 6;
+  saveVersion: 7;
   timeline: Timeline;
   attempt: number;
   status: CampaignStatus;
   skills: string[];
+  skillMastery: Record<string, number>;
   legacyClues: string[];
   lotteryTickets: number;
   transmigrationEligible: boolean;
@@ -38,11 +39,12 @@ export type RpgState = {
 
 export function newRpgState(snapshot: ObserverSnapshot): RpgState {
   return {
-    saveVersion: 6,
+    saveVersion: 7,
     timeline: 1,
     attempt: 1,
     status: "active",
     skills: ["Residual Read"],
+    skillMastery: { "Residual Read": 0 },
     legacyClues: [],
     lotteryTickets: 0,
     transmigrationEligible: false,
@@ -73,11 +75,15 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
       const candidate = JSON.parse(saved) as Partial<RpgState>;
       const migrated = {
         ...candidate,
-        saveVersion: 6 as const,
+        saveVersion: 7 as const,
         timeline: candidate.timeline ?? 1,
         attempt: candidate.attempt ?? 1,
         status: candidate.status ?? (candidate.health === 0 ? "game-over" : "active"),
         skills: Array.isArray(candidate.skills) ? candidate.skills : ["Residual Read"],
+        skillMastery: candidate.skillMastery ?? {
+          "Residual Read": candidate.skills?.includes("Residual Read: Mastered") ? 100 : 0,
+          ...(candidate.skills?.some((skill) => skill.startsWith("Vector Step")) ? { "Vector Step": candidate.skills.includes("Vector Step: Mastered") ? 100 : 0 } : {}),
+        },
         legacyClues: Array.isArray(candidate.legacyClues) ? candidate.legacyClues : [],
         lotteryTickets: candidate.lotteryTickets ?? 0,
         transmigrationEligible: candidate.transmigrationEligible ?? false,
@@ -100,12 +106,14 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
 }
 
 function isRpgState(value: Partial<RpgState>): value is RpgState {
-  return value.saveVersion === 6
+  return value.saveVersion === 7
     && [1, 2, 3].includes(value.timeline as number)
     && Number.isSafeInteger(value.attempt) && value.attempt! > 0
     && ["active", "game-over", "year-ending"].includes(value.status as string)
     && Array.isArray(value.skills) && value.skills.length >= 1 && value.skills.length <= 2
     && value.skills.every((skill) => typeof skill === "string" && skill.length > 0)
+    && value.skillMastery !== null && typeof value.skillMastery === "object" && !Array.isArray(value.skillMastery)
+    && Object.entries(value.skillMastery).every(([skill, mastery]) => value.skills?.includes(skill) && Number.isSafeInteger(mastery) && mastery >= 0 && mastery <= 100)
     && Array.isArray(value.legacyClues) && value.legacyClues.length <= 12
     && value.legacyClues.every((clue) => typeof clue === "string" && clue.length > 0)
     && Number.isSafeInteger(value.lotteryTickets) && value.lotteryTickets! >= 0
@@ -148,6 +156,9 @@ export function restartRpgRun(state: RpgState): RpgState {
     ...state,
     attempt: state.attempt + 1,
     status: "active",
+    skillMastery: state.timeline === 1 ? { "Residual Read": 0 }
+      : state.timeline === 2 ? { "Residual Read": 100, "Vector Step": 0 }
+      : { "Residual Read": 100, "Vector Step": 100 },
     transmigrationEligible: false,
     day: 1,
     slot: "Morning",
@@ -169,7 +180,7 @@ export function transmigrationConditions(state: RpgState): TransmigrationConditi
   const strongestBond = Math.max(0, ...Object.values(state.bonds));
   const base = [
     { id: "day", label: "Reach Day 365 alive", met: state.day === 365 && state.health > 0 },
-    { id: "mastery", label: "Master Residual Read", met: state.skills.includes("Residual Read: Mastered") },
+    { id: "mastery", label: `Master Residual Read (${state.skillMastery["Residual Read"] ?? 0} / 100)`, met: state.skillMastery["Residual Read"] === 100 },
     { id: "evidence", label: "Carry evidence through all four arcs", met: ["arc-i-evidence", "arc-ii-evidence", "arc-iii-evidence", "black-gate-temporal-residue"].every((clue) => state.legacyClues.includes(clue) || state.completedEvents.includes(clue)) },
     { id: "bond", label: `Build a trusted bond (${strongestBond} / 6)`, met: strongestBond >= 6 },
     { id: "health", label: `Enter the core with at least 20 HP (${state.health})`, met: state.health >= 20 },
@@ -177,7 +188,7 @@ export function transmigrationConditions(state: RpgState): TransmigrationConditi
     { id: "choice", label: "Read the collapsing Gate instead of fighting it", met: state.completedEvents.includes("read-the-collapsing-gate") },
   ];
   if (state.timeline === 2) base.push(
-    { id: "second-skill", label: "Awaken and master Vector Step", met: state.skills.includes("Vector Step: Mastered") },
+    { id: "second-skill", label: `Awaken and master Vector Step (${state.skillMastery["Vector Step"] ?? 0} / 100)`, met: state.skillMastery["Vector Step"] === 100 },
     { id: "anchor", label: "Construct the residual anchor with a willing ally", met: state.completedEvents.includes("residual-anchor-complete") },
     { id: "overseas", label: "Decode the Busan signal", met: state.completedEvents.includes("busan-signal-decoded") },
   );
@@ -197,7 +208,8 @@ export function transmigrateRpgState(state: RpgState): RpgState {
     timeline,
     attempt: 1,
     status: "active",
-    skills: timeline >= 2 ? ["Residual Read: Mastered", "Vector Step"] : state.skills,
+    skills: timeline >= 2 ? ["Residual Read", "Vector Step"] : state.skills,
+    skillMastery: timeline === 2 ? { "Residual Read": 100, "Vector Step": 0 } : { "Residual Read": 100, "Vector Step": 100 },
     legacyClues: [...new Set([...state.legacyClues, "black-gate-temporal-residue"])].slice(-12),
     lotteryTickets: state.lotteryTickets + state.timeline,
     transmigrationEligible: false,
@@ -239,7 +251,7 @@ export function currentCampaignArc(day: number) {
   return CAMPAIGN_ARCS.find((arc) => day >= arc.starts && day <= arc.deadline) ?? CAMPAIGN_ARCS.at(-1)!;
 }
 
-export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location" | "bonds" | "completedEvents">>, timeSlots = 1): RpgState {
+export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location" | "bonds" | "completedEvents" | "skillMastery">>, timeSlots = 1): RpgState {
   if (state.status !== "active") return state;
   const slots = Math.max(1, Math.min(RPG_SLOTS.length, Math.trunc(timeSlots)));
   const index = RPG_SLOTS.indexOf(state.slot);

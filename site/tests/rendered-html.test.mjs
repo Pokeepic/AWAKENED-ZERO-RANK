@@ -259,7 +259,7 @@ test("keeps story routing automatic and validates versioned local saves", async 
   assert.match(hud, /pendingStoryRoute/);
   assert.doesNotMatch(hud, /aria-current/);
   assert.doesNotMatch(hud, /STORY/);
-  assert.match(state, /saveVersion: 6/);
+  assert.match(state, /saveVersion: 7/);
   assert.match(state, /isRpgState/);
   assert.match(state, /Number\.isSafeInteger/);
   assert.match(layout, /separate time-management RPG/);
@@ -270,7 +270,7 @@ test("records a bounded persistent campaign journal and migrates older saves", a
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(state, /saveVersion: 6/);
+  assert.match(state, /saveVersion: 7/);
   assert.match(state, /Array\.isArray\(candidate\.journal\)/);
   assert.match(state, /candidate\.bonds/);
   assert.match(state, /candidate\.completedEvents/);
@@ -306,7 +306,12 @@ test("models a lethal one-year campaign with conditional final-day transmigratio
   assert.match(state, /transmigrationConditions/);
   assert.match(state, /canTransmigrate/);
   assert.match(state, /transmigrateRpgState/);
-  for (const requirement of ["Residual Read: Mastered", "Black Gate Core", "read-the-collapsing-gate", "Vector Step: Mastered", "busan-signal-decoded"]) assert.match(state, new RegExp(requirement));
+  assert.match(state, /"Residual Read": 0/);
+  assert.match(state, /state\.skillMastery\["Residual Read"\] === 100/);
+  assert.match(state, /state\.skillMastery\["Vector Step"\] === 100/);
+  assert.match(hud, /RR \{state\.skillMastery/);
+  assert.match(field, /Residual Read.*\+ 12/s);
+  for (const requirement of ["skillMastery", "Black Gate Core", "read-the-collapsing-gate", "busan-signal-decoded"]) assert.match(state, new RegExp(requirement));
   assert.match(hud, /FIRST TIMELINE/);
   assert.match(hud, /RUN TERMINATED/);
   assert.match(hud, /RETRY TIMELINE/);

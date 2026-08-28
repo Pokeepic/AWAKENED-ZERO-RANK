@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.950.0 - Earnable skill mastery
+
+- Added explicit zero-to-100 mastery values for Residual Read and the later Vector Step awakening.
+- Made careful Gate preparation, deeper investigation, tactical withdrawal, and victory grant deterministic Residual Read growth with different risk-reward values.
+- Displayed active skill mastery in the persistent HUD and wired the Day 365 ledger to actual mastery rather than placeholder skill labels.
+- Reset run-bound mastery on ordinary death while preserving the mastery baseline earned by reaching later timelines.
+
 ## 0.940.0 - Conditional transmigration ledger
 
 - Added explicit Day 365 transmigration conditions covering survival, Residual Read mastery, four-arc evidence, a trusted bond, remaining health, the residual-core location, and the correct final choice.
