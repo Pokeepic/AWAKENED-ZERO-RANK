@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.800.0` |
+| Release | `0.810.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -18,6 +18,8 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 ## Play the private web game
 
 [Open AWAKENED: ZERO RANK](https://awakened-zero-rank-observer.pokeepic.chatgpt.site/game)
+
+The game now opens on a dedicated title screen with Continue, New Game, Settings, and Observer options. Continue previews the current device-local save; settings persist reduced motion and larger game text across routes. Once play begins, returning home goes directly to Ren's apartment for a natural campaign flow.
 
 The current game contains six connected, authenticated chapters:
 

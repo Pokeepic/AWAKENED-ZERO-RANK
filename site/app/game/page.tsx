@@ -8,6 +8,8 @@ import Image from "next/image";
 import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observer-data";
 import { loadRpgState, resetRpgState, takeRpgAction, type RpgState } from "./game-state";
 import { GameHud } from "./game-hud";
+import { applyGamePreferences, loadGamePreferences, RPG_SESSION_KEY } from "./game-preferences";
+import { TitleScreen } from "./title-screen";
 import doorStyles from "./door.module.css";
 
 type Hotspot = {
@@ -83,6 +85,7 @@ export default function GamePage() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [response, setResponse] = useState<string | null>(null);
   const [rpg, setRpg] = useState<RpgState | null>(null);
+  const [showTitle, setShowTitle] = useState<boolean | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -98,7 +101,12 @@ export default function GamePage() {
           await contractResponse.json(),
           await snapshotResponse.json(),
         );
-        if (!controller.signal.aborted) { setSnapshot(verified.snapshot); setRpg(loadRpgState(verified.snapshot)); }
+        if (!controller.signal.aborted) {
+          setSnapshot(verified.snapshot);
+          setRpg(loadRpgState(verified.snapshot));
+          applyGamePreferences(loadGamePreferences());
+          setShowTitle(window.sessionStorage.getItem(RPG_SESSION_KEY) !== "active");
+        }
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) setFailed(true);
       }
@@ -119,9 +127,18 @@ export default function GamePage() {
     setResponse(null);
   }
   function newGame() {
-    if (!window.confirm("Start a new local RPG campaign? Your current RPG progress will be replaced.")) return;
     setRpg(resetRpgState(snapshot!));
     replay();
+  }
+
+  function enterCampaign() {
+    window.sessionStorage.setItem(RPG_SESSION_KEY, "active");
+    setShowTitle(false);
+  }
+
+  function startFromTitle() {
+    newGame();
+    enterCampaign();
   }
 
   function suggest(id: string) {
@@ -136,7 +153,8 @@ export default function GamePage() {
   }
 
   if (failed) return <main id="chronicle" className="game-loading"><p>PROLOGUE OFFLINE</p><h1>The chronicle could not be verified.</h1><Link href="/">Return to Observer</Link></main>;
-  if (!snapshot || !rpg) return <main id="chronicle" className="game-loading" aria-busy="true"><p>LOADING RPG SAVE</p><h1>Preparing Ren's day…</h1></main>;
+  if (!snapshot || !rpg || showTitle === null) return <main id="chronicle" className="game-loading" aria-busy="true"><p>LOADING RPG SAVE</p><h1>Preparing Ren's day…</h1></main>;
+  if (showTitle) return <TitleScreen state={rpg} onContinue={enterCampaign} onNewGame={startFromTitle} />;
 
   const scene = currentScene(snapshot);
   const active = HOTSPOTS.find((hotspot) => hotspot.id === activeClue);
@@ -145,7 +163,7 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.800</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.810</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>

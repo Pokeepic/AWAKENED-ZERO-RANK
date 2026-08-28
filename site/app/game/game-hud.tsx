@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 
 import { pendingStoryRoute, type RpgState } from "./game-state";
+import { applyGamePreferences, loadGamePreferences } from "./game-preferences";
 
 export function GameHud({ state, current, onNewGame }: { state: RpgState; current: "home" | "city" | "cases" | "field" | "evening" | "debrief"; onNewGame?: () => void }) {
   const [confirmingReset, setConfirmingReset] = useState(false);
   const cancelReset = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    applyGamePreferences(loadGamePreferences());
     const route = pendingStoryRoute(state);
     const alreadyShowing = (route === "/game/evening" && current === "evening") || (route === "/game/debrief" && current === "debrief");
     if (route && !alreadyShowing) window.location.assign(route);

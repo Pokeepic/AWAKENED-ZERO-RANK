@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.810.0 - RPG title screen
+
+- Added a full-screen RPG title experience with Continue, New Game, Settings, and Observer choices.
+- Continue reports the current local day, time, and location; New Game uses an explicit progress-aware replacement step.
+- Added persistent Full/Reduced Motion and Normal/Large Text settings that apply across every game route.
+- Used session-aware entry so returning home from Tokyo or a canon event opens Ren's apartment directly instead of interrupting play with the title screen.
+- Removed the redundant browser confirmation that previously appeared after the in-game New Game confirmation.
+
 ## 0.800.0 - Safe local campaign save
 
 - Made the campaign journal identify the active device-local save and show its current day, time, and location.

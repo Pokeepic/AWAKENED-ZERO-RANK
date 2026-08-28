@@ -21,6 +21,27 @@ test("ships a separate Ren-controlled local RPG prologue", async () => {
   assert.doesNotMatch(game, /fetch\([^)]*method\s*:/);
   assert.match(observer, /href="\/game"/);
 });
+test("opens the RPG through a persistent title menu without interrupting return travel", async () => {
+  const [game, title, preferences, styles] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/title-screen.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-preferences.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(game, /RPG_SESSION_KEY/);
+  assert.match(game, /sessionStorage\.getItem/);
+  assert.doesNotMatch(game, /window\.confirm/);
+  assert.match(title, /CONTINUE/);
+  assert.match(title, /NEW GAME/);
+  assert.match(title, /SETTINGS/);
+  assert.match(title, /OBSERVER/);
+  assert.match(title, /REPLACE SAVE & START/);
+  assert.match(preferences, /RPG_PREFERENCES_KEY/);
+  assert.match(preferences, /gameMotion/);
+  assert.match(styles, /\.title-screen/);
+  assert.match(styles, /data-game-motion/);
+  assert.match(styles, /data-game-text/);
+});
 test("completes the prologue through explore act and result phases", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
@@ -200,7 +221,8 @@ test("renders a shared persistent RPG HUD with a safe new-game reset", async () 
   assert.doesNotMatch(hud, /aria-label="RPG locations"/);
   assert.match(state, /resetRpgState/);
   assert.match(state, /localStorage\.removeItem/);
-  assert.match(game, /window\.confirm/);
+  assert.doesNotMatch(game, /window\.confirm/);
+  assert.match(hud, /role="alertdialog"/);
   for (const page of [game, city, caseboard]) assert.match(page, /<GameHud/);
   assert.match(styles, /\.rpg-hud/);
 });
