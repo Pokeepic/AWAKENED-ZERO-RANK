@@ -21,9 +21,11 @@ export function TitleScreen({ state, onContinue, onNewGame }: { state: RpgState;
     <Image className="title-bg" src="/game/ren-apartment-window-title-v1.png" alt="Rain falling beyond the balcony window of Ren's dark apartment" fill sizes="100vw" priority />
     <div className="title-window-light" aria-hidden="true" />
     <div className="title-window-rain" aria-hidden="true" />
+    <div className="title-window-rain title-window-rain-near" aria-hidden="true" />
+    <div className="title-city-flicker" aria-hidden="true" />
     <div className="title-curtain-shadow" aria-hidden="true" />
     <div className="title-shade" aria-hidden="true" />
-    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.830</span></header>
+    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.840</span></header>
     <section className="title-lockup" aria-labelledby="title-heading">
       <small>REN&apos;S APARTMENT / ADACHI / 02:13</small>
       <h1 id="title-heading"><span>AWAKENED</span>ZERO RANK</h1>

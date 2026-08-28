@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.840.0 - Window atmosphere pass
+
+- Reworked the title animation into separate near and far rain depths with different speeds, density, and opacity.
+- Added restrained city-window flicker and a softer reflected-light cycle that avoids a mechanical pulse.
+- Changed the curtain movement to a slow delayed sway and reduced the camera drift so the room remains grounded.
+- Preserved a completely static presentation for reduced-motion players.
+
 ## 0.830.0 - The apartment window
 
 - Replaced the character-poster title art with a quiet, empty view from inside Ren's apartment on a rainy Adachi night.

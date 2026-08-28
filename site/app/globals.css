@@ -136,3 +136,18 @@ footer{padding:38px 5vw;background:var(--ink);color:var(--paper);display:flex;ju
 @keyframes title-rain-fall{from{background-position:0 -70px}to{background-position:-15px 90px}}
 @keyframes title-curtain-sway{from{transform:skewX(-.3deg) translateX(-.25%);opacity:.62}to{transform:skewX(.45deg) translateX(.35%);opacity:.92}}
 @media(max-width:760px){.title-screen .title-bg{object-position:60% center}.title-window-rain{inset:9% 5% 31% 30%}.title-screen .title-shade{background:linear-gradient(180deg,rgba(2,5,9,.35),rgba(2,5,9,.5) 35%,rgba(2,5,9,.92) 70%)}.title-screen .title-lockup{left:1.4rem;right:1.4rem;top:14%;width:auto}.title-screen .title-lockup h1{font-size:clamp(3rem,15vw,5rem)}.title-screen .title-menu{left:1.4rem;right:1.4rem;bottom:7%;width:auto}.title-screen .title-menu>a,.title-screen .title-menu>button{background:rgba(3,7,11,.62)}}
+
+/* v0.840 — depth-separated weather with quiet, non-looping-feeling timing. */
+.title-screen .title-bg{animation:title-room-drift-natural 28s cubic-bezier(.45,.05,.55,.95) infinite alternate}
+.title-window-light{background:radial-gradient(ellipse 32% 54% at 62% 50%,rgba(94,145,181,.13),transparent 72%),radial-gradient(ellipse 24% 27% at 66% 78%,rgba(204,121,68,.08),transparent 74%);animation:title-light-weather 14s ease-in-out infinite}
+.title-window-rain{inset:7% 23% 18% 42%;opacity:.11;background-image:repeating-linear-gradient(103deg,transparent 0 23px,rgba(198,221,235,.48) 24px,transparent 25px 51px),repeating-linear-gradient(101deg,transparent 0 71px,rgba(221,236,244,.28) 72px,transparent 74px 119px);background-size:97px 190px,173px 270px;filter:blur(.25px);animation:title-rain-far 3.8s linear infinite}
+.title-window-rain-near{inset:6% 22% 17% 41%;opacity:.085;background-image:repeating-linear-gradient(105deg,transparent 0 47px,rgba(226,239,247,.72) 48px,rgba(226,239,247,.18) 49px,transparent 52px 103px);background-size:151px 310px;filter:blur(.65px);animation:title-rain-near 2.15s linear infinite}
+.title-city-flicker{position:absolute;z-index:1;inset:21% 20% 35% 48%;pointer-events:none;background:radial-gradient(circle at 21% 68%,rgba(230,191,139,.22) 0 1px,transparent 2px),radial-gradient(circle at 59% 61%,rgba(202,219,225,.16) 0 1px,transparent 2px),radial-gradient(circle at 78% 77%,rgba(226,185,129,.2) 0 1px,transparent 2px);background-size:83px 61px,107px 73px,131px 89px;mix-blend-mode:screen;animation:title-city-life 19s steps(1,end) infinite}
+.title-curtain-shadow{background:linear-gradient(83deg,transparent 50%,rgba(2,4,7,.14) 57%,transparent 65%);animation:title-curtain-natural 16s cubic-bezier(.37,0,.25,1) infinite alternate}
+@keyframes title-room-drift-natural{0%{transform:scale(1.018) translate3d(0,0,0)}38%{transform:scale(1.024) translate3d(-.08%,.03%,0)}100%{transform:scale(1.03) translate3d(-.18%,.1%,0)}}
+@keyframes title-light-weather{0%,100%{opacity:.58}18%{opacity:.72}41%{opacity:.65}53%{opacity:.9}55%{opacity:.67}72%{opacity:.76}86%{opacity:.61}}
+@keyframes title-rain-far{from{background-position:0 -190px,40px -270px}to{background-position:-23px 190px,11px 270px}}
+@keyframes title-rain-near{from{background-position:15px -310px}to{background-position:-28px 310px}}
+@keyframes title-city-life{0%,14%,31%,49%,72%,100%{opacity:.34}15%,30%,50%,71%{opacity:.7}83%{opacity:.48}}
+@keyframes title-curtain-natural{0%,12%{transform:skewX(-.18deg) translateX(-.12%);opacity:.7}48%{transform:skewX(.12deg) translateX(.08%);opacity:.82}76%,100%{transform:skewX(.28deg) translateX(.2%);opacity:.74}}
+@media(max-width:760px){.title-window-rain,.title-window-rain-near{inset:8% 3% 31% 29%}.title-city-flicker{inset:22% 2% 44% 36%}}
