@@ -10,6 +10,7 @@ export const CAMPAIGN_ARCS = [
 ] as const;
 export type Timeline = 1 | 2 | 3;
 export type CampaignStatus = "active" | "game-over" | "year-ending";
+export type TransmigrationCondition = { id: string; label: string; met: boolean };
 export type RpgJournalEntry = { day: number; slot: (typeof RPG_SLOTS)[number]; action: string; location: string };
 
 export type RpgState = {
@@ -164,6 +165,58 @@ export function restartRpgRun(state: RpgState): RpgState {
   return retry;
 }
 
+export function transmigrationConditions(state: RpgState): TransmigrationCondition[] {
+  const strongestBond = Math.max(0, ...Object.values(state.bonds));
+  const base = [
+    { id: "day", label: "Reach Day 365 alive", met: state.day === 365 && state.health > 0 },
+    { id: "mastery", label: "Master Residual Read", met: state.skills.includes("Residual Read: Mastered") },
+    { id: "evidence", label: "Carry evidence through all four arcs", met: ["arc-i-evidence", "arc-ii-evidence", "arc-iii-evidence", "black-gate-temporal-residue"].every((clue) => state.legacyClues.includes(clue) || state.completedEvents.includes(clue)) },
+    { id: "bond", label: `Build a trusted bond (${strongestBond} / 6)`, met: strongestBond >= 6 },
+    { id: "health", label: `Enter the core with at least 20 HP (${state.health})`, met: state.health >= 20 },
+    { id: "location", label: "Reach the Black Gate residual core", met: state.location === "Black Gate Core" },
+    { id: "choice", label: "Read the collapsing Gate instead of fighting it", met: state.completedEvents.includes("read-the-collapsing-gate") },
+  ];
+  if (state.timeline === 2) base.push(
+    { id: "second-skill", label: "Awaken and master Vector Step", met: state.skills.includes("Vector Step: Mastered") },
+    { id: "anchor", label: "Construct the residual anchor with a willing ally", met: state.completedEvents.includes("residual-anchor-complete") },
+    { id: "overseas", label: "Decode the Busan signal", met: state.completedEvents.includes("busan-signal-decoded") },
+  );
+  if (state.timeline === 3) base.push({ id: "no-fourth-path", label: "No residual path remains beyond the final timeline", met: false });
+  return base;
+}
+
+export function canTransmigrate(state: RpgState): boolean {
+  return state.timeline < 3 && transmigrationConditions(state).every((condition) => condition.met);
+}
+
+export function transmigrateRpgState(state: RpgState): RpgState {
+  if (state.status !== "year-ending" || !canTransmigrate(state)) return state;
+  const timeline = (state.timeline + 1) as Timeline;
+  const next: RpgState = {
+    ...state,
+    timeline,
+    attempt: 1,
+    status: "active",
+    skills: timeline >= 2 ? ["Residual Read: Mastered", "Vector Step"] : state.skills,
+    legacyClues: [...new Set([...state.legacyClues, "black-gate-temporal-residue"])].slice(-12),
+    lotteryTickets: state.lotteryTickets + state.timeline,
+    transmigrationEligible: false,
+    day: 1,
+    slot: "Morning",
+    health: state.runStart.health,
+    energy: state.runStart.energy,
+    money: state.runStart.money,
+    location: state.runStart.location,
+    turns: 0,
+    lastAction: `Transmigrated into Timeline ${timeline}`,
+    journal: [],
+    bonds: {},
+    completedEvents: [],
+  };
+  saveRpgState(next);
+  return next;
+}
+
 export function pendingStoryRoute(state: RpgState): string | null {
   if (state.status !== "active") return null;
   const survivedFirstGate = state.journal.some((entry) => [
@@ -204,7 +257,10 @@ export function takeRpgAction(state: RpgState, action: string, effects: Partial<
   next.energy = Math.max(0, Math.min(100, next.energy));
   next.money = Math.max(0, next.money);
   if (next.health === 0) next.status = "game-over";
-  else if (state.day === 365 && elapsed >= RPG_SLOTS.length) next.status = "year-ending";
+  else if (state.day === 365 && elapsed >= RPG_SLOTS.length) {
+    next.status = "year-ending";
+    next.transmigrationEligible = canTransmigrate(next);
+  }
   saveRpgState(next);
   return next;
 }

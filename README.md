@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.930.0` |
+| Release | `0.940.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -21,7 +21,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 The game now opens on a restrained cinematic title screen set inside Ren's apartment. It supports mouse, touch, and game-style keyboard navigation: focus begins on Continue, Up/Down moves through choices, Enter activates, Escape backs out, and M toggles rain audio. Ambience fades around play and tab visibility while persistent settings retain sound, motion, and text choices.
 
-The RPG is being rebuilt around three possible one-year timelines. Ordinary death is a real Game Over; retrying begins a new run of the same timeline and grants no transmigration benefit. Transmigration is only possible on Day 365 when the required evidence, bonds, mastery, and final choice have been secured. The first timeline begins with Ren's mocked Zero-Rank skill, Residual Read, and four unequal arc deadlines at Days 45, 120, 240, and 365.
+The RPG is being rebuilt around three possible one-year timelines. Ordinary death is a real Game Over; retrying begins a new run of the same timeline and grants no transmigration benefit. On Day 365, an explicit ledger checks survival, mastery, evidence, bonds, health, location, and the final choice before a residual path can open. The first timeline begins with Ren's mocked Zero-Rank skill, Residual Read, and four unequal arc deadlines at Days 45, 120, 240, and 365.
 
 The current playable opening contains six connected, authenticated chapters:
 

@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.940.0 - Conditional transmigration ledger
+
+- Added explicit Day 365 transmigration conditions covering survival, Residual Read mastery, four-arc evidence, a trusted bond, remaining health, the residual-core location, and the correct final choice.
+- Added stricter second-timeline requirements for Vector Step mastery, the residual anchor, and the decoded Busan signal; the third timeline explicitly has no fourth path.
+- Added an honest year-ending ledger that shows every met and missed condition before allowing transmigration or a same-timeline retry.
+- Implemented successful timeline advancement with reset run progress, retained residual knowledge, the second awakening, and earned lottery tickets.
+
 ## 0.930.0 - Honest run retries
 
 - Added same-timeline retries after an ordinary death, incrementing the run attempt without granting transmigration or advancing the timeline.

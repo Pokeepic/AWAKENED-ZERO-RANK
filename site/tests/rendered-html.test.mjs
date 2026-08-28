@@ -303,9 +303,15 @@ test("models a lethal one-year campaign with conditional final-day transmigratio
   assert.match(state, /completedEvents: \[\]/);
   assert.match(state, /next\.health === 0.*game-over/s);
   assert.match(state, /state\.day === 365.*year-ending/s);
+  assert.match(state, /transmigrationConditions/);
+  assert.match(state, /canTransmigrate/);
+  assert.match(state, /transmigrateRpgState/);
+  for (const requirement of ["Residual Read: Mastered", "Black Gate Core", "read-the-collapsing-gate", "Vector Step: Mastered", "busan-signal-decoded"]) assert.match(state, new RegExp(requirement));
   assert.match(hud, /FIRST TIMELINE/);
   assert.match(hud, /RUN TERMINATED/);
   assert.match(hud, /RETRY TIMELINE/);
+  assert.match(hud, /A residual path opens/);
+  assert.match(hud, /TRANSMIGRATE TO TIMELINE/);
   assert.match(title, /RETRY RUN/);
   assert.match(field, /Fell to the fracture sentinel/);
   assert.doesNotMatch(field, /health: 20.*Retreated from the fracture sentinel/);
@@ -314,6 +320,7 @@ test("models a lethal one-year campaign with conditional final-day transmigratio
   assert.match(story, /Vector Step/);
   assert.match(styles, /\.campaign-deadline/);
   assert.match(styles, /\.reset-dialog\.game-over/);
+  assert.match(styles, /\.reset-dialog\.year-ending/);
 });
 test("adds a post-Gate social chapter with local bond consequences", async () => {
   const [field, evening, state, styles] = await Promise.all([
