@@ -230,8 +230,13 @@ test("records a bounded persistent campaign journal and migrates older saves", a
   assert.match(state, /candidate\.completedEvents/);
   assert.match(state, /\.slice\(-12\)/);
   assert.match(hud, /CAMPAIGN JOURNAL/);
+  assert.match(hud, /AUTOSAVE ACTIVE/);
+  assert.match(hud, /role="alertdialog"/);
+  assert.match(hud, /Escape/);
+  assert.match(hud, /KEEP CURRENT SAVE/);
   assert.match(hud, /state\.journal/);
   assert.match(styles, /\.rpg-journal/);
+  assert.match(styles, /\.reset-dialog/);
 });
 test("adds a post-Gate social chapter with local bond consequences", async () => {
   const [field, evening, state, styles] = await Promise.all([

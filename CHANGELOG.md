@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.800.0 - Safe local campaign save
+
+- Made the campaign journal identify the active device-local save and show its current day, time, and location.
+- Added an explicit autosave status explaining that committed RPG actions persist independently from the Observer.
+- Replaced the immediate New Game reset with an accessible confirmation panel that reports current progress before replacement.
+- Added Escape-to-cancel, deliberate focus placement, compact mobile layout, and clear keep-save versus restart actions.
+
 ## 0.790.0 - First-person apartment
 
 - Removed Ren's full-body sprite from the apartment room and adopted a first-person point-and-click viewpoint.

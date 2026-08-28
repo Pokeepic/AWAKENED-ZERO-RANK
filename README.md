@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.790.0` |
+| Release | `0.800.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -37,6 +37,8 @@ The RPG no longer uses a persistent destination bar or apartment workspace tabs.
 Apartment interactions are aligned to the illustrated room: the exit sits on the actual entry door, Ren stands in the open floor, and clue prompts sit beside their matching furniture or object.
 
 Ren's apartment is framed as a first-person point-and-click scene, so Ren does not stand inside his own viewpoint. His illustrated portrait appears only when he speaks after an action, while small pixel sprites remain reserved for outdoor maps, travel, and field scenes.
+
+The campaign journal now shows the active local autosave and its current day, slot, and location. Starting a new game requires a clear confirmation that displays existing progress and can be cancelled with Escape; the autonomous Observer save is never touched.
 
 ## What the simulation models
 
