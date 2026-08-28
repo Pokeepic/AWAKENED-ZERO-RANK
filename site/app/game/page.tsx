@@ -8,6 +8,7 @@ import Image from "next/image";
 import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observer-data";
 import { loadRpgState, resetRpgState, takeRpgAction, type RpgState } from "./game-state";
 import { GameHud } from "./game-hud";
+import doorStyles from "./door.module.css";
 
 type Hotspot = {
   id: string;
@@ -82,7 +83,6 @@ export default function GamePage() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [response, setResponse] = useState<string | null>(null);
   const [rpg, setRpg] = useState<RpgState | null>(null);
-  const [view, setView] = useState<"scene" | "notebook">("scene");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -117,7 +117,6 @@ export default function GamePage() {
     setActiveClue(null);
     setSelectedSuggestion(null);
     setResponse(null);
-    setView("scene");
   }
   function newGame() {
     if (!window.confirm("Start a new local RPG campaign? Your current RPG progress will be replaced.")) return;
@@ -146,7 +145,7 @@ export default function GamePage() {
   const phase = response ? 3 : unlocked ? 2 : 1;
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.750</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.760</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
@@ -159,16 +158,12 @@ export default function GamePage() {
       </ol>
     </section>
 
-    <nav className="workspace-tabs" aria-label="Apartment workspace">
-      <button className={view === "scene" ? "active" : undefined} aria-pressed={view === "scene"} onClick={() => setView("scene")}>SCENE</button>
-      <button className={view === "notebook" ? "active" : undefined} aria-pressed={view === "notebook"} onClick={() => setView("notebook")}>NOTEBOOK <span>{clues.length}/{HOTSPOTS.length}</span></button>
-    </nav>
-
-    {view === "scene" && <section className="game-board" aria-label="Point-and-click scene">
+    <section className="game-board" aria-label="Point-and-click scene">
       <div className="game-room">
         <Image className="apartment-bg" src="/game/ren-apartment.png" alt="Pixel-art interior of Ren's apartment" fill sizes="(max-width: 800px) 90vw, 65vw" priority />
         <div className="apartment-shade" aria-hidden="true" />
         <Image className="chibi-sprite ren-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} priority />
+        <Link className={doorStyles.apartmentDoor} href="/game/city" aria-label="Leave Ren's apartment for Tokyo"><i aria-hidden="true" /><span>LEAVE APARTMENT</span></Link>
         {HOTSPOTS.map((hotspot, index) => <button
           key={hotspot.id}
           className={`hotspot hotspot-${index + 1} ${clues.includes(hotspot.id) ? "found" : ""}`}
@@ -189,15 +184,7 @@ export default function GamePage() {
         </div>
         {response && selected && <blockquote className="dialogue-box"><span className="speaker-tag">REN</span><small>ACTION COMPLETE / {selected.theme}</small><p>{response}</p><nav className="panel-actions" aria-label="Continue campaign"><Link href="/game/city">GO TO TOKYO</Link><button onClick={replay}>RESET SCENE</button></nav></blockquote>}
       </aside>
-    </section>}
-
-    {view === "notebook" && <section className="evidence-notebook tabbed-notebook" aria-labelledby="notebook-title">
-      <header><small>LOCAL NOTEBOOK</small><h2 id="notebook-title">What you noticed</h2><p>Evidence is revealed only after inspection and is cleared when the scene is replayed.</p></header>
-      <ol>{HOTSPOTS.map((hotspot, index) => {
-        const found = clues.includes(hotspot.id);
-        return <li key={hotspot.id} className={found ? "found" : undefined}><b>{String(index + 1).padStart(2, "0")}</b><div><small>{hotspot.cue}</small><span>{found ? hotspot.label : "UNEXAMINED"}</span>{found && <p>{hotspot.detail(snapshot)}</p>}</div></li>;
-      })}</ol>
-    </section>}
+    </section>
 
     <footer className="game-footer"><b>REN'S LOCAL RPG SAVE</b><p>You control Ren here. Actions advance the RPG clock; the separate Observer simulation remains unchanged.</p><span>{rpg.turns} TURNS / SEED {snapshot.seed}</span></footer>
   </main>;

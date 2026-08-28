@@ -29,7 +29,7 @@ test("completes the prologue through explore act and result phases", async () =>
   assert.match(game, /EXPLORE/);
   assert.match(game, /ACT/);
   assert.match(game, /RESULT/);
-  assert.match(game, /LOCAL NOTEBOOK/);
+  assert.match(game, /LEAVE APARTMENT/);
   assert.match(game, /RESET SCENE/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
   assert.match(styles, /@keyframes ren-breathe/);
@@ -70,7 +70,7 @@ test("ships a deterministic Gate battle that advances time only on resolution", 
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
   assert.match(caseboard, /href="\/game\/field"/);
-  assert.match(hud, />FIELD<\/button>/);
+  assert.doesNotMatch(hud, />FIELD<\/button>/);
   assert.match(field, /PRECISION STRIKE/);
   assert.match(field, /BARRIER PULSE/);
   assert.match(field, /TACTICAL RETREAT/);
@@ -198,20 +198,21 @@ test("renders a shared persistent RPG HUD with a safe new-game reset", async () 
   ]);
   assert.match(hud, /DAY \{state\.day\}/);
   assert.match(hud, /HP \{state\.health\}/);
+  assert.doesNotMatch(hud, /aria-label="RPG locations"/);
   assert.match(state, /resetRpgState/);
   assert.match(state, /localStorage\.removeItem/);
   assert.match(game, /window\.confirm/);
   for (const page of [game, city, caseboard]) assert.match(page, /<GameHud/);
   assert.match(styles, /\.rpg-hud/);
 });
-test("links every RPG chapter and validates versioned local saves", async () => {
+test("keeps story routing automatic and validates versioned local saves", async () => {
   const [hud, state, layout] = await Promise.all([
     readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/layout.tsx", root), "utf8"),
   ]);
-  for (const route of ["/game", "/game/city", "/game/caseboard", "/game/field"]) assert.match(hud, new RegExp(`location\\.assign\\("${route.replaceAll("/", "\\/")}"\\)`));
-  assert.match(hud, /aria-current/);
+  assert.match(hud, /pendingStoryRoute/);
+  assert.doesNotMatch(hud, /aria-current/);
   assert.doesNotMatch(hud, /STORY/);
   assert.match(state, /saveVersion: 4/);
   assert.match(state, /isRpgState/);
@@ -324,18 +325,17 @@ test("triggers canon events from play criteria and charges their time cost", asy
   assert.match(debrief, /consumes one time slot/);
   assert.doesNotMatch(hud, /\/game\/story/);
 });
-test("fits the apartment workspace into tabs without duplicate result sections", async () => {
+test("uses an in-world apartment exit without interface tabs", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
-    readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("app/game/door.module.css", root), "utf8"),
   ]);
-  assert.match(game, /workspace-tabs/);
-  assert.match(game, /"scene" \| "notebook"/);
-  assert.match(game, /view === "scene"/);
-  assert.match(game, /view === "notebook"/);
+  assert.match(game, /doorStyles\.apartmentDoor/);
+  assert.match(game, /href="\/game\/city"/);
+  assert.doesNotMatch(game, /workspace-tabs/);
+  assert.doesNotMatch(game, /"scene" \| "notebook"/);
   assert.doesNotMatch(game, /scene-conclusion/);
-  assert.match(styles, /height:100dvh/);
-  assert.match(styles, /\.workspace-tabs/);
+  assert.match(styles, /\.apartmentDoor/);
 });
 const storyAnchors = [
   [183, "arc_adachi_warning", "The Adachi Warning"],

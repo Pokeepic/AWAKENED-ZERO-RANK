@@ -11,12 +11,7 @@ export function GameHud({ state, current, onNewGame }: { state: RpgState; curren
     if (route && !alreadyShowing) window.location.assign(route);
   }, [current, state]);
 
-  return <><nav className="rpg-nav" aria-label="RPG locations">
-    <button className={current === "home" ? "active" : undefined} aria-current={current === "home" ? "page" : undefined} onClick={() => window.location.assign("/game")}>HOME</button>
-    <button className={current === "city" ? "active" : undefined} aria-current={current === "city" ? "page" : undefined} onClick={() => window.location.assign("/game/city")}>TOKYO</button>
-    <button className={current === "cases" ? "active" : undefined} aria-current={current === "cases" ? "page" : undefined} onClick={() => window.location.assign("/game/caseboard")}>GATE CASES</button>
-    <button className={current === "field" ? "active" : undefined} aria-current={current === "field" ? "page" : undefined} onClick={() => window.location.assign("/game/field")}>FIELD</button>
-  </nav><section className="rpg-hud" aria-label="Ren RPG status">
+  return <><section className="rpg-hud" aria-label="Ren RPG status">
     <div><small>CALENDAR</small><b>DAY {state.day}</b><span>{state.slot}</span></div>
     <div><small>LOCATION</small><b>{state.location}</b><span>{state.turns} ACTION{state.turns === 1 ? "" : "S"}</span></div>
     <div><small>CONDITION</small><b>HP {state.health}</b><span>EN {state.energy}</span></div>

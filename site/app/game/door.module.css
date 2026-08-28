@@ -1,0 +1,55 @@
+.apartmentDoor {
+  position: absolute;
+  z-index: 4;
+  right: 4%;
+  top: 17%;
+  width: 18%;
+  height: 48%;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  padding-bottom: 1rem;
+  color: #fff;
+  text-decoration: none;
+  outline: 0;
+}
+
+.apartmentDoor i {
+  position: absolute;
+  inset: 0;
+  border: 2px solid transparent;
+  background: linear-gradient(90deg, transparent, rgba(236, 83, 46, .08));
+  transition: border-color .18s ease, background .18s ease;
+}
+
+.apartmentDoor span {
+  position: relative;
+  padding: .45rem .65rem;
+  background: rgba(7, 11, 18, .9);
+  border-left: 3px solid var(--signal);
+  font: 800 .56rem var(--mono);
+  letter-spacing: .1em;
+  opacity: .78;
+}
+
+.apartmentDoor:hover i,
+.apartmentDoor:focus-visible i {
+  border-color: var(--signal);
+  background: rgba(236, 83, 46, .12);
+}
+
+.apartmentDoor:hover span,
+.apartmentDoor:focus-visible span {
+  opacity: 1;
+  background: var(--signal);
+  color: #080b10;
+}
+
+@media (max-width: 800px) {
+  .apartmentDoor {
+    right: 2%;
+    top: 15%;
+    width: 25%;
+    height: 50%;
+  }
+}

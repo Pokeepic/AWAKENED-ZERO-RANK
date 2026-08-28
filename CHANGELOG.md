@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.760.0 - In-world navigation
+
+- Removed the persistent RPG destination bar from every playable scene.
+- Replaced the apartment's scene/notebook tabs with a single uninterrupted point-and-click room.
+- Added a highlighted apartment-door hotspot that leads Ren outside to the Tokyo map.
+- Preserved the compact status panel, campaign journal, automatic canon triggers, and one-time event rules.
+
 ## 0.750.0 - Natural canon-event flow
 
 - Removed the standalone Story tab and chapter index from the Ren RPG.
