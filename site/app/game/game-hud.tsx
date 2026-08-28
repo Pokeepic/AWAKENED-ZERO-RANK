@@ -2,13 +2,13 @@
 
 import type { RpgState } from "./game-state";
 
-export function GameHud({ state, current, onNewGame }: { state: RpgState; current: "home" | "city" | "cases" | "field" | "evening" | "debrief"; onNewGame?: () => void }) {
+export function GameHud({ state, current, onNewGame }: { state: RpgState; current: "home" | "city" | "cases" | "field" | "story" | "evening" | "debrief"; onNewGame?: () => void }) {
   return <><nav className="rpg-nav" aria-label="RPG locations">
     <button className={current === "home" ? "active" : undefined} aria-current={current === "home" ? "page" : undefined} onClick={() => window.location.assign("/game")}>HOME</button>
     <button className={current === "city" ? "active" : undefined} aria-current={current === "city" ? "page" : undefined} onClick={() => window.location.assign("/game/city")}>TOKYO</button>
     <button className={current === "cases" ? "active" : undefined} aria-current={current === "cases" ? "page" : undefined} onClick={() => window.location.assign("/game/caseboard")}>GATE CASES</button>
     <button className={current === "field" ? "active" : undefined} aria-current={current === "field" ? "page" : undefined} onClick={() => window.location.assign("/game/field")}>FIELD</button>
-    <button className={["evening", "debrief"].includes(current) ? "active" : undefined} aria-current={["evening", "debrief"].includes(current) ? "page" : undefined} onClick={() => window.location.assign("/game/evening")}>STORY</button>
+    <button className={["story", "evening", "debrief"].includes(current) ? "active" : undefined} aria-current={["story", "evening", "debrief"].includes(current) ? "page" : undefined} onClick={() => window.location.assign("/game/story")}>STORY</button>
   </nav><section className="rpg-hud" aria-label="Ren RPG status">
     <div><small>CALENDAR</small><b>DAY {state.day}</b><span>{state.slot}</span></div>
     <div><small>LOCATION</small><b>{state.location}</b><span>{state.turns} ACTION{state.turns === 1 ? "" : "S"}</span></div>

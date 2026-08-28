@@ -210,7 +210,7 @@ test("links every RPG chapter and validates versioned local saves", async () => 
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/layout.tsx", root), "utf8"),
   ]);
-  for (const route of ["/game", "/game/city", "/game/caseboard", "/game/field", "/game/evening"]) assert.match(hud, new RegExp(`location\\.assign\\("${route.replaceAll("/", "\\/")}"\\)`));
+  for (const route of ["/game", "/game/city", "/game/caseboard", "/game/field", "/game/story"]) assert.match(hud, new RegExp(`location\\.assign\\("${route.replaceAll("/", "\\/")}"\\)`));
   assert.match(hud, /aria-current/);
   assert.match(state, /saveVersion: 4/);
   assert.match(state, /isRpgState/);
@@ -300,6 +300,23 @@ test("continues canon progression into an authenticated Daichi guild debrief", a
   assert.match(hud, /"debrief"/);
   assert.match(styles, /\.vn-character\.daichi/);
   for (const asset of ["hunter-guild-briefing", "daichi-full"]) await access(new URL(`public/game/visual-novel/${asset}.png`, root));
+});
+test("indexes completed available and locked canon events in one story hub", async () => {
+  const [story, hud, styles] = await Promise.all([
+    readFile(new URL("app/game/story/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(hud, /location\.assign\("\/game\/story"\)/);
+  assert.match(story, /const EVENTS/);
+  assert.match(story, /after-the-gate-aiko/);
+  assert.match(story, /guild-debrief-daichi/);
+  assert.match(story, /COMPLETE/);
+  assert.match(story, /AVAILABLE/);
+  assert.match(story, /LOCKED/);
+  assert.match(story, /snapshot\.story\.next/);
+  assert.doesNotMatch(story, /takeRpgAction/);
+  assert.match(styles, /\.story-event-grid/);
 });
 test("fits the apartment workspace into tabs without duplicate result sections", async () => {
   const [game, styles] = await Promise.all([

@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.740.0 - Canon story index
+
+- Added a dedicated Story hub for completed, available, and locked canon events.
+- Changed the persistent RPG HUD's Story control to open the hub instead of replaying one specific scene.
+- Added local bond summaries, direct event continuation/review links, and explicit prerequisite messaging.
+- Surfaced the next authenticated Observer story anchor as future context without presenting unfinished content as playable.
+
 ## 0.730.0 - The Patrol Record
 
 - Added a sixth playable chapter: a one-time visual-novel debrief with Daichi Mori.
