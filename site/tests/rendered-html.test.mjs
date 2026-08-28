@@ -40,6 +40,25 @@ test("opens a one-time shot-directed Day One awakening cinematic", async () => {
   assert.match(styles, /data-game-motion="reduced".*awakening-cutscene/);
   await access(new URL("public/game/cutscenes/awakening-bureau-establishing-v1.png", root));
 });
+test("resolves the first arc deadline through evidence and mastery consequences", async () => {
+  const [deadline, state, styles] = await Promise.all([
+    readFile(new URL("app/game/deadline/arc-one/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /state\.day >= 45/);
+  assert.match(state, /return "\/game\/deadline\/arc-one"/);
+  assert.match(deadline, /arc-i-deadline-resolved/);
+  assert.match(deadline, /arc-i-authenticated-trace/);
+  assert.match(deadline, /mastery >= 20/);
+  assert.match(deadline, /remainingDaySlots/);
+  assert.match(deadline, /takeRpgAction/);
+  assert.match(deadline, /SKIP TO DECISION/);
+  assert.match(deadline, /adachi-day45-pulse-v1\.png/);
+  assert.match(styles, /\.deadline-cutscene/);
+  assert.match(styles, /data-game-motion="reduced".*deadline-cutscene/);
+  await access(new URL("public/game/cutscenes/adachi-day45-pulse-v1.png", root));
+});
 test("opens the RPG through a persistent title menu without interrupting return travel", async () => {
   const [game, title, preferences, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),

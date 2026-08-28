@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.980.0 - Arc I deadline resolution
+
+- Added the automatic Day 45 synchronized-pulse event at Adachi Evacuation Route C with purpose-made cinematic artwork.
+- Branched the mandatory decision around previously secured evidence: authenticate the trace, trust Aiko while holding the route, accept an evidence-loss failure, or attempt a dangerous live read.
+- Made the live read require 20% Residual Read mastery and become lethal when attempted unprepared, preserving the campaign's hell-difficulty rules.
+- Committed success, failure, bonds, resources, location, time cost, and Game Over consequences deterministically to the local RPG save.
+- Added click and keyboard pacing, skip-to-decision behavior, responsive framing, and reduced-motion support.
+
 ## 0.970.0 - Day One awakening cinematic
 
 - Added the first real-time, shot-directed game cutscene using a purpose-made 16:9 Tokyo Awakening Bureau background and layered Ren character art.

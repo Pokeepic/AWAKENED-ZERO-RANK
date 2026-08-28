@@ -233,6 +233,8 @@ export function pendingStoryRoute(state: RpgState): string | null {
   if (state.status !== "active") return null;
   if (state.timeline === 1 && state.day === 1 && state.turns === 0
     && !state.completedEvents.includes("worthless-awakening-intro")) return "/game/awakening";
+  if (state.timeline === 1 && state.day >= 45 && state.day <= 120
+    && !state.completedEvents.includes("arc-i-deadline-resolved")) return "/game/deadline/arc-one";
   const survivedFirstGate = state.journal.some((entry) => [
     "Cleared the fracture sentinel",
     "Retreated from the fracture sentinel",
