@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.850.0 - Rain on glass
+
+- Added individually timed window droplets with tiny refracted highlights, slow merges, and occasional gravity-driven trails.
+- Confined every droplet to the balcony glass so the effect reads as surface weather rather than particles floating through the room.
+- Varied droplet scale, delay, and travel distance while keeping the effect subtle and reduced-motion-safe.
+
 ## 0.840.0 - Window atmosphere pass
 
 - Reworked the title animation into separate near and far rain depths with different speeds, density, and opacity.
