@@ -71,6 +71,23 @@ Authored cutscenes belong at irreversible transitions rather than routine travel
 - Transmigration scenes visually reuse matching Day 365 and Day 1 compositions so the reset is understood through framing before exposition explains it.
 - Generated art must be inspected for inconsistent anatomy, invented text, costume drift, and mismatched character identity before it enters the game. Unusable generations are rejected rather than hidden behind effects.
 
+### In-engine cinematic direction
+
+Cutscenes are authored as timed game sequences, not galleries of still images. Each sequence must define an establishing shot, character staging, shot changes, dialogue beats, sound cues, and the exact gameplay state it returns to.
+
+- **Shot grammar:** begin with location and danger, move to the character affected by it, then reveal the information or choice that changes play. Avoid cutting simply because a dialogue line changed.
+- **Character blocking:** characters enter, turn, step, recoil, or leave with clear screen direction. Their placement must remain geographically consistent between wide shots and dialogue framing.
+- **Camera:** use slow pushes for realization, restrained lateral tracking for movement, brief handheld shake for Gate impacts, and hard cuts only for shocks or timeline discontinuity.
+- **Animation:** layer separate character, foreground, weather, light, and background elements. Use short authored poses or crossfades for reactions; do not rubber-warp a single illustration to imitate full animation.
+- **Timing:** important visual information receives a readable hold before dialogue advances. Automatic beats pause when the browser loses focus and never skip player choices.
+- **Audio:** every scene has a cue sheet for ambience, music entry and exit, Gate pressure, footsteps, clothing movement, impacts, and intentional silence. Dialogue remains readable without audio.
+- **Gameplay handoff:** the final shot must point toward the next controllable objective. Control returns only after the scene commits its event, time cost, consequences, and autosave.
+- **Failure safety:** reloading during a cinematic resumes from its last committed beat or safely restarts the scene; it never duplicates rewards, bonds, evidence, or time costs.
+- **Skip rules:** first viewing may skip only to the next mandatory choice; completed scenes may be skipped entirely. Skipping always commits the same deterministic consequences.
+- **Presentation:** cinematic letterboxing is allowed when it improves composition, but subtitles, choices, and accessibility controls remain inside the safe area on desktop and mobile.
+
+Every cinematic should ship with a small shot manifest containing shot ID, duration, background, character layers, camera motion, effects, audio cues, dialogue, skippability, and completion event. This keeps the scene testable as game logic rather than an unstructured animation.
+
 ### Required illustrated scenes
 
 1. **Worthless Awakening:** clinical Bureau assessment room, fluorescent morning light, Ren isolated beneath a Zero-Rank result display.
