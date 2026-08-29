@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1110.0 - Timeline III Arc III causality
+
+- Added a distinct Timeline 3 solution for the Day 240 emergency-command purge.
+- Let 85% Causal Sever remove the forged orders' authority while preserving the proof, true command network, and Daichi's trust.
+- Persisted the severed command-forgery outcome separately from Timeline 2's escape through the purge.
+- Completed unique Causal Sever solutions across all three recurring pre-finale deadlines.
+
 ## 0.1100.0 - Timeline III Arc II causality
 
 - Added a distinct Timeline 3 solution for the synchronized Day 120 Adachi breach.

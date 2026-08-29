@@ -72,11 +72,12 @@ export default function ArcThreeDeadlinePage() {
   }, []);
 
   const resolve = useCallback(
-    (choice: "publish" | "core" | "vector") => {
+    (choice: "publish" | "core" | "vector" | "causal") => {
       if (!rpg || outcome) return;
       const trusted = (rpg.bonds["Daichi Mori"] ?? 0) >= 2;
       const mastery = rpg.skillMastery["Residual Read"] ?? 0;
       const vector = rpg.skillMastery["Vector Step"] ?? 0;
+      const causal = rpg.skillMastery["Causal Sever"] ?? 0;
       const priorEvidence = rpg.completedEvents.includes("arc-ii-evidence");
       const events = new Set(rpg.completedEvents);
       events.add(EVENT_ID);
@@ -85,7 +86,16 @@ export default function ArcThreeDeadlinePage() {
         energy = rpg.energy,
         action: string,
         result: Outcome;
-      if (choice === "vector" && rpg.timeline >= 2 && vector >= 80) {
+      if (choice === "causal" && rpg.timeline === 3 && causal >= 85) {
+        health -= 3;
+        energy -= 28;
+        events.add("arc-iii-evidence");
+        events.add("false-orders-exposed");
+        events.add("timeline-iii-command-forgery-severed");
+        bonds["Daichi Mori"] = Math.min(10, (bonds["Daichi Mori"] ?? 0) + 2);
+        action = "Severed the forged orders from emergency command";
+        result = { success: true, title: "The false orders lose their authority.", copy: "Ren cuts the causal link that makes the forgery executable. Daichi preserves the proof while Tokyo's real responders regain command." };
+      } else if (choice === "vector" && rpg.timeline >= 2 && vector >= 80) {
         health -= 6;
         energy -= 22;
         events.add("arc-iii-evidence");
@@ -178,7 +188,7 @@ export default function ArcThreeDeadlinePage() {
         rpg?.timeline &&
         rpg.timeline >= 2
       )
-        resolve("vector");
+        resolve(rpg.timeline === 3 ? "causal" : "vector");
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
@@ -201,6 +211,7 @@ export default function ArcThreeDeadlinePage() {
   const trusted = (rpg.bonds["Daichi Mori"] ?? 0) >= 2,
     mastery = rpg.skillMastery["Residual Read"] ?? 0,
     vector = rpg.skillMastery["Vector Step"] ?? 0,
+    causal = rpg.skillMastery["Causal Sever"] ?? 0,
     priorEvidence = rpg.completedEvents.includes("arc-ii-evidence"),
     current = BEATS[Math.min(beat, BEATS.length - 1)];
   return (
@@ -316,13 +327,11 @@ export default function ArcThreeDeadlinePage() {
                 </small>
               </button>
               {rpg.timeline >= 2 && (
-                <button disabled={vector < 80} onClick={() => resolve("vector")}>
+                <button disabled={rpg.timeline === 3 ? causal < 85 : vector < 80} onClick={() => resolve(rpg.timeline === 3 ? "causal" : "vector")}>
                   <b>3</b>
-                  <span>STEP THE PROOF BEYOND THE PURGE</span>
+                  <span>{rpg.timeline === 3 ? "SEVER THE FORGERY FROM COMMAND" : "STEP THE PROOF BEYOND THE PURGE"}</span>
                   <small>
-                    {vector >= 80
-                      ? "VS 80% · PRESERVE PROOF + TRUST"
-                      : "VECTOR STEP 80% REQUIRED"}
+                    {rpg.timeline === 3 ? (causal >= 85 ? "CS 85% · RESTORE TRUE COMMAND" : "CAUSAL SEVER 85% REQUIRED") : vector >= 80 ? "VS 80% · PRESERVE PROOF + TRUST" : "VECTOR STEP 80% REQUIRED"}
                   </small>
                 </button>
               )}
