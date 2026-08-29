@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1270.0 - Daily sustenance
+
+- Added a proper apartment meal as an explicit survival-budget decision costing ¥650 and one time slot.
+- Restores 18 energy and 3 health through the standard bounded RPG action pipeline.
+- Limits the meal to once per campaign day using the persistent journal rather than transient interface state.
+- Shows exact price and completion state while blocking purchases Ren cannot afford.
+- Added focused regression coverage and increased the browser suite to 146 tests.
+
 ## 0.1260.0 - In-world activity drawers
 
 - Condensed location-specific work, training, and shopping into native disclosure controls beneath the active Tokyo scene.

@@ -52,6 +52,7 @@ const HOTSPOTS: Hotspot[] = [
 const SUGGESTIONS = [
   { id: "gate", label: "Check the Gate plan", theme: "COURAGE" },
   { id: "rent", label: "Pay the apartment ledger", theme: "CAUTION" },
+  { id: "meal", label: "Eat a proper meal · ¥650", theme: "SUSTENANCE" },
   { id: "rest", label: "Recover before moving", theme: "CARE" },
   { id: "restock", label: "Restock the field bag · ¥900", theme: "PREPARATION" },
   { id: "routine", label: "Follow the ordinary routine", theme: "PATIENCE" },
@@ -66,6 +67,8 @@ function responseFor(snapshot: ObserverSnapshot, suggestion: string) {
   }
   if (suggestion === "routine")
     return "Ren works, eats, sleeps, and watches the city change without him. The routine earns a little money and restores some energy—but every skipped day is a choice he cannot take back.";
+  if (suggestion === "meal")
+    return "Ren makes rice, miso soup, and the last of the vegetables instead of surviving on caffeine. “Not glamorous. Still alive.”";
   if (suggestion === "restock") return "Ren replaces the seal, counts two bandages and two energy drinks, then knots a ward charm inside the bag. “No borrowed luck. Just fewer stupid deaths.”";
   return p.resources.energy < 45 || p.resources.health < 70
     ? `Ren feels the warning in his body and lies down. “Survival comes before pride.”`
@@ -152,6 +155,8 @@ export default function GamePage() {
     }
     const next = id === "restock"
       ? takeRpgAction(rpg!, "Restocked the field bag", { money: rpg!.money - 900, location: "Ren's Apartment", fieldKit: { ...rpg!.fieldKit, bandages: 2, energyDrinks: 2, wardCharm: true } })
+      : id === "meal"
+      ? takeRpgAction(rpg!, "Ate a proper meal", { money: rpg!.money - 650, energy: rpg!.energy + 18, health: rpg!.health + 3, location: "Ren's Apartment" })
       : id === "rest"
       ? takeRpgAction(rpg!, "Rested at the apartment", { energy: rpg!.energy + 25, health: rpg!.health + 5, location: "Ren's Apartment" })
       : id === "rent"
@@ -183,9 +188,10 @@ export default function GamePage() {
   const routineDays = routineDaysAvailable(rpg);
   const routineArc = currentCampaignArc(rpg.day);
   const rentDue = rentPaymentDue(rpg);
+  const ateToday = rpg.journal.some((entry) => entry.day === rpg.day && entry.action === "Ate a proper meal");
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.1260</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.1270</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
@@ -220,7 +226,7 @@ export default function GamePage() {
           <small>TAKE ONE ACTION</small>
           {activeClue === "field-bag" && <div className="field-kit-readout"><span>BANDAGES <b>{rpg.fieldKit.bandages}</b></span><span>ENERGY DRINKS <b>{rpg.fieldKit.energyDrinks}</b></span><span>WARD <b>{rpg.fieldKit.wardCharm ? "READY" : "EMPTY"}</b></span><span>WEAPON <b>{rpg.fieldKit.weapon}</b></span><span>COAT <b>{rpg.fieldKit.coat}</b></span></div>}
           {activeClue === "rent-envelope" && <div className="rent-ledger"><span>{rpg.rentLedger.arrears > 0 ? "OVERDUE" : "CURRENT"}</span><b>{rpg.rentLedger.arrears > 0 ? `¥${rpg.rentLedger.arrears.toLocaleString()} ARREARS` : `PAID THROUGH DAY ${rpg.rentLedger.paidThroughDay}`}</b><small>NEXT PAYMENT ¥{rentDue.toLocaleString()} · NO TIME SLOT</small></div>}
-          {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null || routineConfirm || (suggestion.id === "routine" && routineDays === 0) || (suggestion.id === "restock" && rpg.money < 900) || (suggestion.id === "rent" && rpg.money < rentDue)} onClick={() => suggest(suggestion.id)}>{suggestion.label}{suggestion.id === "routine" && routineDays > 0 ? ` · ${routineDays} DAY${routineDays === 1 ? "" : "S"}` : suggestion.id === "rent" ? ` · ¥${rentDue.toLocaleString()}` : ""}</button>)}
+          {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null || routineConfirm || (suggestion.id === "routine" && routineDays === 0) || (suggestion.id === "restock" && rpg.money < 900) || (suggestion.id === "rent" && rpg.money < rentDue) || (suggestion.id === "meal" && (rpg.money < 650 || ateToday))} onClick={() => suggest(suggestion.id)}>{suggestion.id === "meal" && ateToday ? "PROPER MEAL ALREADY EATEN TODAY" : suggestion.label}{suggestion.id === "routine" && routineDays > 0 ? ` · ${routineDays} DAY${routineDays === 1 ? "" : "S"}` : suggestion.id === "rent" ? ` · ¥${rentDue.toLocaleString()}` : ""}</button>)}
           {!unlocked && <p>Inspect {2 - clues.length} more point{2 - clues.length === 1 ? "" : "s"} in the room.</p>}
         </div>
         {routineConfirm && <section className="routine-confirm" aria-labelledby="routine-confirm-title"><small>TIME PASSAGE / IRREVERSIBLE</small><h3 id="routine-confirm-title">Let {routineDays} day{routineDays === 1 ? "" : "s"} pass?</h3><dl><div><dt>NEXT DEADLINE</dt><dd>DAY {routineArc.deadline} · {routineArc.title}</dd></div><div><dt>OPPORTUNITY COST</dt><dd>UP TO {routineDays * 4} TIME SLOTS</dd></div><div><dt>ROUTINE RETURN</dt><dd>+¥{(routineDays * 250).toLocaleString()} · +12 ENERGY</dd></div></dl><p>Ren cannot recover skipped meetings, investigations, or training. The calendar stops before the mandatory deadline.</p><nav><button className="primary" onClick={confirmRoutine}>LET TIME PASS</button><button onClick={() => { setRoutineConfirm(false); setSelectedSuggestion(null); }}>CANCEL</button></nav></section>}

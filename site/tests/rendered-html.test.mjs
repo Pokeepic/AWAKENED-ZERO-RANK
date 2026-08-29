@@ -4045,3 +4045,18 @@ test("condenses city activities into keyboard-native in-world drawers", async ()
   assert.match(styles, /summary:focus-visible/);
   assert.match(styles, /flex-wrap:wrap/);
 });
+
+test("makes daily apartment sustenance an explicit bounded RPG choice", async () => {
+  const game = await readFile(
+    new URL("../app/game/page.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(game, /Eat a proper meal · ¥650/);
+  assert.match(game, /Ate a proper meal/);
+  assert.match(game, /money: rpg!\.money - 650/);
+  assert.match(game, /energy: rpg!\.energy \+ 18/);
+  assert.match(game, /health: rpg!\.health \+ 3/);
+  assert.match(game, /entry\.day === rpg\.day/);
+  assert.match(game, /rpg\.money < 650 \|\| ateToday/);
+  assert.match(game, /PROPER MEAL ALREADY EATEN TODAY/);
+});
