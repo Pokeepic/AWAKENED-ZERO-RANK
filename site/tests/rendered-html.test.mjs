@@ -3568,3 +3568,11 @@ test("gives Timeline III a distinct Causal Sever solution at the third deadline"
   assert.match(arc, /SEVER THE FORGERY FROM COMMAND/);
   assert.match(arc, /resolve\(rpg\.timeline === 3 \? "causal" : "vector"\)/);
 });
+
+test("requires all three Causal Sever arc outcomes for the true ending", async () => {
+  const black = await readFile(new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url), "utf8");
+  for (const event of ["timeline-iii-route-cause-severed", "timeline-iii-breach-chain-severed", "timeline-iii-command-forgery-severed"]) assert.match(black, new RegExp(event));
+  assert.match(black, /prepared && causalArcReady/);
+  assert.match(black, /trueEndingReady = ready && causalArcReady/);
+  assert.match(black, /CAUSAL ARC I · II · III REQUIRED/);
+});

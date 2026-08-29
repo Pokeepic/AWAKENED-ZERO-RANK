@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1110.0` |
+| Release | `0.1120.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 131 browser |
+| Automated tests | 339 Python + 132 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -34,6 +34,8 @@ Timeline 3 begins differentiating its repeated crises at the Day 45 deadline. Wi
 The Day 120 crisis now has a Timeline 3 solution at 55% Causal Sever mastery. Ren can remove the common trigger synchronizing all seven breaches, preserving the district, witnesses, evidence, and Aiko's trust without replaying Vector Step's route-by-route rescue.
 
 The Day 240 command purge completes the Timeline 3 deadline set. At 85% Causal Sever mastery, Ren can cut the forged orders away from emergency command itself, restoring the authentic response network while Daichi preserves the proof and publishes the conspiracy.
+
+The Black Gate true ending now requires the distinct Causal Sever resolution from all three earlier Timeline 3 deadlines. Mastery and final preparation alone are insufficient: Ren must demonstrate that he can remove a destructive cause without erasing the people, evidence, and trust surrounding it.
 
 Timeline 2 now unlocks the hidden Haneda Residual Relay. Ren can train Vector Step, redeem earned loop lottery tickets through reproducible draws, decode the Busan residual signal at 40% mastery, and construct the second-loop anchor after mastering Vector Step and building a bond of 6. The relay and its objectives remain invisible in Timeline 1.
 

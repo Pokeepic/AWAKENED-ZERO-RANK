@@ -17,6 +17,7 @@ import {
 } from "../../game-preferences";
 
 const EVENT_ID = "black-gate-deadline-resolved";
+const CAUSAL_ARC_EVENTS = ["timeline-iii-route-cause-severed", "timeline-iii-breach-chain-severed", "timeline-iii-command-forgery-severed"] as const;
 const BEATS = [
   {
     speaker: "SYSTEM",
@@ -84,6 +85,7 @@ export default function BlackGateDeadlinePage() {
         "arc-iii-evidence",
       ].every((event) => rpg.completedEvents.includes(event));
       const strongestBond = Math.max(0, ...Object.values(rpg.bonds));
+      const causalArcReady = CAUSAL_ARC_EVENTS.every((event) => rpg.completedEvents.includes(event));
       const secondTimelineReady =
         rpg.timeline === 1 ||
         (rpg.timeline === 2 &&
@@ -117,7 +119,7 @@ export default function BlackGateDeadlinePage() {
           title: "Zero Rank cannot wound the dark.",
           copy: "Ren attacks the Gate as if this were a battle that could be won. The first counter-pulse erases him. Death ends this run; no loop is granted.",
         };
-      } else if (choice === "sever" && rpg.timeline === 3 && prepared) {
+      } else if (choice === "sever" && rpg.timeline === 3 && prepared && causalArcReady) {
         health -= 28;
         energy -= 40;
         events.add("black-gate-temporal-residue");
@@ -214,6 +216,7 @@ export default function BlackGateDeadlinePage() {
       (event) => rpg.completedEvents.includes(event),
     ).length,
     strongestBond = Math.max(0, ...Object.values(rpg.bonds)),
+    causalArcReady = CAUSAL_ARC_EVENTS.every((event) => rpg.completedEvents.includes(event)),
     secondTimelineReady =
       rpg.timeline === 1 ||
       (rpg.timeline === 2 &&
@@ -230,6 +233,7 @@ export default function BlackGateDeadlinePage() {
       strongestBond >= 4 &&
       rpg.health >= 38 &&
       secondTimelineReady,
+    trueEndingReady = ready && causalArcReady,
     current = BEATS[Math.min(beat, BEATS.length - 1)];
   return (
     <main
@@ -345,13 +349,11 @@ export default function BlackGateDeadlinePage() {
                 </small>
               </button>
               {rpg.timeline === 3 && (
-                <button disabled={!ready} onClick={() => resolve("sever")}>
+                <button disabled={!trueEndingReady} onClick={() => resolve("sever")}>
                   <b>3</b>
                   <span>SEVER THE GATE&apos;S FOUNDING CAUSE</span>
                   <small>
-                    {ready
-                      ? "CS 100% · SPINE + KEY · END THE LOOP"
-                      : "EVERY FINAL-TIMELINE CONDITION REQUIRED"}
+                    {trueEndingReady ? "ALL 3 CAUSAL ARCS · END THE LOOP" : ready ? "CAUSAL ARC I · II · III REQUIRED" : "EVERY FINAL-TIMELINE CONDITION REQUIRED"}
                   </small>
                 </button>
               )}

@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1120.0 - Earned true-ending causality
+
+- Required all three authored Timeline 3 Causal Sever outcomes before the Black Gate's true-ending choice unlocks.
+- Kept mastery, evidence, health, trust, causal-spine, and severance-key requirements intact.
+- Added an explicit final-decision readiness message when one or more causal arc resolutions are missing.
+- Preserved the ordinary residual-read ending so a valid final-year run is not forced into the true ending.
+
 ## 0.1110.0 - Timeline III Arc III causality
 
 - Added a distinct Timeline 3 solution for the Day 240 emergency-command purge.
