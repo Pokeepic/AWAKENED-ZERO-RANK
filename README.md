@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1020.0` |
+| Release | `0.1030.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 122 browser |
+| Automated tests | 339 Python + 123 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -30,6 +30,8 @@ Arc I now ends automatically on Day 45 at Adachi Evacuation Route C. Ren's avail
 Arc II resolves automatically on Day 120 during a district-wide synchronized breach. Arc I proof reduces the physical cost, an Aiko bond of at least 2 enables a coordinated evacuation success, and 40% Residual Read mastery makes the dangerous live-network read survivable. Arriving without those preparations can permanently lose evidence or end the run.
 
 Arc III resolves automatically on Day 240 inside Tokyo's compromised emergency command network. Arc II evidence exposes the forged dispatch chain, Daichi bond 2 lets the Guild publish it without Ren, and 65% Residual Read mastery makes a direct command-core read survivable. Failure can bury the evidence or kill Ren before the Black Gate arc.
+
+The first year now reaches its automatic Day 365 Black Gate finale. Fighting the impossible Gate ends the run; reading its collapse can preserve temporal residue and open the ending ledger, but only a fully prepared Ren can satisfy every condition for the optional first transmigration. The Gate is not defeated in Timeline 1.
 
 The current playable opening contains seven connected, authenticated chapters:
 

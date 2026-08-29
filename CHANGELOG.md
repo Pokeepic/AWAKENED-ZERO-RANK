@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1030.0 - Black Gate first-year finale
+
+- Added the automatic Day 365 Black Gate Core climax with a purpose-made impossible-Gate background.
+- Made fighting the Gate an ordinary lethal ending while a mastered Residual Read can follow its collapsing temporal residue.
+- Connected prior arc evidence, health, location, final choice, and a trusted ally to the existing year-end transmigration ledger.
+- Preserved the intended first-year outcome: Ren cannot defeat the Black Gate, even when a conditional path into Timeline 2 opens.
+
 ## 0.1020.0 - Arc III deadline resolution
 
 - Added the automatic Day 240 Tokyo's False Orders event with a purpose-made underground emergency-command background.

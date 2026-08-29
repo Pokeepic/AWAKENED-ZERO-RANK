@@ -130,6 +130,25 @@ test("resolves the Arc III false-orders conspiracy from evidence trust and maste
   assert.match(styles, /\.arc-three-deadline/);
   await access(new URL("public/game/cutscenes/tokyo-day240-false-orders-v1.png", root));
 });
+test("ends the first year at an impossible Black Gate with conditional transmigration", async () => {
+  const [finale, state, styles] = await Promise.all([
+    readFile(new URL("app/game/deadline/black-gate/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /state\.day === 365/);
+  assert.match(state, /return "\/game\/deadline\/black-gate"/);
+  assert.match(finale, /black-gate-deadline-resolved/);
+  assert.match(finale, /black-gate-temporal-residue/);
+  assert.match(finale, /read-the-collapsing-gate/);
+  assert.match(finale, /mastery === 100/);
+  assert.match(finale, /strongestBond >= 4/);
+  assert.match(finale, /health >= 38/);
+  assert.match(finale, /remainingDaySlots/);
+  assert.match(finale, /black-gate-day365-core-v1\.png/);
+  assert.match(styles, /\.black-gate-deadline/);
+  await access(new URL("public/game/cutscenes/black-gate-day365-core-v1.png", root));
+});
 test("opens the RPG through a persistent title menu without interrupting return travel", async () => {
   const [game, title, preferences, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
