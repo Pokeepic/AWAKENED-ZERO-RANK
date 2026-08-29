@@ -252,6 +252,26 @@ test("turns optional bond ranks into authored deterministic relationship moments
   assert.match(city, /className="bond-moment"/);
   assert.match(styles, /\.bond-moment/);
 });
+test("stages all optional bonds as choice-driven visual-novel encounters", async () => {
+  const [city, encounter, styles] = await Promise.all([
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/city/bond-encounter.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  for (const name of ["Aiko Sato", "Daichi Mori", "Haruto Ishikawa", "Mei Kuroda"]) assert.match(encounter, new RegExp(name));
+  for (const asset of ["haruto-full-v1", "mei-full-v1", "akihabara-night-market-v1", "ueno-archive-room-v1"]) await access(new URL(`public/game/visual-novel/${asset}.png`, root));
+  assert.match(encounter, /role="dialog"/);
+  assert.match(encounter, /aria-modal="true"/);
+  assert.match(encounter, /Digit\[1-3\]/);
+  assert.match(encounter, /event\.key === "Escape"/);
+  assert.match(encounter, /energyCost/);
+  assert.match(encounter, /RETURN TO TOKYO/);
+  assert.match(city, /<BondEncounter/);
+  assert.match(city, /commitBond/);
+  assert.match(city, /rpg\.energy - encounterChoice\.energyCost/);
+  assert.match(styles, /\.bond-vn/);
+  assert.match(styles, /\.bond-vn-cast/);
+});
 test("unlocks a deterministic Timeline II relay for mastery lottery Busan and anchor progress", async () => {
   const [relay, city, state, styles] = await Promise.all([
     readFile(new URL("app/game/residual-relay/page.tsx", root), "utf8"),

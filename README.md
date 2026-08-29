@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1150.0` |
+| Release | `0.1160.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -64,6 +64,8 @@ Exploration uses tiny transparent pixel chibi sprites, while canon and bond scen
 Optional contacts now follow deterministic local schedules. Tokyo's map shows who is available, who is away, and their normal hours; Ren may still travel to an empty location, but spending time and gaining a bond point requires the person to be present and is limited to once per day. Mandatory canon meetings bypass optional schedules so story progress cannot soft-lock.
 
 Optional meetings now reveal authored bond moments instead of only increasing a number. Aiko, Daichi, Haruto, and Mei each have four relationship chapters spanning distant, familiar, trusted, and unbreakable ranks; final-rank scenes in later timelines acknowledge Ren's sense of a remembered life. Rank 10 closes the optional progression cleanly instead of consuming more time for no reward.
+
+Those optional meetings now play as full-screen visual-novel encounters rather than city result cards. Each contact has a location-specific stage, full-size character presentation, two authored lead-in beats, three role-play choices with distinct energy costs and replies, keyboard progression, and an explicit relationship/time result before returning to Tokyo. New production art completes Haruto's Akihabara night market scene and Mei's restricted Ueno archive scene.
 
 Long campaign stretches now support an ordinary-routine action that advances up to seven days at once. It always stops at the current arc deadline, returns Ren home on the following morning, records the passage in his journal, and gives only modest work income and energy recovery; the skipped social, training, and investigation opportunities remain permanently spent.
 

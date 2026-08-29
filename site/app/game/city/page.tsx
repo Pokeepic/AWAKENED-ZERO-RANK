@@ -15,6 +15,10 @@ import {
   type RpgState,
 } from "../game-state";
 import { GameHud } from "../game-hud";
+import {
+  BondEncounter,
+  type BondEncounterChoice,
+} from "./bond-encounter";
 
 const SPRITES: Record<string, string> = {
   "Aiko Sato": "/game/characters/aiko.png",
@@ -81,6 +85,9 @@ export default function CityRoutePage() {
   const [bondResult, setBondResult] = useState<
     (BondMoment & { name: string; level: number }) | null
   >(null);
+  const [bondScene, setBondScene] = useState<
+    (BondMoment & { name: string; location: string; level: number }) | null
+  >(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -124,6 +131,7 @@ export default function CityRoutePage() {
     setActive(null);
     setChoice(null);
     setBondResult(null);
+    setBondScene(null);
   }
   function chooseRoute(name: string, location: string) {
     setChoice({ name, location });
@@ -136,17 +144,26 @@ export default function CityRoutePage() {
   function spendTime(name: string) {
     if (!rpg || !bondAvailability(name, rpg).available) return;
     const level = Math.min(10, (rpg.bonds[name] ?? 0) + 1);
+    setBondScene({
+      ...bondMoment(name, level, rpg.timeline),
+      name,
+      location: choice?.location ?? rpg.location,
+      level,
+    });
+  }
+  function commitBond(name: string, level: number, moment: BondMoment, encounterChoice: BondEncounterChoice) {
+    if (!rpg) return;
     const bonds = {
       ...rpg.bonds,
       [name]: level,
     };
     setRpg(
       takeRpgAction(rpg, `Spent time with ${name}`, {
-        energy: rpg.energy - 4,
+        energy: rpg.energy - encounterChoice.energyCost,
         bonds,
       }),
     );
-    setBondResult({ ...bondMoment(name, level, rpg.timeline), name, level });
+    setBondResult({ ...moment, name, level });
   }
 
   if (failed)
@@ -402,6 +419,24 @@ export default function CityRoutePage() {
             <button onClick={reset}>EXPLORE ANOTHER ROUTE</button>
           </nav>
         </section>
+      )}
+      {bondScene && (
+        <BondEncounter
+          name={bondScene.name}
+          location={bondScene.location}
+          level={bondScene.level}
+          timeline={rpg.timeline}
+          moment={bondScene}
+          onCommit={(encounterChoice) =>
+            commitBond(
+              bondScene.name,
+              bondScene.level,
+              bondScene,
+              encounterChoice,
+            )
+          }
+          onClose={() => setBondScene(null)}
+        />
       )}
       <footer className="game-footer">
         <b>AUTHENTICATED CITY STATE</b>

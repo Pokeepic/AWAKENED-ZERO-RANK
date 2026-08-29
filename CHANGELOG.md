@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1160.0 - Optional bond visual novels
+
+- Upgraded every scheduled optional meeting into a full-screen visual-novel encounter without changing canon-event priority.
+- Added two authored lead-in beats and three role-play choices each for Aiko, Daichi, Haruto, and Mei, for twelve distinct responses and energy costs.
+- Preserved one-slot time passage, one bond rank per completed encounter, daily availability, rank-10 closure, and later-timeline dialogue.
+- Added keyboard progression, numbered choice shortcuts, Escape cancellation before commitment, accessible modal semantics, and a clear result ledger.
+- Added transparent full-body Haruto and Mei illustrations plus dedicated Akihabara night-market and Ueno archive-room backgrounds.
+- Added focused asset and interaction coverage for all four optional visual-novel encounters.
+
 ## 0.1150.0 - Informed time passage
 
 - Added an explicit confirmation step before Ren commits to ordinary routine time passage.
