@@ -72,11 +72,12 @@ export default function ArcTwoDeadlinePage() {
   }, []);
 
   const resolve = useCallback(
-    (choice: "route" | "network" | "vector") => {
+    (choice: "route" | "network" | "vector" | "causal") => {
       if (!rpg || outcome) return;
       const trusted = (rpg.bonds["Aiko Sato"] ?? 0) >= 2;
       const mastery = rpg.skillMastery["Residual Read"] ?? 0;
       const vector = rpg.skillMastery["Vector Step"] ?? 0;
+      const causal = rpg.skillMastery["Causal Sever"] ?? 0;
       const priorProof = rpg.completedEvents.includes(
         "arc-i-authenticated-trace",
       );
@@ -87,7 +88,16 @@ export default function ArcTwoDeadlinePage() {
         energy = rpg.energy,
         action: string,
         result: Outcome;
-      if (choice === "vector" && rpg.timeline >= 2 && vector >= 50) {
+      if (choice === "causal" && rpg.timeline === 3 && causal >= 55) {
+        health -= 4;
+        energy -= 24;
+        events.add("arc-ii-evidence");
+        events.add("adachi-civilians-survived");
+        events.add("timeline-iii-breach-chain-severed");
+        bonds["Aiko Sato"] = Math.min(10, (bonds["Aiko Sato"] ?? 0) + 2);
+        action = "Severed the synchronization cause linking seven breaches";
+        result = { success: true, title: "Seven breaches forget how to become one.", copy: "Ren removes the shared trigger while leaving every evacuation route and witness untouched. The district survives with its evidence intact." };
+      } else if (choice === "vector" && rpg.timeline >= 2 && vector >= 50) {
         health -= 8;
         energy -= 20;
         events.add("arc-ii-evidence");
@@ -181,7 +191,7 @@ export default function ArcTwoDeadlinePage() {
         rpg?.timeline &&
         rpg.timeline >= 2
       )
-        resolve("vector");
+        resolve(rpg.timeline === 3 ? "causal" : "vector");
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
@@ -204,6 +214,7 @@ export default function ArcTwoDeadlinePage() {
   const trusted = (rpg.bonds["Aiko Sato"] ?? 0) >= 2,
     mastery = rpg.skillMastery["Residual Read"] ?? 0,
     vector = rpg.skillMastery["Vector Step"] ?? 0,
+    causal = rpg.skillMastery["Causal Sever"] ?? 0,
     priorProof = rpg.completedEvents.includes("arc-i-authenticated-trace"),
     current = BEATS[Math.min(beat, BEATS.length - 1)];
   return (
@@ -323,15 +334,13 @@ export default function ArcTwoDeadlinePage() {
               </button>
               {rpg.timeline >= 2 && (
                 <button
-                  disabled={vector < 50}
-                  onClick={() => resolve("vector")}
+                  disabled={rpg.timeline === 3 ? causal < 55 : vector < 50}
+                  onClick={() => resolve(rpg.timeline === 3 ? "causal" : "vector")}
                 >
                   <b>3</b>
-                  <span>STEP ACROSS ALL SEVEN ROUTES</span>
+                  <span>{rpg.timeline === 3 ? "SEVER THE SHARED BREACH TRIGGER" : "STEP ACROSS ALL SEVEN ROUTES"}</span>
                   <small>
-                    {vector >= 50
-                      ? "VS 50% · SAVE DISTRICT + MAP"
-                      : "VECTOR STEP 50% REQUIRED"}
+                    {rpg.timeline === 3 ? (causal >= 55 ? "CS 55% · BREAK THE SYNCHRONIZATION" : "CAUSAL SEVER 55% REQUIRED") : vector >= 50 ? "VS 50% · SAVE DISTRICT + MAP" : "VECTOR STEP 50% REQUIRED"}
                   </small>
                 </button>
               )}

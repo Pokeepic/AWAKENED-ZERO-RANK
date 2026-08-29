@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1100.0 - Timeline III Arc II causality
+
+- Added a distinct Timeline 3 solution for the synchronized Day 120 Adachi breach.
+- Let 55% Causal Sever remove the shared breach trigger while preserving all routes, witnesses, evidence, and Aiko's trust.
+- Persisted the severed breach-chain outcome separately from Timeline 2's Vector Step rescue.
+- Preserved the original coordination, live-network, and Vector Step routes for their intended timelines.
+
 ## 0.1090.0 - Timeline III Arc I causality
 
 - Added the first distinct Timeline 3 deadline solution at Adachi Evacuation Route C.

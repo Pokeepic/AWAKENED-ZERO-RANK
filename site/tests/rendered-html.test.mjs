@@ -3550,3 +3550,12 @@ test("gives Timeline III a distinct Causal Sever solution at the first deadline"
   assert.match(arc, /SEVER THE COLLAPSE'S FIRST CAUSE/);
   assert.match(arc, /resolve\(rpg\.timeline === 3 \? "causal" : "vector"\)/);
 });
+
+test("gives Timeline III a distinct Causal Sever solution at the second deadline", async () => {
+  const arc = await readFile(new URL("../app/game/deadline/arc-two/page.tsx", import.meta.url), "utf8");
+  assert.match(arc, /choice === "causal"/);
+  assert.match(arc, /causal >= 55/);
+  assert.match(arc, /timeline-iii-breach-chain-severed/);
+  assert.match(arc, /SEVER THE SHARED BREACH TRIGGER/);
+  assert.match(arc, /resolve\(rpg\.timeline === 3 \? "causal" : "vector"\)/);
+});
