@@ -3780,3 +3780,18 @@ test("adds exact once-daily Residual Read training at two risk levels", async ()
   assert.doesNotMatch(city, /Math\.random/);
   assert.match(styles, /\.skill-training/);
 });
+
+test("charges homeward travel only after Ren has left the apartment", async () => {
+  const [city, styles] = await Promise.all([
+    readFile(new URL("../app/game/city/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(city, /function returnHome\(\)/);
+  assert.match(city, /rpg\.location === "Ren's Apartment"/);
+  assert.match(city, /takeRpgAction\(rpg, "Returned home from Tokyo"/);
+  assert.match(city, /energy: rpg\.energy - 4/);
+  assert.match(city, /RETURN HOME · 1 SLOT/);
+  assert.match(city, /← CANCEL MAP/);
+  assert.doesNotMatch(city, /<Link href="\/game">← PROLOGUE<\/Link>/);
+  assert.match(styles, /\.homeward-travel/);
+});

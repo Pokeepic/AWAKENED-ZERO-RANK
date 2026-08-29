@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1250.0 - Homeward travel integrity
+
+- Replaced the Tokyo route header's free post-travel apartment teleport with an explicit homeward transition.
+- Returning from a visited location now costs one time slot and four energy and is recorded in the campaign journal.
+- Cancelling the route map before Ren leaves the apartment remains free, preserving planning without artificial penalties.
+- Homeward travel uses the standard action pipeline, including rent deadlines, story deadlines, autosave, and resource bounds.
+- Kept canon and deadline return links unchanged because those scenes already charge their committed time before navigation.
+- Added focused regression coverage and increased the browser suite to 144 tests.
+
 ## 0.1240.0 - Residual Read training routes
 
 - Added controlled Residual Read training at the Tokyo Hunter Guild for 6% mastery and 20 energy.

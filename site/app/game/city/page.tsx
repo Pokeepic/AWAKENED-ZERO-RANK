@@ -168,6 +168,17 @@ export default function CityRoutePage() {
     });
     setRpg(next);
   }
+  function returnHome() {
+    if (!rpg || rpg.location === "Ren's Apartment") {
+      window.location.assign("/game");
+      return;
+    }
+    takeRpgAction(rpg, "Returned home from Tokyo", {
+      location: "Ren's Apartment",
+      energy: rpg.energy - 4,
+    });
+    window.location.assign("/game");
+  }
   function spendTime(name: string) {
     if (!rpg || !bondAvailability(name, rpg).available) return;
     const level = Math.min(10, (rpg.bonds[name] ?? 0) + 1);
@@ -279,7 +290,7 @@ export default function CityRoutePage() {
   return (
     <main id="chronicle" className="city-shell">
       <header className="game-header">
-        <Link href="/game">← PROLOGUE</Link>
+        <button className="homeward-travel" onClick={returnHome}>{rpg.location === "Ren's Apartment" ? "← CANCEL MAP" : "← RETURN HOME · 1 SLOT"}</button>
         <b>
           AWAKENED <i>ZERO RANK</i>
         </b>
