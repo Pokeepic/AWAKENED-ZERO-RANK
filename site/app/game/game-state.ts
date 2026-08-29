@@ -286,7 +286,7 @@ export function bondAvailability(name: string, state: RpgState): BondAvailabilit
   return { available, status: available ? "AVAILABLE NOW" : "CURRENTLY AWAY", schedule: schedule.schedule };
 }
 
-export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location" | "bonds" | "completedEvents" | "skillMastery">>, timeSlots = 1): RpgState {
+export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location" | "bonds" | "completedEvents" | "skillMastery" | "lotteryTickets">>, timeSlots = 1): RpgState {
   if (state.status !== "active") return state;
   const slots = Math.max(1, Math.min(RPG_SLOTS.length, Math.trunc(timeSlots)));
   const index = RPG_SLOTS.indexOf(state.slot);

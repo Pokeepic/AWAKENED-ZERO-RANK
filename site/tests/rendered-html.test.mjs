@@ -236,6 +236,26 @@ test("gives optional bonds deterministic schedules without blocking travel or ca
   assert.match(city, /Story-critical meetings still trigger automatically/);
   assert.match(styles, /\.route-node\.contact-away/);
 });
+test("unlocks a deterministic Timeline II relay for mastery lottery Busan and anchor progress", async () => {
+  const [relay, city, state, styles] = await Promise.all([
+    readFile(new URL("app/game/residual-relay/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(city, /rpg\.timeline >= 2/);
+  assert.match(city, /\/game\/residual-relay/);
+  assert.match(relay, /save\.timeline < 2/);
+  assert.match(relay, /busan-signal-decoded/);
+  assert.match(relay, /residual-anchor-complete/);
+  assert.match(relay, /mastery < 40/);
+  assert.match(relay, /mastery < 100/);
+  assert.match(relay, /strongestBond < 6/);
+  assert.match(relay, /lotteryTickets: rpg!\.lotteryTickets - 1/);
+  assert.match(state, /"lotteryTickets">/);
+  assert.match(styles, /\.relay-shell/);
+  await access(new URL("public/game/locations/haneda-residual-relay-v1.png", root));
+});
 test("ships an evidence-complete Gate RPG chapter", async () => {
   const [city, caseboard] = await Promise.all([
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),

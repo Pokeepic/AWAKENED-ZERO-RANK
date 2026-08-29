@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1050.0 - Timeline II residual relay
+
+- Added a Timeline 2-only Haneda Residual Relay route with a purpose-made rainy airport communications background.
+- Added repeatable Vector Step training, a 40% mastery Busan decoding gate, and the 100% mastery plus bond-6 residual-anchor objective.
+- Made loop lottery tickets redeemable through deterministic save-derived draws for mastery, funding, or recovery.
+- Connected both `busan-signal-decoded` and `residual-anchor-complete` to the existing second-transmigration ledger without exposing the route in Timeline 1.
+
 ## 0.1040.0 - Scheduled bond availability
 
 - Added deterministic day-and-slot schedules for Aiko, Daichi, Haruto, and Mei.
