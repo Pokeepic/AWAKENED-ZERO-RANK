@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1090.0 - Timeline III Arc I causality
+
+- Added the first distinct Timeline 3 deadline solution at Adachi Evacuation Route C.
+- Let 25% Causal Sever remove the initiating collapse while preserving the route, authenticated trace, and Aiko's trust.
+- Gave the final timeline its own persisted Arc I consequence instead of reusing Vector Step's second-loop resolution.
+- Preserved the original Timeline 1 and Timeline 2 choices, costs, and failure behavior.
+
 ## 0.1080.0 - Black Gate true ending
 
 - Added a fully prepared Timeline 3 choice to sever the Black Gate's founding cause using all three awakened skills.

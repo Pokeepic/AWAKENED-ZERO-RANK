@@ -75,13 +75,14 @@ export default function ArcOneDeadlinePage() {
   }, []);
 
   const resolve = useCallback(
-    (choice: "evidence" | "evacuation" | "force-read" | "vector") => {
+    (choice: "evidence" | "evacuation" | "force-read" | "vector" | "causal") => {
       if (!rpg || result) return;
       const hasEvidence =
         rpg.completedEvents.includes(EVIDENCE_ID) ||
         rpg.legacyClues.includes(EVIDENCE_ID);
       const mastery = rpg.skillMastery["Residual Read"] ?? 0;
       const vector = rpg.skillMastery["Vector Step"] ?? 0;
+      const causal = rpg.skillMastery["Causal Sever"] ?? 0;
       const completedEvents = new Set(rpg.completedEvents);
       completedEvents.add(EVENT_ID);
       const bonds = { ...rpg.bonds };
@@ -91,7 +92,16 @@ export default function ArcOneDeadlinePage() {
       let action = "Arc I deadline failed";
       let outcome: Result;
 
-      if (choice === "vector" && rpg.timeline >= 2 && vector >= 20) {
+      if (choice === "causal" && rpg.timeline === 3 && causal >= 25) {
+        health -= 2;
+        energy -= 18;
+        completedEvents.add(EVIDENCE_ID);
+        completedEvents.add("arc-i-authenticated-trace");
+        completedEvents.add("timeline-iii-route-cause-severed");
+        bonds["Aiko Sato"] = Math.min(10, (bonds["Aiko Sato"] ?? 0) + 1);
+        action = "Severed the cause of Route C's first collapse";
+        outcome = { survived: true, title: "The collapse loses its beginning.", copy: "Ren cuts the initiating fracture without touching the evacuation it threatened. Route C remains open and the authenticated trace survives intact." };
+      } else if (choice === "vector" && rpg.timeline >= 2 && vector >= 20) {
         health -= 4;
         energy -= 15;
         completedEvents.add(EVIDENCE_ID);
@@ -199,7 +209,8 @@ export default function ArcOneDeadlinePage() {
           resolve(hasEvidence ? "evidence" : "evacuation");
         else if (event.code === "Digit2")
           resolve(hasEvidence ? "evacuation" : "force-read");
-        else if (rpg?.timeline && rpg.timeline >= 2) resolve("vector");
+        else if (rpg?.timeline === 3) resolve("causal");
+        else if (rpg?.timeline === 2) resolve("vector");
       }
     };
     window.addEventListener("keydown", keydown);
@@ -226,6 +237,7 @@ export default function ArcOneDeadlinePage() {
     rpg.completedEvents.includes(EVIDENCE_ID) ||
     rpg.legacyClues.includes(EVIDENCE_ID);
   const vector = rpg.skillMastery["Vector Step"] ?? 0;
+  const causal = rpg.skillMastery["Causal Sever"] ?? 0;
   const current = STORY_BEATS[Math.min(beat, STORY_BEATS.length - 1)];
   return (
     <main
@@ -361,15 +373,13 @@ export default function ArcOneDeadlinePage() {
               </button>
               {rpg.timeline >= 2 && (
                 <button
-                  disabled={vector < 20}
-                  onClick={() => resolve("vector")}
+                  disabled={rpg.timeline === 3 ? causal < 25 : vector < 20}
+                  onClick={() => resolve(rpg.timeline === 3 ? "causal" : "vector")}
                 >
                   <b>3</b>
-                  <span>STEP THROUGH THE REMEMBERED PULSE</span>
+                  <span>{rpg.timeline === 3 ? "SEVER THE COLLAPSE'S FIRST CAUSE" : "STEP THROUGH THE REMEMBERED PULSE"}</span>
                   <small>
-                    {vector >= 20
-                      ? "VS 20% · LOW COST · SAVE BOTH"
-                      : "VECTOR STEP 20% REQUIRED"}
+                    {rpg.timeline === 3 ? (causal >= 25 ? "CS 25% · PRESERVE ROUTE + TRACE" : "CAUSAL SEVER 25% REQUIRED") : vector >= 20 ? "VS 20% · LOW COST · SAVE BOTH" : "VECTOR STEP 20% REQUIRED"}
                   </small>
                 </button>
               )}

@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1080.0` |
+| Release | `0.1090.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 128 browser |
+| Automated tests | 339 Python + 129 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -28,6 +28,8 @@ Each successful transmigration now produces another awakening scene. Timeline 2 
 Timeline 3 now has a complete playable year rather than ending after its awakening. The four fixed deadlines recur, Haneda switches to final-timeline training for Causal Sever, and Ren can map the Black Gate's causal spine at 40% mastery before forging a severance key at 100% mastery with a trusted bond. The final Black Gate ledger recognizes those preparations, but still offers no fourth transmigration.
 
 A fully prepared Timeline 3 Ren can now choose a true ending at the Black Gate. Residual Read identifies the founding wound, Vector Step reaches it through the collapse, and Causal Sever removes the Gate's sustaining cause without erasing Tokyo or Ren's relationships. This completes the campaign permanently for that local chronicle; an unprepared attempt remains unavailable and ordinary lethal choices still end the run.
+
+Timeline 3 begins differentiating its repeated crises at the Day 45 deadline. With 25% Causal Sever mastery, Ren can remove the initiating cause of Route C's collapse while preserving both the evacuation and its authenticated trace. Timeline 1 and Timeline 2 retain their original choices.
 
 Timeline 2 now unlocks the hidden Haneda Residual Relay. Ren can train Vector Step, redeem earned loop lottery tickets through reproducible draws, decode the Busan residual signal at 40% mastery, and construct the second-loop anchor after mastering Vector Step and building a bond of 6. The relay and its objectives remain invisible in Timeline 1.
 

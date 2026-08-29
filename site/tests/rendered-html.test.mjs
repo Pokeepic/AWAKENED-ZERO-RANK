@@ -3541,3 +3541,12 @@ test("ends Timeline III by severing the Black Gate instead of opening a fourth l
   assert.match(hud, /TRUE ENDING · TIMELINE 3/);
   assert.match(hud, /The loop is over/);
 });
+
+test("gives Timeline III a distinct Causal Sever solution at the first deadline", async () => {
+  const arc = await readFile(new URL("../app/game/deadline/arc-one/page.tsx", import.meta.url), "utf8");
+  assert.match(arc, /choice === "causal"/);
+  assert.match(arc, /causal >= 25/);
+  assert.match(arc, /timeline-iii-route-cause-severed/);
+  assert.match(arc, /SEVER THE COLLAPSE'S FIRST CAUSE/);
+  assert.match(arc, /resolve\(rpg\.timeline === 3 \? "causal" : "vector"\)/);
+});
