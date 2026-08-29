@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1250.0` |
+| Release | `0.1260.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 144 browser |
+| Automated tests | 339 Python + 145 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -20,6 +20,8 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 [Open AWAKENED: ZERO RANK](https://awakened-zero-rank-observer.pokeepic.chatgpt.site/game)
 
 The game now opens on a restrained cinematic title screen set inside Ren's apartment. It supports mouse, touch, and game-style keyboard navigation: focus begins on Continue, Up/Down moves through choices, Enter activates, Escape backs out, and M toggles rain audio. Ambience fades around play and tab visibility while persistent settings retain sound, motion, and text choices.
+
+Tokyo locations now keep their playable scene visible while work, training, and shopping sit in compact in-world activity drawers. The native controls work with keyboard, touch, and screen readers; the most immediately useful action opens by default while optional activities stay out of Ren's way.
 
 The RPG is being rebuilt around three possible one-year timelines. Ordinary death is a real Game Over; retrying begins a new run of the same timeline and grants no transmigration benefit. On Day 365, an explicit ledger checks survival, mastery, evidence, bonds, health, location, and the final choice before a residual path can open. The first timeline begins with Ren's mocked Zero-Rank skill, Residual Read, and four unequal arc deadlines at Days 45, 120, 240, and 365.
 

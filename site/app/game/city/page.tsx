@@ -16,10 +16,7 @@ import {
   type RpgState,
 } from "../game-state";
 import { GameHud } from "../game-hud";
-import {
-  BondEncounter,
-  type BondEncounterChoice,
-} from "./bond-encounter";
+import { BondEncounter, type BondEncounterChoice } from "./bond-encounter";
 
 const SPRITES: Record<string, string> = {
   "Aiko Sato": "/game/characters/aiko.png",
@@ -57,20 +54,78 @@ const DISTRICTS = [
 ] as const;
 
 const MARKET_GEAR = [
-  { id: "blade", name: "Resonance Blade", slot: "weapon", price: 4500, effect: "+3 DAMAGE TO EVERY COMBAT MOVE" },
-  { id: "coat", name: "Guildweave Coat", slot: "coat", price: 3500, effect: "−2 DAMAGE FROM EVERY ENEMY ATTACK" },
+  {
+    id: "blade",
+    name: "Resonance Blade",
+    slot: "weapon",
+    price: 4500,
+    effect: "+3 DAMAGE TO EVERY COMBAT MOVE",
+  },
+  {
+    id: "coat",
+    name: "Guildweave Coat",
+    slot: "coat",
+    price: 3500,
+    effect: "−2 DAMAGE FROM EVERY ENEMY ATTACK",
+  },
 ] as const;
 
 const WORK_SHIFTS = {
-  "Tokyo Hunter Guild": { action: "Worked Guild Patrol", title: "Guild Patrol", pay: 1600, energy: 18, health: 0, mastery: 0, note: "Verify licenses and walk the civilian perimeter." },
-  "Akihabara Market": { action: "Worked Night Courier", title: "Night Courier", pay: 1100, energy: 12, health: 0, mastery: 0, note: "Carry sealed parcels through the market service lanes." },
-  "Ueno Library": { action: "Worked Archive Indexing", title: "Archive Indexing", pay: 850, energy: 7, health: 0, mastery: 3, note: "Index pre-Gate reports. Residual Read gains 3 mastery." },
-  "Adachi Gate Zone": { action: "Worked Perimeter Watch", title: "Perimeter Watch", pay: 1900, energy: 22, health: 2, mastery: 0, note: "High-risk boundary watch. The exposure costs 2 HP." },
+  "Tokyo Hunter Guild": {
+    action: "Worked Guild Patrol",
+    title: "Guild Patrol",
+    pay: 1600,
+    energy: 18,
+    health: 0,
+    mastery: 0,
+    note: "Verify licenses and walk the civilian perimeter.",
+  },
+  "Akihabara Market": {
+    action: "Worked Night Courier",
+    title: "Night Courier",
+    pay: 1100,
+    energy: 12,
+    health: 0,
+    mastery: 0,
+    note: "Carry sealed parcels through the market service lanes.",
+  },
+  "Ueno Library": {
+    action: "Worked Archive Indexing",
+    title: "Archive Indexing",
+    pay: 850,
+    energy: 7,
+    health: 0,
+    mastery: 3,
+    note: "Index pre-Gate reports. Residual Read gains 3 mastery.",
+  },
+  "Adachi Gate Zone": {
+    action: "Worked Perimeter Watch",
+    title: "Perimeter Watch",
+    pay: 1900,
+    energy: 22,
+    health: 2,
+    mastery: 0,
+    note: "High-risk boundary watch. The exposure costs 2 HP.",
+  },
 } as const;
 
 const TRAINING_DRILLS = {
-  "Tokyo Hunter Guild": { action: "Trained Controlled Residual Read", title: "Controlled Residual Read", mastery: 6, energy: 20, health: 0, note: "Read sealed traces under Guild supervision." },
-  "Adachi Gate Zone": { action: "Trained Live Residual Read", title: "Live Residual Read", mastery: 10, energy: 28, health: 6, note: "Read an active boundary echo. Faster growth, real exposure." },
+  "Tokyo Hunter Guild": {
+    action: "Trained Controlled Residual Read",
+    title: "Controlled Residual Read",
+    mastery: 6,
+    energy: 20,
+    health: 0,
+    note: "Read sealed traces under Guild supervision.",
+  },
+  "Adachi Gate Zone": {
+    action: "Trained Live Residual Read",
+    title: "Live Residual Read",
+    mastery: 10,
+    energy: 28,
+    health: 6,
+    note: "Read an active boundary echo. Faster growth, real exposure.",
+  },
 } as const;
 
 function routeResponse(
@@ -189,7 +244,12 @@ export default function CityRoutePage() {
       level,
     });
   }
-  function commitBond(name: string, level: number, moment: BondMoment, encounterChoice: BondEncounterChoice) {
+  function commitBond(
+    name: string,
+    level: number,
+    moment: BondMoment,
+    encounterChoice: BondEncounterChoice,
+  ) {
     if (!rpg) return;
     const bonds = {
       ...rpg.bonds,
@@ -205,22 +265,39 @@ export default function CityRoutePage() {
   }
   function purchaseGear(item: (typeof MARKET_GEAR)[number]) {
     if (!rpg || rpg.money < item.price) return;
-    const fieldKit: RpgState["fieldKit"] = item.id === "blade"
-      ? { ...rpg.fieldKit, weapon: "Resonance Blade" }
-      : { ...rpg.fieldKit, coat: "Guildweave Coat" };
-    const next = { ...rpg, money: rpg.money - item.price, fieldKit, lastAction: `Bought ${item.name}` };
+    const fieldKit: RpgState["fieldKit"] =
+      item.id === "blade"
+        ? { ...rpg.fieldKit, weapon: "Resonance Blade" }
+        : { ...rpg.fieldKit, coat: "Guildweave Coat" };
+    const next = {
+      ...rpg,
+      money: rpg.money - item.price,
+      fieldKit,
+      lastAction: `Bought ${item.name}`,
+    };
     saveRpgState(next);
     setRpg(next);
-    setPurchaseResult(`${item.name} equipped. ${item.effect}. No additional time slot was spent.`);
+    setPurchaseResult(
+      `${item.name} equipped. ${item.effect}. No additional time slot was spent.`,
+    );
   }
   function workShift(location: keyof typeof WORK_SHIFTS) {
     if (!rpg) return;
     const shift = WORK_SHIFTS[location];
-    const workedToday = rpg.journal.some((entry) => entry.day === rpg.day && entry.action === shift.action);
+    const workedToday = rpg.journal.some(
+      (entry) => entry.day === rpg.day && entry.action === shift.action,
+    );
     if (workedToday || rpg.energy < shift.energy) return;
-    const skillMastery = shift.mastery > 0
-      ? { ...rpg.skillMastery, "Residual Read": Math.min(100, (rpg.skillMastery["Residual Read"] ?? 0) + shift.mastery) }
-      : rpg.skillMastery;
+    const skillMastery =
+      shift.mastery > 0
+        ? {
+            ...rpg.skillMastery,
+            "Residual Read": Math.min(
+              100,
+              (rpg.skillMastery["Residual Read"] ?? 0) + shift.mastery,
+            ),
+          }
+        : rpg.skillMastery;
     const next = takeRpgAction(rpg, shift.action, {
       money: rpg.money + shift.pay,
       energy: rpg.energy - shift.energy,
@@ -228,12 +305,16 @@ export default function CityRoutePage() {
       skillMastery,
     });
     setRpg(next);
-    setWorkResult(`${shift.title} complete. Earned ¥${shift.pay.toLocaleString()}; one time slot spent.`);
+    setWorkResult(
+      `${shift.title} complete. Earned ¥${shift.pay.toLocaleString()}; one time slot spent.`,
+    );
   }
   function trainSkill(location: keyof typeof TRAINING_DRILLS) {
     if (!rpg) return;
     const drill = TRAINING_DRILLS[location];
-    const trainedToday = rpg.journal.some((entry) => entry.day === rpg.day && entry.action === drill.action);
+    const trainedToday = rpg.journal.some(
+      (entry) => entry.day === rpg.day && entry.action === drill.action,
+    );
     const mastery = rpg.skillMastery["Residual Read"] ?? 0;
     if (trainedToday || mastery >= 100 || rpg.energy < drill.energy) return;
     const gained = Math.min(drill.mastery, 100 - mastery);
@@ -243,7 +324,9 @@ export default function CityRoutePage() {
       skillMastery: { ...rpg.skillMastery, "Residual Read": mastery + gained },
     });
     setRpg(next);
-    setTrainingResult(`${drill.title} complete. Residual Read +${gained}% mastery; one time slot spent.`);
+    setTrainingResult(
+      `${drill.title} complete. Residual Read +${gained}% mastery; one time slot spent.`,
+    );
   }
 
   if (failed)
@@ -277,20 +360,34 @@ export default function CityRoutePage() {
   const activeRoute = routes.find((route) => route.location === active);
   const ready = inspected.length >= 2;
   const choiceAvailability = choice ? bondAvailability(choice.name, rpg) : null;
-  const workShiftChoice = choice ? WORK_SHIFTS[choice.location as keyof typeof WORK_SHIFTS] : null;
+  const workShiftChoice = choice
+    ? WORK_SHIFTS[choice.location as keyof typeof WORK_SHIFTS]
+    : null;
   const workedToday = workShiftChoice
-    ? rpg.journal.some((entry) => entry.day === rpg.day && entry.action === workShiftChoice.action)
+    ? rpg.journal.some(
+        (entry) =>
+          entry.day === rpg.day && entry.action === workShiftChoice.action,
+      )
     : false;
-  const trainingChoice = choice ? TRAINING_DRILLS[choice.location as keyof typeof TRAINING_DRILLS] : null;
+  const trainingChoice = choice
+    ? TRAINING_DRILLS[choice.location as keyof typeof TRAINING_DRILLS]
+    : null;
   const trainedToday = trainingChoice
-    ? rpg.journal.some((entry) => entry.day === rpg.day && entry.action === trainingChoice.action)
+    ? rpg.journal.some(
+        (entry) =>
+          entry.day === rpg.day && entry.action === trainingChoice.action,
+      )
     : false;
   const residualMastery = rpg.skillMastery["Residual Read"] ?? 0;
 
   return (
     <main id="chronicle" className="city-shell">
       <header className="game-header">
-        <button className="homeward-travel" onClick={returnHome}>{rpg.location === "Ren's Apartment" ? "← CANCEL MAP" : "← RETURN HOME · 1 SLOT"}</button>
+        <button className="homeward-travel" onClick={returnHome}>
+          {rpg.location === "Ren's Apartment"
+            ? "← CANCEL MAP"
+            : "← RETURN HOME · 1 SLOT"}
+        </button>
         <b>
           AWAKENED <i>ZERO RANK</i>
         </b>
@@ -495,9 +592,176 @@ export default function CityRoutePage() {
             {choiceAvailability.status}. {choiceAvailability.schedule} RPG
             clock: Day {rpg.day}, {rpg.slot}. Energy {rpg.energy}.
           </p>
-          {workShiftChoice && <section className="work-shift" aria-label={`${workShiftChoice.title} paid shift`}><header><small>LOCAL WORK / ONE TIME SLOT</small><h3>{workShiftChoice.title}</h3></header><dl><div><dt>PAY</dt><dd>¥{workShiftChoice.pay.toLocaleString()}</dd></div><div><dt>ENERGY</dt><dd>−{workShiftChoice.energy}</dd></div>{workShiftChoice.health > 0 && <div><dt>RISK</dt><dd>−{workShiftChoice.health} HP</dd></div>}</dl><p>{workShiftChoice.note} One shift per location each day.</p><button disabled={workedToday || rpg.energy < workShiftChoice.energy} onClick={() => workShift(choice.location as keyof typeof WORK_SHIFTS)}>{workedToday ? "SHIFT ALREADY COMPLETED TODAY" : rpg.energy < workShiftChoice.energy ? "NOT ENOUGH ENERGY" : `WORK ${workShiftChoice.title.toUpperCase()}`}</button>{workResult && <p role="status">{workResult}</p>}</section>}
-          {trainingChoice && <section className="skill-training" aria-label={`${trainingChoice.title} training`}><header><small>SKILL TRAINING / ONE TIME SLOT</small><h3>{trainingChoice.title}</h3><strong>RR {residualMastery}% → {Math.min(100, residualMastery + trainingChoice.mastery)}%</strong></header><dl><div><dt>MASTERY</dt><dd>+{Math.min(trainingChoice.mastery, 100 - residualMastery)}%</dd></div><div><dt>ENERGY</dt><dd>−{trainingChoice.energy}</dd></div>{trainingChoice.health > 0 && <div><dt>EXPOSURE</dt><dd>−{trainingChoice.health} HP</dd></div>}</dl><p>{trainingChoice.note} One drill per location each day.</p><button disabled={trainedToday || residualMastery >= 100 || rpg.energy < trainingChoice.energy} onClick={() => trainSkill(choice.location as keyof typeof TRAINING_DRILLS)}>{residualMastery >= 100 ? "RESIDUAL READ MASTERED" : trainedToday ? "DRILL ALREADY COMPLETED TODAY" : rpg.energy < trainingChoice.energy ? "NOT ENOUGH ENERGY" : `TRAIN ${trainingChoice.title.toUpperCase()}`}</button>{trainingResult && <p role="status">{trainingResult}</p>}</section>}
-          {choice.location === "Akihabara Market" && <section className="market-counter" aria-label="Haruto's equipment counter"><small>HARUTO'S AFTER-HOURS STOCK / ¥{rpg.money.toLocaleString()}</small><h3>Buy once. Equip immediately.</h3>{MARKET_GEAR.map((item) => { const owned = item.slot === "weapon" ? rpg.fieldKit.weapon === item.name : rpg.fieldKit.coat === item.name; return <button key={item.id} disabled={owned || rpg.money < item.price} onClick={() => purchaseGear(item)}><span><b>{item.name}</b><small>{item.effect}</small></span><strong>{owned ? "EQUIPPED" : `¥${item.price.toLocaleString()}`}</strong></button>; })}{purchaseResult && <p role="status">{purchaseResult}</p>}</section>}
+          <div
+            className="location-activities"
+            aria-label="Available location activities"
+          >
+            {workShiftChoice && (
+              <details open>
+                <summary>
+                  <span>WORK</span>
+                  <b>{workShiftChoice.title}</b>
+                  <small>
+                    +¥{workShiftChoice.pay.toLocaleString()} · −
+                    {workShiftChoice.energy} EN
+                  </small>
+                </summary>
+                <section
+                  className="work-shift"
+                  aria-label={`${workShiftChoice.title} paid shift`}
+                >
+                  <header>
+                    <small>LOCAL WORK / ONE TIME SLOT</small>
+                    <h3>{workShiftChoice.title}</h3>
+                  </header>
+                  <dl>
+                    <div>
+                      <dt>PAY</dt>
+                      <dd>¥{workShiftChoice.pay.toLocaleString()}</dd>
+                    </div>
+                    <div>
+                      <dt>ENERGY</dt>
+                      <dd>−{workShiftChoice.energy}</dd>
+                    </div>
+                    {workShiftChoice.health > 0 && (
+                      <div>
+                        <dt>RISK</dt>
+                        <dd>−{workShiftChoice.health} HP</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <p>{workShiftChoice.note} One shift per location each day.</p>
+                  <button
+                    disabled={
+                      workedToday || rpg.energy < workShiftChoice.energy
+                    }
+                    onClick={() =>
+                      workShift(choice.location as keyof typeof WORK_SHIFTS)
+                    }
+                  >
+                    {workedToday
+                      ? "SHIFT ALREADY COMPLETED TODAY"
+                      : rpg.energy < workShiftChoice.energy
+                        ? "NOT ENOUGH ENERGY"
+                        : `WORK ${workShiftChoice.title.toUpperCase()}`}
+                  </button>
+                  {workResult && <p role="status">{workResult}</p>}
+                </section>
+              </details>
+            )}
+            {trainingChoice && (
+              <details>
+                <summary>
+                  <span>TRAIN</span>
+                  <b>{trainingChoice.title}</b>
+                  <small>
+                    +{Math.min(trainingChoice.mastery, 100 - residualMastery)}%
+                    RR · −{trainingChoice.energy} EN
+                  </small>
+                </summary>
+                <section
+                  className="skill-training"
+                  aria-label={`${trainingChoice.title} training`}
+                >
+                  <header>
+                    <small>SKILL TRAINING / ONE TIME SLOT</small>
+                    <h3>{trainingChoice.title}</h3>
+                    <strong>
+                      RR {residualMastery}% →{" "}
+                      {Math.min(100, residualMastery + trainingChoice.mastery)}%
+                    </strong>
+                  </header>
+                  <dl>
+                    <div>
+                      <dt>MASTERY</dt>
+                      <dd>
+                        +
+                        {Math.min(
+                          trainingChoice.mastery,
+                          100 - residualMastery,
+                        )}
+                        %
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>ENERGY</dt>
+                      <dd>−{trainingChoice.energy}</dd>
+                    </div>
+                    {trainingChoice.health > 0 && (
+                      <div>
+                        <dt>EXPOSURE</dt>
+                        <dd>−{trainingChoice.health} HP</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <p>{trainingChoice.note} One drill per location each day.</p>
+                  <button
+                    disabled={
+                      trainedToday ||
+                      residualMastery >= 100 ||
+                      rpg.energy < trainingChoice.energy
+                    }
+                    onClick={() =>
+                      trainSkill(
+                        choice.location as keyof typeof TRAINING_DRILLS,
+                      )
+                    }
+                  >
+                    {residualMastery >= 100
+                      ? "RESIDUAL READ MASTERED"
+                      : trainedToday
+                        ? "DRILL ALREADY COMPLETED TODAY"
+                        : rpg.energy < trainingChoice.energy
+                          ? "NOT ENOUGH ENERGY"
+                          : `TRAIN ${trainingChoice.title.toUpperCase()}`}
+                  </button>
+                  {trainingResult && <p role="status">{trainingResult}</p>}
+                </section>
+              </details>
+            )}
+            {choice.location === "Akihabara Market" && (
+              <details>
+                <summary>
+                  <span>SHOP</span>
+                  <b>Haruto's Equipment</b>
+                  <small>¥{rpg.money.toLocaleString()} AVAILABLE</small>
+                </summary>
+                <section
+                  className="market-counter"
+                  aria-label="Haruto's equipment counter"
+                >
+                  <small>
+                    HARUTO'S AFTER-HOURS STOCK / ¥{rpg.money.toLocaleString()}
+                  </small>
+                  <h3>Buy once. Equip immediately.</h3>
+                  {MARKET_GEAR.map((item) => {
+                    const owned =
+                      item.slot === "weapon"
+                        ? rpg.fieldKit.weapon === item.name
+                        : rpg.fieldKit.coat === item.name;
+                    return (
+                      <button
+                        key={item.id}
+                        disabled={owned || rpg.money < item.price}
+                        onClick={() => purchaseGear(item)}
+                      >
+                        <span>
+                          <b>{item.name}</b>
+                          <small>{item.effect}</small>
+                        </span>
+                        <strong>
+                          {owned
+                            ? "EQUIPPED"
+                            : `¥${item.price.toLocaleString()}`}
+                        </strong>
+                      </button>
+                    );
+                  })}
+                  {purchaseResult && <p role="status">{purchaseResult}</p>}
+                </section>
+              </details>
+            )}
+          </div>
           <nav>
             {choiceAvailability.available && !bondResult && (
               <button

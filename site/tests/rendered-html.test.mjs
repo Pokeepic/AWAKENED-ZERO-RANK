@@ -38,7 +38,9 @@ test("opens a one-time shot-directed Day One awakening cinematic", async () => {
   assert.match(styles, /\.awakening-cutscene/);
   assert.match(styles, /awakening-scan/);
   assert.match(styles, /data-game-motion="reduced".*awakening-cutscene/);
-  await access(new URL("public/game/cutscenes/awakening-bureau-establishing-v1.png", root));
+  await access(
+    new URL("public/game/cutscenes/awakening-bureau-establishing-v1.png", root),
+  );
 });
 test("resolves the first arc deadline through evidence and mastery consequences", async () => {
   const [deadline, state, styles] = await Promise.all([
@@ -57,7 +59,9 @@ test("resolves the first arc deadline through evidence and mastery consequences"
   assert.match(deadline, /adachi-day45-pulse-v1\.png/);
   assert.match(styles, /\.deadline-cutscene/);
   assert.match(styles, /data-game-motion="reduced".*deadline-cutscene/);
-  await access(new URL("public/game/cutscenes/adachi-day45-pulse-v1.png", root));
+  await access(
+    new URL("public/game/cutscenes/adachi-day45-pulse-v1.png", root),
+  );
 });
 test("grants and stages a third awakening after the second transmigration", async () => {
   const [awakening, state, hud, story, styles] = await Promise.all([
@@ -74,7 +78,10 @@ test("grants and stages a third awakening after the second transmigration", asyn
   assert.match(awakening, /third-awakening-intro/);
   assert.match(awakening, /THIRD AWAKENING CONFIRMED/);
   assert.match(hud, /Causal Sever[\s\S]*CS/);
-  assert.match(story, /second and last transmigration triggers Ren's third awakening/);
+  assert.match(
+    story,
+    /second and last transmigration triggers Ren's third awakening/,
+  );
   assert.match(styles, /\.final-awakening/);
   assert.match(styles, /causal-sever-flash/);
 });
@@ -110,7 +117,9 @@ test("resolves the Arc II district breach from prior proof bond and mastery", as
   assert.match(deadline, /remainingDaySlots/);
   assert.match(deadline, /adachi-day120-breach-v1\.png/);
   assert.match(styles, /\.arc-two-deadline/);
-  await access(new URL("public/game/cutscenes/adachi-day120-breach-v1.png", root));
+  await access(
+    new URL("public/game/cutscenes/adachi-day120-breach-v1.png", root),
+  );
 });
 test("resolves the Arc III false-orders conspiracy from evidence trust and mastery", async () => {
   const [deadline, state, styles] = await Promise.all([
@@ -128,7 +137,9 @@ test("resolves the Arc III false-orders conspiracy from evidence trust and maste
   assert.match(deadline, /remainingDaySlots/);
   assert.match(deadline, /tokyo-day240-false-orders-v1\.png/);
   assert.match(styles, /\.arc-three-deadline/);
-  await access(new URL("public/game/cutscenes/tokyo-day240-false-orders-v1.png", root));
+  await access(
+    new URL("public/game/cutscenes/tokyo-day240-false-orders-v1.png", root),
+  );
 });
 test("ends the first year at an impossible Black Gate with conditional transmigration", async () => {
   const [finale, state, styles] = await Promise.all([
@@ -147,7 +158,9 @@ test("ends the first year at an impossible Black Gate with conditional transmigr
   assert.match(finale, /remainingDaySlots/);
   assert.match(finale, /black-gate-day365-core-v1\.png/);
   assert.match(styles, /\.black-gate-deadline/);
-  await access(new URL("public/game/cutscenes/black-gate-day365-core-v1.png", root));
+  await access(
+    new URL("public/game/cutscenes/black-gate-day365-core-v1.png", root),
+  );
 });
 test("opens the RPG through a persistent title menu without interrupting return travel", async () => {
   const [game, title, preferences, styles] = await Promise.all([
@@ -227,7 +240,13 @@ test("gives optional bonds deterministic schedules without blocking travel or ca
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  for (const name of ["Aiko Sato", "Daichi Mori", "Haruto Ishikawa", "Mei Kuroda"]) assert.match(state, new RegExp(name));
+  for (const name of [
+    "Aiko Sato",
+    "Daichi Mori",
+    "Haruto Ishikawa",
+    "Mei Kuroda",
+  ])
+    assert.match(state, new RegExp(name));
   assert.match(state, /export function bondAvailability/);
   assert.match(state, /ALREADY MET TODAY/);
   assert.match(city, /Spent time with/);
@@ -243,10 +262,22 @@ test("turns optional bond ranks into authored deterministic relationship moments
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
   assert.match(state, /const BOND_MOMENTS/);
-  for (const title of ["The Unanswered Message", "Ink Against Orders", "One Honest Bet", "Proof Across Time"]) assert.match(state, new RegExp(title));
+  for (const title of [
+    "The Unanswered Message",
+    "Ink Against Orders",
+    "One Honest Bet",
+    "Proof Across Time",
+  ])
+    assert.match(state, new RegExp(title));
   assert.match(state, /export function bondMoment/);
-  assert.match(state, /level >= 9 \? 3 : level >= 6 \? 2 : level >= 3 \? 1 : 0/);
-  assert.match(state, /Something in the exchange feels remembered from another life/);
+  assert.match(
+    state,
+    /level >= 9 \? 3 : level >= 6 \? 2 : level >= 3 \? 1 : 0/,
+  );
+  assert.match(
+    state,
+    /Something in the exchange feels remembered from another life/,
+  );
   assert.match(state, /BOND COMPLETE/);
   assert.match(city, /bondMoment\(name, level, rpg\.timeline\)/);
   assert.match(city, /className="bond-moment"/);
@@ -258,8 +289,20 @@ test("stages all optional bonds as choice-driven visual-novel encounters", async
     readFile(new URL("app/game/city/bond-encounter.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  for (const name of ["Aiko Sato", "Daichi Mori", "Haruto Ishikawa", "Mei Kuroda"]) assert.match(encounter, new RegExp(name));
-  for (const asset of ["haruto-full-v1", "mei-full-v1", "akihabara-night-market-v1", "ueno-archive-room-v1"]) await access(new URL(`public/game/visual-novel/${asset}.png`, root));
+  for (const name of [
+    "Aiko Sato",
+    "Daichi Mori",
+    "Haruto Ishikawa",
+    "Mei Kuroda",
+  ])
+    assert.match(encounter, new RegExp(name));
+  for (const asset of [
+    "haruto-full-v1",
+    "mei-full-v1",
+    "akihabara-night-market-v1",
+    "ueno-archive-room-v1",
+  ])
+    await access(new URL(`public/game/visual-novel/${asset}.png`, root));
   assert.match(encounter, /role="dialog"/);
   assert.match(encounter, /aria-modal="true"/);
   assert.match(encounter, /Digit\[1-3\]/);
@@ -291,7 +334,9 @@ test("unlocks a deterministic Timeline II relay for mastery lottery Busan and an
   assert.match(state, /"lotteryTickets"/);
   assert.match(state, /"fieldKit"/);
   assert.match(styles, /\.relay-shell/);
-  await access(new URL("public/game/locations/haneda-residual-relay-v1.png", root));
+  await access(
+    new URL("public/game/locations/haneda-residual-relay-v1.png", root),
+  );
 });
 test("ships an evidence-complete Gate RPG chapter", async () => {
   const [city, caseboard] = await Promise.all([
@@ -330,7 +375,15 @@ test("telegraphs enemy intent and unlocks timeline combat moves deterministicall
     readFile(new URL("app/game/field/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  for (const marker of ["FRACTURE CLAW", "PRESSURE SURGE", "CORE EXPOSURE", "VECTOR STEP", "CAUSAL SEVER", "GUARD LATTICE"]) assert.match(field, new RegExp(marker));
+  for (const marker of [
+    "FRACTURE CLAW",
+    "PRESSURE SURGE",
+    "CORE EXPOSURE",
+    "VECTOR STEP",
+    "CAUSAL SEVER",
+    "GUARD LATTICE",
+  ])
+    assert.match(field, new RegExp(marker));
   assert.match(field, /intent\.damage - move\.mitigation/);
   assert.match(field, /move\.damage \+ intent\.exposure/);
   assert.match(field, /rpg\.skillMastery\[move\.skill\]/);
@@ -350,7 +403,16 @@ test("carries the selected Gate and mission plan into distinct field encounters"
   assert.match(caseboard, /case=\$\{encodeURIComponent\(missionCase\)\}/);
   assert.match(caseboard, /plan=\$\{recommendation\.id\}/);
   assert.match(caseboard, /Enter before the signal shifts/);
-  for (const marker of ["DROWNED ARCHIVIST", "UNDERTOW GRIP", "GLASS RAIN", "MEMORY BLOOM", "GUARD LATTICE", "WEAK POINT MARKED", "UNSTABLE ENTRY"]) assert.match(field, new RegExp(marker));
+  for (const marker of [
+    "DROWNED ARCHIVIST",
+    "UNDERTOW GRIP",
+    "GLASS RAIN",
+    "MEMORY BLOOM",
+    "GUARD LATTICE",
+    "WEAK POINT MARKED",
+    "UNSTABLE ENTRY",
+  ])
+    assert.match(field, new RegExp(marker));
   assert.match(field, /reward: 2400/);
   assert.match(field, /plan\.damage/);
   assert.match(field, /plan\.mitigation/);
@@ -393,11 +455,18 @@ test("sells permanent Akihabara equipment and includes it in exact combat previe
     readFile(new URL("app/game/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  for (const marker of ["Resonance Blade", "Guildweave Coat", "Haruto's equipment counter", "MARKET_GEAR"]) assert.match(city, new RegExp(marker));
+  for (const marker of [
+    "Resonance Blade",
+    "Guildweave Coat",
+    "Haruto's equipment counter",
+    "MARKET_GEAR",
+  ])
+    assert.match(city, new RegExp(marker));
   assert.match(city, /price: 4500/);
   assert.match(city, /price: 3500/);
   assert.match(city, /saveRpgState\(next\)/);
-  const purchaseFunction = city.match(/function purchaseGear[\s\S]*?\n {2}}/)?.[0] ?? "";
+  const purchaseFunction =
+    city.match(/function purchaseGear[\s\S]*?\n {2}}/)?.[0] ?? "";
   assert.doesNotMatch(purchaseFunction, /takeRpgAction/);
   assert.match(state, /candidate\.fieldKit\?\.weapon \?\? "Utility Knife"/);
   assert.match(state, /candidate\.fieldKit\?\.coat \?\? "Street Jacket"/);
@@ -440,7 +509,12 @@ test("places the pixel cast on the Tokyo map and encounter stage", async () => {
 test("renders Tokyo and four reusable pixel landmark assets", async () => {
   const city = await readFile(new URL("app/game/city/page.tsx", root), "utf8");
   await access(new URL("public/game/tokyo-dusk.png", root));
-  for (const name of ["hunter-guild", "gate-zone", "akihabara-market", "ueno-library"]) {
+  for (const name of [
+    "hunter-guild",
+    "gate-zone",
+    "akihabara-market",
+    "ueno-library",
+  ]) {
     await access(new URL(`public/game/locations/${name}.png`, root));
   }
   assert.match(city, /const LANDMARKS/);
@@ -480,7 +554,8 @@ test("moves between three district maps without mutating the chronicle", async (
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  for (const name of ["east-loop", "adachi-fringe"]) await access(new URL(`public/game/maps/${name}.png`, root));
+  for (const name of ["east-loop", "adachi-fringe"])
+    await access(new URL(`public/game/maps/${name}.png`, root));
   await access(new URL("public/game/ren-apartment.png", root));
   assert.match(city, /const DISTRICTS/);
   assert.match(city, /className="district-switcher"/);
@@ -577,7 +652,8 @@ test("models a lethal one-year campaign with conditional final-day transmigratio
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
   assert.match(state, /CAMPAIGN_ARCS/);
-  for (const deadline of [45, 120, 240, 365]) assert.match(state, new RegExp(`deadline: ${deadline}`));
+  for (const deadline of [45, 120, 240, 365])
+    assert.match(state, new RegExp(`deadline: ${deadline}`));
   assert.match(state, /timeline: Timeline/);
   assert.match(state, /transmigrationEligible/);
   assert.match(state, /restartRpgRun/);
@@ -596,7 +672,13 @@ test("models a lethal one-year campaign with conditional final-day transmigratio
   assert.match(field, /Residual Read.*\+ 12/s);
   assert.match(hud, /EVIDENCE.*SECURED/);
   assert.match(hud, /arc-i-evidence/);
-  for (const requirement of ["skillMastery", "Black Gate Core", "read-the-collapsing-gate", "busan-signal-decoded"]) assert.match(state, new RegExp(requirement));
+  for (const requirement of [
+    "skillMastery",
+    "Black Gate Core",
+    "read-the-collapsing-gate",
+    "busan-signal-decoded",
+  ])
+    assert.match(state, new RegExp(requirement));
   assert.match(hud, /FIRST TIMELINE/);
   assert.match(hud, /RUN TERMINATED/);
   assert.match(hud, /RETRY TIMELINE/);
@@ -604,7 +686,10 @@ test("models a lethal one-year campaign with conditional final-day transmigratio
   assert.match(hud, /TRANSMIGRATE TO TIMELINE/);
   assert.match(title, /RETRY RUN/);
   assert.match(field, /Fell to the fracture sentinel/);
-  assert.doesNotMatch(field, /health: 20.*Retreated from the fracture sentinel/);
+  assert.doesNotMatch(
+    field,
+    /health: 20.*Retreated from the fracture sentinel/,
+  );
   assert.match(story, /Death before the final day is Game Over/);
   assert.match(story, /Residual Read/);
   assert.match(story, /Vector Step/);
@@ -669,7 +754,8 @@ test("stages one-time canon beats as a full visual-novel scene", async () => {
   assert.match(styles, /\.canon-beat/);
   assert.match(styles, /\.vn-character\.speaking/);
   assert.match(styles, /\.vn-character\.listening/);
-  for (const asset of ["adachi-station-dusk", "ren-full", "aiko-full"]) await access(new URL(`public/game/visual-novel/${asset}.png`, root));
+  for (const asset of ["adachi-station-dusk", "ren-full", "aiko-full"])
+    await access(new URL(`public/game/visual-novel/${asset}.png`, root));
 });
 test("supports keyboard-driven visual-novel pacing and dialogue history", async () => {
   const [evening, styles] = await Promise.all([
@@ -701,7 +787,8 @@ test("continues canon progression into an authenticated Daichi guild debrief", a
   assert.match(debrief, /daichi-full\.png/);
   assert.match(hud, /"debrief"/);
   assert.match(styles, /\.vn-character\.daichi/);
-  for (const asset of ["hunter-guild-briefing", "daichi-full"]) await access(new URL(`public/game/visual-novel/${asset}.png`, root));
+  for (const asset of ["hunter-guild-briefing", "daichi-full"])
+    await access(new URL(`public/game/visual-novel/${asset}.png`, root));
 });
 test("triggers canon events from play criteria and charges their time cost", async () => {
   const [state, field, city, evening, debrief, hud] = await Promise.all([
@@ -997,10 +1084,30 @@ const syncRegistration = (snapshot) => {
       "Haruto Ishikawa": 9 * 4 + 3,
     },
     schedules = {
-      "Aiko Sato": { Morning: "Tokyo Hunter Guild", Afternoon: "Tokyo Hunter Guild", Evening: "Kita-Senju Station", "Late Night": "Home" },
-      "Daichi Mori": { Morning: "Adachi Gate Zone", Afternoon: "Tokyo Hunter Guild", Evening: "Arakawa Riverbank", "Late Night": "Home" },
-      "Haruto Ishikawa": { Morning: "Akihabara Market", Afternoon: "Akihabara Market", Evening: "Kita-Senju Station", "Late Night": "Home" },
-      "Mei Kuroda": { Morning: "Ueno Library", Afternoon: "Adachi Gate Zone", Evening: "Ueno Library", "Late Night": "Shinjuku Guild Annex" },
+      "Aiko Sato": {
+        Morning: "Tokyo Hunter Guild",
+        Afternoon: "Tokyo Hunter Guild",
+        Evening: "Kita-Senju Station",
+        "Late Night": "Home",
+      },
+      "Daichi Mori": {
+        Morning: "Adachi Gate Zone",
+        Afternoon: "Tokyo Hunter Guild",
+        Evening: "Arakawa Riverbank",
+        "Late Night": "Home",
+      },
+      "Haruto Ishikawa": {
+        Morning: "Akihabara Market",
+        Afternoon: "Akihabara Market",
+        Evening: "Kita-Senju Station",
+        "Late Night": "Home",
+      },
+      "Mei Kuroda": {
+        Morning: "Ueno Library",
+        Afternoon: "Adachi Gate Zone",
+        Evening: "Ueno Library",
+        "Late Night": "Shinjuku Guild Annex",
+      },
     },
     fixedHunterRecord =
       (snapshot.clock.day === 3 && snapshot.clock.slot === "Evening") ||
@@ -1083,9 +1190,11 @@ const syncRegistration = (snapshot) => {
   }
   snapshot.relationships.sort((a, b) => a.name.localeCompare(b.name));
   snapshot.whereabouts = snapshot.relationships.map(({ name }) => ({
-    location: snapshot.clock.day % 7 === 0 && ["Aiko Sato", "Haruto Ishikawa"].includes(name)
-      ? "Asakusa Shrine District"
-      : schedules[name][snapshot.clock.slot],
+    location:
+      snapshot.clock.day % 7 === 0 &&
+      ["Aiko Sato", "Haruto Ishikawa"].includes(name)
+        ? "Asakusa Shrine District"
+        : schedules[name][snapshot.clock.slot],
     name,
   }));
 };
@@ -1517,12 +1626,22 @@ test("renders a spoiler-light authenticated three-year timeline", async () => {
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   const timeline = data.storyTimeline(snapshot);
   assert.equal(timeline.length, 6);
-  assert.deepEqual(timeline[0], { day: 183, daysRemaining: 172, status: "next", title: "The Adachi Warning" });
-  assert.deepEqual(timeline.slice(1).map(({ status, title }) => [status, title]), Array(5).fill(["locked", "Unrevealed chapter"]));
+  assert.deepEqual(timeline[0], {
+    day: 183,
+    daysRemaining: 172,
+    status: "next",
+    title: "The Adachi Warning",
+  });
+  assert.deepEqual(
+    timeline.slice(1).map(({ status, title }) => [status, title]),
+    Array(5).fill(["locked", "Unrevealed chapter"]),
+  );
   assert.match(page, /VIEW THREE-YEAR TIMELINE/);
   assert.match(page, /SPOILER-LIGHT/);
   assert.match(css, /\.arc-timeline li\.locked\{opacity:/);
@@ -1588,14 +1707,27 @@ test("joins authenticated portal evidence into read-only case files", async () =
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   const cases = data.portalCaseFiles(snapshot);
   assert.equal(cases.length, snapshot.portals.discovered.length);
-  assert.deepEqual(cases.map(({ profile }) => profile.name), snapshot.portals.discovered);
-  assert.equal(cases.find(({ active }) => active)?.profile.name ?? null, snapshot.portals.active_plan);
-  const investigated = cases.find(({ investigation }) => investigation !== null);
-  assert.equal(investigated?.investigation?.portal_name, investigated?.profile.name);
+  assert.deepEqual(
+    cases.map(({ profile }) => profile.name),
+    snapshot.portals.discovered,
+  );
+  assert.equal(
+    cases.find(({ active }) => active)?.profile.name ?? null,
+    snapshot.portals.active_plan,
+  );
+  const investigated = cases.find(
+    ({ investigation }) => investigation !== null,
+  );
+  assert.equal(
+    investigated?.investigation?.portal_name,
+    investigated?.profile.name,
+  );
   assert.match(page, /PORTAL CASE FILES/);
   assert.match(page, /VERIFIED EFFECT/);
   assert.match(page, /collaboratorLocation/);
@@ -1606,12 +1738,20 @@ test("presents authenticated key memories as a continuity archive", async () => 
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   const archive = data.memoryArchive(snapshot);
   assert.equal(archive.length, snapshot.activity.key_memories.length);
-  assert.deepEqual(archive.map(({ importance }) => importance), snapshot.activity.key_memories.map(({ importance }) => importance));
-  assert.deepEqual(archive.map(({ band }) => band), ["formative", "defining", "defining", "defining", "defining"]);
+  assert.deepEqual(
+    archive.map(({ importance }) => importance),
+    snapshot.activity.key_memories.map(({ importance }) => importance),
+  );
+  assert.deepEqual(
+    archive.map(({ band }) => band),
+    ["formative", "defining", "defining", "defining", "defining"],
+  );
   assert.equal(archive[0].ageDays, snapshot.clock.day - archive[0].day);
   assert.match(page, /CONTINUITY ARCHIVE/);
   assert.match(page, /memory\.ageDays/);
@@ -1622,7 +1762,9 @@ test("summarizes recent authenticated activity without parsing reasons", async (
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   const rhythm = data.recentRhythm(snapshot);
   assert.equal(rhythm.total, snapshot.activity.recent_events.length);
@@ -1652,7 +1794,9 @@ test("derives the next hunter promotion and equipment runway", async () => {
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   assert.deepEqual(data.rankForecast(snapshot), {
     nextRank: "E",
@@ -1673,7 +1817,9 @@ test("explains current Gate readiness from authenticated field conditions", asyn
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   assert.deepEqual(data.gateReadiness(snapshot), {
     energy: "ready",
@@ -1695,12 +1841,20 @@ test("renders the latest retained day as a four-slot narrative strip", async () 
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   const timeline = data.recentDayTimeline(snapshot);
   assert.equal(timeline.day, 10);
-  assert.deepEqual(timeline.slots.map(({ slot }) => slot), ["Morning", "Afternoon", "Evening", "Late Night"]);
-  assert.deepEqual(timeline.slots.map(({ events }) => events.map(({ action }) => action)), [["Eat"], ["Guild patrol"], ["Guild patrol"], ["Rest"]]);
+  assert.deepEqual(
+    timeline.slots.map(({ slot }) => slot),
+    ["Morning", "Afternoon", "Evening", "Late Night"],
+  );
+  assert.deepEqual(
+    timeline.slots.map(({ events }) => events.map(({ action }) => action)),
+    [["Eat"], ["Guild patrol"], ["Guild patrol"], ["Rest"]],
+  );
   assert.match(page, /className="day-strip"/);
   assert.match(page, /INSPECT DECISION LEDGER/);
   assert.match(css, /\.events \.day-strip/);
@@ -1827,10 +1981,15 @@ test("accepts signed trust and rejects non-canonical relationships", async () =>
 });
 test("authenticates and renders schedule-consistent known whereabouts", async () => {
   const [original, page] = await Promise.all([
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
     readFile(new URL("app/page.tsx", root), "utf8"),
   ]);
-  assert.deepEqual(original.whereabouts.map(({ name }) => name), original.relationships.map(({ name }) => name));
+  assert.deepEqual(
+    original.whereabouts.map(({ name }) => name),
+    original.relationships.map(({ name }) => name),
+  );
   assert.equal(isObserverSnapshot(original), true);
   const moved = structuredClone(original);
   moved.whereabouts[0].location = "Home";
@@ -1846,10 +2005,15 @@ test("joins authenticated relationships whereabouts and latest exchanges", async
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   const dossiers = data.peopleDossiers(snapshot);
-  assert.deepEqual(dossiers.map(({ relationship }) => relationship.name), snapshot.relationships.map(({ name }) => name));
+  assert.deepEqual(
+    dossiers.map(({ relationship }) => relationship.name),
+    snapshot.relationships.map(({ name }) => name),
+  );
   assert.equal(dossiers[0].location, "Tokyo Hunter Guild");
   assert.equal(dossiers[0].signal, "Growing familiarity");
   assert.equal(dossiers[0].lastConversation.day, 10);
@@ -1863,14 +2027,21 @@ test("provides a complete read-only Tokyo location atlas", async () => {
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   const names = data.TOKYO_LOCATION_CATALOG.map(({ name }) => name);
   assert.equal(names.length, 13);
   assert.equal(new Set(names).size, names.length);
   assert.ok(names.includes(snapshot.protagonist.location));
-  assert.ok(snapshot.whereabouts.every(({ location }) => names.includes(location)));
-  assert.match(page, /INSPECT \{TOKYO_LOCATION_CATALOG\.length\} DOCUMENTED PLACES/);
+  assert.ok(
+    snapshot.whereabouts.every(({ location }) => names.includes(location)),
+  );
+  assert.match(
+    page,
+    /INSPECT \{TOKYO_LOCATION_CATALOG\.length\} DOCUMENTED PLACES/,
+  );
   assert.match(page, /NO KNOWN PRESENCE/);
   assert.doesNotMatch(page, /onClick=/);
   assert.match(css, /\.city-index summary\{cursor:pointer/);
@@ -1880,11 +2051,17 @@ test("derives the current scene only from authenticated world fields", async () 
     import("../app/observer-data.ts"),
     readFile(new URL("app/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
-    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(JSON.parse),
+    readFile(new URL("public/data/observer-snapshot.json", root), "utf8").then(
+      JSON.parse,
+    ),
   ]);
   assert.deepEqual(data.currentScene(snapshot), {
     atmosphere: "Morning / Clear, 29 C",
-    place: { name: "Adachi Apartment", purpose: "Ren's home and recovery base", ward: "Adachi" },
+    place: {
+      name: "Adachi Apartment",
+      purpose: "Ren's home and recovery base",
+      ward: "Adachi",
+    },
     presence: "No known recurring character is nearby.",
     pressure: "No active Gate pressure",
   });
@@ -3638,10 +3815,22 @@ test("requires exact authored mission award composition", async () => {
 test("replays all four deadlines in Timeline II with Vector Step alternatives", async () => {
   const [state, one, two, three, black] = await Promise.all([
     readFile(new URL("../app/game/game-state.ts", import.meta.url), "utf8"),
-    readFile(new URL("../app/game/deadline/arc-one/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/game/deadline/arc-two/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/game/deadline/arc-three/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../app/game/deadline/arc-one/page.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../app/game/deadline/arc-two/page.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../app/game/deadline/arc-three/page.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url),
+      "utf8",
+    ),
   ]);
   assert.match(state, /state\.timeline <= 3/);
   assert.match(one, /timeline-ii-arc-i-rescue/);
@@ -3658,14 +3847,23 @@ test("gives Timeline III a complete year and Causal Sever preparation route", as
   const [state, city, relay, black] = await Promise.all([
     readFile(new URL("../app/game/game-state.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/game/city/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/game/residual-relay/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../app/game/residual-relay/page.tsx", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url),
+      "utf8",
+    ),
   ]);
   assert.match(state, /state\.timeline <= 3/);
   assert.match(city, /FINAL-TIMELINE ROUTE/);
   assert.match(relay, /causal-spine-mapped/);
   assert.match(relay, /severance-key-complete/);
-  assert.match(relay, /activeSkill = finalTimeline \? "Causal Sever" : "Vector Step"/);
+  assert.match(
+    relay,
+    /activeSkill = finalTimeline \? "Causal Sever" : "Vector Step"/,
+  );
   assert.match(black, /causal-spine-mapped/);
   assert.match(black, /severance-key-complete/);
 });
@@ -3673,7 +3871,10 @@ test("gives Timeline III a complete year and Causal Sever preparation route", as
 test("ends Timeline III by severing the Black Gate instead of opening a fourth loop", async () => {
   const [state, black, hud] = await Promise.all([
     readFile(new URL("../app/game/game-state.ts", import.meta.url), "utf8"),
-    readFile(new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url), "utf8"),
+    readFile(
+      new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url),
+      "utf8",
+    ),
     readFile(new URL("../app/game/game-hud.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(state, /"completed"/);
@@ -3685,7 +3886,10 @@ test("ends Timeline III by severing the Black Gate instead of opening a fourth l
 });
 
 test("gives Timeline III a distinct Causal Sever solution at the first deadline", async () => {
-  const arc = await readFile(new URL("../app/game/deadline/arc-one/page.tsx", import.meta.url), "utf8");
+  const arc = await readFile(
+    new URL("../app/game/deadline/arc-one/page.tsx", import.meta.url),
+    "utf8",
+  );
   assert.match(arc, /choice === "causal"/);
   assert.match(arc, /causal >= 25/);
   assert.match(arc, /timeline-iii-route-cause-severed/);
@@ -3694,7 +3898,10 @@ test("gives Timeline III a distinct Causal Sever solution at the first deadline"
 });
 
 test("gives Timeline III a distinct Causal Sever solution at the second deadline", async () => {
-  const arc = await readFile(new URL("../app/game/deadline/arc-two/page.tsx", import.meta.url), "utf8");
+  const arc = await readFile(
+    new URL("../app/game/deadline/arc-two/page.tsx", import.meta.url),
+    "utf8",
+  );
   assert.match(arc, /choice === "causal"/);
   assert.match(arc, /causal >= 55/);
   assert.match(arc, /timeline-iii-breach-chain-severed/);
@@ -3703,7 +3910,10 @@ test("gives Timeline III a distinct Causal Sever solution at the second deadline
 });
 
 test("gives Timeline III a distinct Causal Sever solution at the third deadline", async () => {
-  const arc = await readFile(new URL("../app/game/deadline/arc-three/page.tsx", import.meta.url), "utf8");
+  const arc = await readFile(
+    new URL("../app/game/deadline/arc-three/page.tsx", import.meta.url),
+    "utf8",
+  );
   assert.match(arc, /choice === "causal"/);
   assert.match(arc, /causal >= 85/);
   assert.match(arc, /timeline-iii-command-forgery-severed/);
@@ -3712,18 +3922,39 @@ test("gives Timeline III a distinct Causal Sever solution at the third deadline"
 });
 
 test("requires all three Causal Sever arc outcomes for the true ending", async () => {
-  const black = await readFile(new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url), "utf8");
-  for (const event of ["timeline-iii-route-cause-severed", "timeline-iii-breach-chain-severed", "timeline-iii-command-forgery-severed"]) assert.match(black, new RegExp(event));
+  const black = await readFile(
+    new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url),
+    "utf8",
+  );
+  for (const event of [
+    "timeline-iii-route-cause-severed",
+    "timeline-iii-breach-chain-severed",
+    "timeline-iii-command-forgery-severed",
+  ])
+    assert.match(black, new RegExp(event));
   assert.match(black, /prepared && causalArcReady/);
   assert.match(black, /trueEndingReady = ready && causalArcReady/);
   assert.match(black, /CAUSAL ARC I · II · III REQUIRED/);
 });
 
 test("offers deterministic location work with exact costs and daily limits", async () => {
-  const city = await readFile(new URL("../app/game/city/page.tsx", import.meta.url), "utf8");
-  for (const shift of ["Guild Patrol", "Night Courier", "Archive Indexing", "Perimeter Watch"]) assert.match(city, new RegExp(shift));
-  for (const pay of ["pay: 1600", "pay: 1100", "pay: 850", "pay: 1900"]) assert.match(city, new RegExp(pay));
-  assert.match(city, /entry\.day === rpg\.day && entry\.action === shift\.action/);
+  const city = await readFile(
+    new URL("../app/game/city/page.tsx", import.meta.url),
+    "utf8",
+  );
+  for (const shift of [
+    "Guild Patrol",
+    "Night Courier",
+    "Archive Indexing",
+    "Perimeter Watch",
+  ])
+    assert.match(city, new RegExp(shift));
+  for (const pay of ["pay: 1600", "pay: 1100", "pay: 850", "pay: 1900"])
+    assert.match(city, new RegExp(pay));
+  assert.match(
+    city,
+    /entry\.day === rpg\.day && entry\.action === shift\.action/,
+  );
   assert.match(city, /rpg\.energy < shift\.energy/);
   assert.match(city, /takeRpgAction\(rpg, shift\.action/);
   assert.match(city, /One shift per location each day/);
@@ -3743,7 +3974,10 @@ test("runs a local monthly rent ledger without charging existing saves", async (
   assert.match(state, /while \(state\.day > paidThroughDay/);
   assert.match(state, /candidate\.rentLedger \?\?/);
   assert.match(state, /arrears: 0/);
-  assert.doesNotMatch(state.match(/export function payRent[\s\S]*?\n}/)?.[0] ?? "", /takeRpgAction/);
+  assert.doesNotMatch(
+    state.match(/export function payRent[\s\S]*?\n}/)?.[0] ?? "",
+    /takeRpgAction/,
+  );
   assert.match(game, /PAID THROUGH DAY/);
   assert.match(game, /NO TIME SLOT/);
   assert.match(styles, /\.rent-ledger/);
@@ -3771,8 +4005,8 @@ test("adds exact once-daily Residual Read training at two risk levels", async ()
   ]);
   assert.match(city, /Controlled Residual Read/);
   assert.match(city, /Live Residual Read/);
-  assert.match(city, /mastery: 6, energy: 20, health: 0/);
-  assert.match(city, /mastery: 10, energy: 28, health: 6/);
+  assert.match(city, /mastery: 6,\s*energy: 20,\s*health: 0/);
+  assert.match(city, /mastery: 10,\s*energy: 28,\s*health: 6/);
   assert.match(city, /trainedToday/);
   assert.match(city, /Math\.min\(drill\.mastery, 100 - mastery\)/);
   assert.match(city, /takeRpgAction\(rpg, drill\.action/);
@@ -3794,4 +4028,20 @@ test("charges homeward travel only after Ren has left the apartment", async () =
   assert.match(city, /← CANCEL MAP/);
   assert.doesNotMatch(city, /<Link href="\/game">← PROLOGUE<\/Link>/);
   assert.match(styles, /\.homeward-travel/);
+});
+
+test("condenses city activities into keyboard-native in-world drawers", async () => {
+  const [city, styles] = await Promise.all([
+    readFile(new URL("../app/game/city/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(city, /className="location-activities"/);
+  assert.match(city, /<details open>/);
+  assert.match(city, /<summary>\s*<span>WORK<\/span>/);
+  assert.match(city, /<summary>\s*<span>TRAIN<\/span>/);
+  assert.match(city, /<summary>\s*<span>SHOP<\/span>/);
+  assert.doesNotMatch(city, /role="tab"/);
+  assert.match(styles, /\.location-activities>details/);
+  assert.match(styles, /summary:focus-visible/);
+  assert.match(styles, /flex-wrap:wrap/);
 });

@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1260.0 - In-world activity drawers
+
+- Condensed location-specific work, training, and shopping into native disclosure controls beneath the active Tokyo scene.
+- Opens the primary local work opportunity by default while keeping optional training and market inventory compact.
+- Preserved every cost, once-per-day limit, result message, and deterministic RPG transition.
+- Added keyboard focus, responsive summaries, and accessible labels without reintroducing interface tabs.
+- Added focused regression coverage and increased the browser suite to 145 tests.
+
 ## 0.1250.0 - Homeward travel integrity
 
 - Replaced the Tokyo route header's free post-travel apartment teleport with an explicit homeward transition.
