@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1240.0 - Residual Read training routes
+
+- Added controlled Residual Read training at the Tokyo Hunter Guild for 6% mastery and 20 energy.
+- Added a dangerous live-read drill at the Adachi perimeter for 10% mastery, 28 energy, and 6 HP.
+- Both options appear only after physical travel, consume one slot, and are limited to once per location per day.
+- Added exact before-and-after mastery previews, resource costs, mastered states, and insufficient-energy blocking.
+- Clamps final gains at 100% and keeps all training progression deterministic.
+- Added focused regression coverage and increased the browser suite to 143 tests.
+
 ## 0.1230.0 - Campaign-wide housing pressure
 
 - Added housing status to the shared RPG HUD so the rent ledger remains visible in every playable chapter.

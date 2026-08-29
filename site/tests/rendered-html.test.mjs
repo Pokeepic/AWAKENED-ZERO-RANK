@@ -3763,3 +3763,20 @@ test("keeps rent pressure visible across every RPG chapter", async () => {
   assert.match(styles, /\.rent-warning\.overdue/);
   assert.match(styles, /nth-child\(5\)/);
 });
+
+test("adds exact once-daily Residual Read training at two risk levels", async () => {
+  const [city, styles] = await Promise.all([
+    readFile(new URL("../app/game/city/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(city, /Controlled Residual Read/);
+  assert.match(city, /Live Residual Read/);
+  assert.match(city, /mastery: 6, energy: 20, health: 0/);
+  assert.match(city, /mastery: 10, energy: 28, health: 6/);
+  assert.match(city, /trainedToday/);
+  assert.match(city, /Math\.min\(drill\.mastery, 100 - mastery\)/);
+  assert.match(city, /takeRpgAction\(rpg, drill\.action/);
+  assert.match(city, /One drill per location each day/);
+  assert.doesNotMatch(city, /Math\.random/);
+  assert.match(styles, /\.skill-training/);
+});
