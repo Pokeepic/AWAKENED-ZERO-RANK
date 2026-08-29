@@ -77,6 +77,12 @@ export function GameHud({
   ][state.timeline];
   const finalConditions =
     state.status === "year-ending" ? transmigrationConditions(state) : [];
+  const rentDaysRemaining = Math.max(0, state.rentLedger.paidThroughDay - state.day);
+  const rentStatus = state.rentLedger.arrears > 0
+    ? "overdue"
+    : rentDaysRemaining <= 5
+      ? "due-soon"
+      : "current";
 
   return (
     <>
@@ -115,6 +121,11 @@ export function GameHud({
           <b>¥{state.money.toLocaleString()}</b>
           <span>{state.lastAction}</span>
         </div>
+        <div className={`housing-status ${rentStatus}`}>
+          <small>HOUSING</small>
+          <b>{state.rentLedger.arrears > 0 ? `¥${state.rentLedger.arrears.toLocaleString()} OVERDUE` : `PAID · DAY ${state.rentLedger.paidThroughDay}`}</b>
+          <span>{state.rentLedger.arrears > 0 ? "PAY AT APARTMENT" : `${rentDaysRemaining} DAYS REMAIN`}</span>
+        </div>
         {onNewGame && (
           <button
             onClick={() => setConfirmingReset(true)}
@@ -124,6 +135,12 @@ export function GameHud({
           </button>
         )}
       </section>
+      {rentStatus !== "current" && (
+        <aside className={`rent-warning ${rentStatus}`} role={rentStatus === "overdue" ? "alert" : "status"}>
+          <b>{rentStatus === "overdue" ? "RENT OVERDUE" : "RENT DUE SOON"}</b>
+          <span>{rentStatus === "overdue" ? `¥${state.rentLedger.arrears.toLocaleString()} must be cleared at Ren's apartment.` : `¥8,000 is due after Day ${state.rentLedger.paidThroughDay}. ${rentDaysRemaining} day${rentDaysRemaining === 1 ? "" : "s"} remain.`}</span>
+        </aside>
+      )}
       <section
         className={`campaign-deadline ${evidenceSecured ? "secured" : "pending"}`}
         aria-label="Current story deadline"

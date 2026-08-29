@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1230.0 - Campaign-wide housing pressure
+
+- Added housing status to the shared RPG HUD so the rent ledger remains visible in every playable chapter.
+- Shows exact paid-through dates, remaining days, and accumulated arrears beside Ren's other survival resources.
+- Added an amber warning during the final five days before rent expires and an accessible alert when payment is overdue.
+- Added a dedicated compact mobile row so the fifth HUD resource does not crowd smaller screens.
+- Added focused regression coverage and increased the browser suite to 142 tests.
+
 ## 0.1220.0 - Apartment rent ledger
 
 - Added a persistent local RPG rent ledger with a ¥8,000 cost and 30-day billing periods.

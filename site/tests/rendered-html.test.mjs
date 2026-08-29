@@ -3748,3 +3748,18 @@ test("runs a local monthly rent ledger without charging existing saves", async (
   assert.match(game, /NO TIME SLOT/);
   assert.match(styles, /\.rent-ledger/);
 });
+
+test("keeps rent pressure visible across every RPG chapter", async () => {
+  const [hud, styles] = await Promise.all([
+    readFile(new URL("../app/game/game-hud.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(hud, /HOUSING/);
+  assert.match(hud, /rentDaysRemaining/);
+  assert.match(hud, /RENT DUE SOON/);
+  assert.match(hud, /RENT OVERDUE/);
+  assert.match(hud, /role=\{rentStatus === "overdue" \? "alert" : "status"\}/);
+  assert.match(styles, /\.housing-status\.due-soon/);
+  assert.match(styles, /\.rent-warning\.overdue/);
+  assert.match(styles, /nth-child\(5\)/);
+});
