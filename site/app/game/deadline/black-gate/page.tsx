@@ -75,7 +75,7 @@ export default function BlackGateDeadlinePage() {
   }, []);
 
   const resolve = useCallback(
-    (choice: "fight" | "read") => {
+    (choice: "fight" | "read" | "sever") => {
       if (!rpg || outcome) return;
       const mastery = rpg.skillMastery["Residual Read"] ?? 0;
       const evidenceReady = [
@@ -84,13 +84,16 @@ export default function BlackGateDeadlinePage() {
         "arc-iii-evidence",
       ].every((event) => rpg.completedEvents.includes(event));
       const strongestBond = Math.max(0, ...Object.values(rpg.bonds));
-      const secondTimelineReady = rpg.timeline === 1 || (rpg.timeline === 2 &&
-        (rpg.skillMastery["Vector Step"] ?? 0) === 100 &&
-        rpg.completedEvents.includes("busan-signal-decoded") &&
-        rpg.completedEvents.includes("residual-anchor-complete")) || (rpg.timeline === 3 &&
-        (rpg.skillMastery["Causal Sever"] ?? 0) === 100 &&
-        rpg.completedEvents.includes("causal-spine-mapped") &&
-        rpg.completedEvents.includes("severance-key-complete"));
+      const secondTimelineReady =
+        rpg.timeline === 1 ||
+        (rpg.timeline === 2 &&
+          (rpg.skillMastery["Vector Step"] ?? 0) === 100 &&
+          rpg.completedEvents.includes("busan-signal-decoded") &&
+          rpg.completedEvents.includes("residual-anchor-complete")) ||
+        (rpg.timeline === 3 &&
+          (rpg.skillMastery["Causal Sever"] ?? 0) === 100 &&
+          rpg.completedEvents.includes("causal-spine-mapped") &&
+          rpg.completedEvents.includes("severance-key-complete"));
       const prepared =
         mastery === 100 &&
         evidenceReady &&
@@ -113,6 +116,20 @@ export default function BlackGateDeadlinePage() {
           survived: false,
           title: "Zero Rank cannot wound the dark.",
           copy: "Ren attacks the Gate as if this were a battle that could be won. The first counter-pulse erases him. Death ends this run; no loop is granted.",
+        };
+      } else if (choice === "sever" && rpg.timeline === 3 && prepared) {
+        health -= 28;
+        energy -= 40;
+        events.add("black-gate-temporal-residue");
+        events.add("read-the-collapsing-gate");
+        events.add("black-gate-causal-severed");
+        const ally = Object.entries(bonds).sort((a, b) => b[1] - a[1])[0]?.[0];
+        if (ally) bonds[ally] = Math.min(10, bonds[ally] + 2);
+        action = "Severed the Black Gate's founding cause";
+        result = {
+          survived: true,
+          title: "The fourth year never needs to begin.",
+          copy: "Residual Read finds the first wound, Vector Step crosses the collapse, and Causal Sever cuts only the cause that keeps the Black Gate alive. Tokyo remains. Ren remains. The loop ends here.",
         };
       } else if (prepared) {
         health -= 18;
@@ -167,10 +184,16 @@ export default function BlackGateDeadlinePage() {
       else if (beat >= BEATS.length && event.code === "Digit1")
         resolve("fight");
       else if (beat >= BEATS.length && event.code === "Digit2") resolve("read");
+      else if (
+        beat >= BEATS.length &&
+        event.code === "Digit3" &&
+        rpg?.timeline === 3
+      )
+        resolve("sever");
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [beat, outcome, resolve]);
+  }, [beat, outcome, resolve, rpg]);
   if (failed)
     return (
       <main className="game-loading">
@@ -191,13 +214,16 @@ export default function BlackGateDeadlinePage() {
       (event) => rpg.completedEvents.includes(event),
     ).length,
     strongestBond = Math.max(0, ...Object.values(rpg.bonds)),
-    secondTimelineReady = rpg.timeline === 1 || (rpg.timeline === 2 &&
-      (rpg.skillMastery["Vector Step"] ?? 0) === 100 &&
-      rpg.completedEvents.includes("busan-signal-decoded") &&
-      rpg.completedEvents.includes("residual-anchor-complete")) || (rpg.timeline === 3 &&
-      (rpg.skillMastery["Causal Sever"] ?? 0) === 100 &&
-      rpg.completedEvents.includes("causal-spine-mapped") &&
-      rpg.completedEvents.includes("severance-key-complete")),
+    secondTimelineReady =
+      rpg.timeline === 1 ||
+      (rpg.timeline === 2 &&
+        (rpg.skillMastery["Vector Step"] ?? 0) === 100 &&
+        rpg.completedEvents.includes("busan-signal-decoded") &&
+        rpg.completedEvents.includes("residual-anchor-complete")) ||
+      (rpg.timeline === 3 &&
+        (rpg.skillMastery["Causal Sever"] ?? 0) === 100 &&
+        rpg.completedEvents.includes("causal-spine-mapped") &&
+        rpg.completedEvents.includes("severance-key-complete")),
     ready =
       mastery === 100 &&
       evidence === 3 &&
@@ -246,7 +272,11 @@ export default function BlackGateDeadlinePage() {
             className={`deadline-result ${outcome.survived ? "success" : "failure"}`}
           >
             <small>
-              {rpg.status === "year-ending" ? `TIMELINE ${rpg.timeline} COMPLETE` : "GAME OVER"}
+              {rpg.status === "completed"
+                ? "TRUE ENDING"
+                : rpg.status === "year-ending"
+                  ? `TIMELINE ${rpg.timeline} COMPLETE`
+                  : "GAME OVER"}
             </small>
             <h1>{outcome.title}</h1>
             <p>{outcome.copy}</p>
@@ -257,14 +287,24 @@ export default function BlackGateDeadlinePage() {
               </div>
               <div>
                 <dt>GATE</dt>
-                <dd>UNBEATEN</dd>
+                <dd>{rpg.status === "completed" ? "SEVERED" : "UNBEATEN"}</dd>
               </div>
               <div>
                 <dt>NEXT</dt>
-                <dd>{rpg.status === "year-ending" ? "LEDGER" : "RETRY"}</dd>
+                <dd>
+                  {rpg.status === "completed"
+                    ? "EPILOGUE"
+                    : rpg.status === "year-ending"
+                      ? "LEDGER"
+                      : "RETRY"}
+                </dd>
               </div>
             </dl>
-            <Link href="/game">OPEN THE FINAL LEDGER</Link>
+            <Link href="/game">
+              {rpg.status === "completed"
+                ? "RETURN TO THE WORLD"
+                : "OPEN THE FINAL LEDGER"}
+            </Link>
           </div>
         ) : beat < BEATS.length ? (
           <div className="deadline-beat" key={`${current.speaker}-${beat}`}>
@@ -279,7 +319,7 @@ export default function BlackGateDeadlinePage() {
         ) : (
           <div className="deadline-choice">
             <small>FINAL IRREVERSIBLE DECISION</small>
-            <h1>The Black Gate cannot be beaten this year.</h1>
+            <h1>{rpg.timeline === 3 ? "One cause holds the Black Gate together." : "The Black Gate cannot be beaten this year."}</h1>
             <p>
               Ren can die fighting it, or trust everything he built and read the
               collapse. A read attempted without every preparation is still
@@ -298,10 +338,23 @@ export default function BlackGateDeadlinePage() {
                   {ready
                     ? "ALL CONDITIONS READY · RESIDUAL PATH"
                     : rpg.timeline >= 2 && !secondTimelineReady
-                      ? rpg.timeline === 3 ? "CS 100% · SPINE · KEY REQUIRED" : "VS 100% · BUSAN · ANCHOR REQUIRED"
+                      ? rpg.timeline === 3
+                        ? "CS 100% · SPINE · KEY REQUIRED"
+                        : "VS 100% · BUSAN · ANCHOR REQUIRED"
                       : "PREPARATION INCOMPLETE · LETHAL"}
                 </small>
               </button>
+              {rpg.timeline === 3 && (
+                <button disabled={!ready} onClick={() => resolve("sever")}>
+                  <b>3</b>
+                  <span>SEVER THE GATE&apos;S FOUNDING CAUSE</span>
+                  <small>
+                    {ready
+                      ? "CS 100% · SPINE + KEY · END THE LOOP"
+                      : "EVERY FINAL-TIMELINE CONDITION REQUIRED"}
+                  </small>
+                </button>
+              )}
             </div>
           </div>
         )}

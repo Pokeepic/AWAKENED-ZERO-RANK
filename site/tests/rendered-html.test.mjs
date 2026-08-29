@@ -73,7 +73,7 @@ test("grants and stages a third awakening after the second transmigration", asyn
   assert.match(awakening, /FINAL_AWAKENING_SHOTS/);
   assert.match(awakening, /third-awakening-intro/);
   assert.match(awakening, /THIRD AWAKENING CONFIRMED/);
-  assert.match(hud, /Causal Sever.*CS/);
+  assert.match(hud, /Causal Sever[\s\S]*CS/);
   assert.match(story, /second and last transmigration triggers Ren's third awakening/);
   assert.match(styles, /\.final-awakening/);
   assert.match(styles, /causal-sever-flash/);
@@ -252,7 +252,7 @@ test("unlocks a deterministic Timeline II relay for mastery lottery Busan and an
   assert.match(relay, /mastery < 100/);
   assert.match(relay, /strongestBond < 6/);
   assert.match(relay, /lotteryTickets: rpg!\.lotteryTickets - 1/);
-  assert.match(state, /"lotteryTickets">/);
+  assert.match(state, /"lotteryTickets"\s*>/);
   assert.match(styles, /\.relay-shell/);
   await access(new URL("public/game/locations/haneda-residual-relay-v1.png", root));
 });
@@ -390,7 +390,7 @@ test("ships illustrated Gate files and a four-slot local RPG save", async () => 
   await access(new URL("public/game/cases/sunken-courtyard.png", root));
   assert.match(caseboard, /CASE_ART/);
   assert.match(caseboard, /className="case-art"/);
-  assert.match(state, /Morning.*Afternoon.*Evening.*Late Night/);
+  assert.match(state, /Morning[\s\S]*Afternoon[\s\S]*Evening[\s\S]*Late Night/);
   assert.match(state, /localStorage/);
   assert.match(state, /Math\.floor\(elapsed \/ RPG_SLOTS\.length\)/);
 });
@@ -3526,4 +3526,18 @@ test("gives Timeline III a complete year and Causal Sever preparation route", as
   assert.match(relay, /activeSkill = finalTimeline \? "Causal Sever" : "Vector Step"/);
   assert.match(black, /causal-spine-mapped/);
   assert.match(black, /severance-key-complete/);
+});
+
+test("ends Timeline III by severing the Black Gate instead of opening a fourth loop", async () => {
+  const [state, black, hud] = await Promise.all([
+    readFile(new URL("../app/game/game-state.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/game-hud.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(state, /"completed"/);
+  assert.match(state, /black-gate-causal-severed/);
+  assert.match(black, /SEVER THE GATE&apos;S FOUNDING CAUSE/);
+  assert.match(black, /The fourth year never needs to begin/);
+  assert.match(hud, /TRUE ENDING · TIMELINE 3/);
+  assert.match(hud, /The loop is over/);
 });

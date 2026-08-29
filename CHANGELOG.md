@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1080.0 - Black Gate true ending
+
+- Added a fully prepared Timeline 3 choice to sever the Black Gate's founding cause using all three awakened skills.
+- Added a persistent completed campaign state and true-ending ledger instead of offering an impossible fourth transmigration.
+- Kept the true ending gated by final-timeline mastery, the causal spine map, severance key, evidence, health, and trust.
+- Preserved ordinary lethal failure, final-year retry behavior, and the earlier timelines' residual-read outcomes.
+
 ## 0.1070.0 - Final-timeline preparation
 
 - Made all four fixed campaign deadlines recur in Timeline 3 instead of leaving the final year empty after its awakening.

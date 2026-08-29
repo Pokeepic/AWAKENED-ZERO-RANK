@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1070.0` |
+| Release | `0.1080.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 127 browser |
+| Automated tests | 339 Python + 128 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -26,6 +26,8 @@ The RPG is being rebuilt around three possible one-year timelines. Ordinary deat
 Each successful transmigration now produces another awakening scene. Timeline 2 begins with Vector Step; the second and final transmigration begins Timeline 3 with a third skill, Causal Sever. Causal Sever can break one selected causal link, but begins at zero mastery and cannot create a fourth timeline.
 
 Timeline 3 now has a complete playable year rather than ending after its awakening. The four fixed deadlines recur, Haneda switches to final-timeline training for Causal Sever, and Ren can map the Black Gate's causal spine at 40% mastery before forging a severance key at 100% mastery with a trusted bond. The final Black Gate ledger recognizes those preparations, but still offers no fourth transmigration.
+
+A fully prepared Timeline 3 Ren can now choose a true ending at the Black Gate. Residual Read identifies the founding wound, Vector Step reaches it through the collapse, and Causal Sever removes the Gate's sustaining cause without erasing Tokyo or Ren's relationships. This completes the campaign permanently for that local chronicle; an unprepared attempt remains unavailable and ordinary lethal choices still end the run.
 
 Timeline 2 now unlocks the hidden Haneda Residual Relay. Ren can train Vector Step, redeem earned loop lottery tickets through reproducible draws, decode the Busan residual signal at 40% mastery, and construct the second-loop anchor after mastering Vector Step and building a bond of 6. The relay and its objectives remain invisible in Timeline 1.
 
