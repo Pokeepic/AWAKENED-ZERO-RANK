@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1060.0 - Timeline II deadline alternatives
+
+- Carried all four fixed arc deadlines into Timeline 2 instead of allowing the second year to skip the campaign structure.
+- Added remembered Vector Step solutions at 20%, 50%, and 80% mastery for the Day 45, 120, and 240 crises.
+- Preserved every original Timeline 1 choice and consequence while giving prepared second-loop Ren distinct evidence-preserving routes.
+- Required 100% Vector Step, the decoded Busan signal, and the residual anchor at the Timeline 2 Black Gate before the second transmigration can open.
+
 ## 0.1050.0 - Timeline II residual relay
 
 - Added a Timeline 2-only Haneda Residual Relay route with a purpose-made rainy airport communications background.

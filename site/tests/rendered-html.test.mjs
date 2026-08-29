@@ -3492,3 +3492,22 @@ test("requires exact authored mission award composition", async () => {
     assert.equal(isObserverSnapshot(invalid), false);
   }
 });
+
+test("replays all four deadlines in Timeline II with Vector Step alternatives", async () => {
+  const [state, one, two, three, black] = await Promise.all([
+    readFile(new URL("../app/game/game-state.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/deadline/arc-one/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/deadline/arc-two/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/deadline/arc-three/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(state, /state\.timeline <= 2/);
+  assert.match(one, /timeline-ii-arc-i-rescue/);
+  assert.match(one, /vector >= 20/);
+  assert.match(two, /timeline-ii-seven-route-rescue/);
+  assert.match(two, /vector >= 50/);
+  assert.match(three, /timeline-ii-command-purge-outrun/);
+  assert.match(three, /vector >= 80/);
+  assert.match(black, /busan-signal-decoded/);
+  assert.match(black, /residual-anchor-complete/);
+});

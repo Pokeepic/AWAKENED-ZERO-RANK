@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1050.0` |
+| Release | `0.1060.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 125 browser |
+| Automated tests | 339 Python + 126 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -26,6 +26,8 @@ The RPG is being rebuilt around three possible one-year timelines. Ordinary deat
 Each successful transmigration now produces another awakening scene. Timeline 2 begins with Vector Step; the second and final transmigration begins Timeline 3 with a third skill, Causal Sever. Causal Sever can break one selected causal link, but begins at zero mastery and cannot create a fourth timeline.
 
 Timeline 2 now unlocks the hidden Haneda Residual Relay. Ren can train Vector Step, redeem earned loop lottery tickets through reproducible draws, decode the Busan residual signal at 40% mastery, and construct the second-loop anchor after mastering Vector Step and building a bond of 6. The relay and its objectives remain invisible in Timeline 1.
+
+Timeline 2 now replays all four yearly deadlines instead of bypassing the arc structure. Remembered routes add Vector Step alternatives at 20%, 50%, and 80% mastery on Days 45, 120, and 240, while the original Timeline 1 solutions remain available. The Day 365 residual path additionally requires 100% Vector Step, the decoded Busan signal, and a completed anchor before the second transmigration can open.
 
 Arc I now ends automatically on Day 45 at Adachi Evacuation Route C. Ren's available choices and survival odds reflect whether he secured the causal trace earlier and whether Residual Read has reached 20% mastery. The resolution consumes the remainder of the day and commits either authenticated evidence, a changed Aiko bond, a persistent arc failure, or an ordinary Game Over.
 
