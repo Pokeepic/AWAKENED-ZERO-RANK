@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1150.0 - Informed time passage
+
+- Added an explicit confirmation step before Ren commits to ordinary routine time passage.
+- Shows the approaching arc deadline, elapsed days, maximum surrendered time slots, income, and energy recovery before saving.
+- Warns that skipped meetings, investigations, and training cannot be recovered.
+- Added a safe cancel path that leaves the local campaign state untouched and restores the apartment actions.
+- Extended pacing coverage to require the confirmation and its accessible presentation.
+
 ## 0.1140.0 - Deadline-safe campaign pacing
 
 - Added an apartment routine action that advances up to seven days for playable year-long campaign pacing.

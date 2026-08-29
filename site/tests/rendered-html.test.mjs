@@ -523,6 +523,12 @@ test("paces long campaign stretches with deadline-safe ordinary routines", async
   assert.match(game, /routineDaysAvailable\(rpg\)/);
   assert.match(game, /followRoutine\(rpg!\)/);
   assert.match(game, /every skipped day is a choice he cannot take back/);
+  assert.match(game, /TIME PASSAGE \/ IRREVERSIBLE/);
+  assert.match(game, /OPPORTUNITY COST/);
+  assert.match(game, /LET TIME PASS/);
+  assert.match(game, /setRoutineConfirm\(false\)/);
+  const styles = await readFile(new URL("app/globals.css", root), "utf8");
+  assert.match(styles, /\.routine-confirm/);
 });
 test("adds a post-Gate social chapter with local bond consequences", async () => {
   const [field, evening, state, styles] = await Promise.all([

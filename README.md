@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1140.0` |
+| Release | `0.1150.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -66,6 +66,8 @@ Optional contacts now follow deterministic local schedules. Tokyo's map shows wh
 Optional meetings now reveal authored bond moments instead of only increasing a number. Aiko, Daichi, Haruto, and Mei each have four relationship chapters spanning distant, familiar, trusted, and unbreakable ranks; final-rank scenes in later timelines acknowledge Ren's sense of a remembered life. Rank 10 closes the optional progression cleanly instead of consuming more time for no reward.
 
 Long campaign stretches now support an ordinary-routine action that advances up to seven days at once. It always stops at the current arc deadline, returns Ren home on the following morning, records the passage in his journal, and gives only modest work income and energy recovery; the skipped social, training, and investigation opportunities remain permanently spent.
+
+Routine passage now requires an explicit in-world confirmation. Before committing, the apartment panel names the approaching arc and deadline, the maximum number of surrendered time slots, the modest routine return, and the irreversible loss of meetings, investigations, and training; cancelling leaves Ren's save untouched.
 
 Canon scenes now flow out of normal RPG play instead of a chapter menu. Resolving the first Gate automatically triggers Aiko's station scene and consumes the rest of that day; later, traveling to the Hunter Guild after that scene automatically triggers Daichi's one-slot debrief. Each event remains one-time and criteria-driven.
 

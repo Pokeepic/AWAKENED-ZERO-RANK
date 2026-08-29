@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 .bond-moment{display:grid;gap:.55rem;margin:1.5rem 0}.bond-moment>small{color:var(--signal);letter-spacing:.15em}.bond-moment h3{margin:0;font:400 clamp(2rem,4vw,3.8rem)/1 var(--display)}.bond-moment blockquote{display:grid;gap:.55rem}.bond-moment blockquote b{color:var(--signal);font-size:.58rem;letter-spacing:.15em}
+.routine-confirm{margin-top:1rem;padding:1rem;border:1px solid #8d5b42;background:#17120f}.routine-confirm>small{color:var(--signal);letter-spacing:.13em}.routine-confirm h3{margin:.45rem 0 1rem;font:400 1.8rem var(--display)}.routine-confirm dl{display:grid;gap:.55rem;margin:0}.routine-confirm dl div{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid #3e352f;padding-top:.5rem}.routine-confirm dt{color:#8f8782;font-size:.5rem;letter-spacing:.1em}.routine-confirm dd{margin:0;text-align:right;font-size:.55rem}.routine-confirm p{color:#aaa19b;line-height:1.5}.routine-confirm nav{display:flex;gap:.5rem}.routine-confirm button{flex:1;border:1px solid #554943;background:transparent;color:#e9e4d9;padding:.7rem;cursor:pointer;font:700 .55rem var(--mono);letter-spacing:.1em}.routine-confirm button.primary{border-color:var(--signal);background:var(--signal);color:#090b0d}.routine-confirm button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
 :root{--ink:#11100e;--paper:#e8e1d2;--paper-deep:#d8d0bf;--red:#b13b2e;--teal:#39716c;--gold:#c18a3d;--muted:#6f685e;--line:#11100e2a;--sans:Arial,Helvetica,sans-serif;--mono:Consolas,"Courier New",monospace}
 *{box-sizing:border-box}

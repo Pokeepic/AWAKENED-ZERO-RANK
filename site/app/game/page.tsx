@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observer-data";
-import { followRoutine, loadRpgState, resetRpgState, restartRpgRun, routineDaysAvailable, takeRpgAction, type RpgState } from "./game-state";
+import { currentCampaignArc, followRoutine, loadRpgState, resetRpgState, restartRpgRun, routineDaysAvailable, takeRpgAction, type RpgState } from "./game-state";
 import { GameHud } from "./game-hud";
 import { applyGamePreferences, loadGamePreferences, RPG_SESSION_KEY } from "./game-preferences";
 import { TitleScreen } from "./title-screen";
@@ -87,6 +87,7 @@ export default function GamePage() {
   const [activeClue, setActiveClue] = useState<string | null>(null);
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [response, setResponse] = useState<string | null>(null);
+  const [routineConfirm, setRoutineConfirm] = useState(false);
   const [rpg, setRpg] = useState<RpgState | null>(null);
   const [showTitle, setShowTitle] = useState<boolean | null>(null);
 
@@ -128,6 +129,7 @@ export default function GamePage() {
     setActiveClue(null);
     setSelectedSuggestion(null);
     setResponse(null);
+    setRoutineConfirm(false);
   }
   function newGame() {
     setRpg(resetRpgState(snapshot!));
@@ -152,15 +154,23 @@ export default function GamePage() {
 
   function suggest(id: string) {
     setSelectedSuggestion(id);
-    const next = id === "routine"
-      ? followRoutine(rpg!)
-      : id === "rest"
+    if (id === "routine") {
+      setRoutineConfirm(true);
+      return;
+    }
+    const next = id === "rest"
       ? takeRpgAction(rpg!, "Rested at the apartment", { energy: rpg!.energy + 25, health: rpg!.health + 5, location: "Ren's Apartment" })
       : id === "rent"
         ? takeRpgAction(rpg!, "Protected the rent reserve", { energy: rpg!.energy - 3, location: "Ren's Apartment" })
         : takeRpgAction(rpg!, "Prepared the Gate route", { energy: rpg!.energy - 8, location: "Ren's Apartment" });
     setRpg(next);
     setResponse(responseFor(snapshot!, id));
+  }
+
+  function confirmRoutine() {
+    setRpg(followRoutine(rpg!));
+    setRoutineConfirm(false);
+    setResponse(responseFor(snapshot!, "routine"));
   }
 
   if (failed) return <main id="chronicle" className="game-loading"><p>PROLOGUE OFFLINE</p><h1>The chronicle could not be verified.</h1><Link href="/">Return to Observer</Link></main>;
@@ -173,9 +183,10 @@ export default function GamePage() {
   const unlocked = clues.length >= 2;
   const phase = response ? 3 : unlocked ? 2 : 1;
   const routineDays = routineDaysAvailable(rpg);
+  const routineArc = currentCampaignArc(rpg.day);
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.1140</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.1150</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
@@ -208,9 +219,10 @@ export default function GamePage() {
         {active && <div className="game-copy"><small>OBSERVATION / {active.label}</small><h2>{active.label}</h2><p>{active.detail(snapshot)}</p></div>}
         <div className="suggestions">
           <small>TAKE ONE ACTION</small>
-          {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null || (suggestion.id === "routine" && routineDays === 0)} onClick={() => suggest(suggestion.id)}>{suggestion.label}{suggestion.id === "routine" && routineDays > 0 ? ` · ${routineDays} DAY${routineDays === 1 ? "" : "S"}` : ""}</button>)}
+          {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null || routineConfirm || (suggestion.id === "routine" && routineDays === 0)} onClick={() => suggest(suggestion.id)}>{suggestion.label}{suggestion.id === "routine" && routineDays > 0 ? ` · ${routineDays} DAY${routineDays === 1 ? "" : "S"}` : ""}</button>)}
           {!unlocked && <p>Inspect {2 - clues.length} more point{2 - clues.length === 1 ? "" : "s"} in the room.</p>}
         </div>
+        {routineConfirm && <section className="routine-confirm" aria-labelledby="routine-confirm-title"><small>TIME PASSAGE / IRREVERSIBLE</small><h3 id="routine-confirm-title">Let {routineDays} day{routineDays === 1 ? "" : "s"} pass?</h3><dl><div><dt>NEXT DEADLINE</dt><dd>DAY {routineArc.deadline} · {routineArc.title}</dd></div><div><dt>OPPORTUNITY COST</dt><dd>UP TO {routineDays * 4} TIME SLOTS</dd></div><div><dt>ROUTINE RETURN</dt><dd>+¥{(routineDays * 250).toLocaleString()} · +12 ENERGY</dd></div></dl><p>Ren cannot recover skipped meetings, investigations, or training. The calendar stops before the mandatory deadline.</p><nav><button className="primary" onClick={confirmRoutine}>LET TIME PASS</button><button onClick={() => { setRoutineConfirm(false); setSelectedSuggestion(null); }}>CANCEL</button></nav></section>}
         {response && selected && <blockquote className="dialogue-box"><Image className={doorStyles.resultPortrait} src="/game/visual-novel/ren-full.png" alt="Portrait of Ren Takahashi" width={1024} height={1536} /><span className="speaker-tag">REN</span><small>ACTION COMPLETE / {selected.theme}</small><p>{response}</p><nav className="panel-actions" aria-label="Continue campaign"><Link href="/game/city">GO TO TOKYO</Link><button onClick={replay}>RESET SCENE</button></nav></blockquote>}
       </aside>
     </section>
