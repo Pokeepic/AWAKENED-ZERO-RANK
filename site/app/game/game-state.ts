@@ -12,6 +12,7 @@ export type Timeline = 1 | 2 | 3;
 export type CampaignStatus = "active" | "game-over" | "year-ending";
 export type TransmigrationCondition = { id: string; label: string; met: boolean };
 export type RpgJournalEntry = { day: number; slot: (typeof RPG_SLOTS)[number]; action: string; location: string };
+export type BondAvailability = { available: boolean; status: string; schedule: string };
 
 export type RpgState = {
   saveVersion: 7;
@@ -268,6 +269,21 @@ export function remainingDaySlots(state: RpgState): number {
 
 export function currentCampaignArc(day: number) {
   return CAMPAIGN_ARCS.find((arc) => day >= arc.starts && day <= arc.deadline) ?? CAMPAIGN_ARCS.at(-1)!;
+}
+
+export function bondAvailability(name: string, state: RpgState): BondAvailability {
+  const alreadyMet = state.journal.some((entry) => entry.day === state.day && entry.action === `Spent time with ${name}`);
+  if (alreadyMet) return { available: false, status: "ALREADY MET TODAY", schedule: "Try again tomorrow." };
+  const schedules: Record<string, { slots: RpgState["slot"][]; dayReady: (day: number) => boolean; schedule: string }> = {
+    "Aiko Sato": { slots: ["Evening", "Late Night"], dayReady: (day) => day % 5 !== 0, schedule: "Evenings, except every fifth patrol day." },
+    "Daichi Mori": { slots: ["Morning", "Afternoon"], dayReady: (day) => ![0, 6].includes(day % 7), schedule: "Guild hours on weekdays." },
+    "Haruto Ishikawa": { slots: ["Afternoon", "Late Night"], dayReady: (day) => day % 2 === 1, schedule: "Odd-numbered days after morning." },
+    "Mei Kuroda": { slots: ["Morning", "Evening"], dayReady: (day) => day % 2 === 0, schedule: "Even-numbered days, morning or evening." },
+  };
+  const schedule = schedules[name];
+  if (!schedule) return { available: false, status: "NO LOCAL SCHEDULE", schedule: "This contact cannot be visited yet." };
+  const available = schedule.dayReady(state.day) && schedule.slots.includes(state.slot);
+  return { available, status: available ? "AVAILABLE NOW" : "CURRENTLY AWAY", schedule: schedule.schedule };
 }
 
 export function takeRpgAction(state: RpgState, action: string, effects: Partial<Pick<RpgState, "health" | "energy" | "money" | "location" | "bonds" | "completedEvents" | "skillMastery">>, timeSlots = 1): RpgState {

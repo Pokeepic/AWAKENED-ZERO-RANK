@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1040.0 - Scheduled bond availability
+
+- Added deterministic day-and-slot schedules for Aiko, Daichi, Haruto, and Mei.
+- Made the Tokyo map visibly distinguish available and absent contacts while preserving travel to every location.
+- Added optional one-slot meetings that grant one local bond point and cannot be repeated with the same person on the same day.
+- Kept mandatory canon events schedule-independent so relationship availability cannot block the main story.
+
 ## 0.1030.0 - Black Gate first-year finale
 
 - Added the automatic Day 365 Black Gate Core climax with a purpose-made impossible-Gate background.

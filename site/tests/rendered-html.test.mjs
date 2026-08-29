@@ -221,6 +221,21 @@ test("ships a Ren-controlled Tokyo route chapter that advances RPG time", async 
   assert.match(city, /TIME ADVANCED/);
   assert.doesNotMatch(city, /fetch\([^)]*method\s*:/);
 });
+test("gives optional bonds deterministic schedules without blocking travel or canon", async () => {
+  const [city, state, styles] = await Promise.all([
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  for (const name of ["Aiko Sato", "Daichi Mori", "Haruto Ishikawa", "Mei Kuroda"]) assert.match(state, new RegExp(name));
+  assert.match(state, /export function bondAvailability/);
+  assert.match(state, /ALREADY MET TODAY/);
+  assert.match(city, /Spent time with/);
+  assert.match(city, /SPEND TIME WITH/);
+  assert.match(city, /TRAVEL ·.*status/);
+  assert.match(city, /Story-critical meetings still trigger automatically/);
+  assert.match(styles, /\.route-node\.contact-away/);
+});
 test("ships an evidence-complete Gate RPG chapter", async () => {
   const [city, caseboard] = await Promise.all([
     readFile(new URL("app/game/city/page.tsx", root), "utf8"),

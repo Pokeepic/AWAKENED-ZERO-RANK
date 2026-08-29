@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1030.0` |
+| Release | `0.1040.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 123 browser |
+| Automated tests | 339 Python + 124 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -44,6 +44,8 @@ The current playable opening contains seven connected, authenticated chapters:
 7. **The Patrol Record** — debrief the mission with Daichi and decide whether the Guild receives rank or truth.
 
 Exploration uses tiny transparent pixel chibi sprites, while canon and bond scenes switch into a visual-novel presentation with full-size illustrated characters and location-specific backgrounds. After the Gate at Adachi Station now leads into Daichi's patrol debrief inside the Tokyo Hunter Guild. Dialogue advances by click, Enter, or Space, numbered choices support keys 1–3, and an expandable history preserves each scene's lines. Canon events unlock in sequence and cannot be replayed for duplicate rewards. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
+
+Optional contacts now follow deterministic local schedules. Tokyo's map shows who is available, who is away, and their normal hours; Ren may still travel to an empty location, but spending time and gaining a bond point requires the person to be present and is limited to once per day. Mandatory canon meetings bypass optional schedules so story progress cannot soft-lock.
 
 Canon scenes now flow out of normal RPG play instead of a chapter menu. Resolving the first Gate automatically triggers Aiko's station scene and consumes the rest of that day; later, traveling to the Hunter Guild after that scene automatically triggers Daichi's one-slot debrief. Each event remains one-time and criteria-driven.
 
