@@ -112,6 +112,24 @@ test("resolves the Arc II district breach from prior proof bond and mastery", as
   assert.match(styles, /\.arc-two-deadline/);
   await access(new URL("public/game/cutscenes/adachi-day120-breach-v1.png", root));
 });
+test("resolves the Arc III false-orders conspiracy from evidence trust and mastery", async () => {
+  const [deadline, state, styles] = await Promise.all([
+    readFile(new URL("app/game/deadline/arc-three/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /state\.day >= 240/);
+  assert.match(state, /return "\/game\/deadline\/arc-three"/);
+  assert.match(deadline, /arc-iii-deadline-resolved/);
+  assert.match(deadline, /arc-ii-evidence/);
+  assert.match(deadline, /Daichi Mori.*>= 2/);
+  assert.match(deadline, /mastery >= 65/);
+  assert.match(deadline, /arc-iii-evidence/);
+  assert.match(deadline, /remainingDaySlots/);
+  assert.match(deadline, /tokyo-day240-false-orders-v1\.png/);
+  assert.match(styles, /\.arc-three-deadline/);
+  await access(new URL("public/game/cutscenes/tokyo-day240-false-orders-v1.png", root));
+});
 test("opens the RPG through a persistent title menu without interrupting return travel", async () => {
   const [game, title, preferences, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),

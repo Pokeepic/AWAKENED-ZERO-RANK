@@ -246,6 +246,8 @@ export function pendingStoryRoute(state: RpgState): string | null {
     && !state.completedEvents.includes("arc-i-deadline-resolved")) return "/game/deadline/arc-one";
   if (state.timeline === 1 && state.day >= 120 && state.day <= 240
     && !state.completedEvents.includes("arc-ii-deadline-resolved")) return "/game/deadline/arc-two";
+  if (state.timeline === 1 && state.day >= 240 && state.day <= 365
+    && !state.completedEvents.includes("arc-iii-deadline-resolved")) return "/game/deadline/arc-three";
   const survivedFirstGate = state.journal.some((entry) => [
     "Cleared the fracture sentinel",
     "Retreated from the fracture sentinel",
