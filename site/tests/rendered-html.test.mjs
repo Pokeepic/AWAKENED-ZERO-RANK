@@ -236,6 +236,22 @@ test("gives optional bonds deterministic schedules without blocking travel or ca
   assert.match(city, /Story-critical meetings still\s+trigger automatically/);
   assert.match(styles, /\.route-node\.contact-away/);
 });
+test("turns optional bond ranks into authored deterministic relationship moments", async () => {
+  const [city, state, styles] = await Promise.all([
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /const BOND_MOMENTS/);
+  for (const title of ["The Unanswered Message", "Ink Against Orders", "One Honest Bet", "Proof Across Time"]) assert.match(state, new RegExp(title));
+  assert.match(state, /export function bondMoment/);
+  assert.match(state, /level >= 9 \? 3 : level >= 6 \? 2 : level >= 3 \? 1 : 0/);
+  assert.match(state, /Something in the exchange feels remembered from another life/);
+  assert.match(state, /BOND COMPLETE/);
+  assert.match(city, /bondMoment\(name, level, rpg\.timeline\)/);
+  assert.match(city, /className="bond-moment"/);
+  assert.match(styles, /\.bond-moment/);
+});
 test("unlocks a deterministic Timeline II relay for mastery lottery Busan and anchor progress", async () => {
   const [relay, city, state, styles] = await Promise.all([
     readFile(new URL("app/game/residual-relay/page.tsx", root), "utf8"),

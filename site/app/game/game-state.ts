@@ -47,6 +47,48 @@ export type BondAvailability = {
   status: string;
   schedule: string;
 };
+export type BondMoment = {
+  title: string;
+  chapter: string;
+  dialogue: string;
+};
+
+const BOND_MOMENTS: Record<string, readonly BondMoment[]> = {
+  "Aiko Sato": [
+    { chapter: "DISTANT", title: "The Unanswered Message", dialogue: "Aiko checks Ren's bandages without asking why he ignored her messages. “Next time, send one word. Alive is enough.”" },
+    { chapter: "FAMILIAR", title: "Platform Coffee", dialogue: "Aiko passes Ren a canned coffee before the last train. “I remembered which one you pretend not to like.”" },
+    { chapter: "TRUSTED", title: "A Light Left On", dialogue: "Aiko gives Ren her spare apartment key. “This isn't permission to disappear. It's proof you have somewhere to return to.”" },
+    { chapter: "UNBREAKABLE", title: "The Fourth Message", dialogue: "Aiko meets Ren's eyes as the city alarms begin. “Whatever year you think you're carrying alone—you aren't.”" },
+  ],
+  "Daichi Mori": [
+    { chapter: "DISTANT", title: "Unsigned Report", dialogue: "Daichi slides the patrol record back across the desk. “If you believe it, put your name where the Guild can punish you for it.”" },
+    { chapter: "FAMILIAR", title: "Second Chair", dialogue: "Daichi leaves the briefing-room chair beside him empty until Ren arrives. “Late. Sit down. I didn't start without you.”" },
+    { chapter: "TRUSTED", title: "Ink Against Orders", dialogue: "Daichi signs beneath Ren's evidence. “Now they have to erase both of us. That makes the lie twice as expensive.”" },
+    { chapter: "UNBREAKABLE", title: "Command Authority", dialogue: "Daichi removes his Guild insignia and places it in Ren's hand. “If the chain fails, you give the order. I'll make them follow it.”" },
+  ],
+  "Haruto Ishikawa": [
+    { chapter: "DISTANT", title: "A Bad Price", dialogue: "Haruto names three prices for the same charm, then sells Ren the cheapest one. “Don't look grateful. It ruins my reputation.”" },
+    { chapter: "FAMILIAR", title: "After Closing", dialogue: "Haruto locks the market stall and reveals the ledger beneath the till. “You wanted the truth. Truth is what I sell after the shutters close.”" },
+    { chapter: "TRUSTED", title: "The House Edge", dialogue: "Haruto tears up a debt marker bearing Ren's name. “I prefer wagers where both of us survive to argue about the payout.”" },
+    { chapter: "UNBREAKABLE", title: "One Honest Bet", dialogue: "Haruto presses his last sealed ticket into Ren's palm. “For once, I'm betting on a person instead of the odds.”" },
+  ],
+  "Mei Kuroda": [
+    { chapter: "DISTANT", title: "Margin Notes", dialogue: "Mei returns Ren's case file covered in red ink. “Your conclusion is reckless. Your evidence, unfortunately, is not.”" },
+    { chapter: "FAMILIAR", title: "The Closed Archive", dialogue: "Mei unlocks a library room absent from every floor plan. “You didn't hear about this archive from me. Try not to bleed on anything.”" },
+    { chapter: "TRUSTED", title: "A Name Restored", dialogue: "Mei adds Ren's testimony to the permanent record. “Systems forget people deliberately. Archives don't have to.”" },
+    { chapter: "UNBREAKABLE", title: "Proof Across Time", dialogue: "Mei closes the final ledger. “Even if the world resets, I believe you existed exactly as you remember.”" },
+  ],
+};
+
+export function bondMoment(name: string, level: number, timeline: Timeline): BondMoment {
+  const moments = BOND_MOMENTS[name];
+  const fallback = { chapter: "KNOWN", title: "A Quiet Hour", dialogue: `${name} spends the hour with Ren. Neither of them calls the time wasted.` };
+  const index = level >= 9 ? 3 : level >= 6 ? 2 : level >= 3 ? 1 : 0;
+  const moment = moments?.[index] ?? fallback;
+  return timeline === 1 || index < 3
+    ? moment
+    : { ...moment, dialogue: `${moment.dialogue} Something in the exchange feels remembered from another life.` };
+}
 
 export type RpgState = {
   saveVersion: 7;
@@ -517,6 +559,12 @@ export function bondAvailability(
   name: string,
   state: RpgState,
 ): BondAvailability {
+  if ((state.bonds[name] ?? 0) >= 10)
+    return {
+      available: false,
+      status: "BOND COMPLETE",
+      schedule: "This relationship has reached rank 10.",
+    };
   const alreadyMet = state.journal.some(
     (entry) =>
       entry.day === state.day && entry.action === `Spent time with ${name}`,

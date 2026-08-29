@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1130.0 - Authored bond chapters
+
+- Replaced generic optional-meeting results with four deterministic relationship chapters for Aiko, Daichi, Haruto, and Mei.
+- Advanced bond dialogue through distant, familiar, trusted, and unbreakable ranks, with later-timeline recognition at the final tier.
+- Preserved contact schedules, one meeting per day, one-slot time costs, and automatic canon-event priority.
+- Marked rank-10 relationships complete so further optional meetings cannot waste a time slot.
+- Added focused browser-contract coverage for authored bond progression and completion behavior.
+
 ## 0.1120.0 - Earned true-ending causality
 
 - Required all three authored Timeline 3 Causal Sever outcomes before the Black Gate's true-ending choice unlocks.

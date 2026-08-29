@@ -8,8 +8,10 @@ import { useEffect, useState } from "react";
 import { verifyArtifacts, type ObserverSnapshot } from "../../observer-data";
 import {
   bondAvailability,
+  bondMoment,
   loadRpgState,
   takeRpgAction,
+  type BondMoment,
   type RpgState,
 } from "../game-state";
 import { GameHud } from "../game-hud";
@@ -76,7 +78,9 @@ export default function CityRoutePage() {
   const [districtId, setDistrictId] =
     useState<(typeof DISTRICTS)[number]["id"]>("central");
   const [rpg, setRpg] = useState<RpgState | null>(null);
-  const [bondResult, setBondResult] = useState<string | null>(null);
+  const [bondResult, setBondResult] = useState<
+    (BondMoment & { name: string; level: number }) | null
+  >(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -131,9 +135,10 @@ export default function CityRoutePage() {
   }
   function spendTime(name: string) {
     if (!rpg || !bondAvailability(name, rpg).available) return;
+    const level = Math.min(10, (rpg.bonds[name] ?? 0) + 1);
     const bonds = {
       ...rpg.bonds,
-      [name]: Math.min(10, (rpg.bonds[name] ?? 0) + 1),
+      [name]: level,
     };
     setRpg(
       takeRpgAction(rpg, `Spent time with ${name}`, {
@@ -141,7 +146,7 @@ export default function CityRoutePage() {
         bonds,
       }),
     );
-    setBondResult(`${name.toUpperCase()} BOND +1`);
+    setBondResult({ ...bondMoment(name, level, rpg.timeline), name, level });
   }
 
   if (failed)
@@ -364,10 +369,22 @@ export default function CityRoutePage() {
           </div>
           <small>TRAVEL COMPLETE / TIME ADVANCED</small>
           <h2 id="route-result-title">{choice.location}</h2>
-          <blockquote>
-            {bondResult ??
-              routeResponse(snapshot, choice.name, choice.location)}
-          </blockquote>
+          {bondResult ? (
+            <div className="bond-moment" aria-live="polite">
+              <small>
+                {bondResult.chapter} BOND / RANK {bondResult.level}
+              </small>
+              <h3>{bondResult.title}</h3>
+              <blockquote>
+                <b>{bondResult.name.toUpperCase()}</b>
+                {bondResult.dialogue}
+              </blockquote>
+            </div>
+          ) : (
+            <blockquote>
+              {routeResponse(snapshot, choice.name, choice.location)}
+            </blockquote>
+          )}
           <p>
             {choiceAvailability.status}. {choiceAvailability.schedule} RPG
             clock: Day {rpg.day}, {rpg.slot}. Energy {rpg.energy}.
