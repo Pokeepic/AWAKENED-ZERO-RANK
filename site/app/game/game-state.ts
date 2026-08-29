@@ -526,8 +526,10 @@ export function pendingStoryRoute(state: RpgState): string | null {
   const survivedFirstGate = state.journal.some((entry) =>
     [
       "Cleared the fracture sentinel",
+      "Cleared the drowned archivist",
       "Retreated from the fracture sentinel",
       "Withdrew from the fracture sentinel",
+      "Withdrew from the drowned archivist",
     ].includes(entry.action),
   );
   if (

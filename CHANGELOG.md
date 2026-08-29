@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1180.0 - Connected Gate operations
+
+- Connected the authenticated case selected on the caseboard to the subsequent field encounter through explicit route state.
+- Added the Drowned Archivist as a harder Sunken Courtyard encounter with 78 HP, three distinct telegraphs, a larger exposed window, blue-water visual treatment, and a ¥2,400 reward.
+- Preserved the Fracture Sentinel as the faster Glass Office Labyrinth encounter with its existing deterministic pattern and ¥1,800 reward.
+- Made all three mission approaches consequential: preparation reduces incoming damage, investigation increases outgoing damage, and a rushed entry increases incoming damage.
+- Displays the active mission plan and applies it to every exact damage preview, combat resolution, journal result, and automatic post-Gate story trigger.
+- Added focused regression coverage for case routing, plan modifiers, both enemies, rewards, visual states, and deterministic execution.
+
 ## 0.1170.0 - Telegraph combat
 
 - Added a deterministic three-intent enemy cycle with exact incoming-damage telegraphs and distinct visual cues.

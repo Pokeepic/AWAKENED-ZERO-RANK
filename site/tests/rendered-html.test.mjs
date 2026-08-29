@@ -313,7 +313,7 @@ test("ships a deterministic Gate battle that advances time only on resolution", 
     readFile(new URL("app/game/game-hud.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(caseboard, /href="\/game\/field"/);
+  assert.match(caseboard, /\/game\/field\?case=/);
   assert.doesNotMatch(hud, />FIELD<\/button>/);
   assert.match(field, /PRECISION STRIKE/);
   assert.match(field, /BARRIER PULSE/);
@@ -329,7 +329,7 @@ test("telegraphs enemy intent and unlocks timeline combat moves deterministicall
     readFile(new URL("app/game/field/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  for (const marker of ["FRACTURE CLAW", "PRESSURE SURGE", "CORE EXPOSURE", "VECTOR STEP", "CAUSAL SEVER", "TELEGRAPH LOCKED"]) assert.match(field, new RegExp(marker));
+  for (const marker of ["FRACTURE CLAW", "PRESSURE SURGE", "CORE EXPOSURE", "VECTOR STEP", "CAUSAL SEVER", "GUARD LATTICE"]) assert.match(field, new RegExp(marker));
   assert.match(field, /intent\.damage - move\.mitigation/);
   assert.match(field, /move\.damage \+ intent\.exposure/);
   assert.match(field, /rpg\.skillMastery\[move\.skill\]/);
@@ -337,6 +337,26 @@ test("telegraphs enemy intent and unlocks timeline combat moves deterministicall
   assert.match(field, /event\.key\.toLowerCase\(\) === "r"/);
   assert.match(styles, /\.enemy-intent/);
   assert.match(styles, /@keyframes enemy-surge/);
+  assert.doesNotMatch(field, /Math\.random/);
+});
+test("carries the selected Gate and mission plan into distinct field encounters", async () => {
+  const [caseboard, field, state, styles] = await Promise.all([
+    readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/field/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(caseboard, /case=\$\{encodeURIComponent\(missionCase\)\}/);
+  assert.match(caseboard, /plan=\$\{recommendation\.id\}/);
+  assert.match(caseboard, /Enter before the signal shifts/);
+  for (const marker of ["DROWNED ARCHIVIST", "UNDERTOW GRIP", "GLASS RAIN", "MEMORY BLOOM", "GUARD LATTICE", "WEAK POINT MARKED", "UNSTABLE ENTRY"]) assert.match(field, new RegExp(marker));
+  assert.match(field, /reward: 2400/);
+  assert.match(field, /plan\.damage/);
+  assert.match(field, /plan\.mitigation/);
+  assert.match(field, /Cleared the drowned archivist/);
+  assert.match(state, /Cleared the drowned archivist/);
+  assert.match(styles, /\.enemy-archivist/);
+  assert.match(styles, /\.battle-plan/);
   assert.doesNotMatch(field, /Math\.random/);
 });
 test("uses first-person apartment framing and pixel sprites for outside scenes", async () => {

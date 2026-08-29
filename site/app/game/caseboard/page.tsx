@@ -17,7 +17,7 @@ const CASE_ART: Record<string, string> = {
 const RECOMMENDATIONS = [
   { id: "prepare", label: "Prepare before committing", tone: "DISCIPLINE" },
   { id: "investigate", label: "Investigate the weaker signal", tone: "CURIOSITY" },
-  { id: "withdraw", label: "Leave both Gates alone", tone: "RESTRAINT" },
+  { id: "rush", label: "Enter before the signal shifts", tone: "RISK" },
 ] as const;
 
 function renResponse(snapshot: ObserverSnapshot, recommendation: string) {
@@ -29,7 +29,7 @@ function renResponse(snapshot: ObserverSnapshot, recommendation: string) {
     const lowest = [...snapshot.portals.investigations].sort((a, b) => a.risk - b.risk || a.portal_name.localeCompare(b.portal_name))[0];
     return lowest ? `Ren circles ${lowest.portal_name}, risk ${lowest.risk}. “That's the weaker signal. I'll scout its perimeter.”` : "Ren finds no authenticated Gate file to follow. “Then there is nothing to investigate.”";
   }
-  return `Ren leaves both files open but untouched. “Restraint is information too. Gate alert ${snapshot.environment.gate_alert_level} doesn't make every risk mine.”`;
+  return `Ren closes the file and checks the Gate alert at ${snapshot.environment.gate_alert_level}. “If the signal shifts, the route closes. I move now.”`;
 }
 
 export default function CaseboardPage() {
@@ -38,6 +38,7 @@ export default function CaseboardPage() {
   const [opened, setOpened] = useState<string[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [recommendation, setRecommendation] = useState<(typeof RECOMMENDATIONS)[number] | null>(null);
+  const [missionCase, setMissionCase] = useState<string | null>(null);
   const [rpg, setRpg] = useState<RpgState | null>(null);
 
   useEffect(() => {
@@ -58,13 +59,15 @@ export default function CaseboardPage() {
   }, []);
 
   function openFile(name: string) { setActive(name); setOpened((known) => known.includes(name) ? known : [...known, name]); }
-  function replay() { setOpened([]); setActive(null); setRecommendation(null); }
+  function replay() { setOpened([]); setActive(null); setRecommendation(null); setMissionCase(null); }
   function decide(item: (typeof RECOMMENDATIONS)[number]) {
+    if (!activeCase) return;
     setRecommendation(item);
+    setMissionCase(activeCase.portal_name);
     const residual = rpg!.skillMastery["Residual Read"] ?? 0;
     const effects = item.id === "prepare" ? { energy: rpg!.energy - 8, location: "Adachi Gate Zone", skillMastery: { ...rpg!.skillMastery, "Residual Read": Math.min(100, residual + 4) } }
       : item.id === "investigate" ? { energy: rpg!.energy - 12, health: rpg!.health - 2, location: "Adachi Gate Zone", skillMastery: { ...rpg!.skillMastery, "Residual Read": Math.min(100, residual + 8) }, completedEvents: [...new Set([...rpg!.completedEvents, "arc-i-evidence"])] }
-      : { energy: rpg!.energy - 3, location: "Ren's Apartment" };
+      : { energy: rpg!.energy - 3, location: "Adachi Gate Zone" };
     setRpg(takeRpgAction(rpg!, item.label, effects));
   }
 
@@ -87,7 +90,7 @@ export default function CaseboardPage() {
       </aside>
     </section>}
 
-    {recommendation && <section className="case-verdict"><Image className="verdict-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><small>{recommendation.tone} / TIME ADVANCED</small><h2>Ren takes action.</h2><blockquote>{renResponse(snapshot, recommendation.id)}</blockquote><div><span>RPG CLOCK</span><b>DAY {rpg.day} / {rpg.slot}</b><span>STATUS</span><b>HP {rpg.health} / EN {rpg.energy}</b></div><nav><Link className="primary" href="/game/field">ENTER THE GATE</Link><button onClick={replay}>REOPEN CASEBOARD</button><Link href="/game/city">RETURN TO TOKYO</Link></nav></section>}
+    {recommendation && missionCase && <section className="case-verdict"><Image className="verdict-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><small>{recommendation.tone} / TIME ADVANCED</small><h2>{missionCase} selected.</h2><blockquote>{renResponse(snapshot, recommendation.id)}</blockquote><div><span>RPG CLOCK</span><b>DAY {rpg.day} / {rpg.slot}</b><span>STATUS</span><b>HP {rpg.health} / EN {rpg.energy}</b></div><nav><Link className="primary" href={`/game/field?case=${encodeURIComponent(missionCase)}&plan=${recommendation.id}`}>ENTER THE GATE</Link><button onClick={replay}>REOPEN CASEBOARD</button><Link href="/game/city">RETURN TO TOKYO</Link></nav></section>}
     <footer className="game-footer"><b>REN'S LOCAL RPG CAMPAIGN</b><p>Actions consume a time slot here. The autonomous Observer timeline remains separate.</p><span>{cases.length} AUTHENTICATED CASES</span></footer>
   </main>;
 }

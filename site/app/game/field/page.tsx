@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { verifyArtifacts, type ObserverSnapshot } from "../../observer-data";
@@ -25,13 +26,42 @@ const INTENTS = [
   { id: "core", label: "CORE EXPOSURE", damage: 10, exposure: 8, cue: "Its core opens to attack. Every move deals +8 damage this round." },
 ] as const;
 
+const ENCOUNTERS = {
+  "Glass Office Labyrinth": {
+    enemy: "FRACTURE SENTINEL", hp: 60, reward: 1800, className: "sentinel",
+    intro: "A fracture sentinel blocks the inner corridor.",
+    intents: INTENTS,
+  },
+  "Sunken Courtyard": {
+    enemy: "DROWNED ARCHIVIST", hp: 78, reward: 2400, className: "archivist",
+    intro: "A drowned archivist rises between Ren and the submerged record.",
+    intents: [
+      { id: "undertow", label: "UNDERTOW GRIP", damage: 11, exposure: 0, cue: "Water pulls toward the core. Brace before the floor gives way." },
+      { id: "rain", label: "GLASS RAIN", damage: 17, exposure: 0, cue: "The ceiling fractures into a descending blade pattern." },
+      { id: "bloom", label: "MEMORY BLOOM", damage: 9, exposure: 10, cue: "Its archive opens. The exposed record amplifies every strike by 10." },
+    ],
+  },
+} as const;
+const PLANS = {
+  prepare: { label: "GUARD LATTICE", damage: 0, mitigation: 3, note: "Preparation absorbs 3 incoming damage." },
+  investigate: { label: "WEAK POINT MARKED", damage: 4, mitigation: 0, note: "Investigation adds 4 damage to every move." },
+  rush: { label: "UNSTABLE ENTRY", damage: 0, mitigation: -2, note: "The rushed entry adds 2 incoming damage." },
+} as const;
+type PlanId = keyof typeof PLANS;
+
 type Battle = { enemyHp: number; round: number; log: string[]; resolved: "victory" | "retreat" | "death" | null };
 
 export default function FieldPage() {
+  const searchParams = useSearchParams();
   const [snapshot, setSnapshot] = useState<ObserverSnapshot | null>(null);
   const [rpg, setRpg] = useState<RpgState | null>(null);
   const [failed, setFailed] = useState(false);
-  const [battle, setBattle] = useState<Battle>({ enemyHp: 60, round: 1, log: ["A fracture sentinel blocks the inner corridor."], resolved: null });
+  const caseName = searchParams.get("case");
+  const encounter = caseName && caseName in ENCOUNTERS ? ENCOUNTERS[caseName as keyof typeof ENCOUNTERS] : ENCOUNTERS["Glass Office Labyrinth"];
+  const requestedPlan = searchParams.get("plan");
+  const planId: PlanId = requestedPlan && requestedPlan in PLANS ? requestedPlan as PlanId : "rush";
+  const plan = PLANS[planId];
+  const [battle, setBattle] = useState<Battle>(() => ({ enemyHp: encounter.hp, round: 1, log: [encounter.intro], resolved: null }));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,40 +85,43 @@ export default function FieldPage() {
     ...(rpg?.timeline && rpg.timeline >= 2 ? [TIMELINE_MOVES[0]] : []),
     ...(rpg?.timeline === 3 ? [TIMELINE_MOVES[1]] : []),
   ], [rpg]);
-  const intent = INTENTS[(battle.round - 1) % INTENTS.length];
+  const intent = encounter.intents[(battle.round - 1) % encounter.intents.length];
   const moveReady = useCallback((move: Move) => Boolean(rpg && rpg.energy >= move.cost && (!move.skill || (rpg.skillMastery[move.skill] ?? 0) >= (move.requiredMastery ?? 0))), [rpg]);
 
   const act = useCallback((id: MoveId) => {
     if (!rpg || battle.resolved) return;
     const move = moves.find((candidate) => candidate.id === id);
     if (!move || !moveReady(move)) return;
-    const dealt = move.damage + intent.exposure;
+    const dealt = move.damage + intent.exposure + plan.damage;
     const enemyHp = Math.max(0, battle.enemyHp - dealt);
-    const incoming = enemyHp === 0 ? 0 : Math.max(0, intent.damage - move.mitigation);
+    const incoming = enemyHp === 0 ? 0 : Math.max(0, intent.damage - move.mitigation - plan.mitigation);
     const health = Math.max(0, rpg.health - incoming);
     const energy = Math.max(0, rpg.energy - move.cost);
     if (enemyHp === 0) {
       const skillMastery = { ...rpg.skillMastery, "Residual Read": Math.min(100, (rpg.skillMastery["Residual Read"] ?? 0) + 12) };
-      const next = takeRpgAction({ ...rpg, health, energy }, "Cleared the fracture sentinel", { health, energy, money: rpg.money + 1800, location: "Glass Office Labyrinth", skillMastery });
+      const action = encounter.enemy === "FRACTURE SENTINEL" ? "Cleared the fracture sentinel" : "Cleared the drowned archivist";
+      const next = takeRpgAction({ ...rpg, health, energy }, action, { health, energy, money: rpg.money + encounter.reward, location: caseName ?? "Glass Office Labyrinth", skillMastery });
       setRpg(next);
-      setBattle((current) => ({ ...current, enemyHp, log: [...current.log, `${move.note} ${dealt} damage.`, "The sentinel collapses. The corridor stabilizes."], resolved: "victory" }));
+      setBattle((current) => ({ ...current, enemyHp, log: [...current.log, `${move.note} ${dealt} damage.`, `${encounter.enemy} collapses. The Gate stabilizes.`], resolved: "victory" }));
     } else if (health === 0) {
-      const next = takeRpgAction({ ...rpg, health, energy }, "Fell to the fracture sentinel", { health, energy, location: "Glass Office Labyrinth" });
+      const action = encounter.enemy === "FRACTURE SENTINEL" ? "Fell to the fracture sentinel" : "Fell to the drowned archivist";
+      const next = takeRpgAction({ ...rpg, health, energy }, action, { health, energy, location: caseName ?? "Glass Office Labyrinth" });
       setRpg(next);
-      setBattle((current) => ({ ...current, enemyHp, log: [...current.log, `${move.note} ${intent.label} deals ${incoming} damage.`, "The corridor closes. No residual path answers Ren."], resolved: "death" }));
+      setBattle((current) => ({ ...current, enemyHp, log: [...current.log, `${move.note} ${intent.label} deals ${incoming} damage.`, "The Gate closes. No residual path answers Ren."], resolved: "death" }));
     } else {
       setRpg({ ...rpg, health, energy });
       setBattle((current) => ({ enemyHp, round: current.round + 1, log: [...current.log, `${move.note} ${dealt} dealt; ${intent.label} answers for ${incoming}.`].slice(-4), resolved: null }));
     }
-  }, [battle.enemyHp, battle.resolved, intent, moveReady, moves, rpg]);
+  }, [battle.enemyHp, battle.resolved, caseName, encounter, intent, moveReady, moves, plan.damage, plan.mitigation, rpg]);
 
   const retreat = useCallback(() => {
     if (!rpg || battle.resolved) return;
     const skillMastery = { ...rpg.skillMastery, "Residual Read": Math.min(100, (rpg.skillMastery["Residual Read"] ?? 0) + 5) };
-    const next = takeRpgAction(rpg, "Withdrew from the fracture sentinel", { energy: Math.max(0, rpg.energy - 2), location: "Adachi Gate Zone", skillMastery });
+    const action = encounter.enemy === "FRACTURE SENTINEL" ? "Withdrew from the fracture sentinel" : "Withdrew from the drowned archivist";
+    const next = takeRpgAction(rpg, action, { energy: Math.max(0, rpg.energy - 2), location: "Adachi Gate Zone", skillMastery });
     setRpg(next);
     setBattle((current) => ({ ...current, log: [...current.log, "Ren marks the pattern and withdraws before the corridor seals."], resolved: "retreat" }));
-  }, [battle.resolved, rpg]);
+  }, [battle.resolved, encounter.enemy, rpg]);
 
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
@@ -105,14 +138,14 @@ export default function FieldPage() {
   if (failed) return <main id="chronicle" className="game-loading"><p>FIELD LINK OFFLINE</p><h1>The Gate could not be verified.</h1><Link href="/game/caseboard">Return to caseboard</Link></main>;
   if (!snapshot || !rpg) return <main id="chronicle" className="game-loading" aria-busy="true"><p>LOADING FIELD SAVE</p><h1>Opening the Gate…</h1></main>;
 
-  const caseFile = snapshot.portals.investigations[0];
+  const caseFile = snapshot.portals.investigations.find((item) => item.portal_name === caseName) ?? snapshot.portals.investigations[0];
   return <main id="chronicle" className="field-shell">
     <header className="game-header"><Link href="/game/caseboard">← CASEBOARD</Link><b>AWAKENED <i>ZERO RANK</i></b><span>CHAPTER 04 / FIRST CONTACT</span></header>
     <GameHud state={rpg} current="field" />
     <section className="field-intro"><small>{caseFile?.portal_name ?? "VERIFIED GATE"} / RISK {caseFile?.risk ?? "UNKNOWN"}</small><h1>Hold the line.</h1><p>Battle moves are tactical turns. The RPG clock advances once when the encounter resolves.</p></section>
     <section className="field-stage" aria-label="Gate battle">
-      <div className={`field-arena intent-${intent.id}`}><Image src="/game/maps/adachi-fringe.png" alt="Pixel-art Gate exclusion zone" fill sizes="(max-width: 800px) 100vw, 70vw" priority /><div className="field-shade" /><span className="field-ren"><Image src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><b>REN</b></span><span className="field-enemy" aria-label="Fracture sentinel"><i /><i /><i /><b>FRACTURE SENTINEL</b></span><div className="enemy-intent"><small>NEXT ATTACK / {intent.label}</small><b>{intent.damage} DAMAGE</b><p>{intent.cue}</p></div></div>
-      <aside className="battle-panel" aria-live="polite"><div className="battle-bars"><span>REN / HP {rpg.health}</span><meter min="0" max="100" value={rpg.health} /><span>SENTINEL / HP {battle.enemyHp}</span><meter min="0" max="60" value={battle.enemyHp} /></div><small>ROUND {battle.round} / TELEGRAPH LOCKED</small><p>{battle.log.at(-1)}</p>{!battle.resolved ? <div className="battle-actions">{moves.map((move, index) => { const ready = moveReady(move); const dealt = move.damage + intent.exposure; const incoming = Math.max(0, intent.damage - move.mitigation); return <button key={move.id} disabled={!ready} onClick={() => act(move.id)}><b>{index + 1} · {move.label}</b><span>{ready ? `${dealt} DMG / ${move.cost} EN / TAKE ${incoming}` : move.skill ? `${move.skill.toUpperCase()} ${move.requiredMastery}% REQUIRED` : `${move.cost} ENERGY REQUIRED`}</span></button>; })}<button className="retreat" onClick={retreat}><b>R · TACTICAL RETREAT</b><span>2 EN / SAFE EXIT</span></button></div> : <div className={`battle-result ${battle.resolved}`}><small>{battle.resolved === "victory" ? "GATE SECURED" : battle.resolved === "death" ? "RUN TERMINATED" : "TACTICAL RETREAT"}</small><h2>{battle.resolved === "victory" ? "+¥1,800 / TIME ADVANCED" : battle.resolved === "death" ? "GAME OVER" : "REN SURVIVED / TIME ADVANCED"}</h2><p>{battle.resolved === "death" ? "Only the final day can open a path to transmigration." : "A canon event has triggered. Aiko is waiting at Adachi Station…"}</p></div>}</aside>
+      <div className={`field-arena enemy-${encounter.className} intent-${intent.id}`}><Image src="/game/maps/adachi-fringe.png" alt="Pixel-art Gate exclusion zone" fill sizes="(max-width: 800px) 100vw, 70vw" priority /><div className="field-shade" /><span className="field-ren"><Image src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><b>REN</b></span><span className="field-enemy" aria-label={encounter.enemy}><i /><i /><i /><b>{encounter.enemy}</b></span><div className="enemy-intent"><small>NEXT ATTACK / {intent.label}</small><b>{intent.damage} DAMAGE</b><p>{intent.cue}</p></div></div>
+      <aside className="battle-panel" aria-live="polite"><div className="battle-bars"><span>REN / HP {rpg.health}</span><meter min="0" max="100" value={rpg.health} /><span>{encounter.enemy} / HP {battle.enemyHp}</span><meter min="0" max={encounter.hp} value={battle.enemyHp} /></div><small>ROUND {battle.round} / {plan.label}</small><p>{battle.log.at(-1)}</p><div className="battle-plan"><b>{plan.label}</b><span>{plan.note}</span></div>{!battle.resolved ? <div className="battle-actions">{moves.map((move, index) => { const ready = moveReady(move); const dealt = move.damage + intent.exposure + plan.damage; const incoming = Math.max(0, intent.damage - move.mitigation - plan.mitigation); return <button key={move.id} disabled={!ready} onClick={() => act(move.id)}><b>{index + 1} · {move.label}</b><span>{ready ? `${dealt} DMG / ${move.cost} EN / TAKE ${incoming}` : move.skill ? `${move.skill.toUpperCase()} ${move.requiredMastery}% REQUIRED` : `${move.cost} ENERGY REQUIRED`}</span></button>; })}<button className="retreat" onClick={retreat}><b>R · TACTICAL RETREAT</b><span>2 EN / SAFE EXIT</span></button></div> : <div className={`battle-result ${battle.resolved}`}><small>{battle.resolved === "victory" ? "GATE SECURED" : battle.resolved === "death" ? "RUN TERMINATED" : "TACTICAL RETREAT"}</small><h2>{battle.resolved === "victory" ? `+¥${encounter.reward.toLocaleString()} / TIME ADVANCED` : battle.resolved === "death" ? "GAME OVER" : "REN SURVIVED / TIME ADVANCED"}</h2><p>{battle.resolved === "death" ? "Only the final day can open a path to transmigration." : "A canon event has triggered. Aiko is waiting at Adachi Station…"}</p></div>}</aside>
     </section>
     <footer className="game-footer"><b>DETERMINISTIC FIELD ENCOUNTER</b><p>No random rolls. Every move shows its exact cost and effect.</p><span>ENERGY {rpg.energy}</span></footer>
   </main>;

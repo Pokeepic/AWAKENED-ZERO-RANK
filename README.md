@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1170.0` |
+| Release | `0.1180.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 136 browser |
+| Automated tests | 339 Python + 137 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -64,6 +64,8 @@ Exploration uses tiny transparent pixel chibi sprites, while canon and bond scen
 Optional contacts now follow deterministic local schedules. Tokyo's map shows who is available, who is away, and their normal hours; Ren may still travel to an empty location, but spending time and gaining a bond point requires the person to be present and is limited to once per day. Mandatory canon meetings bypass optional schedules so story progress cannot soft-lock.
 
 Gate combat now telegraphs the sentinel's next attack before every turn. Strike, barrier, and guard choices show exact outgoing damage, energy cost, and incoming damage; exposed-core rounds reward aggression, while pressure surges reward defense. Later timelines add mastery-gated Vector Step and Causal Sever moves, and number keys plus R provide complete keyboard control. Combat remains fully deterministic and advances the campaign clock only when Ren wins, retreats, or dies.
+
+The caseboard now carries Ren's selected Gate and approach into the field. The Glass Office Labyrinth contains the faster Fracture Sentinel, while the harder Sunken Courtyard contains a Drowned Archivist with its own health, telegraphs, exposed phase, visual treatment, and reward. Preparing adds mitigation, investigating marks a damage weakness, and rushing accepts extra incoming damage; every modifier is shown before Ren commits to a move.
 
 Optional meetings now reveal authored bond moments instead of only increasing a number. Aiko, Daichi, Haruto, and Mei each have four relationship chapters spanning distant, familiar, trusted, and unbreakable ranks; final-rank scenes in later timelines acknowledge Ren's sense of a remembered life. Rank 10 closes the optional progression cleanly instead of consuming more time for no reward.
 
