@@ -91,7 +91,7 @@ export function bondMoment(name: string, level: number, timeline: Timeline): Bon
 }
 
 export type RpgState = {
-  saveVersion: 7;
+  saveVersion: 8;
   timeline: Timeline;
   attempt: number;
   status: CampaignStatus;
@@ -112,11 +112,12 @@ export type RpgState = {
   journal: RpgJournalEntry[];
   bonds: Record<string, number>;
   completedEvents: string[];
+  fieldKit: { bandages: number; energyDrinks: number; wardCharm: boolean };
 };
 
 export function newRpgState(snapshot: ObserverSnapshot): RpgState {
   return {
-    saveVersion: 7,
+    saveVersion: 8,
     timeline: 1,
     attempt: 1,
     status: "active",
@@ -142,6 +143,7 @@ export function newRpgState(snapshot: ObserverSnapshot): RpgState {
     journal: [],
     bonds: {},
     completedEvents: [],
+    fieldKit: { bandages: 1, energyDrinks: 1, wardCharm: false },
   };
 }
 
@@ -152,7 +154,7 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
       const candidate = JSON.parse(saved) as Partial<RpgState>;
       const migrated = {
         ...candidate,
-        saveVersion: 7 as const,
+        saveVersion: 8 as const,
         timeline: candidate.timeline ?? 1,
         attempt: candidate.attempt ?? 1,
         status:
@@ -213,6 +215,7 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
         completedEvents: Array.isArray(candidate.completedEvents)
           ? candidate.completedEvents
           : [],
+        fieldKit: candidate.fieldKit ?? { bandages: 1, energyDrinks: 1, wardCharm: false },
       };
       if (isRpgState(migrated)) {
         saveRpgState(migrated);
@@ -229,7 +232,7 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
 
 function isRpgState(value: Partial<RpgState>): value is RpgState {
   return (
-    value.saveVersion === 7 &&
+    value.saveVersion === 8 &&
     [1, 2, 3].includes(value.timeline as number) &&
     Number.isSafeInteger(value.attempt) &&
     value.attempt! > 0 &&
@@ -309,7 +312,13 @@ function isRpgState(value: Partial<RpgState>): value is RpgState {
     new Set(value.completedEvents).size === value.completedEvents.length &&
     value.completedEvents.every(
       (event) => typeof event === "string" && event.length > 0,
-    )
+    ) &&
+    value.fieldKit !== undefined &&
+    Number.isSafeInteger(value.fieldKit.bandages) &&
+    value.fieldKit.bandages >= 0 && value.fieldKit.bandages <= 3 &&
+    Number.isSafeInteger(value.fieldKit.energyDrinks) &&
+    value.fieldKit.energyDrinks >= 0 && value.fieldKit.energyDrinks <= 3 &&
+    typeof value.fieldKit.wardCharm === "boolean"
   );
 }
 
@@ -347,6 +356,7 @@ export function restartRpgRun(state: RpgState): RpgState {
     journal: [],
     bonds: {},
     completedEvents: [],
+    fieldKit: { bandages: 1, energyDrinks: 1, wardCharm: false },
   };
   saveRpgState(retry);
   return retry;
@@ -468,6 +478,7 @@ export function transmigrateRpgState(state: RpgState): RpgState {
     journal: [],
     bonds: {},
     completedEvents: [],
+    fieldKit: { bandages: 1, energyDrinks: 1, wardCharm: false },
   };
   saveRpgState(next);
   return next;
@@ -668,6 +679,7 @@ export function takeRpgAction(
       | "completedEvents"
       | "skillMastery"
       | "lotteryTickets"
+      | "fieldKit"
     >
   >,
   timeSlots = 1,

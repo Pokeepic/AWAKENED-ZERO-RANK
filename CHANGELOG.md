@@ -4,6 +4,16 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1190.0 - Persistent field kits
+
+- Added a versioned local field kit containing bounded bandages, energy drinks, and a ward charm, with exact migration for existing saves.
+- Turned the apartment field-bag hotspot into a live inventory readout and added a ¥900 one-slot restock action.
+- Added usable combat bandages that restore 18 HP and energy drinks that restore 22 energy before the telegraphed enemy response.
+- Added a ward effect that reduces every incoming combat hit by two and appears in the field-kit status bar.
+- Added B and E keyboard shortcuts plus mouse and touch controls, disabled states at full resources, and exact remaining-item counts.
+- Saves mid-encounter supply consumption and resource changes immediately so refreshing cannot duplicate items or erase combat costs.
+- Added focused regression coverage for migration, bounds, restocking, item consumption, ward mitigation, keyboard input, and styling.
+
 ## 0.1180.0 - Connected Gate operations
 
 - Connected the authenticated case selected on the caseboard to the subsequent field encounter through explicit route state.

@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { verifyArtifacts, type ObserverSnapshot } from "../../observer-data";
-import { loadRpgState, takeRpgAction, type RpgState } from "../game-state";
+import { loadRpgState, saveRpgState, takeRpgAction, type RpgState } from "../game-state";
 import { GameHud } from "../game-hud";
 
 type MoveId = "strike" | "pulse" | "guard" | "vector" | "sever";
@@ -87,6 +87,7 @@ export default function FieldPage() {
   ], [rpg]);
   const intent = encounter.intents[(battle.round - 1) % encounter.intents.length];
   const moveReady = useCallback((move: Move) => Boolean(rpg && rpg.energy >= move.cost && (!move.skill || (rpg.skillMastery[move.skill] ?? 0) >= (move.requiredMastery ?? 0))), [rpg]);
+  const wardMitigation = rpg?.fieldKit.wardCharm ? 2 : 0;
 
   const act = useCallback((id: MoveId) => {
     if (!rpg || battle.resolved) return;
@@ -94,7 +95,7 @@ export default function FieldPage() {
     if (!move || !moveReady(move)) return;
     const dealt = move.damage + intent.exposure + plan.damage;
     const enemyHp = Math.max(0, battle.enemyHp - dealt);
-    const incoming = enemyHp === 0 ? 0 : Math.max(0, intent.damage - move.mitigation - plan.mitigation);
+    const incoming = enemyHp === 0 ? 0 : Math.max(0, intent.damage - move.mitigation - plan.mitigation - wardMitigation);
     const health = Math.max(0, rpg.health - incoming);
     const energy = Math.max(0, rpg.energy - move.cost);
     if (enemyHp === 0) {
@@ -109,10 +110,33 @@ export default function FieldPage() {
       setRpg(next);
       setBattle((current) => ({ ...current, enemyHp, log: [...current.log, `${move.note} ${intent.label} deals ${incoming} damage.`, "The Gate closes. No residual path answers Ren."], resolved: "death" }));
     } else {
-      setRpg({ ...rpg, health, energy });
+      const next = { ...rpg, health, energy };
+      saveRpgState(next);
+      setRpg(next);
       setBattle((current) => ({ enemyHp, round: current.round + 1, log: [...current.log, `${move.note} ${dealt} dealt; ${intent.label} answers for ${incoming}.`].slice(-4), resolved: null }));
     }
-  }, [battle.enemyHp, battle.resolved, caseName, encounter, intent, moveReady, moves, plan.damage, plan.mitigation, rpg]);
+  }, [battle.enemyHp, battle.resolved, caseName, encounter, intent, moveReady, moves, plan.damage, plan.mitigation, rpg, wardMitigation]);
+
+  const applyFieldItem = useCallback((item: "bandage" | "energyDrink") => {
+    if (!rpg || battle.resolved) return;
+    const available = item === "bandage" ? rpg.fieldKit.bandages : rpg.fieldKit.energyDrinks;
+    if (available === 0 || (item === "bandage" ? rpg.health >= 100 : rpg.energy >= 100)) return;
+    const fieldKit = { ...rpg.fieldKit, [item === "bandage" ? "bandages" : "energyDrinks"]: available - 1 };
+    const restoredHealth = item === "bandage" ? Math.min(100, rpg.health + 18) : rpg.health;
+    const energy = item === "energyDrink" ? Math.min(100, rpg.energy + 22) : rpg.energy;
+    const incoming = Math.max(0, intent.damage - plan.mitigation - wardMitigation);
+    const health = Math.max(0, restoredHealth - incoming);
+    const label = item === "bandage" ? "BANDAGE" : "ENERGY DRINK";
+    const next = { ...rpg, health, energy, fieldKit };
+    if (health === 0) {
+      setRpg(takeRpgAction(next, `Fell to ${encounter.enemy.toLowerCase()}`, { health, energy, fieldKit, location: caseName ?? "Glass Office Labyrinth" }));
+      setBattle((current) => ({ ...current, log: [...current.log, `${label} used; ${intent.label} deals ${incoming} damage.`, "The Gate closes. No residual path answers Ren."], resolved: "death" }));
+      return;
+    }
+    saveRpgState(next);
+    setRpg(next);
+    setBattle((current) => ({ ...current, round: current.round + 1, log: [...current.log, `${label} used; ${intent.label} answers for ${incoming}.`].slice(-4) }));
+  }, [battle.resolved, caseName, encounter.enemy, intent, plan.mitigation, rpg, wardMitigation]);
 
   const retreat = useCallback(() => {
     if (!rpg || battle.resolved) return;
@@ -129,11 +153,13 @@ export default function FieldPage() {
       if (/^Digit[1-5]$/.test(event.code)) {
         const move = moves[Number(event.code.at(-1)) - 1];
         if (move) act(move.id);
-      } else if (event.key.toLowerCase() === "r") retreat();
+      } else if (event.key.toLowerCase() === "b") applyFieldItem("bandage");
+      else if (event.key.toLowerCase() === "e") applyFieldItem("energyDrink");
+      else if (event.key.toLowerCase() === "r") retreat();
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [act, battle.resolved, moves, retreat]);
+  }, [act, applyFieldItem, battle.resolved, moves, retreat]);
 
   if (failed) return <main id="chronicle" className="game-loading"><p>FIELD LINK OFFLINE</p><h1>The Gate could not be verified.</h1><Link href="/game/caseboard">Return to caseboard</Link></main>;
   if (!snapshot || !rpg) return <main id="chronicle" className="game-loading" aria-busy="true"><p>LOADING FIELD SAVE</p><h1>Opening the Gate…</h1></main>;
@@ -147,6 +173,7 @@ export default function FieldPage() {
       <div className={`field-arena enemy-${encounter.className} intent-${intent.id}`}><Image src="/game/maps/adachi-fringe.png" alt="Pixel-art Gate exclusion zone" fill sizes="(max-width: 800px) 100vw, 70vw" priority /><div className="field-shade" /><span className="field-ren"><Image src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><b>REN</b></span><span className="field-enemy" aria-label={encounter.enemy}><i /><i /><i /><b>{encounter.enemy}</b></span><div className="enemy-intent"><small>NEXT ATTACK / {intent.label}</small><b>{intent.damage} DAMAGE</b><p>{intent.cue}</p></div></div>
       <aside className="battle-panel" aria-live="polite"><div className="battle-bars"><span>REN / HP {rpg.health}</span><meter min="0" max="100" value={rpg.health} /><span>{encounter.enemy} / HP {battle.enemyHp}</span><meter min="0" max={encounter.hp} value={battle.enemyHp} /></div><small>ROUND {battle.round} / {plan.label}</small><p>{battle.log.at(-1)}</p><div className="battle-plan"><b>{plan.label}</b><span>{plan.note}</span></div>{!battle.resolved ? <div className="battle-actions">{moves.map((move, index) => { const ready = moveReady(move); const dealt = move.damage + intent.exposure + plan.damage; const incoming = Math.max(0, intent.damage - move.mitigation - plan.mitigation); return <button key={move.id} disabled={!ready} onClick={() => act(move.id)}><b>{index + 1} · {move.label}</b><span>{ready ? `${dealt} DMG / ${move.cost} EN / TAKE ${incoming}` : move.skill ? `${move.skill.toUpperCase()} ${move.requiredMastery}% REQUIRED` : `${move.cost} ENERGY REQUIRED`}</span></button>; })}<button className="retreat" onClick={retreat}><b>R · TACTICAL RETREAT</b><span>2 EN / SAFE EXIT</span></button></div> : <div className={`battle-result ${battle.resolved}`}><small>{battle.resolved === "victory" ? "GATE SECURED" : battle.resolved === "death" ? "RUN TERMINATED" : "TACTICAL RETREAT"}</small><h2>{battle.resolved === "victory" ? `+¥${encounter.reward.toLocaleString()} / TIME ADVANCED` : battle.resolved === "death" ? "GAME OVER" : "REN SURVIVED / TIME ADVANCED"}</h2><p>{battle.resolved === "death" ? "Only the final day can open a path to transmigration." : "A canon event has triggered. Aiko is waiting at Adachi Station…"}</p></div>}</aside>
     </section>
+    {!battle.resolved && <section className="field-kit-bar" aria-label="Field kit"><small>FIELD KIT / WARD {rpg.fieldKit.wardCharm ? "−2 INCOMING" : "NOT EQUIPPED"}</small><button disabled={rpg.fieldKit.bandages === 0 || rpg.health >= 100} onClick={() => applyFieldItem("bandage")}><b>B · BANDAGE ×{rpg.fieldKit.bandages}</b><span>+18 HP / ENEMY ACTS</span></button><button disabled={rpg.fieldKit.energyDrinks === 0 || rpg.energy >= 100} onClick={() => applyFieldItem("energyDrink")}><b>E · ENERGY DRINK ×{rpg.fieldKit.energyDrinks}</b><span>+22 EN / ENEMY ACTS</span></button></section>}
     <footer className="game-footer"><b>DETERMINISTIC FIELD ENCOUNTER</b><p>No random rolls. Every move shows its exact cost and effect.</p><span>ENERGY {rpg.energy}</span></footer>
   </main>;
 }

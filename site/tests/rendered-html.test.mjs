@@ -288,7 +288,8 @@ test("unlocks a deterministic Timeline II relay for mastery lottery Busan and an
   assert.match(relay, /mastery < 100/);
   assert.match(relay, /strongestBond < 6/);
   assert.match(relay, /lotteryTickets: rpg!\.lotteryTickets - 1/);
-  assert.match(state, /"lotteryTickets"\s*>/);
+  assert.match(state, /"lotteryTickets"/);
+  assert.match(state, /"fieldKit"/);
   assert.match(styles, /\.relay-shell/);
   await access(new URL("public/game/locations/haneda-residual-relay-v1.png", root));
 });
@@ -319,7 +320,7 @@ test("ships a deterministic Gate battle that advances time only on resolution", 
   assert.match(field, /BARRIER PULSE/);
   assert.match(field, /TACTICAL RETREAT/);
   assert.match(field, /No random rolls/);
-  assert.equal((field.match(/takeRpgAction\(/g) ?? []).length, 3);
+  assert.equal((field.match(/takeRpgAction\(/g) ?? []).length, 4);
   assert.match(styles, /\.field-stage/);
   assert.match(styles, /\.field-enemy/);
   assert.doesNotMatch(field, /Math\.random/);
@@ -358,6 +359,29 @@ test("carries the selected Gate and mission plan into distinct field encounters"
   assert.match(styles, /\.enemy-archivist/);
   assert.match(styles, /\.battle-plan/);
   assert.doesNotMatch(field, /Math\.random/);
+});
+test("persists a bounded apartment field kit and consumes supplies during combat", async () => {
+  const [game, field, state, styles] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/field/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /fieldKit: \{ bandages: number; energyDrinks: number; wardCharm: boolean \}/);
+  assert.match(state, /candidate\.fieldKit \?\?/);
+  assert.match(state, /bandages <= 3/);
+  assert.match(state, /energyDrinks <= 3/);
+  assert.match(game, /Restock the field bag · ¥900/);
+  assert.match(game, /money: rpg!\.money - 900/);
+  assert.match(game, /field-kit-readout/);
+  assert.match(field, /applyFieldItem/);
+  assert.match(field, /\+ 18/);
+  assert.match(field, /\+ 22/);
+  assert.match(field, /wardMitigation/);
+  assert.match(field, /saveRpgState\(next\)/);
+  assert.match(field, /event\.key\.toLowerCase\(\) === "b"/);
+  assert.match(field, /event\.key\.toLowerCase\(\) === "e"/);
+  assert.match(styles, /\.field-kit-bar/);
 });
 test("uses first-person apartment framing and pixel sprites for outside scenes", async () => {
   const [game, city, caseboard, styles] = await Promise.all([
@@ -493,7 +517,7 @@ test("keeps story routing automatic and validates versioned local saves", async 
   assert.match(hud, /pendingStoryRoute/);
   assert.doesNotMatch(hud, /aria-current/);
   assert.doesNotMatch(hud, /STORY/);
-  assert.match(state, /saveVersion: 7/);
+  assert.match(state, /saveVersion: 8/);
   assert.match(state, /isRpgState/);
   assert.match(state, /Number\.isSafeInteger/);
   assert.match(layout, /separate time-management RPG/);
@@ -504,7 +528,7 @@ test("records a bounded persistent campaign journal and migrates older saves", a
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(state, /saveVersion: 7/);
+  assert.match(state, /saveVersion: 8/);
   assert.match(state, /Array\.isArray\(candidate\.journal\)/);
   assert.match(state, /candidate\.bonds/);
   assert.match(state, /candidate\.completedEvents/);
