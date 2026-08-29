@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1190.0` |
+| Release | `0.1200.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 138 browser |
+| Automated tests | 339 Python + 139 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -68,6 +68,8 @@ Gate combat now telegraphs the sentinel's next attack before every turn. Strike,
 The caseboard now carries Ren's selected Gate and approach into the field. The Glass Office Labyrinth contains the faster Fracture Sentinel, while the harder Sunken Courtyard contains a Drowned Archivist with its own health, telegraphs, exposed phase, visual treatment, and reward. Preparing adds mitigation, investigating marks a damage weakness, and rushing accepts extra incoming damage; every modifier is shown before Ren commits to a move.
 
 Ren's apartment field bag now holds a persistent, bounded combat kit. A ¥900 restock consumes one time slot and provides two bandages, two energy drinks, and a ward charm. In battle, bandages restore 18 HP and energy drinks restore 22 energy while still allowing the telegraphed enemy attack; the ward reduces every incoming hit by two. Supply use and mid-encounter health and energy are saved immediately, preventing refresh-based item duplication.
+
+Haruto's Akihabara Market now sells permanent equipment after Ren travels there. The ¥4,500 Resonance Blade adds three damage to every combat move, while the ¥3,500 Guildweave Coat removes two damage from every enemy attack. Buying equips the item immediately without charging another time slot, owned gear is disabled at the counter, and exact combat previews include both bonuses. New runs begin with a Utility Knife and Street Jacket.
 
 Optional meetings now reveal authored bond moments instead of only increasing a number. Aiko, Daichi, Haruto, and Mei each have four relationship chapters spanning distant, familiar, trusted, and unbreakable ranks; final-rank scenes in later timelines acknowledge Ren's sense of a remembered life. Rank 10 closes the optional progression cleanly instead of consuming more time for no reward.
 

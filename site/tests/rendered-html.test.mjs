@@ -367,8 +367,10 @@ test("persists a bounded apartment field kit and consumes supplies during combat
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(state, /fieldKit: \{ bandages: number; energyDrinks: number; wardCharm: boolean \}/);
-  assert.match(state, /candidate\.fieldKit \?\?/);
+  assert.match(state, /fieldKit: \{/);
+  assert.match(state, /weapon: "Utility Knife" \| "Resonance Blade"/);
+  assert.match(state, /coat: "Street Jacket" \| "Guildweave Coat"/);
+  assert.match(state, /candidate\.fieldKit\?\.bandages \?\?/);
   assert.match(state, /bandages <= 3/);
   assert.match(state, /energyDrinks <= 3/);
   assert.match(game, /Restock the field bag · ¥900/);
@@ -382,6 +384,28 @@ test("persists a bounded apartment field kit and consumes supplies during combat
   assert.match(field, /event\.key\.toLowerCase\(\) === "b"/);
   assert.match(field, /event\.key\.toLowerCase\(\) === "e"/);
   assert.match(styles, /\.field-kit-bar/);
+});
+test("sells permanent Akihabara equipment and includes it in exact combat previews", async () => {
+  const [city, field, state, game, styles] = await Promise.all([
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/field/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  for (const marker of ["Resonance Blade", "Guildweave Coat", "Haruto's equipment counter", "MARKET_GEAR"]) assert.match(city, new RegExp(marker));
+  assert.match(city, /price: 4500/);
+  assert.match(city, /price: 3500/);
+  assert.match(city, /saveRpgState\(next\)/);
+  assert.doesNotMatch(city, /purchaseGear[\s\S]*takeRpgAction/);
+  assert.match(state, /candidate\.fieldKit\?\.weapon \?\? "Utility Knife"/);
+  assert.match(state, /candidate\.fieldKit\?\.coat \?\? "Street Jacket"/);
+  assert.match(game, /\.\.\.rpg!\.fieldKit/);
+  assert.match(field, /gearDamage/);
+  assert.match(field, /gearMitigation/);
+  assert.match(field, /plan\.damage \+ gearDamage/);
+  assert.match(field, /wardMitigation - gearMitigation/);
+  assert.match(styles, /\.market-counter/);
 });
 test("uses first-person apartment framing and pixel sprites for outside scenes", async () => {
   const [game, city, caseboard, styles] = await Promise.all([
@@ -517,7 +541,7 @@ test("keeps story routing automatic and validates versioned local saves", async 
   assert.match(hud, /pendingStoryRoute/);
   assert.doesNotMatch(hud, /aria-current/);
   assert.doesNotMatch(hud, /STORY/);
-  assert.match(state, /saveVersion: 8/);
+  assert.match(state, /saveVersion: 9/);
   assert.match(state, /isRpgState/);
   assert.match(state, /Number\.isSafeInteger/);
   assert.match(layout, /separate time-management RPG/);
@@ -528,7 +552,7 @@ test("records a bounded persistent campaign journal and migrates older saves", a
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(state, /saveVersion: 8/);
+  assert.match(state, /saveVersion: 9/);
   assert.match(state, /Array\.isArray\(candidate\.journal\)/);
   assert.match(state, /candidate\.bonds/);
   assert.match(state, /candidate\.completedEvents/);

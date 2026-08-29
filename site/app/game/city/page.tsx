@@ -10,6 +10,7 @@ import {
   bondAvailability,
   bondMoment,
   loadRpgState,
+  saveRpgState,
   takeRpgAction,
   type BondMoment,
   type RpgState,
@@ -55,6 +56,11 @@ const DISTRICTS = [
   },
 ] as const;
 
+const MARKET_GEAR = [
+  { id: "blade", name: "Resonance Blade", slot: "weapon", price: 4500, effect: "+3 DAMAGE TO EVERY COMBAT MOVE" },
+  { id: "coat", name: "Guildweave Coat", slot: "coat", price: 3500, effect: "−2 DAMAGE FROM EVERY ENEMY ATTACK" },
+] as const;
+
 function routeResponse(
   snapshot: ObserverSnapshot,
   personName: string,
@@ -88,6 +94,7 @@ export default function CityRoutePage() {
   const [bondScene, setBondScene] = useState<
     (BondMoment & { name: string; location: string; level: number }) | null
   >(null);
+  const [purchaseResult, setPurchaseResult] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -132,6 +139,7 @@ export default function CityRoutePage() {
     setChoice(null);
     setBondResult(null);
     setBondScene(null);
+    setPurchaseResult(null);
   }
   function chooseRoute(name: string, location: string) {
     setChoice({ name, location });
@@ -164,6 +172,16 @@ export default function CityRoutePage() {
       }),
     );
     setBondResult({ ...moment, name, level });
+  }
+  function purchaseGear(item: (typeof MARKET_GEAR)[number]) {
+    if (!rpg || rpg.money < item.price) return;
+    const fieldKit: RpgState["fieldKit"] = item.id === "blade"
+      ? { ...rpg.fieldKit, weapon: "Resonance Blade" }
+      : { ...rpg.fieldKit, coat: "Guildweave Coat" };
+    const next = { ...rpg, money: rpg.money - item.price, fieldKit, lastAction: `Bought ${item.name}` };
+    saveRpgState(next);
+    setRpg(next);
+    setPurchaseResult(`${item.name} equipped. ${item.effect}. No additional time slot was spent.`);
   }
 
   if (failed)
@@ -406,6 +424,7 @@ export default function CityRoutePage() {
             {choiceAvailability.status}. {choiceAvailability.schedule} RPG
             clock: Day {rpg.day}, {rpg.slot}. Energy {rpg.energy}.
           </p>
+          {choice.location === "Akihabara Market" && <section className="market-counter" aria-label="Haruto's equipment counter"><small>HARUTO'S AFTER-HOURS STOCK / ¥{rpg.money.toLocaleString()}</small><h3>Buy once. Equip immediately.</h3>{MARKET_GEAR.map((item) => { const owned = item.slot === "weapon" ? rpg.fieldKit.weapon === item.name : rpg.fieldKit.coat === item.name; return <button key={item.id} disabled={owned || rpg.money < item.price} onClick={() => purchaseGear(item)}><span><b>{item.name}</b><small>{item.effect}</small></span><strong>{owned ? "EQUIPPED" : `¥${item.price.toLocaleString()}`}</strong></button>; })}{purchaseResult && <p role="status">{purchaseResult}</p>}</section>}
           <nav>
             {choiceAvailability.available && !bondResult && (
               <button

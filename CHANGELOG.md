@@ -4,6 +4,16 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1200.0 - Akihabara equipment counter
+
+- Added an in-world equipment counter to Haruto's existing Akihabara Market route instead of creating a detached shop screen.
+- Added a ¥4,500 Resonance Blade that contributes +3 to every exact outgoing-damage preview and resolved combat move.
+- Added a ¥3,500 Guildweave Coat that contributes −2 to every exact incoming-damage preview, item turn, and resolved enemy attack.
+- Purchases equip immediately and persist without spending another slot after travel; owned items and unaffordable purchases are disabled.
+- Advanced local saves to schema 9 with exact starter-gear migration, bounded equipment validation, and clean new-run resets.
+- Preserved purchased equipment when Ren restocks consumables at the apartment.
+- Added focused coverage for prices, persistence, migration, time neutrality, restock preservation, and exact combat attribution.
+
 ## 0.1190.0 - Persistent field kits
 
 - Added a versioned local field kit containing bounded bandages, energy drinks, and a ward charm, with exact migration for existing saves.

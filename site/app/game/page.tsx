@@ -161,7 +161,7 @@ export default function GamePage() {
       return;
     }
     const next = id === "restock"
-      ? takeRpgAction(rpg!, "Restocked the field bag", { money: rpg!.money - 900, location: "Ren's Apartment", fieldKit: { bandages: 2, energyDrinks: 2, wardCharm: true } })
+      ? takeRpgAction(rpg!, "Restocked the field bag", { money: rpg!.money - 900, location: "Ren's Apartment", fieldKit: { ...rpg!.fieldKit, bandages: 2, energyDrinks: 2, wardCharm: true } })
       : id === "rest"
       ? takeRpgAction(rpg!, "Rested at the apartment", { energy: rpg!.energy + 25, health: rpg!.health + 5, location: "Ren's Apartment" })
       : id === "rent"
@@ -190,7 +190,7 @@ export default function GamePage() {
   const routineArc = currentCampaignArc(rpg.day);
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.1190</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.1200</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>
@@ -223,7 +223,7 @@ export default function GamePage() {
         {active && <div className="game-copy"><small>OBSERVATION / {active.label}</small><h2>{active.label}</h2><p>{active.detail(snapshot)}</p></div>}
         <div className="suggestions">
           <small>TAKE ONE ACTION</small>
-          {activeClue === "field-bag" && <div className="field-kit-readout"><span>BANDAGES <b>{rpg.fieldKit.bandages}</b></span><span>ENERGY DRINKS <b>{rpg.fieldKit.energyDrinks}</b></span><span>WARD <b>{rpg.fieldKit.wardCharm ? "READY" : "EMPTY"}</b></span></div>}
+          {activeClue === "field-bag" && <div className="field-kit-readout"><span>BANDAGES <b>{rpg.fieldKit.bandages}</b></span><span>ENERGY DRINKS <b>{rpg.fieldKit.energyDrinks}</b></span><span>WARD <b>{rpg.fieldKit.wardCharm ? "READY" : "EMPTY"}</b></span><span>WEAPON <b>{rpg.fieldKit.weapon}</b></span><span>COAT <b>{rpg.fieldKit.coat}</b></span></div>}
           {SUGGESTIONS.map((suggestion) => <button key={suggestion.id} disabled={!unlocked || response !== null || routineConfirm || (suggestion.id === "routine" && routineDays === 0) || (suggestion.id === "restock" && rpg.money < 900)} onClick={() => suggest(suggestion.id)}>{suggestion.label}{suggestion.id === "routine" && routineDays > 0 ? ` · ${routineDays} DAY${routineDays === 1 ? "" : "S"}` : ""}</button>)}
           {!unlocked && <p>Inspect {2 - clues.length} more point{2 - clues.length === 1 ? "" : "s"} in the room.</p>}
         </div>
