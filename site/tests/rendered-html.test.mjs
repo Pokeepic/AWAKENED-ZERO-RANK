@@ -324,6 +324,21 @@ test("ships a deterministic Gate battle that advances time only on resolution", 
   assert.match(styles, /\.field-enemy/);
   assert.doesNotMatch(field, /Math\.random/);
 });
+test("telegraphs enemy intent and unlocks timeline combat moves deterministically", async () => {
+  const [field, styles] = await Promise.all([
+    readFile(new URL("app/game/field/page.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  for (const marker of ["FRACTURE CLAW", "PRESSURE SURGE", "CORE EXPOSURE", "VECTOR STEP", "CAUSAL SEVER", "TELEGRAPH LOCKED"]) assert.match(field, new RegExp(marker));
+  assert.match(field, /intent\.damage - move\.mitigation/);
+  assert.match(field, /move\.damage \+ intent\.exposure/);
+  assert.match(field, /rpg\.skillMastery\[move\.skill\]/);
+  assert.match(field, /Digit\[1-5\]/);
+  assert.match(field, /event\.key\.toLowerCase\(\) === "r"/);
+  assert.match(styles, /\.enemy-intent/);
+  assert.match(styles, /@keyframes enemy-surge/);
+  assert.doesNotMatch(field, /Math\.random/);
+});
 test("uses first-person apartment framing and pixel sprites for outside scenes", async () => {
   const [game, city, caseboard, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),

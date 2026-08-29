@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1170.0 - Telegraph combat
+
+- Added a deterministic three-intent enemy cycle with exact incoming-damage telegraphs and distinct visual cues.
+- Expanded field choices with a defensive read, an exposed-core damage window, and mastery-gated Vector Step and Causal Sever moves in later timelines.
+- Shows each move's outgoing damage, energy cost, and resulting incoming damage before commitment.
+- Added number-key move selection and an R-key tactical retreat while preserving mouse and touch controls.
+- Kept combat turns outside the calendar: the RPG clock still advances exactly once on victory, retreat, or death.
+- Added focused regression coverage for intent order, mitigation, mastery gates, keyboard control, and the absence of random rolls.
+
 ## 0.1160.0 - Optional bond visual novels
 
 - Upgraded every scheduled optional meeting into a full-screen visual-novel encounter without changing canon-event priority.
