@@ -94,6 +94,24 @@ test("stages Vector Step after the first transmigration", async () => {
   assert.match(styles, /\.second-awakening/);
   assert.match(styles, /vector-step-reveal/);
 });
+test("resolves the Arc II district breach from prior proof bond and mastery", async () => {
+  const [deadline, state, styles] = await Promise.all([
+    readFile(new URL("app/game/deadline/arc-two/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /state\.day >= 120/);
+  assert.match(state, /return "\/game\/deadline\/arc-two"/);
+  assert.match(deadline, /arc-ii-deadline-resolved/);
+  assert.match(deadline, /arc-i-authenticated-trace/);
+  assert.match(deadline, /Aiko Sato.*>= 2/);
+  assert.match(deadline, /mastery >= 40/);
+  assert.match(deadline, /arc-ii-evidence/);
+  assert.match(deadline, /remainingDaySlots/);
+  assert.match(deadline, /adachi-day120-breach-v1\.png/);
+  assert.match(styles, /\.arc-two-deadline/);
+  await access(new URL("public/game/cutscenes/adachi-day120-breach-v1.png", root));
+});
 test("opens the RPG through a persistent title menu without interrupting return travel", async () => {
   const [game, title, preferences, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),

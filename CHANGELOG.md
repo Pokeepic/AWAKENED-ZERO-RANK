@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1010.0 - Arc II deadline resolution
+
+- Added the automatic Day 120 Adachi Countdown event with a purpose-made district breach background.
+- Made Arc I authenticated proof reduce the deadline's health costs and an Aiko bond of 2 unlock a coordinated evacuation success.
+- Added a high-risk live-network read that requires 40% Residual Read mastery and becomes an ordinary lethal Game Over when attempted unprepared.
+- Persisted Arc II evidence, survivors, network mapping, partial failure, resources, bonds, time, and location consequences.
+
 ## 0.1000.0 - Second awakening
 
 - Added the missing automatic Day 1 reassessment after the first transmigration.

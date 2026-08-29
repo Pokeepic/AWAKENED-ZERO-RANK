@@ -1,6 +1,6 @@
 {
   "name": "awakened-zero-rank-observer",
-  "version": "0.1000.0",
+  "version": "0.1010.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
