@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1210.0 - Tokyo work economy
+
+- Added four paid shifts that appear only after Ren physically travels to the matching Tokyo location.
+- Added distinct deterministic pay, energy, health-risk, and Residual Read mastery consequences with exact previews.
+- Every shift consumes one campaign time slot and is limited to once per location per day through the persistent journal.
+- Disabled work when Ren lacks the required energy and kept all outcomes free of random rolls.
+- Connected ordinary play to the existing equipment and field-supply economy without adding another navigation tab.
+- Added focused regression coverage and increased the browser suite to 140 tests.
+
 ## 0.1200.0 - Akihabara equipment counter
 
 - Added an in-world equipment counter to Haruto's existing Akihabara Market route instead of creating a detached shop screen.

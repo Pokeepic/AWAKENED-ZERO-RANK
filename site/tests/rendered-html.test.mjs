@@ -397,7 +397,8 @@ test("sells permanent Akihabara equipment and includes it in exact combat previe
   assert.match(city, /price: 4500/);
   assert.match(city, /price: 3500/);
   assert.match(city, /saveRpgState\(next\)/);
-  assert.doesNotMatch(city, /purchaseGear[\s\S]*takeRpgAction/);
+  const purchaseFunction = city.match(/function purchaseGear[\s\S]*?\n  }/)?.[0] ?? "";
+  assert.doesNotMatch(purchaseFunction, /takeRpgAction/);
   assert.match(state, /candidate\.fieldKit\?\.weapon \?\? "Utility Knife"/);
   assert.match(state, /candidate\.fieldKit\?\.coat \?\? "Street Jacket"/);
   assert.match(game, /\.\.\.rpg!\.fieldKit/);
@@ -3716,4 +3717,15 @@ test("requires all three Causal Sever arc outcomes for the true ending", async (
   assert.match(black, /prepared && causalArcReady/);
   assert.match(black, /trueEndingReady = ready && causalArcReady/);
   assert.match(black, /CAUSAL ARC I · II · III REQUIRED/);
+});
+
+test("offers deterministic location work with exact costs and daily limits", async () => {
+  const city = await readFile(new URL("../app/game/city/page.tsx", import.meta.url), "utf8");
+  for (const shift of ["Guild Patrol", "Night Courier", "Archive Indexing", "Perimeter Watch"]) assert.match(city, new RegExp(shift));
+  for (const pay of ["pay: 1600", "pay: 1100", "pay: 850", "pay: 1900"]) assert.match(city, new RegExp(pay));
+  assert.match(city, /entry\.day === rpg\.day && entry\.action === shift\.action/);
+  assert.match(city, /rpg\.energy < shift\.energy/);
+  assert.match(city, /takeRpgAction\(rpg, shift\.action/);
+  assert.match(city, /One shift per location each day/);
+  assert.doesNotMatch(city, /Math\.random/);
 });

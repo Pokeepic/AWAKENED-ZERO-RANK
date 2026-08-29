@@ -61,6 +61,13 @@ const MARKET_GEAR = [
   { id: "coat", name: "Guildweave Coat", slot: "coat", price: 3500, effect: "−2 DAMAGE FROM EVERY ENEMY ATTACK" },
 ] as const;
 
+const WORK_SHIFTS = {
+  "Tokyo Hunter Guild": { action: "Worked Guild Patrol", title: "Guild Patrol", pay: 1600, energy: 18, health: 0, mastery: 0, note: "Verify licenses and walk the civilian perimeter." },
+  "Akihabara Market": { action: "Worked Night Courier", title: "Night Courier", pay: 1100, energy: 12, health: 0, mastery: 0, note: "Carry sealed parcels through the market service lanes." },
+  "Ueno Library": { action: "Worked Archive Indexing", title: "Archive Indexing", pay: 850, energy: 7, health: 0, mastery: 3, note: "Index pre-Gate reports. Residual Read gains 3 mastery." },
+  "Adachi Gate Zone": { action: "Worked Perimeter Watch", title: "Perimeter Watch", pay: 1900, energy: 22, health: 2, mastery: 0, note: "High-risk boundary watch. The exposure costs 2 HP." },
+} as const;
+
 function routeResponse(
   snapshot: ObserverSnapshot,
   personName: string,
@@ -95,6 +102,7 @@ export default function CityRoutePage() {
     (BondMoment & { name: string; location: string; level: number }) | null
   >(null);
   const [purchaseResult, setPurchaseResult] = useState<string | null>(null);
+  const [workResult, setWorkResult] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -140,8 +148,11 @@ export default function CityRoutePage() {
     setBondResult(null);
     setBondScene(null);
     setPurchaseResult(null);
+    setWorkResult(null);
   }
   function chooseRoute(name: string, location: string) {
+    setWorkResult(null);
+    setPurchaseResult(null);
     setChoice({ name, location });
     const next = takeRpgAction(rpg!, `Traveled to ${location}`, {
       location,
@@ -183,6 +194,23 @@ export default function CityRoutePage() {
     setRpg(next);
     setPurchaseResult(`${item.name} equipped. ${item.effect}. No additional time slot was spent.`);
   }
+  function workShift(location: keyof typeof WORK_SHIFTS) {
+    if (!rpg) return;
+    const shift = WORK_SHIFTS[location];
+    const workedToday = rpg.journal.some((entry) => entry.day === rpg.day && entry.action === shift.action);
+    if (workedToday || rpg.energy < shift.energy) return;
+    const skillMastery = shift.mastery > 0
+      ? { ...rpg.skillMastery, "Residual Read": Math.min(100, (rpg.skillMastery["Residual Read"] ?? 0) + shift.mastery) }
+      : rpg.skillMastery;
+    const next = takeRpgAction(rpg, shift.action, {
+      money: rpg.money + shift.pay,
+      energy: rpg.energy - shift.energy,
+      health: rpg.health - shift.health,
+      skillMastery,
+    });
+    setRpg(next);
+    setWorkResult(`${shift.title} complete. Earned ¥${shift.pay.toLocaleString()}; one time slot spent.`);
+  }
 
   if (failed)
     return (
@@ -215,6 +243,10 @@ export default function CityRoutePage() {
   const activeRoute = routes.find((route) => route.location === active);
   const ready = inspected.length >= 2;
   const choiceAvailability = choice ? bondAvailability(choice.name, rpg) : null;
+  const workShiftChoice = choice ? WORK_SHIFTS[choice.location as keyof typeof WORK_SHIFTS] : null;
+  const workedToday = workShiftChoice
+    ? rpg.journal.some((entry) => entry.day === rpg.day && entry.action === workShiftChoice.action)
+    : false;
 
   return (
     <main id="chronicle" className="city-shell">
@@ -424,6 +456,7 @@ export default function CityRoutePage() {
             {choiceAvailability.status}. {choiceAvailability.schedule} RPG
             clock: Day {rpg.day}, {rpg.slot}. Energy {rpg.energy}.
           </p>
+          {workShiftChoice && <section className="work-shift" aria-label={`${workShiftChoice.title} paid shift`}><header><small>LOCAL WORK / ONE TIME SLOT</small><h3>{workShiftChoice.title}</h3></header><dl><div><dt>PAY</dt><dd>¥{workShiftChoice.pay.toLocaleString()}</dd></div><div><dt>ENERGY</dt><dd>−{workShiftChoice.energy}</dd></div>{workShiftChoice.health > 0 && <div><dt>RISK</dt><dd>−{workShiftChoice.health} HP</dd></div>}</dl><p>{workShiftChoice.note} One shift per location each day.</p><button disabled={workedToday || rpg.energy < workShiftChoice.energy} onClick={() => workShift(choice.location as keyof typeof WORK_SHIFTS)}>{workedToday ? "SHIFT ALREADY COMPLETED TODAY" : rpg.energy < workShiftChoice.energy ? "NOT ENOUGH ENERGY" : `WORK ${workShiftChoice.title.toUpperCase()}`}</button>{workResult && <p role="status">{workResult}</p>}</section>}
           {choice.location === "Akihabara Market" && <section className="market-counter" aria-label="Haruto's equipment counter"><small>HARUTO'S AFTER-HOURS STOCK / ¥{rpg.money.toLocaleString()}</small><h3>Buy once. Equip immediately.</h3>{MARKET_GEAR.map((item) => { const owned = item.slot === "weapon" ? rpg.fieldKit.weapon === item.name : rpg.fieldKit.coat === item.name; return <button key={item.id} disabled={owned || rpg.money < item.price} onClick={() => purchaseGear(item)}><span><b>{item.name}</b><small>{item.effect}</small></span><strong>{owned ? "EQUIPPED" : `¥${item.price.toLocaleString()}`}</strong></button>; })}{purchaseResult && <p role="status">{purchaseResult}</p>}</section>}
           <nav>
             {choiceAvailability.available && !bondResult && (

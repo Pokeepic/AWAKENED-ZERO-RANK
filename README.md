@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1200.0` |
+| Release | `0.1210.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 139 browser |
+| Automated tests | 339 Python + 140 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -62,6 +62,8 @@ The current playable opening contains seven connected, authenticated chapters:
 Exploration uses tiny transparent pixel chibi sprites, while canon and bond scenes switch into a visual-novel presentation with full-size illustrated characters and location-specific backgrounds. After the Gate at Adachi Station now leads into Daichi's patrol debrief inside the Tokyo Hunter Guild. Dialogue advances by click, Enter, or Space, numbered choices support keys 1–3, and an expandable history preserves each scene's lines. Canon events unlock in sequence and cannot be replayed for duplicate rewards. Local bonds and campaign state remain separate from the authenticated autonomous Observer save.
 
 Optional contacts now follow deterministic local schedules. Tokyo's map shows who is available, who is away, and their normal hours; Ren may still travel to an empty location, but spending time and gaining a bond point requires the person to be present and is limited to once per day. Mandatory canon meetings bypass optional schedules so story progress cannot soft-lock.
+
+Tokyo now supports a complete location-based work loop. After traveling, Ren can take a Guild patrol, market courier run, library indexing shift, or hazardous Gate perimeter watch. Every job declares its pay, energy cost, and any health or mastery consequence before confirmation, spends one time slot, and can be completed only once per location each day. This gives the permanent equipment and supply economy a sustainable deterministic income source.
 
 Gate combat now telegraphs the sentinel's next attack before every turn. Strike, barrier, and guard choices show exact outgoing damage, energy cost, and incoming damage; exposed-core rounds reward aggression, while pressure surges reward defense. Later timelines add mastery-gated Vector Step and Causal Sever moves, and number keys plus R provide complete keyboard control. Combat remains fully deterministic and advances the campaign clock only when Ren wins, retreats, or dies.
 
