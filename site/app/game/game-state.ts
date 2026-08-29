@@ -243,13 +243,13 @@ export function pendingStoryRoute(state: RpgState): string | null {
     && !state.completedEvents.includes("second-awakening-intro")) return "/game/awakening/second";
   if (state.timeline === 3 && state.day === 1 && state.turns === 0
     && !state.completedEvents.includes("third-awakening-intro")) return "/game/awakening/final";
-  if (state.timeline <= 2 && state.day >= 45 && state.day <= 120
+  if (state.timeline <= 3 && state.day >= 45 && state.day <= 120
     && !state.completedEvents.includes("arc-i-deadline-resolved")) return "/game/deadline/arc-one";
-  if (state.timeline <= 2 && state.day >= 120 && state.day <= 240
+  if (state.timeline <= 3 && state.day >= 120 && state.day <= 240
     && !state.completedEvents.includes("arc-ii-deadline-resolved")) return "/game/deadline/arc-two";
-  if (state.timeline <= 2 && state.day >= 240 && state.day < 365
+  if (state.timeline <= 3 && state.day >= 240 && state.day < 365
     && !state.completedEvents.includes("arc-iii-deadline-resolved")) return "/game/deadline/arc-three";
-  if (state.timeline <= 2 && state.day === 365
+  if (state.timeline <= 3 && state.day === 365
     && !state.completedEvents.includes("black-gate-deadline-resolved")) return "/game/deadline/black-gate";
   const survivedFirstGate = state.journal.some((entry) => [
     "Cleared the fracture sentinel",

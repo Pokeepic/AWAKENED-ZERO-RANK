@@ -233,7 +233,7 @@ test("gives optional bonds deterministic schedules without blocking travel or ca
   assert.match(city, /Spent time with/);
   assert.match(city, /SPEND TIME WITH/);
   assert.match(city, /TRAVEL ·.*status/);
-  assert.match(city, /Story-critical meetings still trigger automatically/);
+  assert.match(city, /Story-critical meetings still\s+trigger automatically/);
   assert.match(styles, /\.route-node\.contact-away/);
 });
 test("unlocks a deterministic Timeline II relay for mastery lottery Busan and anchor progress", async () => {
@@ -3501,7 +3501,7 @@ test("replays all four deadlines in Timeline II with Vector Step alternatives", 
     readFile(new URL("../app/game/deadline/arc-three/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(state, /state\.timeline <= 2/);
+  assert.match(state, /state\.timeline <= 3/);
   assert.match(one, /timeline-ii-arc-i-rescue/);
   assert.match(one, /vector >= 20/);
   assert.match(two, /timeline-ii-seven-route-rescue/);
@@ -3510,4 +3510,20 @@ test("replays all four deadlines in Timeline II with Vector Step alternatives", 
   assert.match(three, /vector >= 80/);
   assert.match(black, /busan-signal-decoded/);
   assert.match(black, /residual-anchor-complete/);
+});
+
+test("gives Timeline III a complete year and Causal Sever preparation route", async () => {
+  const [state, city, relay, black] = await Promise.all([
+    readFile(new URL("../app/game/game-state.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/city/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/residual-relay/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/deadline/black-gate/page.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(state, /state\.timeline <= 3/);
+  assert.match(city, /FINAL-TIMELINE ROUTE/);
+  assert.match(relay, /causal-spine-mapped/);
+  assert.match(relay, /severance-key-complete/);
+  assert.match(relay, /activeSkill = finalTimeline \? "Causal Sever" : "Vector Step"/);
+  assert.match(black, /causal-spine-mapped/);
+  assert.match(black, /severance-key-complete/);
 });

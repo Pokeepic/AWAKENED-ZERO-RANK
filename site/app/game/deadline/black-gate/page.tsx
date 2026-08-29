@@ -84,11 +84,13 @@ export default function BlackGateDeadlinePage() {
         "arc-iii-evidence",
       ].every((event) => rpg.completedEvents.includes(event));
       const strongestBond = Math.max(0, ...Object.values(rpg.bonds));
-      const secondTimelineReady =
-        rpg.timeline === 1 ||
-        ((rpg.skillMastery["Vector Step"] ?? 0) === 100 &&
-          rpg.completedEvents.includes("busan-signal-decoded") &&
-          rpg.completedEvents.includes("residual-anchor-complete"));
+      const secondTimelineReady = rpg.timeline === 1 || (rpg.timeline === 2 &&
+        (rpg.skillMastery["Vector Step"] ?? 0) === 100 &&
+        rpg.completedEvents.includes("busan-signal-decoded") &&
+        rpg.completedEvents.includes("residual-anchor-complete")) || (rpg.timeline === 3 &&
+        (rpg.skillMastery["Causal Sever"] ?? 0) === 100 &&
+        rpg.completedEvents.includes("causal-spine-mapped") &&
+        rpg.completedEvents.includes("severance-key-complete"));
       const prepared =
         mastery === 100 &&
         evidenceReady &&
@@ -189,11 +191,13 @@ export default function BlackGateDeadlinePage() {
       (event) => rpg.completedEvents.includes(event),
     ).length,
     strongestBond = Math.max(0, ...Object.values(rpg.bonds)),
-    secondTimelineReady =
-      rpg.timeline === 1 ||
-      ((rpg.skillMastery["Vector Step"] ?? 0) === 100 &&
-        rpg.completedEvents.includes("busan-signal-decoded") &&
-        rpg.completedEvents.includes("residual-anchor-complete")),
+    secondTimelineReady = rpg.timeline === 1 || (rpg.timeline === 2 &&
+      (rpg.skillMastery["Vector Step"] ?? 0) === 100 &&
+      rpg.completedEvents.includes("busan-signal-decoded") &&
+      rpg.completedEvents.includes("residual-anchor-complete")) || (rpg.timeline === 3 &&
+      (rpg.skillMastery["Causal Sever"] ?? 0) === 100 &&
+      rpg.completedEvents.includes("causal-spine-mapped") &&
+      rpg.completedEvents.includes("severance-key-complete")),
     ready =
       mastery === 100 &&
       evidence === 3 &&
@@ -242,7 +246,7 @@ export default function BlackGateDeadlinePage() {
             className={`deadline-result ${outcome.survived ? "success" : "failure"}`}
           >
             <small>
-              {rpg.status === "year-ending" ? "YEAR ONE COMPLETE" : "GAME OVER"}
+              {rpg.status === "year-ending" ? `TIMELINE ${rpg.timeline} COMPLETE` : "GAME OVER"}
             </small>
             <h1>{outcome.title}</h1>
             <p>{outcome.copy}</p>
@@ -294,7 +298,7 @@ export default function BlackGateDeadlinePage() {
                   {ready
                     ? "ALL CONDITIONS READY · RESIDUAL PATH"
                     : rpg.timeline >= 2 && !secondTimelineReady
-                      ? "VS 100% · BUSAN · ANCHOR REQUIRED"
+                      ? rpg.timeline === 3 ? "CS 100% · SPINE · KEY REQUIRED" : "VS 100% · BUSAN · ANCHOR REQUIRED"
                       : "PREPARATION INCOMPLETE · LETHAL"}
                 </small>
               </button>

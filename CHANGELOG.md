@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1070.0 - Final-timeline preparation
+
+- Made all four fixed campaign deadlines recur in Timeline 3 instead of leaving the final year empty after its awakening.
+- Converted the Haneda relay into a final-timeline Causal Sever training facility while preserving its Timeline 2 behavior.
+- Added a 40% Causal Sever objective to map the Black Gate's causal spine and a 100% mastery plus bond-6 objective to forge the severance key.
+- Connected the causal spine and severance key to the final Black Gate readiness check without creating an unintended fourth transmigration.
+
 ## 0.1060.0 - Timeline II deadline alternatives
 
 - Carried all four fixed arc deadlines into Timeline 2 instead of allowing the second year to skip the campaign structure.
