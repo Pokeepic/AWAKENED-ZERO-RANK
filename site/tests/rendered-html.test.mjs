@@ -397,7 +397,7 @@ test("sells permanent Akihabara equipment and includes it in exact combat previe
   assert.match(city, /price: 4500/);
   assert.match(city, /price: 3500/);
   assert.match(city, /saveRpgState\(next\)/);
-  const purchaseFunction = city.match(/function purchaseGear[\s\S]*?\n  }/)?.[0] ?? "";
+  const purchaseFunction = city.match(/function purchaseGear[\s\S]*?\n {2}}/)?.[0] ?? "";
   assert.doesNotMatch(purchaseFunction, /takeRpgAction/);
   assert.match(state, /candidate\.fieldKit\?\.weapon \?\? "Utility Knife"/);
   assert.match(state, /candidate\.fieldKit\?\.coat \?\? "Street Jacket"/);
@@ -542,7 +542,7 @@ test("keeps story routing automatic and validates versioned local saves", async 
   assert.match(hud, /pendingStoryRoute/);
   assert.doesNotMatch(hud, /aria-current/);
   assert.doesNotMatch(hud, /STORY/);
-  assert.match(state, /saveVersion: 9/);
+  assert.match(state, /saveVersion: 10/);
   assert.match(state, /isRpgState/);
   assert.match(state, /Number\.isSafeInteger/);
   assert.match(layout, /separate time-management RPG/);
@@ -553,7 +553,7 @@ test("records a bounded persistent campaign journal and migrates older saves", a
     readFile(new URL("app/game/game-state.ts", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
-  assert.match(state, /saveVersion: 9/);
+  assert.match(state, /saveVersion: 10/);
   assert.match(state, /Array\.isArray\(candidate\.journal\)/);
   assert.match(state, /candidate\.bonds/);
   assert.match(state, /candidate\.completedEvents/);
@@ -3728,4 +3728,23 @@ test("offers deterministic location work with exact costs and daily limits", asy
   assert.match(city, /takeRpgAction\(rpg, shift\.action/);
   assert.match(city, /One shift per location each day/);
   assert.doesNotMatch(city, /Math\.random/);
+});
+
+test("runs a local monthly rent ledger without charging existing saves", async () => {
+  const [state, game, styles] = await Promise.all([
+    readFile(new URL("../app/game/game-state.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(state, /RPG_RENT_COST = 8000/);
+  assert.match(state, /RPG_RENT_PERIOD_DAYS = 30/);
+  assert.match(state, /export function rentPaymentDue/);
+  assert.match(state, /export function payRent/);
+  assert.match(state, /while \(state\.day > paidThroughDay/);
+  assert.match(state, /candidate\.rentLedger \?\?/);
+  assert.match(state, /arrears: 0/);
+  assert.doesNotMatch(state.match(/export function payRent[\s\S]*?\n}/)?.[0] ?? "", /takeRpgAction/);
+  assert.match(game, /PAID THROUGH DAY/);
+  assert.match(game, /NO TIME SLOT/);
+  assert.match(styles, /\.rent-ledger/);
 });

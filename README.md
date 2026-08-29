@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1210.0` |
+| Release | `0.1220.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 140 browser |
+| Automated tests | 339 Python + 141 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -64,6 +64,8 @@ Exploration uses tiny transparent pixel chibi sprites, while canon and bond scen
 Optional contacts now follow deterministic local schedules. Tokyo's map shows who is available, who is away, and their normal hours; Ren may still travel to an empty location, but spending time and gaining a bond point requires the person to be present and is limited to once per day. Mandatory canon meetings bypass optional schedules so story progress cannot soft-lock.
 
 Tokyo now supports a complete location-based work loop. After traveling, Ren can take a Guild patrol, market courier run, library indexing shift, or hazardous Gate perimeter watch. Every job declares its pay, energy cost, and any health or mastery consequence before confirmation, spends one time slot, and can be completed only once per location each day. This gives the permanent equipment and supply economy a sustainable deterministic income source.
+
+Ren's apartment now has its own persistent monthly rent ledger. The ¥8,000 payment covers 30 campaign days; missed periods become cumulative arrears when the calendar crosses a due date. The envelope shows the exact balance and paid-through date, and transferring rent does not consume a time slot. Existing local saves migrate as current through their present billing period instead of receiving retroactive debt.
 
 Gate combat now telegraphs the sentinel's next attack before every turn. Strike, barrier, and guard choices show exact outgoing damage, energy cost, and incoming damage; exposed-core rounds reward aggression, while pressure surges reward defense. Later timelines add mastery-gated Vector Step and Causal Sever moves, and number keys plus R provide complete keyboard control. Combat remains fully deterministic and advances the campaign clock only when Ren wins, retreats, or dies.
 

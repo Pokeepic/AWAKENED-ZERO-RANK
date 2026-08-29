@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1220.0 - Apartment rent ledger
+
+- Added a persistent local RPG rent ledger with a ¥8,000 cost and 30-day billing periods.
+- Accumulates exact arrears when ordinary actions or routine passage cross unpaid due dates.
+- Rebuilt the apartment envelope around Ren's local campaign money rather than the separate Observer economy.
+- Added prepayment, arrears clearance, insufficient-funds blocking, paid-through dates, and a clear no-time-slot promise.
+- Migrates existing saves as paid through their current billing period and resets the ledger correctly on retries and transmigrations.
+- Added focused browser coverage and advanced the local save schema to version 10.
+
 ## 0.1210.0 - Tokyo work economy
 
 - Added four paid shifts that appear only after Ren physically travels to the matching Tokyo location.

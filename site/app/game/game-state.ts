@@ -7,6 +7,8 @@ export const RPG_SLOTS = [
   "Evening",
   "Late Night",
 ] as const;
+export const RPG_RENT_COST = 8000;
+export const RPG_RENT_PERIOD_DAYS = 30;
 export const CAMPAIGN_ARCS = [
   {
     id: "worthless-awakening",
@@ -91,7 +93,7 @@ export function bondMoment(name: string, level: number, timeline: Timeline): Bon
 }
 
 export type RpgState = {
-  saveVersion: 9;
+  saveVersion: 10;
   timeline: Timeline;
   attempt: number;
   status: CampaignStatus;
@@ -112,6 +114,11 @@ export type RpgState = {
   journal: RpgJournalEntry[];
   bonds: Record<string, number>;
   completedEvents: string[];
+  rentLedger: {
+    paidThroughDay: number;
+    arrears: number;
+    payments: number;
+  };
   fieldKit: {
     bandages: number;
     energyDrinks: number;
@@ -123,7 +130,7 @@ export type RpgState = {
 
 export function newRpgState(snapshot: ObserverSnapshot): RpgState {
   return {
-    saveVersion: 9,
+    saveVersion: 10,
     timeline: 1,
     attempt: 1,
     status: "active",
@@ -149,6 +156,7 @@ export function newRpgState(snapshot: ObserverSnapshot): RpgState {
     journal: [],
     bonds: {},
     completedEvents: [],
+    rentLedger: { paidThroughDay: 30, arrears: 0, payments: 0 },
     fieldKit: { bandages: 1, energyDrinks: 1, wardCharm: false, weapon: "Utility Knife", coat: "Street Jacket" },
   };
 }
@@ -160,7 +168,7 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
       const candidate = JSON.parse(saved) as Partial<RpgState>;
       const migrated = {
         ...candidate,
-        saveVersion: 9 as const,
+        saveVersion: 10 as const,
         timeline: candidate.timeline ?? 1,
         attempt: candidate.attempt ?? 1,
         status:
@@ -221,6 +229,11 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
         completedEvents: Array.isArray(candidate.completedEvents)
           ? candidate.completedEvents
           : [],
+        rentLedger: candidate.rentLedger ?? {
+          paidThroughDay: Math.max(30, Math.ceil((candidate.day ?? 1) / RPG_RENT_PERIOD_DAYS) * RPG_RENT_PERIOD_DAYS),
+          arrears: 0,
+          payments: 0,
+        },
         fieldKit: {
           bandages: candidate.fieldKit?.bandages ?? 1,
           energyDrinks: candidate.fieldKit?.energyDrinks ?? 1,
@@ -244,7 +257,7 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
 
 function isRpgState(value: Partial<RpgState>): value is RpgState {
   return (
-    value.saveVersion === 9 &&
+    value.saveVersion === 10 &&
     [1, 2, 3].includes(value.timeline as number) &&
     Number.isSafeInteger(value.attempt) &&
     value.attempt! > 0 &&
@@ -325,6 +338,15 @@ function isRpgState(value: Partial<RpgState>): value is RpgState {
     value.completedEvents.every(
       (event) => typeof event === "string" && event.length > 0,
     ) &&
+    value.rentLedger !== undefined &&
+    Number.isSafeInteger(value.rentLedger.paidThroughDay) &&
+    value.rentLedger.paidThroughDay >= 30 &&
+    value.rentLedger.paidThroughDay <= 390 &&
+    Number.isSafeInteger(value.rentLedger.arrears) &&
+    value.rentLedger.arrears >= 0 &&
+    value.rentLedger.arrears % RPG_RENT_COST === 0 &&
+    Number.isSafeInteger(value.rentLedger.payments) &&
+    value.rentLedger.payments >= 0 &&
     value.fieldKit !== undefined &&
     Number.isSafeInteger(value.fieldKit.bandages) &&
     value.fieldKit.bandages >= 0 && value.fieldKit.bandages <= 3 &&
@@ -370,6 +392,7 @@ export function restartRpgRun(state: RpgState): RpgState {
     journal: [],
     bonds: {},
     completedEvents: [],
+    rentLedger: { paidThroughDay: 30, arrears: 0, payments: 0 },
     fieldKit: { bandages: 1, energyDrinks: 1, wardCharm: false, weapon: "Utility Knife", coat: "Street Jacket" },
   };
   saveRpgState(retry);
@@ -492,6 +515,7 @@ export function transmigrateRpgState(state: RpgState): RpgState {
     journal: [],
     bonds: {},
     completedEvents: [],
+    rentLedger: { paidThroughDay: 30, arrears: 0, payments: 0 },
     fieldKit: { bandages: 1, energyDrinks: 1, wardCharm: false, weapon: "Utility Knife", coat: "Street Jacket" },
   };
   saveRpgState(next);
@@ -591,7 +615,7 @@ export function routineDaysAvailable(state: RpgState): number {
 export function followRoutine(state: RpgState): RpgState {
   const days = routineDaysAvailable(state);
   if (days === 0) return state;
-  const next: RpgState = {
+  const next = applyRentDeadlines({
     ...state,
     day: state.day + days,
     slot: "Morning",
@@ -609,6 +633,37 @@ export function followRoutine(state: RpgState): RpgState {
         location: "Ren's Apartment",
       },
     ].slice(-12),
+  });
+  saveRpgState(next);
+  return next;
+}
+
+function applyRentDeadlines(state: RpgState): RpgState {
+  let paidThroughDay = state.rentLedger.paidThroughDay;
+  let arrears = state.rentLedger.arrears;
+  while (state.day > paidThroughDay && paidThroughDay < 390) {
+    arrears += RPG_RENT_COST;
+    paidThroughDay += RPG_RENT_PERIOD_DAYS;
+  }
+  return { ...state, rentLedger: { ...state.rentLedger, paidThroughDay, arrears } };
+}
+
+export function rentPaymentDue(state: RpgState): number {
+  return state.rentLedger.arrears || RPG_RENT_COST;
+}
+
+export function payRent(state: RpgState): RpgState {
+  const amount = rentPaymentDue(state);
+  if (state.status !== "active" || state.money < amount) return state;
+  const next: RpgState = {
+    ...state,
+    money: state.money - amount,
+    lastAction: state.rentLedger.arrears > 0 ? "Cleared rent arrears" : "Reserved next month's rent",
+    rentLedger: {
+      paidThroughDay: state.rentLedger.arrears > 0 ? state.rentLedger.paidThroughDay : Math.min(390, state.rentLedger.paidThroughDay + RPG_RENT_PERIOD_DAYS),
+      arrears: 0,
+      payments: state.rentLedger.payments + 1,
+    },
   };
   saveRpgState(next);
   return next;
@@ -702,7 +757,7 @@ export function takeRpgAction(
   const slots = Math.max(1, Math.min(RPG_SLOTS.length, Math.trunc(timeSlots)));
   const index = RPG_SLOTS.indexOf(state.slot);
   const elapsed = index + slots;
-  const next = {
+  let next: RpgState = {
     ...state,
     ...effects,
     day: Math.min(365, state.day + Math.floor(elapsed / RPG_SLOTS.length)),
@@ -719,6 +774,7 @@ export function takeRpgAction(
       },
     ].slice(-12),
   };
+  next = applyRentDeadlines(next);
   next.health = Math.max(0, Math.min(100, next.health));
   next.energy = Math.max(0, Math.min(100, next.energy));
   next.money = Math.max(0, next.money);
