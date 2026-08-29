@@ -508,6 +508,22 @@ test("models a lethal one-year campaign with conditional final-day transmigratio
   assert.match(styles, /\.reset-dialog\.game-over/);
   assert.match(styles, /\.reset-dialog\.year-ending/);
 });
+test("paces long campaign stretches with deadline-safe ordinary routines", async () => {
+  const [game, state] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+  ]);
+  assert.match(state, /export function routineDaysAvailable/);
+  assert.match(state, /Math\.min\(7, deadline - state\.day\)/);
+  assert.match(state, /export function followRoutine/);
+  assert.match(state, /slot: "Morning"/);
+  assert.match(state, /money: state\.money \+ days \* 250/);
+  assert.match(state, /saveRpgState\(next\)/);
+  assert.match(game, /Follow the ordinary routine/);
+  assert.match(game, /routineDaysAvailable\(rpg\)/);
+  assert.match(game, /followRoutine\(rpg!\)/);
+  assert.match(game, /every skipped day is a choice he cannot take back/);
+});
 test("adds a post-Gate social chapter with local bond consequences", async () => {
   const [field, evening, state, styles] = await Promise.all([
     readFile(new URL("app/game/field/page.tsx", root), "utf8"),

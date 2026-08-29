@@ -555,6 +555,38 @@ export function currentCampaignArc(day: number) {
   );
 }
 
+export function routineDaysAvailable(state: RpgState): number {
+  if (state.status !== "active" || state.day >= 365) return 0;
+  const deadline = currentCampaignArc(state.day).deadline;
+  return Math.max(0, Math.min(7, deadline - state.day));
+}
+
+export function followRoutine(state: RpgState): RpgState {
+  const days = routineDaysAvailable(state);
+  if (days === 0) return state;
+  const next: RpgState = {
+    ...state,
+    day: state.day + days,
+    slot: "Morning",
+    energy: Math.min(100, state.energy + 12),
+    money: state.money + days * 250,
+    location: "Ren's Apartment",
+    turns: state.turns + 1,
+    lastAction: `Followed ordinary routine for ${days} day${days === 1 ? "" : "s"}`,
+    journal: [
+      ...state.journal,
+      {
+        day: state.day,
+        slot: state.slot,
+        action: `Followed ordinary routine for ${days} day${days === 1 ? "" : "s"}`,
+        location: "Ren's Apartment",
+      },
+    ].slice(-12),
+  };
+  saveRpgState(next);
+  return next;
+}
+
 export function bondAvailability(
   name: string,
   state: RpgState,

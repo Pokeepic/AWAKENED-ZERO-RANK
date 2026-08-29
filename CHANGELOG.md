@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1140.0 - Deadline-safe campaign pacing
+
+- Added an apartment routine action that advances up to seven days for playable year-long campaign pacing.
+- Stops routine passage exactly at the active arc deadline so mandatory resolutions cannot be skipped.
+- Returns Ren home the following morning with modest work income and energy recovery while permanently surrendering skipped opportunities.
+- Records each routine passage in the bounded local journal and prevents passage on the final day or outside an active run.
+- Added focused browser-contract coverage for deadline-safe pacing behavior.
+
 ## 0.1130.0 - Authored bond chapters
 
 - Replaced generic optional-meeting results with four deterministic relationship chapters for Aiko, Daichi, Haruto, and Mei.
