@@ -78,6 +78,22 @@ test("grants and stages a third awakening after the second transmigration", asyn
   assert.match(styles, /\.final-awakening/);
   assert.match(styles, /causal-sever-flash/);
 });
+test("stages Vector Step after the first transmigration", async () => {
+  const [awakening, state, styles] = await Promise.all([
+    readFile(new URL("app/game/awakening/second/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(state, /state\.timeline === 2/);
+  assert.match(state, /return "\/game\/awakening\/second"/);
+  assert.match(awakening, /SECOND_AWAKENING_SHOTS/);
+  assert.match(awakening, /second-awakening-intro/);
+  assert.match(awakening, /SECOND AWAKENING CONFIRMED/);
+  assert.match(awakening, /NEW ABILITY: VECTOR STEP/);
+  assert.match(awakening, /saveRpgState/);
+  assert.match(styles, /\.second-awakening/);
+  assert.match(styles, /vector-step-reveal/);
+});
 test("opens the RPG through a persistent title menu without interrupting return travel", async () => {
   const [game, title, preferences, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),

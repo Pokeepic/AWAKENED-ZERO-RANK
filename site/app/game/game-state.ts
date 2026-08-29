@@ -238,6 +238,8 @@ export function pendingStoryRoute(state: RpgState): string | null {
   if (state.status !== "active") return null;
   if (state.timeline === 1 && state.day === 1 && state.turns === 0
     && !state.completedEvents.includes("worthless-awakening-intro")) return "/game/awakening";
+  if (state.timeline === 2 && state.day === 1 && state.turns === 0
+    && !state.completedEvents.includes("second-awakening-intro")) return "/game/awakening/second";
   if (state.timeline === 3 && state.day === 1 && state.turns === 0
     && !state.completedEvents.includes("third-awakening-intro")) return "/game/awakening/final";
   if (state.timeline === 1 && state.day >= 45 && state.day <= 120

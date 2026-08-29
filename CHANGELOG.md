@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1000.0 - Second awakening
+
+- Added the missing automatic Day 1 reassessment after the first transmigration.
+- Introduced Vector Step through a five-shot cinematic that connects mastered Residual Read to Ren's new movement resonance.
+- Added distinct vector-trace motion, keyboard and skip controls, reduced-motion behavior, and one-time save completion without consuming a time slot.
+- Completed the visible three-stage awakening progression across all three timelines.
+
 ## 0.990.0 - Third awakening
 
 - Made the second transmigration grant Ren a third skill, Causal Sever, alongside mastered Residual Read and Vector Step.
