@@ -4060,3 +4060,17 @@ test("makes daily apartment sustenance an explicit bounded RPG choice", async ()
   assert.match(game, /rpg\.money < 650 \|\| ateToday/);
   assert.match(game, /PROPER MEAL ALREADY EATEN TODAY/);
 });
+
+test("charges a transparent outbound Tokyo train fare without trapping Ren", async () => {
+  const city = await readFile(
+    new URL("../app/game/city/page.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(city, /const TOKYO_TRAIN_FARE = 220/);
+  assert.match(city, /rpg\.money < TOKYO_TRAIN_FARE/);
+  assert.match(city, /money: rpg!\.money - TOKYO_TRAIN_FARE/);
+  assert.match(city, /TRAVEL · ¥\{TOKYO_TRAIN_FARE\} · −6 EN · 1 SLOT/);
+  assert.match(city, /Returning home remains free of cash cost/);
+  assert.match(city, /Fare paid ¥\{TOKYO_TRAIN_FARE\}/);
+  assert.doesNotMatch(city, /money: rpg\.money - TOKYO_TRAIN_FARE[\s\S]{0,180}Returned home/);
+});

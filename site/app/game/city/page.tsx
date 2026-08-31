@@ -18,6 +18,8 @@ import {
 import { GameHud } from "../game-hud";
 import { BondEncounter, type BondEncounterChoice } from "./bond-encounter";
 
+const TOKYO_TRAIN_FARE = 220;
+
 const SPRITES: Record<string, string> = {
   "Aiko Sato": "/game/characters/aiko.png",
   "Daichi Mori": "/game/characters/daichi.png",
@@ -213,6 +215,7 @@ export default function CityRoutePage() {
     setTrainingResult(null);
   }
   function chooseRoute(name: string, location: string) {
+    if (!rpg || rpg.money < TOKYO_TRAIN_FARE) return;
     setWorkResult(null);
     setPurchaseResult(null);
     setTrainingResult(null);
@@ -220,6 +223,7 @@ export default function CityRoutePage() {
     const next = takeRpgAction(rpg!, `Traveled to ${location}`, {
       location,
       energy: rpg!.energy - 6,
+      money: rpg!.money - TOKYO_TRAIN_FARE,
     });
     setRpg(next);
   }
@@ -536,11 +540,11 @@ export default function CityRoutePage() {
             {routes.map((route) => (
               <button
                 key={route.name}
-                disabled={!ready || choice !== null}
+                disabled={!ready || choice !== null || rpg.money < TOKYO_TRAIN_FARE}
                 onClick={() => chooseRoute(route.name, route.location)}
               >
                 <span>{route.location}</span>
-                <small>TRAVEL · {route.availability.status}</small>
+                <small>TRAVEL · ¥{TOKYO_TRAIN_FARE} · −6 EN · 1 SLOT · {route.availability.status}</small>
               </button>
             ))}
             {!ready && (
@@ -548,6 +552,9 @@ export default function CityRoutePage() {
                 Inspect {2 - inspected.length} more signal
                 {2 - inspected.length === 1 ? "" : "s"} first.
               </p>
+            )}
+            {ready && rpg.money < TOKYO_TRAIN_FARE && (
+              <p role="status">Ren needs ¥{TOKYO_TRAIN_FARE} for the outbound train. Returning home remains free of cash cost.</p>
             )}
           </div>
         </aside>
@@ -590,7 +597,7 @@ export default function CityRoutePage() {
           )}
           <p>
             {choiceAvailability.status}. {choiceAvailability.schedule} RPG
-            clock: Day {rpg.day}, {rpg.slot}. Energy {rpg.energy}.
+            clock: Day {rpg.day}, {rpg.slot}. Energy {rpg.energy}. Fare paid ¥{TOKYO_TRAIN_FARE}.
           </p>
           <div
             className="location-activities"

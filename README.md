@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1270.0` |
+| Release | `0.1280.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 146 browser |
+| Automated tests | 339 Python + 147 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -24,6 +24,8 @@ The game now opens on a restrained cinematic title screen set inside Ren's apart
 Tokyo locations now keep their playable scene visible while work, training, and shopping sit in compact in-world activity drawers. The native controls work with keyboard, touch, and screen readers; the most immediately useful action opens by default while optional activities stay out of Ren's way.
 
 Food is now part of Ren's survival budget. Once per day he can spend ¥650 and one apartment time slot on a proper meal, restoring 18 energy and 3 health. Recovery remains capped by the core state engine, and the action cannot be repeated to farm health in the same day.
+
+Outbound Tokyo travel now costs ¥220 alongside its six-energy and one-slot commitment. Every route shows the complete cost before selection and unaffordable trips are blocked, while Ren can always return home without a cash charge so the economy cannot strand a save away from the apartment.
 
 The RPG is being rebuilt around three possible one-year timelines. Ordinary death is a real Game Over; retrying begins a new run of the same timeline and grants no transmigration benefit. On Day 365, an explicit ledger checks survival, mastery, evidence, bonds, health, location, and the final choice before a residual path can open. The first timeline begins with Ren's mocked Zero-Rank skill, Residual Read, and four unequal arc deadlines at Days 45, 120, 240, and 365.
 
