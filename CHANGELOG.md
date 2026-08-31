@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1300.0 - Guild medical wing
+
+- Added licensed treatment at the Tokyo Hunter Guild for ¥1,800 and one time slot.
+- Restores up to 25 HP without exceeding Ren's maximum health.
+- Limits treatment to once per campaign day through the persistent action journal.
+- Blocks full-health and unaffordable treatment with explicit interface states.
+- Added focused regression coverage and increased the browser suite to 149 tests.
+
 ## 0.1290.0 - Akihabara field supplies
 
 - Added individually priced bandages, energy drinks, and ward charms to Haruto's market counter.

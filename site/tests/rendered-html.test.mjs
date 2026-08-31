@@ -4090,3 +4090,19 @@ test("sells capped field consumables individually at Akihabara", async () => {
   assert.match(city, /No additional time slot was spent/);
   assert.match(city, /PACK FULL/);
 });
+
+test("offers bounded once-daily paid treatment at the Guild clinic", async () => {
+  const [city, styles] = await Promise.all([
+    readFile(new URL("../app/game/city/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(city, /const GUILD_CLINIC_FEE = 1800/);
+  assert.match(city, /Received Guild Clinic Treatment/);
+  assert.match(city, /Math\.min\(25, 100 - rpg\.health\)/);
+  assert.match(city, /money: rpg\.money - GUILD_CLINIC_FEE/);
+  assert.match(city, /health: rpg\.health \+ restored/);
+  assert.match(city, /treatedToday \|\| rpg\.health >= 100 \|\| rpg\.money < GUILD_CLINIC_FEE/);
+  assert.match(city, /TREATMENT ALREADY RECEIVED TODAY/);
+  assert.match(city, /Guild Medical Wing/);
+  assert.match(styles, /\.guild-clinic/);
+});

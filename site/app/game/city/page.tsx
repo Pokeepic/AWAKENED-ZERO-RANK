@@ -19,6 +19,7 @@ import { GameHud } from "../game-hud";
 import { BondEncounter, type BondEncounterChoice } from "./bond-encounter";
 
 const TOKYO_TRAIN_FARE = 220;
+const GUILD_CLINIC_FEE = 1800;
 
 const SPRITES: Record<string, string> = {
   "Aiko Sato": "/game/characters/aiko.png",
@@ -172,6 +173,7 @@ export default function CityRoutePage() {
   const [purchaseResult, setPurchaseResult] = useState<string | null>(null);
   const [workResult, setWorkResult] = useState<string | null>(null);
   const [trainingResult, setTrainingResult] = useState<string | null>(null);
+  const [clinicResult, setClinicResult] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -219,12 +221,14 @@ export default function CityRoutePage() {
     setPurchaseResult(null);
     setWorkResult(null);
     setTrainingResult(null);
+    setClinicResult(null);
   }
   function chooseRoute(name: string, location: string) {
     if (!rpg || rpg.money < TOKYO_TRAIN_FARE) return;
     setWorkResult(null);
     setPurchaseResult(null);
     setTrainingResult(null);
+    setClinicResult(null);
     setChoice({ name, location });
     const next = takeRpgAction(rpg!, `Traveled to ${location}`, {
       location,
@@ -351,6 +355,20 @@ export default function CityRoutePage() {
       `${drill.title} complete. Residual Read +${gained}% mastery; one time slot spent.`,
     );
   }
+  function receiveClinicTreatment() {
+    if (!rpg || rpg.money < GUILD_CLINIC_FEE || rpg.health >= 100) return;
+    const treatedToday = rpg.journal.some(
+      (entry) => entry.day === rpg.day && entry.action === "Received Guild Clinic Treatment",
+    );
+    if (treatedToday) return;
+    const restored = Math.min(25, 100 - rpg.health);
+    const next = takeRpgAction(rpg, "Received Guild Clinic Treatment", {
+      money: rpg.money - GUILD_CLINIC_FEE,
+      health: rpg.health + restored,
+    });
+    setRpg(next);
+    setClinicResult(`Treatment complete. HP +${restored}; ¥${GUILD_CLINIC_FEE.toLocaleString()} paid; one time slot spent.`);
+  }
 
   if (failed)
     return (
@@ -402,6 +420,9 @@ export default function CityRoutePage() {
       )
     : false;
   const residualMastery = rpg.skillMastery["Residual Read"] ?? 0;
+  const treatedToday = rpg.journal.some(
+    (entry) => entry.day === rpg.day && entry.action === "Received Guild Clinic Treatment",
+  );
 
   return (
     <main id="chronicle" className="city-shell">
@@ -672,6 +693,33 @@ export default function CityRoutePage() {
                         : `WORK ${workShiftChoice.title.toUpperCase()}`}
                   </button>
                   {workResult && <p role="status">{workResult}</p>}
+                </section>
+              </details>
+            )}
+            {choice.location === "Tokyo Hunter Guild" && (
+              <details>
+                <summary>
+                  <span>CLINIC</span>
+                  <b>Guild Medical Wing</b>
+                  <small>+25 HP · ¥{GUILD_CLINIC_FEE.toLocaleString()} · 1 SLOT</small>
+                </summary>
+                <section className="guild-clinic" aria-label="Guild clinic treatment">
+                  <small>LICENSED HUNTER CARE / ONCE PER DAY</small>
+                  <h3>Patch the damage before the next Gate.</h3>
+                  <p>Restores up to 25 HP. Treatment never exceeds Ren's maximum health.</p>
+                  <button
+                    disabled={treatedToday || rpg.health >= 100 || rpg.money < GUILD_CLINIC_FEE}
+                    onClick={receiveClinicTreatment}
+                  >
+                    {treatedToday
+                      ? "TREATMENT ALREADY RECEIVED TODAY"
+                      : rpg.health >= 100
+                        ? "REN IS ALREADY AT FULL HEALTH"
+                        : rpg.money < GUILD_CLINIC_FEE
+                          ? "INSUFFICIENT FUNDS"
+                          : `RECEIVE TREATMENT · ¥${GUILD_CLINIC_FEE.toLocaleString()}`}
+                  </button>
+                  {clinicResult && <p role="status">{clinicResult}</p>}
                 </section>
               </details>
             )}
