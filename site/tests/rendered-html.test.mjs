@@ -4128,10 +4128,21 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1320"/);
+  assert.match(version, /GAME_VERSION = "0\.1330"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);
   assert.match(game, /from "\.\/game-version"/);
   assert.doesNotMatch(title, /v0\.1010/);
+});
+
+test("avoids the failing vinext RSC prefetch path on the title screen", async () => {
+  const title = await readFile(
+    new URL("../app/game/title-screen.tsx", import.meta.url),
+    "utf8",
+  );
+  const links = title.match(/<Link\b[^>]*>/g) ?? [];
+  assert.equal(links.length, 2);
+  for (const link of links) assert.match(link, /prefetch=\{false\}/);
+  assert.match(title, /<Link prefetch=\{false\} href="\/">← OBSERVER<\/Link>/);
 });

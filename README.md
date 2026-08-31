@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1320.0` |
+| Release | `0.1330.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 151 browser |
+| Automated tests | 339 Python + 152 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -34,6 +34,8 @@ The Tokyo Hunter Guild now includes a licensed medical wing. Once per day Ren ca
 The campaign journal now opens with a four-period day ledger. Morning, Afternoon, Evening, and Late Night are marked as spent, current, or still open, making the Persona-style clock readable without adding interface tabs or changing the underlying save format.
 
 The title menu and playable campaign now share one release label. This removes the stale pre-arc version that remained on the live title screen and prevents those two player-facing surfaces from drifting apart in later releases.
+
+The private title screen now disables speculative RSC prefetch on its Observer links. Normal navigation is unchanged, while the workaround avoids a confirmed vinext beta runtime fault that previously filled the deployed browser console during title initialization.
 
 The RPG is being rebuilt around three possible one-year timelines. Ordinary death is a real Game Over; retrying begins a new run of the same timeline and grants no transmigration benefit. On Day 365, an explicit ledger checks survival, mastery, evidence, bonds, health, location, and the final choice before a residual path can open. The first timeline begins with Ren's mocked Zero-Rank skill, Residual Read, and four unequal arc deadlines at Days 45, 120, 240, and 365.
 

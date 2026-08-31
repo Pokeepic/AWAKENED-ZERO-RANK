@@ -126,7 +126,7 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry }: { state: 
     <div className="title-city-flicker" aria-hidden="true" />
     <div className="title-curtain-shadow" aria-hidden="true" />
     <div className="title-shade" aria-hidden="true" />
-    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v{GAME_VERSION}</span></header>
+    <header><Link prefetch={false} href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v{GAME_VERSION}</span></header>
     <section className="title-lockup" aria-labelledby="title-heading">
       <small>REN&apos;S APARTMENT / ADACHI / 02:13</small>
       <h1 id="title-heading"><span>AWAKENED</span>ZERO RANK</h1>
@@ -137,7 +137,7 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry }: { state: 
         <button className="primary" onClick={continueOrRetry}><b>{runEnded ? `RETRY RUN ${state.attempt + 1}` : hasProgress ? "CONTINUE" : "START GAME"}</b><span>{runEnded ? `Timeline ${state.timeline} · no transmigration` : `Day ${state.day} · ${state.slot} · ${state.location}`}</span></button>
         <button onClick={() => setPanel("new-game")}><b>NEW GAME</b><span>Begin again from the authenticated world seed</span></button>
         <button onClick={() => setPanel("settings")}><b>SETTINGS</b><span>Motion and dialogue readability</span></button>
-        <Link href="/"><b>OBSERVER</b><span>Open Ren&apos;s autonomous chronicle</span></Link>
+        <Link prefetch={false} href="/"><b>OBSERVER</b><span>Open Ren&apos;s autonomous chronicle</span></Link>
       </>}
       {panel === "settings" && <div className="title-subpanel">
         <small>SETTINGS</small><h2>Presentation</h2>

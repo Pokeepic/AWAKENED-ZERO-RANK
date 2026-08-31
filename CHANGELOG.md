@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1330.0 - Clean title initialization
+
+- Reproduced a deployed vinext RSC-prefetch runtime error on the private title screen.
+- Disabled speculative prefetch on the title's two Observer links while preserving ordinary navigation.
+- Kept preference loading, local saves, authentication, and campaign state unchanged.
+- Added regression coverage requiring every mounted title-screen link to opt out of the failing path.
+- Increased the browser suite to 152 tests.
+
 ## 0.1320.0 - Unified game identity
 
 - Corrected the live title screen's stale v0.1010 label.
