@@ -72,6 +72,12 @@ const MARKET_GEAR = [
   },
 ] as const;
 
+const MARKET_SUPPLIES = [
+  { id: "bandage", name: "Field Bandage", price: 350, effect: "+1 BANDAGE · MAX 3" },
+  { id: "drink", name: "Energy Drink", price: 500, effect: "+1 ENERGY DRINK · MAX 3" },
+  { id: "ward", name: "Ward Charm", price: 900, effect: "ONE COMBAT WARD · MAX 1" },
+] as const;
+
 const WORK_SHIFTS = {
   "Tokyo Hunter Guild": {
     action: "Worked Guild Patrol",
@@ -284,6 +290,19 @@ export default function CityRoutePage() {
     setPurchaseResult(
       `${item.name} equipped. ${item.effect}. No additional time slot was spent.`,
     );
+  }
+  function purchaseSupply(item: (typeof MARKET_SUPPLIES)[number]) {
+    if (!rpg || rpg.money < item.price) return;
+    const fieldKit: RpgState["fieldKit"] = item.id === "bandage"
+      ? { ...rpg.fieldKit, bandages: Math.min(3, rpg.fieldKit.bandages + 1) }
+      : item.id === "drink"
+        ? { ...rpg.fieldKit, energyDrinks: Math.min(3, rpg.fieldKit.energyDrinks + 1) }
+        : { ...rpg.fieldKit, wardCharm: true };
+    if (JSON.stringify(fieldKit) === JSON.stringify(rpg.fieldKit)) return;
+    const next = { ...rpg, money: rpg.money - item.price, fieldKit, lastAction: `Bought ${item.name}` };
+    saveRpgState(next);
+    setRpg(next);
+    setPurchaseResult(`${item.name} packed. No additional time slot was spent.`);
   }
   function workShift(location: keyof typeof WORK_SHIFTS) {
     if (!rpg) return;
@@ -761,6 +780,24 @@ export default function CityRoutePage() {
                             ? "EQUIPPED"
                             : `¥${item.price.toLocaleString()}`}
                         </strong>
+                      </button>
+                    );
+                  })}
+                  <h3>Replace what the field consumed.</h3>
+                  {MARKET_SUPPLIES.map((item) => {
+                    const full = item.id === "bandage"
+                      ? rpg.fieldKit.bandages >= 3
+                      : item.id === "drink"
+                        ? rpg.fieldKit.energyDrinks >= 3
+                        : rpg.fieldKit.wardCharm;
+                    return (
+                      <button
+                        key={item.id}
+                        disabled={full || rpg.money < item.price}
+                        onClick={() => purchaseSupply(item)}
+                      >
+                        <span><b>{item.name}</b><small>{item.effect}</small></span>
+                        <strong>{full ? "PACK FULL" : `¥${item.price.toLocaleString()}`}</strong>
                       </button>
                     );
                   })}

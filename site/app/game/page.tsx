@@ -191,7 +191,7 @@ export default function GamePage() {
   const ateToday = rpg.journal.some((entry) => entry.day === rpg.day && entry.action === "Ate a proper meal");
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.1280</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.1290</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>

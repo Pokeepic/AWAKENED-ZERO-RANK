@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1290.0 - Akihabara field supplies
+
+- Added individually priced bandages, energy drinks, and ward charms to Haruto's market counter.
+- Enforces the existing maximum of three bandages, three energy drinks, and one active ward.
+- Blocks full-pack and unaffordable purchases before any money is deducted.
+- Saves each successful purchase immediately without charging another time slot after city travel.
+- Added focused regression coverage and increased the browser suite to 148 tests.
+
 ## 0.1280.0 - Tokyo transit economy
 
 - Added a deterministic ¥220 outbound train fare to every playable Tokyo route.

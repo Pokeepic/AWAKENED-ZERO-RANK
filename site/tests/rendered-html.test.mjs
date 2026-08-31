@@ -4074,3 +4074,19 @@ test("charges a transparent outbound Tokyo train fare without trapping Ren", asy
   assert.match(city, /Fare paid ¥\{TOKYO_TRAIN_FARE\}/);
   assert.doesNotMatch(city, /money: rpg\.money - TOKYO_TRAIN_FARE[\s\S]{0,180}Returned home/);
 });
+
+test("sells capped field consumables individually at Akihabara", async () => {
+  const city = await readFile(
+    new URL("../app/game/city/page.tsx", import.meta.url),
+    "utf8",
+  );
+  for (const marker of ["MARKET_SUPPLIES", "Field Bandage", "Energy Drink", "Ward Charm"])
+    assert.match(city, new RegExp(marker));
+  assert.match(city, /bandages: Math\.min\(3, rpg\.fieldKit\.bandages \+ 1\)/);
+  assert.match(city, /energyDrinks: Math\.min\(3, rpg\.fieldKit\.energyDrinks \+ 1\)/);
+  assert.match(city, /wardCharm: true/);
+  assert.match(city, /money: rpg\.money - item\.price/);
+  assert.match(city, /saveRpgState\(next\)/);
+  assert.match(city, /No additional time slot was spent/);
+  assert.match(city, /PACK FULL/);
+});
