@@ -255,7 +255,7 @@ export function loadRpgState(snapshot: ObserverSnapshot): RpgState {
   return initial;
 }
 
-function isRpgState(value: Partial<RpgState>): value is RpgState {
+export function isRpgState(value: Partial<RpgState>): value is RpgState {
   return (
     value.saveVersion === 10 &&
     [1, 2, 3].includes(value.timeline as number) &&
@@ -356,6 +356,19 @@ function isRpgState(value: Partial<RpgState>): value is RpgState {
     ["Utility Knife", "Resonance Blade"].includes(value.fieldKit.weapon) &&
     ["Street Jacket", "Guildweave Coat"].includes(value.fieldKit.coat)
   );
+}
+
+export function exportRpgState(state: RpgState): string {
+  return JSON.stringify(state, null, 2);
+}
+
+export function importRpgState(raw: string): RpgState | null {
+  try {
+    const candidate = JSON.parse(raw) as Partial<RpgState>;
+    return isRpgState(candidate) ? candidate : null;
+  } catch {
+    return null;
+  }
 }
 
 export function saveRpgState(state: RpgState) {

@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1350.0 - Portable campaign saves
+
+- Added a title-screen Save Data panel with a compact summary of the active timeline, day, slot, action count, and campaign status.
+- Added downloadable, human-readable JSON backups with timeline and day in the filename.
+- Added size-limited restore input that rejects malformed, incompatible, or structurally invalid saves before changing local campaign state.
+- Kept backup and restore isolated from the authenticated autonomous Observer.
+- Added focused browser-contract coverage for the backup controls, strict validation boundary, persistence path, and accessible status feedback.
+
 ## 0.1340.0 - Campaign-wide clean navigation
 
 - Extended the verified no-prefetch workaround from the title screen to every RPG chapter.

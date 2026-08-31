@@ -6,7 +6,7 @@ import Link from "./game-link";
 import Image from "next/image";
 
 import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observer-data";
-import { currentCampaignArc, followRoutine, loadRpgState, payRent, rentPaymentDue, resetRpgState, restartRpgRun, routineDaysAvailable, takeRpgAction, type RpgState } from "./game-state";
+import { currentCampaignArc, followRoutine, loadRpgState, payRent, rentPaymentDue, resetRpgState, restartRpgRun, routineDaysAvailable, saveRpgState, takeRpgAction, type RpgState } from "./game-state";
 import { GameHud } from "./game-hud";
 import { applyGamePreferences, loadGamePreferences, RPG_SESSION_KEY } from "./game-preferences";
 import { TitleScreen } from "./title-screen";
@@ -148,6 +148,12 @@ export default function GamePage() {
     enterCampaign();
   }
 
+  function importFromTitle(restored: RpgState) {
+    saveRpgState(restored);
+    setRpg(restored);
+    replay();
+  }
+
   function suggest(id: string) {
     setSelectedSuggestion(id);
     if (id === "routine") {
@@ -179,7 +185,7 @@ export default function GamePage() {
 
   if (failed) return <main id="chronicle" className="game-loading"><p>PROLOGUE OFFLINE</p><h1>The chronicle could not be verified.</h1><Link href="/">Return to Observer</Link></main>;
   if (!snapshot || !rpg || showTitle === null) return <main id="chronicle" className="game-loading" aria-busy="true"><p>LOADING RPG SAVE</p><h1>Preparing Ren's day…</h1></main>;
-  if (showTitle) return <TitleScreen state={rpg} onContinue={enterCampaign} onNewGame={startFromTitle} onRetry={retryFromTitle} />;
+  if (showTitle) return <TitleScreen state={rpg} onContinue={enterCampaign} onNewGame={startFromTitle} onRetry={retryFromTitle} onImport={importFromTitle} />;
 
   const scene = currentScene(snapshot);
   const active = HOTSPOTS.find((hotspot) => hotspot.id === activeClue);

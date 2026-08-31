@@ -1,19 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import Image from "next/image";
 import Link from "./game-link";
 
 import { loadGamePreferences, saveGamePreferences, type GamePreferences } from "./game-preferences";
-import type { RpgState } from "./game-state";
+import { exportRpgState, importRpgState, type RpgState } from "./game-state";
 import { GAME_VERSION } from "./game-version";
 
-export function TitleScreen({ state, onContinue, onNewGame, onRetry }: { state: RpgState; onContinue: () => void; onNewGame: () => void; onRetry: () => void }) {
-  const [panel, setPanel] = useState<"menu" | "settings" | "new-game">("menu");
+export function TitleScreen({ state, onContinue, onNewGame, onRetry, onImport }: { state: RpgState; onContinue: () => void; onNewGame: () => void; onRetry: () => void; onImport: (state: RpgState) => void }) {
+  const [panel, setPanel] = useState<"menu" | "settings" | "new-game" | "save-data">("menu");
   const [preferences, setPreferences] = useState<GamePreferences>(() => loadGamePreferences());
   const audioRef = useRef<HTMLAudioElement>(null);
   const menuRef = useRef<HTMLElement>(null);
+  const importRef = useRef<HTMLInputElement>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const hasProgress = state.turns > 0 || state.completedEvents.length > 0;
   const runEnded = state.status === "game-over";
 
@@ -82,6 +84,34 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry }: { state: 
     leaveTitle(runEnded ? onRetry : onContinue);
   };
 
+  const downloadSave = () => {
+    const blob = new Blob([exportRpgState(state)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `awakened-zero-rank-t${state.timeline}-day-${state.day}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setSaveMessage("Backup downloaded. Keep it somewhere safe.");
+  };
+
+  const restoreSave = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (file.size > 256_000) {
+      setSaveMessage("That file is too large to be a campaign backup.");
+      return;
+    }
+    const restored = importRpgState(await file.text());
+    if (!restored) {
+      setSaveMessage("Restore rejected. The backup is damaged or incompatible.");
+      return;
+    }
+    onImport(restored);
+    setSaveMessage(`Timeline ${restored.timeline}, Day ${restored.day} restored successfully.`);
+  };
+
   useEffect(() => {
     const menu = menuRef.current;
     if (!menu) return;
@@ -132,11 +162,12 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry }: { state: 
       <h1 id="title-heading"><span>AWAKENED</span>ZERO RANK</h1>
       <p>THE RAIN HASN&apos;T STOPPED</p>
     </section>
-    <section ref={menuRef} className="title-menu" aria-label={panel === "menu" ? "Main menu" : panel === "settings" ? "Settings" : "New game confirmation"}>
+    <section ref={menuRef} className="title-menu" aria-label={panel === "menu" ? "Main menu" : panel === "settings" ? "Settings" : panel === "save-data" ? "Save data" : "New game confirmation"}>
       {panel === "menu" && <>
         <button className="primary" onClick={continueOrRetry}><b>{runEnded ? `RETRY RUN ${state.attempt + 1}` : hasProgress ? "CONTINUE" : "START GAME"}</b><span>{runEnded ? `Timeline ${state.timeline} · no transmigration` : `Day ${state.day} · ${state.slot} · ${state.location}`}</span></button>
         <button onClick={() => setPanel("new-game")}><b>NEW GAME</b><span>Begin again from the authenticated world seed</span></button>
         <button onClick={() => setPanel("settings")}><b>SETTINGS</b><span>Motion and dialogue readability</span></button>
+        <button onClick={() => { setSaveMessage(null); setPanel("save-data"); }}><b>SAVE DATA</b><span>Back up or restore this campaign</span></button>
         <Link href="/"><b>OBSERVER</b><span>Open Ren&apos;s autonomous chronicle</span></Link>
       </>}
       {panel === "settings" && <div className="title-subpanel">
@@ -153,6 +184,16 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry }: { state: 
         <p>{hasProgress ? `Your Day ${state.day} local RPG save with ${state.turns} recorded actions will be replaced. The Observer remains unchanged.` : "A new local RPG save will begin from the verified Observer world seed."}</p>
         <button className="primary confirm" onClick={() => leaveTitle(onNewGame)}>{hasProgress ? "REPLACE SAVE & START" : "START NEW GAME"}</button>
         <button className="back" onClick={() => setPanel("menu")}>← KEEP CURRENT SAVE</button>
+      </div>}
+      {panel === "save-data" && <div className="title-subpanel save-data-panel">
+        <small>LOCAL CAMPAIGN</small><h2>Save data</h2>
+        <dl><div><dt>TIMELINE</dt><dd>{state.timeline} / 3</dd></div><div><dt>POSITION</dt><dd>DAY {state.day} · {state.slot.toUpperCase()}</dd></div><div><dt>ACTIONS</dt><dd>{state.turns}</dd></div><div><dt>STATUS</dt><dd>{state.status.replace("-", " ").toUpperCase()}</dd></div></dl>
+        <p>Download a portable JSON backup, or restore a verified v10 campaign. Importing never changes the autonomous Observer.</p>
+        <button className="primary" onClick={downloadSave}><b>DOWNLOAD BACKUP</b><span>Save a copy to this device</span></button>
+        <button onClick={() => importRef.current?.click()}><b>RESTORE BACKUP</b><span>Choose a compatible JSON save</span></button>
+        <input ref={importRef} className="save-file-input" type="file" accept="application/json,.json" onChange={(event) => void restoreSave(event)} />
+        {saveMessage && <p className="save-data-message" role="status">{saveMessage}</p>}
+        <button className="back" onClick={() => setPanel("menu")}>← BACK TO MENU</button>
       </div>}
     </section>
     <aside className="title-controls" aria-label="Title menu controls">

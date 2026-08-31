@@ -207,6 +207,27 @@ test("opens the RPG through a persistent title menu without interrupting return 
   assert.match(styles, /data-game-text/);
   assert.match(styles, /title-selection-breathe/);
 });
+
+test("backs up and strictly restores the local RPG campaign", async () => {
+  const [game, title, state, styles] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/title-screen.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-state.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(title, /SAVE DATA/);
+  assert.match(title, /DOWNLOAD BACKUP/);
+  assert.match(title, /RESTORE BACKUP/);
+  assert.match(title, /256_000/);
+  assert.match(title, /accept="application\/json,\.json"/);
+  assert.match(title, /role="status"/);
+  assert.match(state, /export function exportRpgState/);
+  assert.match(state, /export function importRpgState/);
+  assert.match(state, /return isRpgState\(candidate\) \? candidate : null/);
+  assert.match(game, /saveRpgState\(restored\)/);
+  assert.match(styles, /\.save-data-panel/);
+  assert.match(styles, /\.save-file-input/);
+});
 test("completes the prologue through explore act and result phases", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
@@ -4128,7 +4149,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1340"/);
+  assert.match(version, /GAME_VERSION = "0\.1350"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);
