@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   currentCampaignArc,
   pendingStoryRoute,
+  RPG_SLOTS,
   restartRpgRun,
   transmigrationConditions,
   transmigrateRpgState,
@@ -83,6 +84,7 @@ export function GameHud({
     : rentDaysRemaining <= 5
       ? "due-soon"
       : "current";
+  const currentSlotIndex = RPG_SLOTS.indexOf(state.slot);
 
   return (
     <>
@@ -163,8 +165,21 @@ export function GameHud({
       </section>
       <details className="rpg-journal">
         <summary>
-          CAMPAIGN JOURNAL <span>LOCAL SAVE · {state.journal.length} / 12</span>
+          CAMPAIGN JOURNAL <span>TODAY {currentSlotIndex} / 4 SPENT · LOCAL SAVE</span>
         </summary>
+        <ol className="day-ledger" aria-label={`Day ${state.day} time slots`}>
+          {RPG_SLOTS.map((slot, index) => (
+            <li
+              key={slot}
+              className={index < currentSlotIndex ? "spent" : index === currentSlotIndex ? "current" : "remaining"}
+              data-status={index < currentSlotIndex ? "spent" : index === currentSlotIndex ? "current" : "remaining"}
+            >
+              <b>{String(index + 1).padStart(2, "0")}</b>
+              <span>{slot}</span>
+              <small>{index < currentSlotIndex ? "SPENT" : index === currentSlotIndex ? "NOW" : "OPEN"}</small>
+            </li>
+          ))}
+        </ol>
         <div className="save-status">
           <b>AUTOSAVE ACTIVE</b>
           <span>

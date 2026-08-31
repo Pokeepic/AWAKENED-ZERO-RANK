@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1310.0 - Four-slot day ledger
+
+- Added a compact Morning, Afternoon, Evening, and Late Night ledger inside the existing campaign journal.
+- Marks each period as spent, current, or open from the authoritative RPG clock.
+- Shows the number of slots already committed today in the collapsed journal summary.
+- Preserves the natural no-tab game flow and requires no save migration.
+- Added focused regression coverage and increased the browser suite to 150 tests.
+
 ## 0.1300.0 - Guild medical wing
 
 - Added licensed treatment at the Tokyo Hunter Guild for ¥1,800 and one time slot.

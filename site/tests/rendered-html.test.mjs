@@ -4106,3 +4106,18 @@ test("offers bounded once-daily paid treatment at the Guild clinic", async () =>
   assert.match(city, /Guild Medical Wing/);
   assert.match(styles, /\.guild-clinic/);
 });
+
+test("shows the current Persona-style day as a four-slot journal ledger", async () => {
+  const [hud, styles] = await Promise.all([
+    readFile(new URL("../app/game/game-hud.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(hud, /RPG_SLOTS/);
+  assert.match(hud, /RPG_SLOTS\.indexOf\(state\.slot\)/);
+  assert.match(hud, /TODAY \{currentSlotIndex\} \/ 4 SPENT/);
+  assert.match(hud, /className="day-ledger"/);
+  assert.match(hud, /data-status=\{index < currentSlotIndex/);
+  assert.match(hud, /"SPENT".*"NOW".*"OPEN"/s);
+  assert.match(styles, /\.rpg-journal \.day-ledger/);
+  assert.match(styles, /\.day-ledger \.current/);
+});
