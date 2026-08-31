@@ -4121,3 +4121,17 @@ test("shows the current Persona-style day as a four-slot journal ledger", async 
   assert.match(styles, /\.rpg-journal \.day-ledger/);
   assert.match(styles, /\.day-ledger \.current/);
 });
+
+test("uses one current version label across the title and playable campaign", async () => {
+  const [version, title, game] = await Promise.all([
+    readFile(new URL("../app/game/game-version.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(version, /GAME_VERSION = "0\.1320"/);
+  assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
+  assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
+  assert.match(title, /from "\.\/game-version"/);
+  assert.match(game, /from "\.\/game-version"/);
+  assert.doesNotMatch(title, /v0\.1010/);
+});

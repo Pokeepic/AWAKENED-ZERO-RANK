@@ -10,6 +10,7 @@ import { currentCampaignArc, followRoutine, loadRpgState, payRent, rentPaymentDu
 import { GameHud } from "./game-hud";
 import { applyGamePreferences, loadGamePreferences, RPG_SESSION_KEY } from "./game-preferences";
 import { TitleScreen } from "./title-screen";
+import { GAME_VERSION } from "./game-version";
 import doorStyles from "./door.module.css";
 
 type Hotspot = {
@@ -191,7 +192,7 @@ export default function GamePage() {
   const ateToday = rpg.journal.some((entry) => entry.day === rpg.day && entry.action === "Ate a proper meal");
 
   return <main id="chronicle" className="game-shell">
-    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v0.1310</span></header>
+    <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v{GAME_VERSION}</span></header>
     <GameHud state={rpg} current="home" onNewGame={newGame} />
     <section className="game-intro" aria-labelledby="game-title">
       <small>DAY {rpg.day} / {rpg.slot} / {rpg.location}</small>

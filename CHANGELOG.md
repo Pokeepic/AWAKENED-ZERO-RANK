@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1320.0 - Unified game identity
+
+- Corrected the live title screen's stale v0.1010 label.
+- Added one shared game-version source for the title menu and playable campaign header.
+- Prevents player-facing release labels from drifting apart in future updates.
+- Verified the defect against the privately deployed game before implementation.
+- Added focused regression coverage and increased the browser suite to 151 tests.
+
 ## 0.1310.0 - Four-slot day ledger
 
 - Added a compact Morning, Afternoon, Evening, and Late Night ledger inside the existing campaign journal.

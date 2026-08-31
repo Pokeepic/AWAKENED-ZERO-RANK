@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import { loadGamePreferences, saveGamePreferences, type GamePreferences } from "./game-preferences";
 import type { RpgState } from "./game-state";
+import { GAME_VERSION } from "./game-version";
 
 export function TitleScreen({ state, onContinue, onNewGame, onRetry }: { state: RpgState; onContinue: () => void; onNewGame: () => void; onRetry: () => void }) {
   const [panel, setPanel] = useState<"menu" | "settings" | "new-game">("menu");
@@ -125,7 +126,7 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry }: { state: 
     <div className="title-city-flicker" aria-hidden="true" />
     <div className="title-curtain-shadow" aria-hidden="true" />
     <div className="title-shade" aria-hidden="true" />
-    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v0.1010</span></header>
+    <header><Link href="/">← OBSERVER</Link><span>PRIVATE RPG CAMPAIGN / v{GAME_VERSION}</span></header>
     <section className="title-lockup" aria-labelledby="title-heading">
       <small>REN&apos;S APARTMENT / ADACHI / 02:13</small>
       <h1 id="title-heading"><span>AWAKENED</span>ZERO RANK</h1>
