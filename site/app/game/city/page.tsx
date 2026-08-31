@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import Link from "next/link";
+import Link from "../game-link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 

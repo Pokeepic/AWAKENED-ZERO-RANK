@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "./game-link";
 import Image from "next/image";
 
 import { currentScene, verifyArtifacts, type ObserverSnapshot } from "../observer-data";

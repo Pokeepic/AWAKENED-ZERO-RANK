@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1340.0 - Campaign-wide clean navigation
+
+- Extended the verified no-prefetch workaround from the title screen to every RPG chapter.
+- Added one shared game-link component that forces safe click-only navigation.
+- Migrated all 15 link-bearing RPG surfaces away from direct prefetching Next links.
+- Preserved routes, styling, accessibility labels, and ordinary navigation behavior.
+- Kept the verified browser suite at 152 tests with campaign-wide import coverage.
+
 ## 0.1330.0 - Clean title initialization
 
 - Reproduced a deployed vinext RSC-prefetch runtime error on the private title screen.
