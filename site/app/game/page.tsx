@@ -11,6 +11,7 @@ import { GameHud } from "./game-hud";
 import { applyGamePreferences, loadGamePreferences, RPG_SESSION_KEY } from "./game-preferences";
 import { TitleScreen } from "./title-screen";
 import { GAME_VERSION } from "./game-version";
+import { apartmentAtmosphere } from "./game-weather";
 import doorStyles from "./door.module.css";
 
 type Hotspot = {
@@ -196,6 +197,7 @@ export default function GamePage() {
   const routineArc = currentCampaignArc(rpg.day);
   const rentDue = rentPaymentDue(rpg);
   const ateToday = rpg.journal.some((entry) => entry.day === rpg.day && entry.action === "Ate a proper meal");
+  const atmosphere = apartmentAtmosphere(rpg);
 
   return <main id="chronicle" className="game-shell">
     <header className="game-header"><Link href="/">← OBSERVER</Link><b>AWAKENED <i>ZERO RANK</i></b><span>REN RPG / v{GAME_VERSION}</span></header>
@@ -212,9 +214,11 @@ export default function GamePage() {
     </section>
 
     <section className="game-board" aria-label="Point-and-click scene">
-      <div className="game-room">
-        <Image className="apartment-bg" src="/game/ren-apartment.png" alt="Pixel-art interior of Ren's apartment" fill sizes="(max-width: 800px) 90vw, 65vw" priority />
+      <div className={`game-room apartment-${rpg.slot.toLowerCase().replace(" ", "-")} weather-${atmosphere.weather.toLowerCase()} snow-depth-${atmosphere.snowDepth}`}>
+        <Image className="apartment-bg" src={atmosphere.image} alt={`Pixel-art interior of Ren's apartment during ${atmosphere.label}`} fill sizes="(max-width: 800px) 90vw, 65vw" priority />
         <div className="apartment-shade" aria-hidden="true" />
+        {(atmosphere.weather === "Rain" || atmosphere.weather === "Snow") && <div className="apartment-weather" aria-hidden="true"><i /><i /><i /></div>}
+        <div className="apartment-atmosphere"><span>{atmosphere.season}</span><b>{atmosphere.weather}</b>{atmosphere.snowDepth > 0 && <small>SNOWPACK {atmosphere.snowDepth} / 3</small>}</div>
         <Link className={doorStyles.apartmentDoor} href="/game/city" aria-label="Leave Ren's apartment for Tokyo"><i aria-hidden="true" /><span>LEAVE APARTMENT</span></Link>
         {HOTSPOTS.map((hotspot, index) => <button
           key={hotspot.id}
@@ -222,7 +226,7 @@ export default function GamePage() {
           onClick={() => inspect(hotspot)}
           aria-pressed={activeClue === hotspot.id}
         ><i aria-hidden="true" /><span>{hotspot.label}</span></button>)}
-        <p className="scene-caption">{scene.place.name} / {scene.atmosphere} / {scene.presence}</p>
+        <p className="scene-caption">REN&apos;S APARTMENT / {atmosphere.label.toUpperCase()} / {scene.presence}</p>
       </div>
 
       <aside className={`game-panel ${doorStyles.apartmentPanel}`} aria-live="polite">

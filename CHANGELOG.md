@@ -4,6 +4,15 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1370.0 - Living apartment weather
+
+- Connected Ren's apartment illustration to the local RPG day, timeline, season, and four-slot clock.
+- Added generated pixel-art night and snowbound apartment variants that preserve the established room composition.
+- Added deterministic clear, cloudy, rain, and winter snow conditions without borrowing stale weather from the autonomous Observer.
+- Animated rain and snow only across the closed balcony window and exposed the current season and weather in the scene.
+- Accumulated recent winter snowfall across up to six days, with three visible snowpack levels and persistent outdoor snow after the flakes stop.
+- Added focused browser-contract coverage for time lighting, weather determinism, snowfall accumulation, visual assets, and motion hooks.
+
 ## 0.1360.0 - Safe restore preview
 
 - Staged verified campaign backups in memory instead of immediately overwriting the active local save.

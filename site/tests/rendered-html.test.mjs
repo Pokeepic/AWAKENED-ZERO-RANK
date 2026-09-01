@@ -233,6 +233,30 @@ test("backs up and strictly restores the local RPG campaign", async () => {
   assert.match(styles, /\.save-file-input/);
   assert.match(styles, /\.restore-preview/);
 });
+
+test("changes the apartment illustration with time weather and winter snowpack", async () => {
+  const [game, weather, styles] = await Promise.all([
+    readFile(new URL("app/game/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/game-weather.ts", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
+  ]);
+  assert.match(game, /apartmentAtmosphere\(rpg\)/);
+  assert.match(game, /weather-\$\{atmosphere\.weather\.toLowerCase\(\)\}/);
+  assert.match(game, /SNOWPACK/);
+  assert.match(weather, /export function gameSeason/);
+  assert.match(weather, /export function gameWeather/);
+  assert.match(weather, /export function snowAccumulation/);
+  assert.match(weather, /ren-apartment-night-v1\.png/);
+  assert.match(weather, /ren-apartment-winter-v1\.png/);
+  assert.match(styles, /\.apartment-morning/);
+  assert.match(styles, /\.apartment-evening/);
+  assert.match(styles, /\.apartment-late-night/);
+  assert.match(styles, /\.weather-snow/);
+  assert.match(styles, /@keyframes apartment-rain/);
+  assert.match(styles, /@keyframes apartment-snow/);
+  await access(new URL("public/game/ren-apartment-night-v1.png", root));
+  await access(new URL("public/game/ren-apartment-winter-v1.png", root));
+});
 test("completes the prologue through explore act and result phases", async () => {
   const [game, styles] = await Promise.all([
     readFile(new URL("app/game/page.tsx", root), "utf8"),
@@ -518,7 +542,8 @@ test("uses first-person apartment framing and pixel sprites for outside scenes",
   assert.doesNotMatch(game, /alt="Full-body illustration of Ren Takahashi"/);
   assert.match(city, /SPRITES/);
   assert.match(caseboard, /src="\/game\/characters\/ren\.png"/);
-  assert.match(game, /ren-apartment\.png/);
+  assert.match(game, /src=\{atmosphere\.image\}/);
+  await access(new URL("public/game/ren-apartment.png", root));
 });
 test("places the pixel cast on the Tokyo map and encounter stage", async () => {
   const [city, styles] = await Promise.all([
@@ -570,8 +595,8 @@ test("uses a separate location layer and dialogue-first social-sim framing", asy
 });
 test("renders the current scene profile as text instead of a React object", async () => {
   const game = await readFile(new URL("app/game/page.tsx", root), "utf8");
-  assert.match(game, /scene\.place\.name/);
-  assert.match(game, /scene\.atmosphere/);
+  assert.match(game, /REN&apos;S APARTMENT/);
+  assert.match(game, /atmosphere\.label\.toUpperCase/);
   assert.doesNotMatch(game, /\{scene\.place\}\s*\//);
   assert.doesNotMatch(game, /scene\.weather/);
 });
@@ -4154,7 +4179,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1360"/);
+  assert.match(version, /GAME_VERSION = "0\.1370"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);

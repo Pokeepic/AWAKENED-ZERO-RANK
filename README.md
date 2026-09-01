@@ -8,11 +8,11 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1360.0` |
+| Release | `0.1370.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
-| Automated tests | 339 Python + 153 browser |
+| Automated tests | 339 Python + 154 browser |
 | Website access | Private, owner-only |
 
 ## Play the private web game
@@ -42,6 +42,8 @@ That safeguard now covers every RPG chapter through one shared game-link compone
 The title screen now includes a dedicated Save Data panel. Players can download a portable JSON backup of Ren's local campaign and restore it later; restore files are size-limited and must pass the complete current save-schema validation before they can replace the active run. The authenticated Observer remains separate and unchanged.
 
 Verified backups are now staged instead of loading immediately. The title screen compares the active campaign with the incoming timeline, day, slot, and action count, then requires an explicit confirmation; canceling leaves the current save untouched.
+
+Ren's apartment now follows the local RPG calendar. Morning, afternoon, evening, and late night use distinct lighting; deterministic daily weather adds rain or snow beyond the closed window; and recent winter snowfall leaves visible outdoor accumulation that can build across several days. New illustrated night and snowbound apartment variants preserve the established pixel-art layout.
 
 The RPG is being rebuilt around three possible one-year timelines. Ordinary death is a real Game Over; retrying begins a new run of the same timeline and grants no transmigration benefit. On Day 365, an explicit ledger checks survival, mastery, evidence, bonds, health, location, and the final choice before a residual path can open. The first timeline begins with Ren's mocked Zero-Rank skill, Residual Read, and four unequal arc deadlines at Days 45, 120, 240, and 365.
 
