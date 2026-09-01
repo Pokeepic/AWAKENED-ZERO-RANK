@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1530.0 - Illustrated combat motion
+
+- Reframed Ren as a grounded left-foreground combatant with natural scale, foot placement, depth, and mobile staging.
+- Added a dedicated transparent Precision Strike illustration instead of sliding the defensive pose across the arena.
+- Cut between idle and strike artwork through anticipation, lunge, impact, recoil, and recovery timing.
+- Removed the synthetic hand-energy overlay; both poses now carry their own authored Residual effects.
+- Verified both battle frames are native-alpha RGBA assets and retained reduced-motion behavior.
+
 ## 0.1520.0 - Native-alpha combat art
 
 - Replaced Ren's matte-backed combat illustration with a game-ready RGBA cutout whose surrounding pixels are genuinely transparent.

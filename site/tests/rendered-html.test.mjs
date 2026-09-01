@@ -4260,15 +4260,20 @@ test("gives every playable Gate its own illustrated interior", async () => {
   assert.match(field, /src=\{encounter\.background\}/);
   assert.doesNotMatch(field, /adachiMapImage/);
   assert.match(field, /ren-battle-back-v2\.png/);
+  assert.match(field, /ren-battle-strike-v1\.png/);
+  assert.match(field, /ren-battle-idle/);
+  assert.match(field, /ren-battle-strike/);
   assert.match(field, /field-ren field-ren-battle/);
   assert.match(field, /setAttackMotion\(\(value\) => value \+ 1\)/);
   assert.match(field, /battle-attacking/);
-  assert.match(field, /residual-flare/);
+  assert.doesNotMatch(field, /residual-flare/);
   assert.doesNotMatch(field, /Pixel sprite of Ren Takahashi/);
   const renBattleArt = await readFile(new URL("../public/game/characters/ren-battle-back-v2.png", import.meta.url));
+  const renStrikeArt = await readFile(new URL("../public/game/characters/ren-battle-strike-v1.png", import.meta.url));
   assert.equal(renBattleArt[25], 6, "Ren battle art must be an RGBA PNG with real transparency");
+  assert.equal(renStrikeArt[25], 6, "Ren strike art must be an RGBA PNG with real transparency");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  for (const animation of ["battle-ren-idle", "battle-ren-attack", "battle-residual-strike", "battle-enemy-impact", "battle-impact-slash"])
+  for (const animation of ["battle-ren-idle", "battle-ren-commit", "battle-idle-cut", "battle-strike-cut", "battle-enemy-impact", "battle-impact-slash"])
     assert.match(styles, new RegExp(`@keyframes ${animation}`));
   assert.match(styles, /data-game-motion="reduced".*field-ren-battle/);
   assert.doesNotMatch(styles, /\.field-ren-battle(?: img)?\{[^}]*mix-blend-mode/);
