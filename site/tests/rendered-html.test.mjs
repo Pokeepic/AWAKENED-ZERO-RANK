@@ -4236,7 +4236,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1500"/);
+  assert.match(version, /GAME_VERSION = "0\.1510"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);
@@ -4270,6 +4270,8 @@ test("gives every playable Gate its own illustrated interior", async () => {
   for (const animation of ["battle-ren-idle", "battle-ren-attack", "battle-residual-strike", "battle-enemy-impact", "battle-impact-slash"])
     assert.match(styles, new RegExp(`@keyframes ${animation}`));
   assert.match(styles, /data-game-motion="reduced".*field-ren-battle/);
+  assert.match(styles, /\.field-ren-battle\{[^}]*mix-blend-mode:screen/);
+  assert.doesNotMatch(styles, /\.field-ren-battle img\{[^}]*mix-blend-mode:screen/);
 });
 
 test("renders bond episodes with half-body expression sheets", async () => {

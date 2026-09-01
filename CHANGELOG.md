@@ -4,6 +4,11 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1510.0 - Seamless combat compositing
+
+- Moved Ren's screen blend to the complete animated foreground group so its matte composites against the portal world.
+- Removed the visible rectangular battle-art boundary without changing the idle or attack animation timing.
+
 ## 0.1500.0 - Animated Gate combat
 
 - Added a restrained breathing and coat-drift idle loop to Ren's illustrated battle stance.
