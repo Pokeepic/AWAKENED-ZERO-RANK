@@ -13,14 +13,14 @@ export type BondEncounterChoice = {
 };
 
 const ENCOUNTERS: Record<string, {
-  portrait: string;
+  portraitSheet: string;
   background: string;
   opening: string;
   prompt: string;
   choices: readonly BondEncounterChoice[];
 }> = {
   "Aiko Sato": {
-    portrait: "/game/visual-novel/aiko-full.png",
+    portraitSheet: "/game/visual-novel/expressions/aiko-sheet-v1.png",
     background: "/game/visual-novel/adachi-station-dusk.png",
     opening: "Aiko waits beyond the ticket gates, pretending she was already headed this way.",
     prompt: "“You came all this way. So—are you going to tell me what you actually need?”",
@@ -31,7 +31,7 @@ const ENCOUNTERS: Record<string, {
     ],
   },
   "Daichi Mori": {
-    portrait: "/game/visual-novel/daichi-full.png",
+    portraitSheet: "/game/visual-novel/expressions/daichi-sheet-v1.png",
     background: "/game/visual-novel/hunter-guild-briefing.png",
     opening: "Daichi clears the last unsigned report from the second chair before Ren arrives.",
     prompt: "“You have one hour before command remembers I'm supposed to be busy. Use it.”",
@@ -42,7 +42,7 @@ const ENCOUNTERS: Record<string, {
     ],
   },
   "Haruto Ishikawa": {
-    portrait: "/game/visual-novel/haruto-full-v1.png",
+    portraitSheet: "/game/visual-novel/expressions/haruto-sheet-v1.png",
     background: "/game/visual-novel/akihabara-night-market-v1.png",
     opening: "Haruto raises one shutter after midnight and leaves the price board facedown.",
     prompt: "“Tonight I'm selling information, bad advice, and exactly one honest answer. Pick carefully.”",
@@ -53,7 +53,7 @@ const ENCOUNTERS: Record<string, {
     ],
   },
   "Mei Kuroda": {
-    portrait: "/game/visual-novel/mei-full-v1.png",
+    portraitSheet: "/game/visual-novel/expressions/mei-sheet-v1.png",
     background: "/game/visual-novel/ueno-archive-room-v1.png",
     opening: "Mei locks the archive door, checks it twice, and places Ren's file beneath the green lamp.",
     prompt: "“The official record omits you in three places. Which omission do you want to correct first?”",
@@ -64,6 +64,17 @@ const ENCOUNTERS: Record<string, {
     ],
   },
 };
+
+type Expression = "neutral" | "concerned" | "warm" | "firm";
+
+function ExpressionPortrait({ sheet, expression, side, active }: {
+  sheet: string;
+  expression: Expression;
+  side: "left" | "right";
+  active: boolean;
+}) {
+  return <span className={`vn-expression ${side} ${expression} ${active ? "speaking" : "listening"}`}><Image src={sheet} alt="" width={1240} height={1536} priority /></span>;
+}
 
 export function BondEncounter({ name, location, level, timeline, moment, onCommit, onClose }: {
   name: string;
@@ -104,10 +115,12 @@ export function BondEncounter({ name, location, level, timeline, moment, onCommi
   if (!encounter) return null;
   const speaker = beat === 0 ? "NARRATION" : name.split(" ")[0].toUpperCase();
   const line = beat === 0 ? encounter.opening : beat === 1 ? moment.dialogue : encounter.prompt;
+  const npcExpression: Expression = result ? (result.id === "honest" || result.id === "coffee" || result.id === "game" || result.id === "ordinary" ? "warm" : "firm") : beat === 0 ? "neutral" : beat === 1 ? "concerned" : "firm";
+  const renExpression: Expression = result ? "warm" : beat === 2 ? "concerned" : "neutral";
   return <section className="bond-vn" role="dialog" aria-modal="true" aria-labelledby="bond-vn-title">
     <Image className="bond-vn-bg" src={encounter.background} alt={`Illustrated ${location}`} fill sizes="100vw" priority />
     <div className="bond-vn-shade" />
-    <div className="bond-vn-cast" aria-hidden="true"><Image className={speaker === "REN" ? "speaking" : "listening"} src="/game/visual-novel/ren-full.png" alt="" width={1024} height={1536} /><Image className={speaker !== "NARRATION" ? "speaking" : "listening"} src={encounter.portrait} alt="" width={1024} height={1536} /></div>
+    <div className="bond-vn-cast" aria-hidden="true"><ExpressionPortrait side="left" sheet="/game/visual-novel/expressions/ren-sheet-v1.png" expression={renExpression} active={speaker === "REN"} /><ExpressionPortrait side="right" sheet={encounter.portraitSheet} expression={npcExpression} active={speaker !== "NARRATION"} /></div>
     <header><small>OPTIONAL BOND / TIMELINE {timeline} / RANK {level}</small><h1 id="bond-vn-title">{moment.title}</h1><span>{location}</span></header>
     <div className="bond-vn-panel">
       {!result && beat < 2 && <div className="bond-vn-line" aria-live="polite"><small>{speaker}</small><p>{line}</p><button onClick={() => setBeat((value) => value + 1)}>CONTINUE <span>ENTER / SPACE</span></button></div>}

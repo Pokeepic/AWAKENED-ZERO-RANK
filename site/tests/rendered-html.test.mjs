@@ -275,13 +275,14 @@ test("carries the living calendar across every Tokyo district map", async () => 
   assert.match(city, /const districtImage/);
   assert.match(weather, /export function gameAtmosphere/);
   assert.match(weather, /export function adachiMapImage/);
-  for (const route of ["caseboard", "field"]) {
-    const scene = await readFile(new URL(`app/game/${route}/page.tsx`, root), "utf8");
-    assert.match(scene, /adachiMapImage\(rpg\.slot\)/);
-    assert.match(scene, /gameAtmosphere\(rpg\)/);
-    assert.match(scene, /field-weather/);
-    assert.match(scene, /weather-\$\{atmosphere\.weather\.toLowerCase/);
-  }
+  const caseboard = await readFile(new URL("app/game/caseboard/page.tsx", root), "utf8");
+  assert.match(caseboard, /adachiMapImage\(rpg\.slot\)/);
+  assert.match(caseboard, /gameAtmosphere\(rpg\)/);
+  assert.match(caseboard, /field-weather/);
+  assert.match(caseboard, /weather-\$\{atmosphere\.weather\.toLowerCase/);
+  const field = await readFile(new URL("app/game/field/page.tsx", root), "utf8");
+  assert.doesNotMatch(field, /adachiMapImage/);
+  assert.match(field, /src=\{encounter\.background\}/);
   assert.match(styles, /\.city-morning/);
   assert.match(styles, /\.city-late-night/);
   assert.match(styles, /\.city-diorama\.weather-snow/);
@@ -4235,12 +4236,46 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1460"/);
+  assert.match(version, /GAME_VERSION = "0\.1470"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);
   assert.match(game, /from "\.\/game-version"/);
   assert.doesNotMatch(title, /v0\.1010/);
+});
+
+test("gives every playable Gate its own illustrated interior", async () => {
+  const field = await readFile(
+    new URL("../app/game/field/page.tsx", import.meta.url),
+    "utf8",
+  );
+  for (const asset of [
+    "glass-office-labyrinth-interior-v1.png",
+    "sunken-courtyard-interior-v1.png",
+  ]) {
+    assert.match(field, new RegExp(asset.replaceAll(".", "\\.")));
+    await access(new URL(`../public/game/portals/${asset}`, import.meta.url));
+  }
+  assert.match(field, /className=\{`field-arena portal-interior/);
+  assert.match(field, /src=\{encounter\.background\}/);
+  assert.doesNotMatch(field, /adachiMapImage/);
+});
+
+test("renders bond episodes with half-body expression sheets", async () => {
+  const bond = await readFile(
+    new URL("../app/game/city/bond-encounter.tsx", import.meta.url),
+    "utf8",
+  );
+  for (const character of ["ren", "aiko", "daichi", "haruto", "mei"]) {
+    const asset = `${character}-sheet-v1.png`;
+    assert.match(bond, new RegExp(asset));
+    await access(new URL(`../public/game/visual-novel/expressions/${asset}`, import.meta.url));
+  }
+  assert.match(bond, /function ExpressionPortrait/);
+  assert.match(bond, /type Expression = "neutral" \| "concerned" \| "warm" \| "firm"/);
+  assert.match(bond, /npcExpression/);
+  assert.match(bond, /renExpression/);
+  assert.doesNotMatch(bond, /portrait:.*full-body/);
 });
 
 test("avoids the failing vinext RSC prefetch path throughout the RPG", async () => {
