@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1400.0` |
+| Release | `0.1410.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -48,6 +48,8 @@ Ren's apartment now follows the local RPG calendar. Morning, afternoon, evening,
 Tokyo's three district maps now share that same living calendar. Central Tokyo, the East Loop, and the Adachi Fringe use dedicated illustrated morning and late-night variants, keep the established dusk art for afternoon and evening, display the current season and weather, animate outdoor rain or snow across the full map, and retain the current winter snowpack while every route and contact remains usable.
 
 Adachi now keeps that atmosphere after Ren leaves the route board. The investigation caseboard and Gate battle select the same morning, dusk, or late-night district illustration from the local RPG clock, carry rain or snow into the scene, and preserve recent winter accumulation so field continuity no longer resets between chapters.
+
+The caseboard has received a focused visual QA pass. Ren's field marker is once again anchored inside the map instead of being clipped by a stronger generic text rule, and the opening copy is compact enough to bring the investigation board into a normal laptop viewport while preserving full-size evidence cards.
 
 The RPG is being rebuilt around three possible one-year timelines. Ordinary death is a real Game Over; retrying begins a new run of the same timeline and grants no transmigration benefit. On Day 365, an explicit ledger checks survival, mastery, evidence, bonds, health, location, and the final choice before a residual path can open. The first timeline begins with Ren's mocked Zero-Rank skill, Residual Read, and four unequal arc deadlines at Days 45, 120, 240, and 365.
 

@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1410.0 - Caseboard composition repair
+
+- Fixed a specificity conflict that changed Ren's field marker from absolute to relative positioning and clipped it against the top of the Adachi map.
+- Tightened the caseboard introduction so the evidence board and its primary interaction enter a normal laptop viewport sooner.
+- Preserved evidence-card size, weather layers, action costs, and case progression.
+- Added browser-contract coverage for both repaired layout rules.
+
 ## 0.1400.0 - Continuous Adachi weather
 
 - Carried the local RPG time, season, deterministic weather, and snow depth from the Tokyo route board into the Adachi caseboard and Gate battle.
