@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1430.0 - Compact Tokyo hub
+
+- Removed the oversized vertical gap between the persistent RPG status and Tokyo district navigation found during live browser inspection.
+- Brought the district switcher and active route map substantially higher on laptop-height screens.
+- Preserved map size, illustrated time variants, route-card placement, travel costs, and signal requirements.
+- Added browser-contract coverage for the compact hub composition.
+
 ## 0.1420.0 - Combat first-screen pacing
 
 - Reduced unused vertical space above Gate battles after live browser inspection at a 1280 × 720 laptop viewport.

@@ -8,7 +8,7 @@ The project has two distinct modes. In **Observer**, autonomous Ren decides how 
 
 | Status | Value |
 |---|---|
-| Release | `0.1420.0` |
+| Release | `0.1430.0` |
 | Python | 3.11+; CI-tested through 3.14 |
 | Production controller | Transparent utility policy |
 | RL adoption verdict | **Baseline remains better** |
@@ -52,6 +52,8 @@ Adachi now keeps that atmosphere after Ren leaves the route board. The investiga
 The caseboard has received a focused visual QA pass. Ren's field marker is once again anchored inside the map instead of being clipped by a stronger generic text rule, and the opening copy is compact enough to bring the investigation board into a normal laptop viewport while preserving full-size evidence cards.
 
 The Gate battle now opens closer to its tactical controls on laptop-height screens. The compact field introduction brings the first exact move preview into the initial viewport without shrinking the encounter artwork, compressing combat information, or changing any battle calculation.
+
+Tokyo's route board now behaves like the game's main working hub from the first screen. A compact introduction removes the oversized empty band between Ren's status and the district controls, revealing substantially more of the active map without shrinking its artwork or changing travel flow.
 
 The RPG is being rebuilt around three possible one-year timelines. Ordinary death is a real Game Over; retrying begins a new run of the same timeline and grants no transmigration benefit. On Day 365, an explicit ledger checks survival, mastery, evidence, bonds, health, location, and the final choice before a residual path can open. The first timeline begins with Ren's mocked Zero-Rank skill, Residual Read, and four unequal arc deadlines at Days 45, 120, 240, and 365.
 
