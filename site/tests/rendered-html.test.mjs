@@ -668,6 +668,10 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(styles, /\.case-shell \.case-intro\{display:grid;grid-template-columns:minmax\(330px,\.8fr\) minmax\(360px,1\.2fr\)/);
   assert.match(styles, /\.case-shell \.case-intro h1\{grid-area:title;font-size:clamp\(2\.15rem,3vw,3\.25rem\)/);
   assert.match(caseboard, /<h1>Two Gates\. Ren chooses\.<\/h1>/);
+  assert.match(caseboard, /verdictRef\.current\?\.scrollIntoView/);
+  assert.match(caseboard, /verdictHeadingRef\.current\?\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(caseboard, /prefers-reduced-motion: reduce/);
+  assert.match(caseboard, /tabIndex=\{-1\}/);
   assert.match(styles, /\.field-shell \.field-intro\{padding:1\.75rem/);
   assert.match(styles, /\.field-shell \.field-intro h1\{margin:\.45rem 0 \.65rem\}/);
   assert.match(styles, /\.city-shell \.city-intro\{padding:2\.25rem 0 1\.25rem\}/);
@@ -4226,7 +4230,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1440"/);
+  assert.match(version, /GAME_VERSION = "0\.1450"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);

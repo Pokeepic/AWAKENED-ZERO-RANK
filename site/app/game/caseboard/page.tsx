@@ -3,7 +3,7 @@
 
 import Link from "../game-link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { gateReadiness, verifyArtifacts, type ObserverSnapshot } from "../../observer-data";
 import { loadRpgState, takeRpgAction, type RpgState } from "../game-state";
@@ -41,6 +41,9 @@ export default function CaseboardPage() {
   const [recommendation, setRecommendation] = useState<(typeof RECOMMENDATIONS)[number] | null>(null);
   const [missionCase, setMissionCase] = useState<string | null>(null);
   const [rpg, setRpg] = useState<RpgState | null>(null);
+  const boardRef = useRef<HTMLElement>(null);
+  const verdictRef = useRef<HTMLElement>(null);
+  const verdictHeadingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -59,8 +62,20 @@ export default function CaseboardPage() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    if (!recommendation) return;
+    const frame = window.requestAnimationFrame(() => {
+      verdictRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      verdictHeadingRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [recommendation]);
+
   function openFile(name: string) { setActive(name); setOpened((known) => known.includes(name) ? known : [...known, name]); }
-  function replay() { setOpened([]); setActive(null); setRecommendation(null); setMissionCase(null); }
+  function replay() {
+    setOpened([]); setActive(null); setRecommendation(null); setMissionCase(null);
+    window.requestAnimationFrame(() => boardRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
+  }
   function decide(item: (typeof RECOMMENDATIONS)[number]) {
     if (!activeCase) return;
     setRecommendation(item);
@@ -86,14 +101,14 @@ export default function CaseboardPage() {
     <GameHud state={rpg} current="cases" />
     <section className="case-intro"><small>DAY {rpg.day} / {rpg.slot} / {atmosphere.season} / {atmosphere.weather} / ENERGY {rpg.energy}</small><h1>Two Gates. Ren chooses.</h1><p>Inspect every case, then take Ren's next action. Every decision spends one RPG time slot.</p></section>
 
-    {cases.length === 0 ? <section className="case-empty"><small>NO DISCOVERED CASES</small><h2>The board is blank.</h2><p>Ren has no authenticated portal investigation yet. The game will not invent one.</p><Link href="/">RETURN TO CHRONICLE</Link></section> : <section className="caseboard" aria-label="Gate investigation caseboard">
+    {cases.length === 0 ? <section className="case-empty"><small>NO DISCOVERED CASES</small><h2>The board is blank.</h2><p>Ren has no authenticated portal investigation yet. The game will not invent one.</p><Link href="/">RETURN TO CHRONICLE</Link></section> : <section ref={boardRef} className="caseboard" aria-label="Gate investigation caseboard">
       <div className={`case-files case-zone city-${rpg.slot.toLowerCase().replace(" ", "-")} weather-${atmosphere.weather.toLowerCase()} snow-depth-${atmosphere.snowDepth}`}><Image className="case-zone-bg" src={mapImage} alt={`Pixel-art Adachi Gate exclusion zone during ${atmosphere.label}`} fill sizes="(max-width: 800px) 90vw, 65vw" priority /><div className="case-zone-shade" aria-hidden="true" />{(atmosphere.weather === "Rain" || atmosphere.weather === "Snow") && <div className="city-weather field-weather" aria-hidden="true"><i /><i /><i /></div>}<span className="case-ren"><Image src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={72} height={72} /><b>FIELD BRIEFING</b></span>{cases.map((item, index) => <button key={item.portal_name} onClick={() => openFile(item.portal_name)} className={`case-node case-node-${index + 1} ${opened.includes(item.portal_name) ? "opened" : ""}`} aria-pressed={active === item.portal_name}>{CASE_ART[item.portal_name] && <Image className="case-art" src={CASE_ART[item.portal_name]} alt={`Pixel art of ${item.portal_name}`} width={220} height={120} />}<span>CASE {String(index + 1).padStart(2, "0")}</span><h2>{item.portal_name}</h2><small>{opened.includes(item.portal_name) ? "FILE OPENED" : "SEALED EVIDENCE"}</small></button>)}</div>
       <aside className="case-detail" aria-live="polite">{!activeCase ? <><small>CASEBOARD</small><h2>Open the evidence.</h2><p>Risk and progress remain hidden until you inspect each file.</p></> : <><small>{activeCase.preparation_strategy}</small><h2>{activeCase.portal_name}</h2><dl><div><dt>RISK</dt><dd>{activeCase.risk}</dd></div><div><dt>PROGRESS</dt><dd>{activeCase.progress}%</dd></div><div><dt>PREP BONUS</dt><dd>+{activeCase.preparation_bonus}</dd></div><div><dt>JOINT MISSIONS</dt><dd>{activeCase.joint_missions}</dd></div></dl><p>{activeCase.cooperating_npc ? `Cooperating with ${activeCase.cooperating_npc}.` : "No cooperating contact recorded."}</p></>}
         <div className="case-options"><small>TAKE REN'S ACTION</small>{RECOMMENDATIONS.map((item) => <button key={item.id} disabled={!ready || recommendation !== null} onClick={() => decide(item)}>{item.label}</button>)}{!ready && <p>Open {cases.length - opened.length} remaining file{cases.length - opened.length === 1 ? "" : "s"}.</p>}</div>
       </aside>
     </section>}
 
-    {recommendation && missionCase && <section className="case-verdict"><Image className="verdict-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><small>{recommendation.tone} / TIME ADVANCED</small><h2>{missionCase} selected.</h2><blockquote>{renResponse(snapshot, recommendation.id)}</blockquote><div><span>RPG CLOCK</span><b>DAY {rpg.day} / {rpg.slot}</b><span>STATUS</span><b>HP {rpg.health} / EN {rpg.energy}</b></div><nav><Link className="primary" href={`/game/field?case=${encodeURIComponent(missionCase)}&plan=${recommendation.id}`}>ENTER THE GATE</Link><button onClick={replay}>REOPEN CASEBOARD</button><Link href="/game/city">RETURN TO TOKYO</Link></nav></section>}
+    {recommendation && missionCase && <section ref={verdictRef} className="case-verdict"><Image className="verdict-chibi" src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={96} height={96} /><small>{recommendation.tone} / TIME ADVANCED</small><h2 ref={verdictHeadingRef} tabIndex={-1}>{missionCase} selected.</h2><blockquote>{renResponse(snapshot, recommendation.id)}</blockquote><div><span>RPG CLOCK</span><b>DAY {rpg.day} / {rpg.slot}</b><span>STATUS</span><b>HP {rpg.health} / EN {rpg.energy}</b></div><nav><Link className="primary" href={`/game/field?case=${encodeURIComponent(missionCase)}&plan=${recommendation.id}`}>ENTER THE GATE</Link><button onClick={replay}>REOPEN CASEBOARD</button><Link href="/game/city">RETURN TO TOKYO</Link></nav></section>}
     <footer className="game-footer"><b>REN'S LOCAL RPG CAMPAIGN</b><p>Actions consume a time slot here. The autonomous Observer timeline remains separate.</p><span>{cases.length} AUTHENTICATED CASES</span></footer>
   </main>;
 }

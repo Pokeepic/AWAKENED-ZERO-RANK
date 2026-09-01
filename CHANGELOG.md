@@ -4,6 +4,11 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1450.0 - Visible case verdicts
+
+- Automatically reveals and focuses the case verdict after Ren commits to a Gate plan.
+- Respects reduced-motion preferences and returns cleanly to the evidence board when reopening the case.
+
 ## 0.1440.0 - Caseboard mission briefing
 
 - Reworked the Gate caseboard introduction into a compact two-column mission briefing on desktop.
