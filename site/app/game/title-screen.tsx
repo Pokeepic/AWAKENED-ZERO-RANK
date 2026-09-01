@@ -16,6 +16,7 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry, onImport }:
   const importRef = useRef<HTMLInputElement>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [pendingImport, setPendingImport] = useState<RpgState | null>(null);
   const hasProgress = state.turns > 0 || state.completedEvents.length > 0;
   const runEnded = state.status === "game-over";
 
@@ -108,8 +109,15 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry, onImport }:
       setSaveMessage("Restore rejected. The backup is damaged or incompatible.");
       return;
     }
-    onImport(restored);
-    setSaveMessage(`Timeline ${restored.timeline}, Day ${restored.day} restored successfully.`);
+    setPendingImport(restored);
+    setSaveMessage("Backup verified. Review it before replacing the active campaign.");
+  };
+
+  const confirmRestore = () => {
+    if (!pendingImport) return;
+    onImport(pendingImport);
+    setSaveMessage(`Timeline ${pendingImport.timeline}, Day ${pendingImport.day} restored successfully.`);
+    setPendingImport(null);
   };
 
   useEffect(() => {
@@ -167,7 +175,7 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry, onImport }:
         <button className="primary" onClick={continueOrRetry}><b>{runEnded ? `RETRY RUN ${state.attempt + 1}` : hasProgress ? "CONTINUE" : "START GAME"}</b><span>{runEnded ? `Timeline ${state.timeline} · no transmigration` : `Day ${state.day} · ${state.slot} · ${state.location}`}</span></button>
         <button onClick={() => setPanel("new-game")}><b>NEW GAME</b><span>Begin again from the authenticated world seed</span></button>
         <button onClick={() => setPanel("settings")}><b>SETTINGS</b><span>Motion and dialogue readability</span></button>
-        <button onClick={() => { setSaveMessage(null); setPanel("save-data"); }}><b>SAVE DATA</b><span>Back up or restore this campaign</span></button>
+        <button onClick={() => { setSaveMessage(null); setPendingImport(null); setPanel("save-data"); }}><b>SAVE DATA</b><span>Back up or restore this campaign</span></button>
         <Link href="/"><b>OBSERVER</b><span>Open Ren&apos;s autonomous chronicle</span></Link>
       </>}
       {panel === "settings" && <div className="title-subpanel">
@@ -192,6 +200,13 @@ export function TitleScreen({ state, onContinue, onNewGame, onRetry, onImport }:
         <button className="primary" onClick={downloadSave}><b>DOWNLOAD BACKUP</b><span>Save a copy to this device</span></button>
         <button onClick={() => importRef.current?.click()}><b>RESTORE BACKUP</b><span>Choose a compatible JSON save</span></button>
         <input ref={importRef} className="save-file-input" type="file" accept="application/json,.json" onChange={(event) => void restoreSave(event)} />
+        {pendingImport && <section className="restore-preview" aria-labelledby="restore-preview-title">
+          <small>VERIFIED BACKUP</small><h3 id="restore-preview-title">Replace this campaign?</h3>
+          <div><span>CURRENT</span><b>T{state.timeline} · DAY {state.day}</b><small>{state.slot.toUpperCase()} · {state.turns} ACTIONS</small></div>
+          <div className="incoming"><span>BACKUP</span><b>T{pendingImport.timeline} · DAY {pendingImport.day}</b><small>{pendingImport.slot.toUpperCase()} · {pendingImport.turns} ACTIONS</small></div>
+          <p>This replaces only the local RPG save. This action cannot be undone unless you download the current campaign first.</p>
+          <nav><button className="confirm-restore" onClick={confirmRestore}>CONFIRM RESTORE</button><button onClick={() => { setPendingImport(null); setSaveMessage("Restore cancelled. Your current campaign is unchanged."); }}>CANCEL</button></nav>
+        </section>}
         {saveMessage && <p className="save-data-message" role="status">{saveMessage}</p>}
         <button className="back" onClick={() => setPanel("menu")}>← BACK TO MENU</button>
       </div>}

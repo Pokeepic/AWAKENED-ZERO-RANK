@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1360.0 - Safe restore preview
+
+- Staged verified campaign backups in memory instead of immediately overwriting the active local save.
+- Added a side-by-side current-versus-backup summary for timeline, day, slot, and recorded actions.
+- Required explicit confirmation before restore and added a cancellation path that preserves the current campaign.
+- Kept accessible status feedback and constrained the expanded save panel to the available viewport.
+
 ## 0.1350.0 - Portable campaign saves
 
 - Added a title-screen Save Data panel with a compact summary of the active timeline, day, slot, action count, and campaign status.

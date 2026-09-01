@@ -221,12 +221,17 @@ test("backs up and strictly restores the local RPG campaign", async () => {
   assert.match(title, /256_000/);
   assert.match(title, /accept="application\/json,\.json"/);
   assert.match(title, /role="status"/);
+  assert.match(title, /Backup verified\. Review it before replacing the active campaign/);
+  assert.match(title, /CONFIRM RESTORE/);
+  assert.match(title, /Restore cancelled\. Your current campaign is unchanged/);
+  assert.match(title, /pendingImport/);
   assert.match(state, /export function exportRpgState/);
   assert.match(state, /export function importRpgState/);
   assert.match(state, /return isRpgState\(candidate\) \? candidate : null/);
   assert.match(game, /saveRpgState\(restored\)/);
   assert.match(styles, /\.save-data-panel/);
   assert.match(styles, /\.save-file-input/);
+  assert.match(styles, /\.restore-preview/);
 });
 test("completes the prologue through explore act and result phases", async () => {
   const [game, styles] = await Promise.all([
@@ -4149,7 +4154,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1350"/);
+  assert.match(version, /GAME_VERSION = "0\.1360"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);
