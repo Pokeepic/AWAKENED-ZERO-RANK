@@ -4,6 +4,11 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1440.0 - Caseboard mission briefing
+
+- Reworked the Gate caseboard introduction into a compact two-column mission briefing on desktop.
+- Brought the interactive evidence board substantially closer to the first viewport while preserving the mobile reading flow.
+
 ## 0.1430.0 - Compact Tokyo hub
 
 - Removed the oversized vertical gap between the persistent RPG status and Tokyo district navigation found during live browser inspection.
