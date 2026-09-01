@@ -16,6 +16,7 @@ import {
   type RpgState,
 } from "../game-state";
 import { GameHud } from "../game-hud";
+import { gameAtmosphere } from "../game-weather";
 import { BondEncounter, type BondEncounterChoice } from "./bond-encounter";
 
 const TOKYO_TRAIN_FARE = 220;
@@ -423,6 +424,7 @@ export default function CityRoutePage() {
   const treatedToday = rpg.journal.some(
     (entry) => entry.day === rpg.day && entry.action === "Received Guild Clinic Treatment",
   );
+  const atmosphere = gameAtmosphere(rpg);
 
   return (
     <main id="chronicle" className="city-shell">
@@ -487,7 +489,7 @@ export default function CityRoutePage() {
         ))}
       </nav>
       <section className="route-board" aria-label="Tokyo route board">
-        <div className={`route-map city-diorama district-${district.id}`}>
+        <div className={`route-map city-diorama district-${district.id} city-${rpg.slot.toLowerCase().replace(" ", "-")} weather-${atmosphere.weather.toLowerCase()} snow-depth-${atmosphere.snowDepth}`}>
           <Image
             className="tokyo-map-bg"
             src={district.image}
@@ -497,10 +499,12 @@ export default function CityRoutePage() {
             priority
           />
           <div className="map-atmosphere" aria-hidden="true" />
+          {(atmosphere.weather === "Rain" || atmosphere.weather === "Snow") && <div className="city-weather" aria-hidden="true"><i /><i /><i /></div>}
           <span className="district-stamp">
             {district.label}
-            <b>LOCAL MAP</b>
+            <b>{atmosphere.season} · {atmosphere.weather} · {rpg.slot}</b>
           </span>
+          {atmosphere.snowDepth > 0 && <span className="city-snowpack">SNOWPACK {atmosphere.snowDepth} / 3</span>}
           <span className="map-origin">
             <Image
               src="/game/characters/ren.png"

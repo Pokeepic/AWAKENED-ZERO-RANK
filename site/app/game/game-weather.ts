@@ -32,20 +32,27 @@ export function snowAccumulation(day: number, timeline: Timeline): number {
   return Math.min(3, depth);
 }
 
-export function apartmentAtmosphere(state: RpgState) {
+export function gameAtmosphere(state: RpgState) {
   const season = gameSeason(state.day);
   const weather = gameWeather(state.day, state.timeline);
   const snowDepth = snowAccumulation(state.day, state.timeline);
-  const night = state.slot === "Late Night";
   return {
     season,
     weather,
     snowDepth,
-    image: snowDepth > 0
+    label: `${state.slot}, ${weather.toLowerCase()} ${season.toLowerCase()} weather${snowDepth > 0 ? `, snow accumulation level ${snowDepth}` : ""}`,
+  };
+}
+
+export function apartmentAtmosphere(state: RpgState) {
+  const atmosphere = gameAtmosphere(state);
+  const night = state.slot === "Late Night";
+  return {
+    ...atmosphere,
+    image: atmosphere.snowDepth > 0
       ? "/game/ren-apartment-winter-v1.png"
       : night
         ? "/game/ren-apartment-night-v1.png"
         : "/game/ren-apartment.png",
-    label: `${state.slot}, ${weather.toLowerCase()} ${season.toLowerCase()} weather${snowDepth > 0 ? `, snow accumulation level ${snowDepth}` : ""}`,
   };
 }

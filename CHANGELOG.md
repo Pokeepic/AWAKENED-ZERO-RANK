@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1380.0 - Living Tokyo districts
+
+- Extended the local RPG atmosphere from Ren's apartment to Central Tokyo, the East Loop, and the Adachi Fringe.
+- Applied distinct morning, afternoon, evening, late-night, and cloudy lighting to every district illustration.
+- Added full-map rain and snow motion using the same deterministic daily weather as the apartment.
+- Added visible season, weather, time-slot, and winter snowpack labels without changing travel costs, contacts, or route behavior.
+- Centralized shared campaign atmosphere data so indoor and outdoor scenes cannot disagree about the day.
+
 ## 0.1370.0 - Living apartment weather
 
 - Connected Ren's apartment illustration to the local RPG day, timeline, season, and four-slot clock.
