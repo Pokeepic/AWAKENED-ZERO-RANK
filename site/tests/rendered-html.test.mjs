@@ -666,6 +666,8 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(styles, /\.case-zone \.case-node/);
   assert.match(styles, /\.case-zone \.case-ren\{position:absolute\}/);
   assert.match(styles, /\.case-shell \.case-intro\{padding:3rem 0 1\.75rem\}/);
+  assert.match(styles, /\.field-shell \.field-intro\{padding:1\.75rem/);
+  assert.match(styles, /\.field-shell \.field-intro h1\{margin:\.45rem 0 \.65rem\}/);
   assert.match(styles, /\.case-ren/);
 });
 test("ships illustrated Gate files and a four-slot local RPG save", async () => {
@@ -4220,7 +4222,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1410"/);
+  assert.match(version, /GAME_VERSION = "0\.1420"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);

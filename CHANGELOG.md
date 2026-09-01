@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1420.0 - Combat first-screen pacing
+
+- Reduced unused vertical space above Gate battles after live browser inspection at a 1280 × 720 laptop viewport.
+- Brought the first exact combat move preview into the opening viewport while preserving the full arena and tactical panel.
+- Left battle calculations, keyboard controls, enemy telegraphs, field items, and weather continuity unchanged.
+- Added browser-contract coverage for the compact field introduction.
+
 ## 0.1410.0 - Caseboard composition repair
 
 - Fixed a specificity conflict that changed Ren's field marker from absolute to relative positioning and clipped it against the top of the Adachi map.
