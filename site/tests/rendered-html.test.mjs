@@ -4236,7 +4236,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1490"/);
+  assert.match(version, /GAME_VERSION = "0\.1500"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);
@@ -4261,8 +4261,15 @@ test("gives every playable Gate its own illustrated interior", async () => {
   assert.doesNotMatch(field, /adachiMapImage/);
   assert.match(field, /ren-battle-back-v1\.png/);
   assert.match(field, /field-ren field-ren-battle/);
+  assert.match(field, /setAttackMotion\(\(value\) => value \+ 1\)/);
+  assert.match(field, /battle-attacking/);
+  assert.match(field, /residual-flare/);
   assert.doesNotMatch(field, /Pixel sprite of Ren Takahashi/);
   await access(new URL("../public/game/characters/ren-battle-back-v1.png", import.meta.url));
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  for (const animation of ["battle-ren-idle", "battle-ren-attack", "battle-residual-strike", "battle-enemy-impact", "battle-impact-slash"])
+    assert.match(styles, new RegExp(`@keyframes ${animation}`));
+  assert.match(styles, /data-game-motion="reduced".*field-ren-battle/);
 });
 
 test("renders bond episodes with half-body expression sheets", async () => {

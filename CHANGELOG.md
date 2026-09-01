@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1500.0 - Animated Gate combat
+
+- Added a restrained breathing and coat-drift idle loop to Ren's illustrated battle stance.
+- Every combat move now triggers a forward lunge, Residual Read flare, impact slash, and enemy recoil.
+- Respects the game's reduced-motion preference and leaves deterministic combat outcomes unchanged.
+
 ## 0.1490.0 - Over-the-shoulder Gate combat
 
 - Replaced Ren's tiny pixel battle marker with a dedicated rear three-quarter combat illustration.
