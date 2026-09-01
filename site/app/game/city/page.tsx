@@ -40,19 +40,31 @@ const DISTRICTS = [
   {
     id: "central",
     label: "CENTRAL TOKYO",
-    image: "/game/tokyo-dusk.png",
+    images: {
+      morning: "/game/maps/central-morning-v1.png",
+      standard: "/game/tokyo-dusk.png",
+      night: "/game/maps/central-night-v1.png",
+    },
     locations: ["Tokyo Hunter Guild"],
   },
   {
     id: "east",
     label: "EAST LOOP",
-    image: "/game/maps/east-loop.png",
+    images: {
+      morning: "/game/maps/east-loop-morning-v1.png",
+      standard: "/game/maps/east-loop.png",
+      night: "/game/maps/east-loop-night-v1.png",
+    },
     locations: ["Akihabara Market", "Ueno Library"],
   },
   {
     id: "adachi",
     label: "ADACHI FRINGE",
-    image: "/game/maps/adachi-fringe.png",
+    images: {
+      morning: "/game/maps/adachi-fringe-morning-v1.png",
+      standard: "/game/maps/adachi-fringe.png",
+      night: "/game/maps/adachi-fringe-night-v1.png",
+    },
     locations: ["Adachi Gate Zone"],
   },
 ] as const;
@@ -425,6 +437,12 @@ export default function CityRoutePage() {
     (entry) => entry.day === rpg.day && entry.action === "Received Guild Clinic Treatment",
   );
   const atmosphere = gameAtmosphere(rpg);
+  const districtImage =
+    rpg.slot === "Morning"
+      ? district.images.morning
+      : rpg.slot === "Late Night"
+        ? district.images.night
+        : district.images.standard;
 
   return (
     <main id="chronicle" className="city-shell">
@@ -492,7 +510,7 @@ export default function CityRoutePage() {
         <div className={`route-map city-diorama district-${district.id} city-${rpg.slot.toLowerCase().replace(" ", "-")} weather-${atmosphere.weather.toLowerCase()} snow-depth-${atmosphere.snowDepth}`}>
           <Image
             className="tokyo-map-bg"
-            src={district.image}
+            src={districtImage}
             alt={`Pixel-art ${district.label.toLowerCase()}`}
             fill
             sizes="(max-width: 800px) 90vw, 65vw"

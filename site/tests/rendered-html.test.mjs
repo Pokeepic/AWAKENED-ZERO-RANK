@@ -270,12 +270,23 @@ test("carries the living calendar across every Tokyo district map", async () => 
   assert.match(city, /city-weather/);
   assert.match(city, /city-snowpack/);
   assert.match(city, /atmosphere\.season/);
+  assert.match(city, /district\.images\.morning/);
+  assert.match(city, /district\.images\.night/);
+  assert.match(city, /const districtImage/);
   assert.match(weather, /export function gameAtmosphere/);
   assert.match(styles, /\.city-morning/);
   assert.match(styles, /\.city-late-night/);
   assert.match(styles, /\.city-diorama\.weather-snow/);
   assert.match(styles, /@keyframes city-rain/);
   assert.match(styles, /@keyframes city-snow/);
+  for (const asset of [
+    "central-morning-v1",
+    "central-night-v1",
+    "east-loop-morning-v1",
+    "east-loop-night-v1",
+    "adachi-fringe-morning-v1",
+    "adachi-fringe-night-v1",
+  ]) await access(new URL(`public/game/maps/${asset}.png`, root));
 });
 test("completes the prologue through explore act and result phases", async () => {
   const [game, styles] = await Promise.all([
@@ -4199,7 +4210,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1380"/);
+  assert.match(version, /GAME_VERSION = "0\.1390"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);

@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1390.0 - Illustrated Tokyo clock
+
+- Added dedicated morning and late-night pixel-art illustrations for Central Tokyo, the East Loop, and the Adachi Fringe.
+- Selected each outdoor map illustration directly from Ren's current time slot instead of simulating dawn and night with a global brightness filter.
+- Preserved the established district layouts, travel routes, contacts, deterministic weather, and winter snow accumulation.
+- Kept afternoon and evening on the original illustrated district art while allowing rain, snow, and cloudy conditions to combine with every time period.
+
 ## 0.1380.0 - Living Tokyo districts
 
 - Extended the local RPG atmosphere from Ren's apartment to Central Tokyo, the East Loop, and the Adachi Fringe.
