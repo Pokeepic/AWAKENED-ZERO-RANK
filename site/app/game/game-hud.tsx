@@ -32,7 +32,8 @@ export function GameHud({
     const alreadyShowing =
       (route === "/game/evening" && current === "evening") ||
       (route === "/game/debrief" && current === "debrief");
-    if (route && !alreadyShowing) window.location.assign(route);
+    const resolvingFieldEncounter = route === "/game/evening" && current === "field";
+    if (route && !alreadyShowing && !resolvingFieldEncounter) window.location.assign(route);
   }, [current, state]);
 
   useEffect(() => {

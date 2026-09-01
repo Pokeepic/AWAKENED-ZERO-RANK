@@ -4,6 +4,11 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1460.0 - Battle outcome routes
+
+- Added explicit outcome-specific navigation after Gate battles.
+- Victory continues into the automatic Adachi Station canon scene, retreat returns Ren to preparation, and defeat returns to the campaign screen.
+
 ## 0.1450.0 - Visible case verdicts
 
 - Automatically reveals and focuses the case verdict after Ren commits to a Gate plan.

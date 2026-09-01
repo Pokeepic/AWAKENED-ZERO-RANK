@@ -453,6 +453,11 @@ test("ships a deterministic Gate battle that advances time only on resolution", 
   assert.match(field, /PRECISION STRIKE/);
   assert.match(field, /BARRIER PULSE/);
   assert.match(field, /TACTICAL RETREAT/);
+  assert.match(field, /CONTINUE TO ADACHI STATION/);
+  assert.match(field, /RETURN TO CAMPAIGN/);
+  assert.match(field, /battle\.resolved === "victory"/);
+  assert.match(field, /battle\.resolved === "retreat"/);
+  assert.match(hud, /resolvingFieldEncounter/);
   assert.match(field, /No random rolls/);
   assert.equal((field.match(/takeRpgAction\(/g) ?? []).length, 4);
   assert.match(styles, /\.field-stage/);
@@ -4230,7 +4235,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1450"/);
+  assert.match(version, /GAME_VERSION = "0\.1460"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);
