@@ -4236,7 +4236,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1470"/);
+  assert.match(version, /GAME_VERSION = "0\.1480"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);
@@ -4267,7 +4267,7 @@ test("renders bond episodes with half-body expression sheets", async () => {
     "utf8",
   );
   for (const character of ["ren", "aiko", "daichi", "haruto", "mei"]) {
-    const asset = `${character}-sheet-v1.png`;
+    const asset = `${character}-sheet-v2.png`;
     assert.match(bond, new RegExp(asset));
     await access(new URL(`../public/game/visual-novel/expressions/${asset}`, import.meta.url));
   }

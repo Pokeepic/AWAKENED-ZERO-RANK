@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1480.0 - Classic visual-novel cast
+
+- Redrew Ren, Aiko, Daichi, Haruto, and Mei as a coherent classic visual-novel ensemble.
+- Replaced glossy portrait rendering with economical ink lines, flatter cel shadows, and restrained facial acting.
+- Preserved four dialogue expressions per character and a dark stage matte designed to disappear behind the cast.
+
 ## 0.1470.0 - Portal worlds and expressive bonds
 
 - Added unique illustrated interior battle worlds for Glass Office Labyrinth and Sunken Courtyard.
