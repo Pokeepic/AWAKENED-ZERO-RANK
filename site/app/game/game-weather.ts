@@ -44,6 +44,12 @@ export function gameAtmosphere(state: RpgState) {
   };
 }
 
+export function adachiMapImage(slot: RpgState["slot"]): string {
+  if (slot === "Morning") return "/game/maps/adachi-fringe-morning-v1.png";
+  if (slot === "Late Night") return "/game/maps/adachi-fringe-night-v1.png";
+  return "/game/maps/adachi-fringe.png";
+}
+
 export function apartmentAtmosphere(state: RpgState) {
   const atmosphere = gameAtmosphere(state);
   const night = state.slot === "Late Night";

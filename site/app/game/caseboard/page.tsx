@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { gateReadiness, verifyArtifacts, type ObserverSnapshot } from "../../observer-data";
 import { loadRpgState, takeRpgAction, type RpgState } from "../game-state";
 import { GameHud } from "../game-hud";
+import { adachiMapImage, gameAtmosphere } from "../game-weather";
 
 const CASE_ART: Record<string, string> = {
   "Glass Office Labyrinth": "/game/cases/glass-office-labyrinth.png",
@@ -77,14 +78,16 @@ export default function CaseboardPage() {
   const cases = snapshot.portals.investigations;
   const activeCase = cases.find((item) => item.portal_name === active);
   const ready = cases.length > 0 && opened.length === cases.length;
+  const atmosphere = gameAtmosphere(rpg);
+  const mapImage = adachiMapImage(rpg.slot);
 
   return <main id="chronicle" className="case-shell">
     <header className="game-header"><Link href="/game/city">← TOKYO BOARD</Link><b>AWAKENED <i>ZERO RANK</i></b><span>CHAPTER 03 / GATE CASEBOARD</span></header>
     <GameHud state={rpg} current="cases" />
-    <section className="case-intro"><small>DAY {rpg.day} / {rpg.slot} / ENERGY {rpg.energy}</small><h1>Two Gates.<br />Ren chooses.</h1><p>Inspect every case, then take Ren's next action. Every decision spends one RPG time slot.</p></section>
+    <section className="case-intro"><small>DAY {rpg.day} / {rpg.slot} / {atmosphere.season} / {atmosphere.weather} / ENERGY {rpg.energy}</small><h1>Two Gates.<br />Ren chooses.</h1><p>Inspect every case, then take Ren's next action. Every decision spends one RPG time slot.</p></section>
 
     {cases.length === 0 ? <section className="case-empty"><small>NO DISCOVERED CASES</small><h2>The board is blank.</h2><p>Ren has no authenticated portal investigation yet. The game will not invent one.</p><Link href="/">RETURN TO CHRONICLE</Link></section> : <section className="caseboard" aria-label="Gate investigation caseboard">
-      <div className="case-files case-zone"><Image className="case-zone-bg" src="/game/maps/adachi-fringe.png" alt="Pixel-art Adachi Gate exclusion zone" fill sizes="(max-width: 800px) 90vw, 65vw" priority /><div className="case-zone-shade" aria-hidden="true" /><span className="case-ren"><Image src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={72} height={72} /><b>FIELD BRIEFING</b></span>{cases.map((item, index) => <button key={item.portal_name} onClick={() => openFile(item.portal_name)} className={`case-node case-node-${index + 1} ${opened.includes(item.portal_name) ? "opened" : ""}`} aria-pressed={active === item.portal_name}>{CASE_ART[item.portal_name] && <Image className="case-art" src={CASE_ART[item.portal_name]} alt={`Pixel art of ${item.portal_name}`} width={220} height={120} />}<span>CASE {String(index + 1).padStart(2, "0")}</span><h2>{item.portal_name}</h2><small>{opened.includes(item.portal_name) ? "FILE OPENED" : "SEALED EVIDENCE"}</small></button>)}</div>
+      <div className={`case-files case-zone city-${rpg.slot.toLowerCase().replace(" ", "-")} weather-${atmosphere.weather.toLowerCase()} snow-depth-${atmosphere.snowDepth}`}><Image className="case-zone-bg" src={mapImage} alt={`Pixel-art Adachi Gate exclusion zone during ${atmosphere.label}`} fill sizes="(max-width: 800px) 90vw, 65vw" priority /><div className="case-zone-shade" aria-hidden="true" />{(atmosphere.weather === "Rain" || atmosphere.weather === "Snow") && <div className="city-weather field-weather" aria-hidden="true"><i /><i /><i /></div>}<span className="case-ren"><Image src="/game/characters/ren.png" alt="Pixel sprite of Ren Takahashi" width={72} height={72} /><b>FIELD BRIEFING</b></span>{cases.map((item, index) => <button key={item.portal_name} onClick={() => openFile(item.portal_name)} className={`case-node case-node-${index + 1} ${opened.includes(item.portal_name) ? "opened" : ""}`} aria-pressed={active === item.portal_name}>{CASE_ART[item.portal_name] && <Image className="case-art" src={CASE_ART[item.portal_name]} alt={`Pixel art of ${item.portal_name}`} width={220} height={120} />}<span>CASE {String(index + 1).padStart(2, "0")}</span><h2>{item.portal_name}</h2><small>{opened.includes(item.portal_name) ? "FILE OPENED" : "SEALED EVIDENCE"}</small></button>)}</div>
       <aside className="case-detail" aria-live="polite">{!activeCase ? <><small>CASEBOARD</small><h2>Open the evidence.</h2><p>Risk and progress remain hidden until you inspect each file.</p></> : <><small>{activeCase.preparation_strategy}</small><h2>{activeCase.portal_name}</h2><dl><div><dt>RISK</dt><dd>{activeCase.risk}</dd></div><div><dt>PROGRESS</dt><dd>{activeCase.progress}%</dd></div><div><dt>PREP BONUS</dt><dd>+{activeCase.preparation_bonus}</dd></div><div><dt>JOINT MISSIONS</dt><dd>{activeCase.joint_missions}</dd></div></dl><p>{activeCase.cooperating_npc ? `Cooperating with ${activeCase.cooperating_npc}.` : "No cooperating contact recorded."}</p></>}
         <div className="case-options"><small>TAKE REN'S ACTION</small>{RECOMMENDATIONS.map((item) => <button key={item.id} disabled={!ready || recommendation !== null} onClick={() => decide(item)}>{item.label}</button>)}{!ready && <p>Open {cases.length - opened.length} remaining file{cases.length - opened.length === 1 ? "" : "s"}.</p>}</div>
       </aside>

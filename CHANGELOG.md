@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1400.0 - Continuous Adachi weather
+
+- Carried the local RPG time, season, deterministic weather, and snow depth from the Tokyo route board into the Adachi caseboard and Gate battle.
+- Reused the dedicated Adachi morning and late-night illustrations so investigation and combat no longer reset to a fixed night scene.
+- Added outdoor rain and snow motion to both chapters while preserving case interactions, enemy telegraphs, and tactical controls.
+- Exposed the current atmosphere in scene labels without changing action costs or time advancement.
+
 ## 0.1390.0 - Illustrated Tokyo clock
 
 - Added dedicated morning and late-night pixel-art illustrations for Central Tokyo, the East Loop, and the Adachi Fringe.

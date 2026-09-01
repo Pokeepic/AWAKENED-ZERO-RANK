@@ -274,6 +274,14 @@ test("carries the living calendar across every Tokyo district map", async () => 
   assert.match(city, /district\.images\.night/);
   assert.match(city, /const districtImage/);
   assert.match(weather, /export function gameAtmosphere/);
+  assert.match(weather, /export function adachiMapImage/);
+  for (const route of ["caseboard", "field"]) {
+    const scene = await readFile(new URL(`app/game/${route}/page.tsx`, root), "utf8");
+    assert.match(scene, /adachiMapImage\(rpg\.slot\)/);
+    assert.match(scene, /gameAtmosphere\(rpg\)/);
+    assert.match(scene, /field-weather/);
+    assert.match(scene, /weather-\$\{atmosphere\.weather\.toLowerCase/);
+  }
   assert.match(styles, /\.city-morning/);
   assert.match(styles, /\.city-late-night/);
   assert.match(styles, /\.city-diorama\.weather-snow/);
@@ -652,7 +660,7 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
   assert.match(caseboard, /case-files case-zone/);
-  assert.match(caseboard, /maps\/adachi-fringe\.png/);
+  assert.match(caseboard, /src=\{mapImage\}/);
   assert.match(caseboard, /className="case-ren"/);
   assert.match(caseboard, /case-node case-node-/);
   assert.match(styles, /\.case-zone \.case-node/);
@@ -4210,7 +4218,7 @@ test("uses one current version label across the title and playable campaign", as
     readFile(new URL("../app/game/title-screen.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/game/page.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(version, /GAME_VERSION = "0\.1390"/);
+  assert.match(version, /GAME_VERSION = "0\.1400"/);
   assert.match(title, /PRIVATE RPG CAMPAIGN \/ v\{GAME_VERSION\}/);
   assert.match(game, /REN RPG \/ v\{GAME_VERSION\}/);
   assert.match(title, /from "\.\/game-version"/);
