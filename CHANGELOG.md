@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1490.0 - Over-the-shoulder Gate combat
+
+- Replaced Ren's tiny pixel battle marker with a dedicated rear three-quarter combat illustration.
+- Kept pixel sprites exclusive to Tokyo exploration while Gate battles use cinematic foreground staging.
+- Added responsive combat framing that preserves the enemy, intent telegraph, and battlefield depth.
+
 ## 0.1480.0 - Classic visual-novel cast
 
 - Redrew Ren, Aiko, Daichi, Haruto, and Mei as a coherent classic visual-novel ensemble.
