@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1520.0 - Native-alpha combat art
+
+- Replaced Ren's matte-backed combat illustration with a game-ready RGBA cutout whose surrounding pixels are genuinely transparent.
+- Removed blend-mode compositing so Ren stays fully opaque against every Gate interior.
+- Rebalanced desktop and mobile combat scale, anchoring, labels, shadows, and motion around the new silhouette.
+- Added a rendered regression check that requires the production battle asset to use an RGBA PNG color type.
+
 ## 0.1510.0 - Seamless combat compositing
 
 - Moved Ren's screen blend to the complete animated foreground group so its matte composites against the portal world.
