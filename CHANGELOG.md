@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1590.0 - Urban occult combat dossier
+
+- Reframes the combat interface as Ren's asymmetric field dossier while preserving the illustrated Gate arena and deterministic battle rules.
+- Gives strike, barrier, guard, and retreat distinct tactical-card identities with compact numbering, clearer hierarchy, and responsive hover feedback.
+- Reworks the encounter heading, plan note, field kit, and footer into one rain-soaked case-file visual language instead of a stack of generic dashboard boxes.
+- Keeps desktop and mobile controls readable without changing damage, energy costs, enemy intent, or time advancement.
+
 ## 0.1580.0 - Responsive combat cockpit
 
 - Rebalances the desktop battle into a centered 1,180-pixel cockpit with a shorter arena, wider tactical panel, readable move costs, and tighter vertical rhythm.

@@ -661,9 +661,10 @@ test("moves between three district maps without mutating the chronicle", async (
   assert.match(styles, /\.district-switcher/);
 });
 test("stages authenticated Gate files inside the Adachi field scene", async () => {
-  const [caseboard, styles] = await Promise.all([
+  const [caseboard, styles, game] = await Promise.all([
     readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
+    readFile(new URL("app/game/field/page.tsx", root), "utf8"),
   ]);
   assert.match(caseboard, /case-files case-zone/);
   assert.match(caseboard, /src=\{mapImage\}/);
@@ -683,6 +684,9 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(styles, /\.field-shell \.battle-actions\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}/);
   assert.match(styles, /\.field-shell \.field-kit-bar\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(styles, /\.field-shell \.campaign-deadline,\.field-shell \.rpg-journal\{display:none\}/);
+  assert.match(game, /COMBAT DOSSIER/);
+  assert.match(game, /move-card move-/);
+  assert.match(styles, /urban occult combat dossier/);
   assert.match(styles, /\.city-shell \.city-intro\{padding:2\.25rem 0 1\.25rem\}/);
   assert.match(styles, /\.city-shell \.city-intro h1\{margin:\.55rem 0 \.75rem\}/);
   assert.match(styles, /\.case-ren/);
