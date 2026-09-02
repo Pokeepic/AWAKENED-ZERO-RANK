@@ -11,6 +11,7 @@ import { GameHud } from "../game-hud";
 import { gameAtmosphere } from "../game-weather";
 
 type MoveId = "strike" | "pulse" | "guard" | "vector" | "sever";
+type MotionId = MoveId | "item";
 type Move = { id: MoveId; label: string; damage: number; cost: number; mitigation: number; note: string; skill?: "Vector Step" | "Causal Sever"; requiredMastery?: number };
 const BASE_MOVES: readonly Move[] = [
   { id: "strike", label: "PRECISION STRIKE", damage: 24, cost: 5, mitigation: 0, note: "Ren cuts through the nearest fracture before it can reform." },
@@ -59,7 +60,8 @@ export default function FieldPage() {
   const [snapshot, setSnapshot] = useState<ObserverSnapshot | null>(null);
   const [rpg, setRpg] = useState<RpgState | null>(null);
   const [failed, setFailed] = useState(false);
-  const [attackMotion, setAttackMotion] = useState<{ count: number; move: MoveId }>({ count: 0, move: "strike" });
+  const [turnLocked, setTurnLocked] = useState(false);
+  const [attackMotion, setAttackMotion] = useState<{ count: number; move: MotionId; counter: boolean }>({ count: 0, move: "strike", counter: false });
   const caseName = searchParams.get("case");
   const encounter = caseName && caseName in ENCOUNTERS ? ENCOUNTERS[caseName as keyof typeof ENCOUNTERS] : ENCOUNTERS["Glass Office Labyrinth"];
   const requestedPlan = searchParams.get("plan");
@@ -95,14 +97,21 @@ export default function FieldPage() {
   const gearDamage = rpg?.fieldKit.weapon === "Resonance Blade" ? 3 : 0;
   const gearMitigation = rpg?.fieldKit.coat === "Guildweave Coat" ? 2 : 0;
 
+  useEffect(() => {
+    if (!turnLocked) return;
+    const timer = window.setTimeout(() => setTurnLocked(false), 1100);
+    return () => window.clearTimeout(timer);
+  }, [attackMotion.count, turnLocked]);
+
   const act = useCallback((id: MoveId) => {
-    if (!rpg || battle.resolved) return;
+    if (!rpg || battle.resolved || turnLocked) return;
     const move = moves.find((candidate) => candidate.id === id);
     if (!move || !moveReady(move)) return;
-    setAttackMotion((value) => ({ count: value.count + 1, move: id }));
     const dealt = move.damage + intent.exposure + plan.damage + gearDamage;
     const enemyHp = Math.max(0, battle.enemyHp - dealt);
     const incoming = enemyHp === 0 ? 0 : Math.max(0, intent.damage - move.mitigation - plan.mitigation - wardMitigation - gearMitigation);
+    setTurnLocked(true);
+    setAttackMotion((value) => ({ count: value.count + 1, move: id, counter: incoming > 0 }));
     const health = Math.max(0, rpg.health - incoming);
     const energy = Math.max(0, rpg.energy - move.cost);
     if (enemyHp === 0) {
@@ -122,16 +131,18 @@ export default function FieldPage() {
       setRpg(next);
       setBattle((current) => ({ enemyHp, round: current.round + 1, log: [...current.log, `${move.note} ${dealt} dealt; ${intent.label} answers for ${incoming}.`].slice(-4), resolved: null }));
     }
-  }, [battle.enemyHp, battle.resolved, caseName, encounter, gearDamage, gearMitigation, intent, moveReady, moves, plan.damage, plan.mitigation, rpg, wardMitigation]);
+  }, [battle.enemyHp, battle.resolved, caseName, encounter, gearDamage, gearMitigation, intent, moveReady, moves, plan.damage, plan.mitigation, rpg, turnLocked, wardMitigation]);
 
   const applyFieldItem = useCallback((item: "bandage" | "energyDrink") => {
-    if (!rpg || battle.resolved) return;
+    if (!rpg || battle.resolved || turnLocked) return;
     const available = item === "bandage" ? rpg.fieldKit.bandages : rpg.fieldKit.energyDrinks;
     if (available === 0 || (item === "bandage" ? rpg.health >= 100 : rpg.energy >= 100)) return;
     const fieldKit = { ...rpg.fieldKit, [item === "bandage" ? "bandages" : "energyDrinks"]: available - 1 };
     const restoredHealth = item === "bandage" ? Math.min(100, rpg.health + 18) : rpg.health;
     const energy = item === "energyDrink" ? Math.min(100, rpg.energy + 22) : rpg.energy;
     const incoming = Math.max(0, intent.damage - plan.mitigation - wardMitigation - gearMitigation);
+    setTurnLocked(true);
+    setAttackMotion((value) => ({ count: value.count + 1, move: "item", counter: incoming > 0 }));
     const health = Math.max(0, restoredHealth - incoming);
     const label = item === "bandage" ? "BANDAGE" : "ENERGY DRINK";
     const next = { ...rpg, health, energy, fieldKit };
@@ -143,7 +154,7 @@ export default function FieldPage() {
     saveRpgState(next);
     setRpg(next);
     setBattle((current) => ({ ...current, round: current.round + 1, log: [...current.log, `${label} used; ${intent.label} answers for ${incoming}.`].slice(-4) }));
-  }, [battle.resolved, caseName, encounter.enemy, gearMitigation, intent, plan.mitigation, rpg, wardMitigation]);
+  }, [battle.resolved, caseName, encounter.enemy, gearMitigation, intent, plan.mitigation, rpg, turnLocked, wardMitigation]);
 
   const retreat = useCallback(() => {
     if (!rpg || battle.resolved) return;
@@ -156,7 +167,7 @@ export default function FieldPage() {
 
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
-      if (battle.resolved || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (battle.resolved || turnLocked || event.altKey || event.ctrlKey || event.metaKey) return;
       if (/^Digit[1-5]$/.test(event.code)) {
         const move = moves[Number(event.code.at(-1)) - 1];
         if (move) act(move.id);
@@ -166,7 +177,7 @@ export default function FieldPage() {
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [act, applyFieldItem, battle.resolved, moves, retreat]);
+  }, [act, applyFieldItem, battle.resolved, moves, retreat, turnLocked]);
 
   if (failed) return <main id="chronicle" className="game-loading"><p>FIELD LINK OFFLINE</p><h1>The Gate could not be verified.</h1><Link href="/game/caseboard">Return to caseboard</Link></main>;
   if (!snapshot || !rpg) return <main id="chronicle" className="game-loading" aria-busy="true"><p>LOADING FIELD SAVE</p><h1>Opening the Gate…</h1></main>;
@@ -178,10 +189,10 @@ export default function FieldPage() {
     <GameHud state={rpg} current="field" />
     <section className="field-intro"><small>{caseFile?.portal_name ?? "VERIFIED GATE"} / RISK {caseFile?.risk ?? "UNKNOWN"} / {rpg.slot.toUpperCase()} / {atmosphere.weather.toUpperCase()}</small><h1>Hold the line.</h1><p>Battle moves are tactical turns. The RPG clock advances once when the encounter resolves.</p></section>
     <section className="field-stage" aria-label="Gate battle">
-      <div key={`${caseName}-${attackMotion.count}`} className={`field-arena portal-interior enemy-${encounter.className} intent-${intent.id} move-${attackMotion.move} ${attackMotion.count > 0 ? "battle-attacking" : ""}`}><Image src={encounter.background} alt={`Illustrated interior of ${caseFile?.portal_name ?? "the verified Gate"}`} fill sizes="(max-width: 800px) 100vw, 70vw" priority /><div className="field-shade" /><span className="field-ren field-ren-battle"><Image className="ren-battle-idle" src="/game/characters/ren-battle-back-v2.png" alt="Ren Takahashi viewed from behind in a defensive combat stance" width={1024} height={1536} priority /><Image className="ren-battle-strike" src="/game/characters/ren-battle-strike-v1.png" alt="" aria-hidden="true" width={1024} height={1536} priority /><i className="barrier-effect" aria-hidden="true" /><i className="read-effect" aria-hidden="true" /><b>REN</b></span><span className="field-enemy" aria-label={encounter.enemy}><i /><i /><i /><b>{encounter.enemy}</b></span><div className="enemy-intent"><small>NEXT ATTACK / {intent.label}</small><b>{intent.damage} DAMAGE</b><p>{intent.cue}</p></div></div>
-      <aside className="battle-panel" aria-live="polite"><div className="battle-bars"><span>REN / HP {rpg.health}</span><meter min="0" max="100" value={rpg.health} /><span>{encounter.enemy} / HP {battle.enemyHp}</span><meter min="0" max={encounter.hp} value={battle.enemyHp} /></div><small>ROUND {battle.round} / {plan.label}</small><p>{battle.log.at(-1)}</p><div className="battle-plan"><b>{plan.label}</b><span>{plan.note}</span></div>{!battle.resolved ? <div className="battle-actions">{moves.map((move, index) => { const ready = moveReady(move); const dealt = move.damage + intent.exposure + plan.damage + gearDamage; const incoming = Math.max(0, intent.damage - move.mitigation - plan.mitigation - wardMitigation - gearMitigation); return <button key={move.id} disabled={!ready} onClick={() => act(move.id)}><b>{index + 1} · {move.label}</b><span>{ready ? `${dealt} DMG / ${move.cost} EN / TAKE ${incoming}` : move.skill ? `${move.skill.toUpperCase()} ${move.requiredMastery}% REQUIRED` : `${move.cost} ENERGY REQUIRED`}</span></button>; })}<button className="retreat" onClick={retreat}><b>R · TACTICAL RETREAT</b><span>2 EN / SAFE EXIT</span></button></div> : <div className={`battle-result ${battle.resolved}`}><small>{battle.resolved === "victory" ? "GATE SECURED" : battle.resolved === "death" ? "RUN TERMINATED" : "TACTICAL RETREAT"}</small><h2>{battle.resolved === "victory" ? `+¥${encounter.reward.toLocaleString()} / TIME ADVANCED` : battle.resolved === "death" ? "GAME OVER" : "REN SURVIVED / TIME ADVANCED"}</h2><p>{battle.resolved === "death" ? "Only the final day can open a path to transmigration." : battle.resolved === "retreat" ? "Ren keeps the evidence he gathered. Aiko is waiting beyond the exclusion-zone perimeter…" : "A canon event has triggered. Aiko is waiting at Adachi Station…"}</p><nav>{battle.resolved === "death" ? <Link href="/game">RETURN TO CAMPAIGN</Link> : <Link href="/game/evening">CONTINUE TO ADACHI STATION</Link>}</nav></div>}</aside>
+      <div key={`${caseName}-${attackMotion.count}`} className={`field-arena portal-interior enemy-${encounter.className} intent-${intent.id} move-${attackMotion.move} ${attackMotion.count > 0 ? "battle-attacking" : ""} ${attackMotion.counter ? "enemy-countering" : ""}`}><Image src={encounter.background} alt={`Illustrated interior of ${caseFile?.portal_name ?? "the verified Gate"}`} fill sizes="(max-width: 800px) 100vw, 70vw" priority /><div className="field-shade" /><span className="field-ren field-ren-battle"><Image className="ren-battle-idle" src="/game/characters/ren-battle-back-v2.png" alt="Ren Takahashi viewed from behind in a defensive combat stance" width={1024} height={1536} priority /><Image className="ren-battle-strike" src="/game/characters/ren-battle-strike-v1.png" alt="" aria-hidden="true" width={1024} height={1536} priority /><i className="barrier-effect" aria-hidden="true" /><i className="read-effect" aria-hidden="true" /><i className="counter-impact" aria-hidden="true" /><b>REN</b></span><span className="field-enemy" aria-label={encounter.enemy}><i /><i /><i /><b>{encounter.enemy}</b></span><div className="enemy-intent"><small>NEXT ATTACK / {intent.label}</small><b>{intent.damage} DAMAGE</b><p>{intent.cue}</p></div></div>
+      <aside className="battle-panel" aria-live="polite" aria-busy={turnLocked}><div className="battle-bars"><span>REN / HP {rpg.health}</span><meter min="0" max="100" value={rpg.health} /><span>{encounter.enemy} / HP {battle.enemyHp}</span><meter min="0" max={encounter.hp} value={battle.enemyHp} /></div><small>ROUND {battle.round} / {plan.label}</small><p>{battle.log.at(-1)}</p><div className="battle-plan"><b>{plan.label}</b><span>{plan.note}</span></div>{!battle.resolved ? <div className="battle-actions">{moves.map((move, index) => { const ready = moveReady(move); const dealt = move.damage + intent.exposure + plan.damage + gearDamage; const incoming = Math.max(0, intent.damage - move.mitigation - plan.mitigation - wardMitigation - gearMitigation); return <button key={move.id} disabled={!ready || turnLocked} onClick={() => act(move.id)}><b>{index + 1} · {move.label}</b><span>{ready ? `${dealt} DMG / ${move.cost} EN / TAKE ${incoming}` : move.skill ? `${move.skill.toUpperCase()} ${move.requiredMastery}% REQUIRED` : `${move.cost} ENERGY REQUIRED`}</span></button>; })}<button className="retreat" disabled={turnLocked} onClick={retreat}><b>R · TACTICAL RETREAT</b><span>2 EN / SAFE EXIT</span></button></div> : <div className={`battle-result ${battle.resolved}`}><small>{battle.resolved === "victory" ? "GATE SECURED" : battle.resolved === "death" ? "RUN TERMINATED" : "TACTICAL RETREAT"}</small><h2>{battle.resolved === "victory" ? `+¥${encounter.reward.toLocaleString()} / TIME ADVANCED` : battle.resolved === "death" ? "GAME OVER" : "REN SURVIVED / TIME ADVANCED"}</h2><p>{battle.resolved === "death" ? "Only the final day can open a path to transmigration." : battle.resolved === "retreat" ? "Ren keeps the evidence he gathered. Aiko is waiting beyond the exclusion-zone perimeter…" : "A canon event has triggered. Aiko is waiting at Adachi Station…"}</p><nav>{battle.resolved === "death" ? <Link href="/game">RETURN TO CAMPAIGN</Link> : <Link href="/game/evening">CONTINUE TO ADACHI STATION</Link>}</nav></div>}</aside>
     </section>
-    {!battle.resolved && <section className="field-kit-bar" aria-label="Field kit"><small>LOADOUT / {rpg.fieldKit.weapon} / {rpg.fieldKit.coat} / WARD {rpg.fieldKit.wardCharm ? "READY" : "EMPTY"}</small><button disabled={rpg.fieldKit.bandages === 0 || rpg.health >= 100} onClick={() => applyFieldItem("bandage")}><b>B · BANDAGE ×{rpg.fieldKit.bandages}</b><span>+18 HP / ENEMY ACTS</span></button><button disabled={rpg.fieldKit.energyDrinks === 0 || rpg.energy >= 100} onClick={() => applyFieldItem("energyDrink")}><b>E · ENERGY DRINK ×{rpg.fieldKit.energyDrinks}</b><span>+22 EN / ENEMY ACTS</span></button></section>}
+    {!battle.resolved && <section className="field-kit-bar" aria-label="Field kit"><small>LOADOUT / {rpg.fieldKit.weapon} / {rpg.fieldKit.coat} / WARD {rpg.fieldKit.wardCharm ? "READY" : "EMPTY"}</small><button disabled={turnLocked || rpg.fieldKit.bandages === 0 || rpg.health >= 100} onClick={() => applyFieldItem("bandage")}><b>B · BANDAGE ×{rpg.fieldKit.bandages}</b><span>+18 HP / ENEMY ACTS</span></button><button disabled={turnLocked || rpg.fieldKit.energyDrinks === 0 || rpg.energy >= 100} onClick={() => applyFieldItem("energyDrink")}><b>E · ENERGY DRINK ×{rpg.fieldKit.energyDrinks}</b><span>+22 EN / ENEMY ACTS</span></button></section>}
     <footer className="game-footer"><b>DETERMINISTIC FIELD ENCOUNTER</b><p>No random rolls. Every move shows its exact cost and effect.</p><span>ENERGY {rpg.energy}</span></footer>
   </main>;
 }

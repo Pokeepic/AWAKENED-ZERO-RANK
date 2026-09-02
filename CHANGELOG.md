@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1550.0 - Complete battle exchanges
+
+- Animates the enemy's telegraphed counterattack after Ren's selected move, with heavier lunges for pressure surges and glass rain.
+- Gives Ren distinct hit, guarded-impact, and consumable-turn reactions while preserving every deterministic damage calculation.
+- Locks combat and field-kit controls for the 1.1-second exchange so rapid input cannot skip or stack turns during choreography.
+- Keeps zero-damage guards, finishing blows, exact previews, keyboard controls, and reduced-motion behavior intact.
+
 ## 0.1540.0 - Move-specific battle choreography
 
 - Tracks the exact selected combat move through the animation state instead of treating every action as Precision Strike.
