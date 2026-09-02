@@ -678,8 +678,11 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(caseboard, /verdictHeadingRef\.current\?\.focus\(\{ preventScroll: true \}\)/);
   assert.match(caseboard, /prefers-reduced-motion: reduce/);
   assert.match(caseboard, /tabIndex=\{-1\}/);
-  assert.match(styles, /\.field-shell \.field-intro\{padding:1\.75rem/);
-  assert.match(styles, /\.field-shell \.field-intro h1\{margin:\.45rem 0 \.65rem\}/);
+  assert.match(styles, /\.field-shell \.field-intro\{width:min\(1180px/);
+  assert.match(styles, /\.field-shell \.field-stage\{grid-template-columns:minmax\(0,1\.45fr\)/);
+  assert.match(styles, /\.field-shell \.battle-actions\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)\}/);
+  assert.match(styles, /\.field-shell \.field-kit-bar\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(styles, /\.field-shell \.campaign-deadline,\.field-shell \.rpg-journal\{display:none\}/);
   assert.match(styles, /\.city-shell \.city-intro\{padding:2\.25rem 0 1\.25rem\}/);
   assert.match(styles, /\.city-shell \.city-intro h1\{margin:\.55rem 0 \.75rem\}/);
   assert.match(styles, /\.case-ren/);

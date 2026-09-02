@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1580.0 - Responsive combat cockpit
+
+- Rebalances the desktop battle into a centered 1,180-pixel cockpit with a shorter arena, wider tactical panel, readable move costs, and tighter vertical rhythm.
+- Converts mobile combat actions and field supplies into compact two-column controls while keeping retreat full-width and touch-friendly.
+- Hides nonessential deadline, housing, funds, and journal chrome on narrow battle screens so the current fight and first choices appear sooner.
+- Visually verified the live-sized desktop and 390-pixel mobile layouts without changing combat calculations or campaign state.
+
 ## 0.1570.0 - Resolved-intent continuity
 
 - Binds enemy counter choreography to the attack that actually resolved instead of accidentally inheriting the following round's intent styling.
