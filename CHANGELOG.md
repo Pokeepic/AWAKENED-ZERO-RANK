@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1570.0 - Resolved-intent continuity
+
+- Binds enemy counter choreography to the attack that actually resolved instead of accidentally inheriting the following round's intent styling.
+- Shows the resolved enemy action over the arena while the tactical panel separately labels the upcoming attack as the next telegraph.
+- Preserves heavier counter motion for Pressure Surge and Glass Rain even when the following queued intent is lighter.
+- Keeps deterministic damage, fixed turn timing, reduced-motion presentation, and exact move previews unchanged.
+
 ## 0.1560.0 - Combat impact feedback
 
 - Adds animated damage numbers at the struck combatant, exact healing and energy-restoration values, and explicit blocked-hit feedback.
