@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1640.0 - Illustrated combat loadout
+
+- Replaces the battle's text-only equipment summary with compact weapon, coat, and ward slots.
+- Uses the dedicated equipment atlas to distinguish starter gear from permanent upgrades during combat.
+- Shows ward readiness visually while preserving the existing deterministic mitigation and item controls.
+
 ## 0.1630.0 - Dedicated pixel equipment atlas
 
 - Adds a second transparent pixel atlas for the Utility Knife, Resonance Blade, Street Jacket, Guildweave Coat, and Ward Charm.

@@ -694,6 +694,11 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(styles, /persistent pixel inventory language/);
   assert.match(styles, /equipment-icon-sprites-v1\.png/);
   assert.match(styles, /dedicated pixel equipment atlas/);
+  assert.match(game, /field-combat-loadout/);
+  assert.match(game, /gear-blade/);
+  assert.match(game, /gear-guildweave/);
+  assert.match(styles, /illustrated combat loadout/);
+  assert.match(styles, /\.field-combat-loadout \.gear-ward\.is-ready i/);
   assert.match(city, /market-gear market-gear-/);
   assert.match(styles, /\.market-counter \.market-supply-bandage:before/);
   assert.match(styles, /\.awakening-cutscene\.final-awakening \.cinematic-caption:before/);
