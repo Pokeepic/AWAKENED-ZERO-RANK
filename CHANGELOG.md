@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1620.0 - Persistent pixel inventory language
+
+- Carries the combat atlas into Ren's apartment field-bag readout, including consumables, ward status, weapon, and coat slots.
+- Adds matching pixel goods to Haruto's supply counter for bandages, energy drinks, and ward charms.
+- Gives all three Awakening cutscenes the correct Residual Read, Vector Step, or Causal Sever icon in their cinematic caption.
+
 ## 0.1610.0 - Pixel skill and item atlas
 
 - Adds a generated transparent seven-icon pixel atlas for Precision Strike, Barrier Pulse, Guard & Read, Vector Step, Causal Sever, Bandage, and Energy Drink.

@@ -661,10 +661,11 @@ test("moves between three district maps without mutating the chronicle", async (
   assert.match(styles, /\.district-switcher/);
 });
 test("stages authenticated Gate files inside the Adachi field scene", async () => {
-  const [caseboard, styles, game] = await Promise.all([
+  const [caseboard, styles, game, city] = await Promise.all([
     readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
     readFile(new URL("app/globals.css", root), "utf8"),
     readFile(new URL("app/game/field/page.tsx", root), "utf8"),
+    readFile(new URL("app/game/city/page.tsx", root), "utf8"),
   ]);
   assert.match(caseboard, /case-files case-zone/);
   assert.match(caseboard, /src=\{mapImage\}/);
@@ -690,6 +691,10 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(styles, /living combat dossier feedback/);
   assert.match(styles, /combat-icon-sprites-v1\.png/);
   assert.match(styles, /generated pixel skill and item atlas/);
+  assert.match(styles, /persistent pixel inventory language/);
+  assert.match(styles, /\.market-counter \.market-supply-bandage:before/);
+  assert.match(styles, /\.awakening-cutscene\.final-awakening \.cinematic-caption:before/);
+  assert.match(city, /market-supply market-supply-/);
   assert.match(styles, /EXPOSED CORE/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
   assert.match(styles, /\.city-shell \.city-intro\{padding:2\.25rem 0 1\.25rem\}/);

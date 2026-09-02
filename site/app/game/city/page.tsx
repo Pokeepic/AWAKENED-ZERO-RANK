@@ -862,6 +862,7 @@ export default function CityRoutePage() {
                         : rpg.fieldKit.wardCharm;
                     return (
                       <button
+                        className={`market-supply market-supply-${item.id}`}
                         key={item.id}
                         disabled={full || rpg.money < item.price}
                         onClick={() => purchaseSupply(item)}
