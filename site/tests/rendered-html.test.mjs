@@ -687,6 +687,9 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(game, /COMBAT DOSSIER/);
   assert.match(game, /move-card move-/);
   assert.match(styles, /urban occult combat dossier/);
+  assert.match(styles, /living combat dossier feedback/);
+  assert.match(styles, /EXPOSED CORE/);
+  assert.match(styles, /prefers-reduced-motion:reduce/);
   assert.match(styles, /\.city-shell \.city-intro\{padding:2\.25rem 0 1\.25rem\}/);
   assert.match(styles, /\.city-shell \.city-intro h1\{margin:\.55rem 0 \.75rem\}/);
   assert.match(styles, /\.case-ren/);

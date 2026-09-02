@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1600.0 - Living combat dossier
+
+- Adds compact CUT, WARD, READ, STEP, SEVER, and EXIT signatures to the deterministic move cards without replacing their exact previews.
+- Gives critical incoming attacks a restrained warning pulse and marks exposed-core rounds in blue directly on the enemy telegraph.
+- Adds keyboard-visible tactical focus, pressed-state feedback, subtle dossier scanning, and distinct medical and energy field-kit markers.
+- Disables every new ambient animation under reduced-motion preferences and avoids hover displacement on touch layouts.
+
 ## 0.1590.0 - Urban occult combat dossier
 
 - Reframes the combat interface as Ren's asymmetric field dossier while preserving the illustrated Gate arena and deterministic battle rules.
