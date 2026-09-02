@@ -692,6 +692,9 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(styles, /combat-icon-sprites-v1\.png/);
   assert.match(styles, /generated pixel skill and item atlas/);
   assert.match(styles, /persistent pixel inventory language/);
+  assert.match(styles, /equipment-icon-sprites-v1\.png/);
+  assert.match(styles, /dedicated pixel equipment atlas/);
+  assert.match(city, /market-gear market-gear-/);
   assert.match(styles, /\.market-counter \.market-supply-bandage:before/);
   assert.match(styles, /\.awakening-cutscene\.final-awakening \.cinematic-caption:before/);
   assert.match(city, /market-supply market-supply-/);
@@ -702,8 +705,12 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(styles, /\.case-ren/);
 });
 test("ships the transparent combat icon atlas", async () => {
-  const atlas = await readFile(new URL("public/game/ui/combat-icon-sprites-v1.png", root));
-  assert.ok(atlas.byteLength > 100_000);
+  const [combatAtlas, equipmentAtlas] = await Promise.all([
+    readFile(new URL("public/game/ui/combat-icon-sprites-v1.png", root)),
+    readFile(new URL("public/game/ui/equipment-icon-sprites-v1.png", root)),
+  ]);
+  assert.ok(combatAtlas.byteLength > 100_000);
+  assert.ok(equipmentAtlas.byteLength > 100_000);
 });
 
 test("ships illustrated Gate files and a four-slot local RPG save", async () => {

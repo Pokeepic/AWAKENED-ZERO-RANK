@@ -837,6 +837,7 @@ export default function CityRoutePage() {
                         : rpg.fieldKit.coat === item.name;
                     return (
                       <button
+                        className={`market-gear market-gear-${item.id}`}
                         key={item.id}
                         disabled={owned || rpg.money < item.price}
                         onClick={() => purchaseGear(item)}

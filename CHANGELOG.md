@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1630.0 - Dedicated pixel equipment atlas
+
+- Adds a second transparent pixel atlas for the Utility Knife, Resonance Blade, Street Jacket, Guildweave Coat, and Ward Charm.
+- Replaces borrowed skill imagery in Ren's apartment equipment slots with the correct weapon, coat, and ward silhouettes.
+- Gives Haruto's permanent equipment stock dedicated shop sprites while retaining the consumable atlas for supplies.
+
 ## 0.1620.0 - Persistent pixel inventory language
 
 - Carries the combat atlas into Ren's apartment field-bag readout, including consumables, ward status, weapon, and coat slots.
