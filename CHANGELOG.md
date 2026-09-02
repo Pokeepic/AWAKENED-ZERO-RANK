@@ -4,6 +4,12 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1610.0 - Pixel skill and item atlas
+
+- Adds a generated transparent seven-icon pixel atlas for Precision Strike, Barrier Pulse, Guard & Read, Vector Step, Causal Sever, Bandage, and Energy Drink.
+- Integrates the icons into existing tactical cards and field-kit controls without adding image requests per button or changing their accessible labels.
+- Preserves crisp pixel edges and distinct atlas positions across desktop and compact mobile layouts.
+
 ## 0.1600.0 - Living combat dossier
 
 - Adds compact CUT, WARD, READ, STEP, SEVER, and EXIT signatures to the deterministic move cards without replacing their exact previews.

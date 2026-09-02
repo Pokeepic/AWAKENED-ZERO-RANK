@@ -688,12 +688,19 @@ test("stages authenticated Gate files inside the Adachi field scene", async () =
   assert.match(game, /move-card move-/);
   assert.match(styles, /urban occult combat dossier/);
   assert.match(styles, /living combat dossier feedback/);
+  assert.match(styles, /combat-icon-sprites-v1\.png/);
+  assert.match(styles, /generated pixel skill and item atlas/);
   assert.match(styles, /EXPOSED CORE/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
   assert.match(styles, /\.city-shell \.city-intro\{padding:2\.25rem 0 1\.25rem\}/);
   assert.match(styles, /\.city-shell \.city-intro h1\{margin:\.55rem 0 \.75rem\}/);
   assert.match(styles, /\.case-ren/);
 });
+test("ships the transparent combat icon atlas", async () => {
+  const atlas = await readFile(new URL("public/game/ui/combat-icon-sprites-v1.png", root));
+  assert.ok(atlas.byteLength > 100_000);
+});
+
 test("ships illustrated Gate files and a four-slot local RPG save", async () => {
   const [caseboard, state] = await Promise.all([
     readFile(new URL("app/game/caseboard/page.tsx", root), "utf8"),
