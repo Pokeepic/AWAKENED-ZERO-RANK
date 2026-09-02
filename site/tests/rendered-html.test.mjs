@@ -4270,6 +4270,8 @@ test("gives every playable Gate its own illustrated interior", async () => {
   assert.match(field, /battle-attacking/);
   assert.match(field, /enemy-countering/);
   assert.match(field, /counter-impact/);
+  for (const feedback of ["damage-enemy", "damage-ren", "blocked-hit", "restored-stat", "finisher-label"])
+    assert.match(field, new RegExp(feedback));
   assert.match(field, /aria-busy=\{turnLocked\}/);
   assert.match(field, /window\.setTimeout\(\(\) => setTurnLocked\(false\), 1100\)/);
   assert.doesNotMatch(field, /residual-flare/);
@@ -4279,7 +4281,7 @@ test("gives every playable Gate its own illustrated interior", async () => {
   assert.equal(renBattleArt[25], 6, "Ren battle art must be an RGBA PNG with real transparency");
   assert.equal(renStrikeArt[25], 6, "Ren strike art must be an RGBA PNG with real transparency");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  for (const animation of ["battle-ren-idle", "battle-ren-commit", "battle-idle-cut", "battle-strike-cut", "battle-ren-pulse", "battle-barrier-pulse", "battle-ren-guard", "battle-read-scan", "battle-enemy-impact", "battle-impact-slash", "battle-enemy-counter", "battle-enemy-heavy-counter", "battle-ren-exchange", "battle-pulse-exchange", "battle-guard-exchange", "battle-item-exchange", "battle-counter-impact", "battle-item-use"])
+  for (const animation of ["battle-ren-idle", "battle-ren-commit", "battle-idle-cut", "battle-strike-cut", "battle-ren-pulse", "battle-barrier-pulse", "battle-ren-guard", "battle-read-scan", "battle-enemy-impact", "battle-impact-slash", "battle-enemy-counter", "battle-enemy-heavy-counter", "battle-ren-exchange", "battle-pulse-exchange", "battle-guard-exchange", "battle-item-exchange", "battle-counter-impact", "battle-item-use", "battle-number-enemy", "battle-number-ren", "battle-blocked", "battle-restored", "battle-finisher", "battle-enemy-break"])
     assert.match(styles, new RegExp(`@keyframes ${animation}`));
   for (const move of ["pulse", "guard", "vector", "sever"])
     assert.match(styles, new RegExp(`move-${move}`));

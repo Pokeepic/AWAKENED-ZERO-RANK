@@ -4,6 +4,13 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1560.0 - Combat impact feedback
+
+- Adds animated damage numbers at the struck combatant, exact healing and energy-restoration values, and explicit blocked-hit feedback.
+- Gives finishing blows a dedicated BREAK cue and enemy-collapse treatment while leaving victory resolution deterministic.
+- Ends every temporary visual state with the existing turn lock, returning Ren and the arena cleanly to idle after each exchange.
+- Preserves reduced-motion visibility, keyboard controls, exact previews, and all established combat outcomes.
+
 ## 0.1550.0 - Complete battle exchanges
 
 - Animates the enemy's telegraphed counterattack after Ren's selected move, with heavier lunges for pressure surges and glass rain.
