@@ -4,6 +4,14 @@ This file preserves the detailed update record, balance evidence, rejected exper
 
 The project follows evidence-driven releases: learned-policy changes remain offline until held-out evaluation supports adoption without safety or progression regressions.
 
+## 0.1540.0 - Move-specific battle choreography
+
+- Tracks the exact selected combat move through the animation state instead of treating every action as Precision Strike.
+- Gives Barrier Pulse a planted recoil, expanding shield, and dissipating pressure wave.
+- Gives Guard & Read a low brace and floor-to-target Residual scanning sweep.
+- Differentiates Vector Step and Causal Sever through faster traversal and heavier impact timing.
+- Keeps every move deterministic, keyboard-compatible, responsive, and reduced-motion safe.
+
 ## 0.1530.0 - Illustrated combat motion
 
 - Reframed Ren as a grounded left-foreground combatant with natural scale, foot placement, depth, and mobile staging.
